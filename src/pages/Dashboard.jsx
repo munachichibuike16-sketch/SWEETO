@@ -1,4 +1,4 @@
-hee is the whoel file change what you want and i will take it back import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
 
@@ -76,45 +76,6 @@ const Dashboard = () => {
       window.removeEventListener('admin-unauthorized', handleUnauthorized);
     };
   }, []);
-
-  // Real-time subscription to listen for logout broadcasts from other devices
-  React.useEffect(() => {
-    if (!isAdminAuthenticated) return;
-    
-    const securityChannel = supabase.channel('admin_security', {
-      config: {
-        broadcast: { self: false }
-      }
-    });
-
-    securityChannel
-      .on('broadcast', { event: 'logout_others' }, async (payload) => {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session && session.user && session.user.email === payload.email) {
-            if (payload.exceptSessionId && session.id !== payload.exceptSessionId) {
-              console.log('Security alert: Remote logout requested for this session.');
-              showToast('Logged out from another device.', 'warning');
-              
-              try {
-                await supabase.auth.signOut();
-              } catch (e) {}
-              sessionStorage.removeItem('sweetohub_admin_authenticated');
-              sessionStorage.removeItem('sweetohub_admin_token');
-              setIsAdminAuthenticated(false);
-              window.location.reload();
-            }
-          }
-        } catch (err) {
-          console.error('Error handling remote logout:', err);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(securityChannel);
-    };
-  }, [isAdminAuthenticated]);
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isAdminDark, setIsAdminDark] = React.useState(() => {
@@ -269,7 +230,7 @@ const Dashboard = () => {
   const handleLogoutOthers = () => {
     requestConfirm({
       title: 'Logout Other Devices?',
-      message: 'Are you sure you want to log out this administrator account from all other devices and active sessions globally? Only this current browser session will remain active.',
+      message: 'This will sign out all other sessions. Only this browser will remain active.',
       type: 'warning',
       confirmText: 'Log Out Others',
       cancelText: 'Cancel',
@@ -277,35 +238,17 @@ const Dashboard = () => {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
-            showToast('No active session found.', 'error');
+            showToast('No active session found. Please log in again.', 'error');
             return;
           }
-
-          const securityChannel = supabase.channel('admin_security');
-          await new Promise((resolve) => {
-            securityChannel.subscribe(async (status) => {
-              if (status === 'SUBSCRIBED') {
-                await securityChannel.send({
-                  type: 'broadcast',
-                  event: 'logout_others',
-                  payload: {
-                    email: session.user.email,
-                    exceptSessionId: session.id
-                  }
-                });
-                resolve();
-              } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
-                resolve();
-              }
-            });
-          });
-
-          supabase.removeChannel(securityChannel);
+          
           const { error } = await supabase.auth.signOut({ scope: 'others' });
           if (error) throw error;
-          showToast('Successfully logged out other devices! 🛡️', 'success');
+          
+          showToast('All other devices signed out! 🛡️', 'success');
         } catch (err) {
-          showToast('Failed to sign out other devices: ' + err.message, 'error');
+          console.error('Logout others error:', err);
+          showToast('Failed: ' + err.message, 'error');
         }
       }
     });
