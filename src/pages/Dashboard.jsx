@@ -77,6 +77,31 @@ const Dashboard = () => {
     };
   }, []);
 
+  // Listen for logout broadcasts from other devices
+  React.useEffect(() => {
+    if (!isAdminAuthenticated) return;
+
+    const channel = supabase.channel('admin_security');
+    
+    channel.on('broadcast', { event: 'logout_others' }, (payload) => {
+      if (payload.exceptSessionId) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session && session.id !== payload.exceptSessionId) {
+            supabase.auth.signOut().then(() => {
+              sessionStorage.removeItem('sweetohub_admin_authenticated');
+              sessionStorage.removeItem('sweetohub_admin_token');
+              window.location.reload();
+            });
+          }
+        });
+      }
+    }).subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdminAuthenticated]);
+
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isAdminDark, setIsAdminDark] = React.useState(() => {
     const saved = localStorage.getItem('admin_theme');
@@ -230,7 +255,7 @@ const Dashboard = () => {
   const handleLogoutOthers = () => {
     requestConfirm({
       title: 'Logout Other Devices?',
-      message: 'This will sign out all other sessions. Only this browser will remain active.',
+      message: 'This will force all other devices to log out immediately.',
       type: 'warning',
       confirmText: 'Log Out Others',
       cancelText: 'Cancel',
@@ -238,16 +263,28 @@ const Dashboard = () => {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
-            showToast('No active session found. Please log in again.', 'error');
+            showToast('No active session found.', 'error');
             return;
           }
+
+          await supabase.auth.signOut({ scope: 'others' });
           
-          const { error } = await supabase.auth.signOut({ scope: 'others' });
-          if (error) throw error;
-          
-          showToast('All other devices signed out! 🛡️', 'success');
+          const channel = supabase.channel('admin_security');
+          channel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await channel.send({
+                type: 'broadcast',
+                event: 'logout_others',
+                payload: { 
+                  email: session.user.email,
+                  exceptSessionId: session.id 
+                }
+              });
+              showToast('All other devices logged out! 🛡️', 'success');
+              supabase.removeChannel(channel);
+            }
+          });
         } catch (err) {
-          console.error('Logout others error:', err);
           showToast('Failed: ' + err.message, 'error');
         }
       }
