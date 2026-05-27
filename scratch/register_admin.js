@@ -7,12 +7,7 @@ const supabaseKey = envFile.match(/VITE_SUPABASE_ANON_KEY=(.*)/)?.[1]?.trim();
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function run() {
-  console.log('Attempting to register admin@sweetohub.com...');
-  const { data, error } = await supabase.auth.signUp({
-    email: 'admin@sweetohub.com',
-    password: 'admin123'
-  });
+
 
   if (error) {
     console.error('Registration Error:', error.message);
