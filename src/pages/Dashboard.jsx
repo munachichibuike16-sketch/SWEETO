@@ -67,6 +67,23 @@ const Dashboard = () => {
     return () => window.removeEventListener('admin-unauthorized', handleUnauthorized);
   }, []);
 
+  // Listen for force logout broadcasts from other devices
+  React.useEffect(() => {
+    if (!isAdminAuthenticated) return;
+    const channel = supabase.channel('admin_security');
+    channel.on('broadcast', { event: 'logout_force' }, (payload) => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session && session.id !== payload.exceptSessionId) {
+          supabase.auth.signOut().then(() => {
+            sessionStorage.clear();
+            window.location.reload();
+          });
+        }
+      });
+    }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdminAuthenticated]);
+
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isAdminDark, setIsAdminDark] = React.useState(() => {
     const saved = localStorage.getItem('admin_theme');
@@ -164,19 +181,33 @@ const Dashboard = () => {
 
   const handleLogoutOthers = () => {
     requestConfirm({
-      title: 'Logout All Devices?',
-      message: 'This will sign out ALL devices including this one. You will need to log in again.',
+      title: 'Logout Other Devices?',
+      message: 'This will sign out all other devices. You will stay logged in.',
       type: 'warning',
-      confirmText: 'Log Out All',
+      confirmText: 'Log Out Others',
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          await supabase.auth.signOut({ scope: 'global' });
-          sessionStorage.removeItem('sweetohub_admin_authenticated');
-          sessionStorage.removeItem('sweetohub_admin_token');
-          setIsAdminAuthenticated(false);
-          showToast('All devices logged out! Please log in again.', 'success');
-          window.location.reload();
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            showToast('No active session found.', 'error');
+            return;
+          }
+
+          await supabase.auth.signOut({ scope: 'others' });
+          
+          const channel = supabase.channel('admin_security');
+          channel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await channel.send({
+                type: 'broadcast',
+                event: 'logout_force',
+                payload: { exceptSessionId: session.id }
+              });
+              showToast('Other devices logged out! 🛡️', 'success');
+              supabase.removeChannel(channel);
+            }
+          });
         } catch (err) {
           showToast('Failed: ' + err.message, 'error');
         }
@@ -244,7 +275,7 @@ const Dashboard = () => {
             <div className="relative z-10 flex items-center justify-between gap-4">
               <div className="flex items-center gap-4"><div className="w-10 h-10 bg-white/10 rounded-2xl backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0"><span className="text-white font-black text-base">A</span></div><div><p className="text-white font-bold text-xs tracking-wide">Admin User</p><p className="text-white/55 text-[9px] uppercase tracking-widest font-black">System Master</p></div></div>
               <div className="flex items-center gap-2">
-                <button onClick={handleLogoutOthers} className="w-9 h-9 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 transition-all flex items-center justify-center border border-amber-500/20" title="Logout All Devices"><Icons.Smartphone size={16} /></button>
+                <button onClick={handleLogoutOthers} className="w-9 h-9 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 transition-all flex items-center justify-center border border-amber-500/20" title="Logout Other Devices"><Icons.Smartphone size={16} /></button>
                 <button onClick={async () => { try { await supabase.auth.signOut(); } catch (e) {} sessionStorage.removeItem('sweetohub_admin_authenticated'); sessionStorage.removeItem('sweetohub_admin_token'); window.location.reload(); }} className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all flex items-center justify-center border border-red-500/20" title="Lock Terminal"><Icons.LogOut size={16} /></button>
               </div>
             </div>
