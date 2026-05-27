@@ -77,7 +77,7 @@ const Dashboard = () => {
         const signal = payload.new;
         if (signal.signal_type === 'logout') {
           const { data: { session } } = await supabase.auth.getSession();
-          if (session && session.id !== signal.except_session_id) {
+          if (!session || signal.except_session_id === 'force_all' || session.id !== signal.except_session_id) {
             await supabase.auth.signOut();
             sessionStorage.clear();
             window.location.reload();
@@ -193,19 +193,12 @@ const Dashboard = () => {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            showToast('No active session found.', 'error');
-            return;
-          }
-
-          // Invalidate other sessions on Supabase
           await supabase.auth.signOut({ scope: 'others' });
           
-          // Insert signal into DB - other devices are listening for this
+          const { data: { session } } = await supabase.auth.getSession();
           await supabase.from('admin_signals').insert({
             signal_type: 'logout',
-            except_session_id: session.id
+            except_session_id: session?.id || 'force_all'
           });
           
           showToast('Other devices logged out! 🛡️', 'success');
