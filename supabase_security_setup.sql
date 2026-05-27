@@ -24,7 +24,7 @@ BEGIN
 
   -- Fallback if admin_email isn't initialized yet
   IF admin_email_val IS NULL THEN
-    admin_email_val := 'admin@sweetohub.com';
+    admin_email_val := '';
   END IF;
 
   -- 2. Check if the user is authenticated and their email matches the admin email

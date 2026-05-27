@@ -109,7 +109,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
               <input
                 type="email"
                 required
-                placeholder="admin@sweetohub.com"
+                placeholder="admin@yourdomain.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-14 pr-6 py-5 bg-transparent outline-none font-bold text-slate-100 text-xs tracking-wide placeholder:text-slate-700"

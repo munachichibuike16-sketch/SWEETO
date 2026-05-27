@@ -63,7 +63,7 @@ async function authenticateAdmin(req, res, next) {
     }
 
     // Retrieve admin email from SQLite to compare with JWT email
-    let adminEmail = 'admin@sweetohub.com';
+    let adminEmail = '';
     try {
       const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_email'").get();
       if (row) {
@@ -99,7 +99,7 @@ async function getAdminFromToken(req) {
     if (error || !user) return null;
 
     // Retrieve admin email from SQLite to compare with JWT email
-    let adminEmail = 'admin@sweetohub.com';
+    let adminEmail = '';
     try {
       const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_email'").get();
       if (row) {
@@ -127,6 +127,13 @@ console.log('Starting server...');
 console.log('Initializing database...');
 const db = new Database('shop.db', { verbose: console.log });
 console.log('Database connected.');
+
+// Clean up legacy default admin email from settings
+try {
+  db.prepare("UPDATE settings SET value = '' WHERE key = 'admin_email' AND (value = 'admin@sweetohub.com' OR value = '\"admin@sweetohub.com\"')").run();
+} catch (err) {
+  console.error('Failed to clean up legacy admin email:', err);
+}
 
 // Create tables if they don't exist
 console.log('Creating tables...');
@@ -381,7 +388,7 @@ if (settingsCount === 0) {
   insertSetting.run('tax_rate', '0');
   insertSetting.run('shipping_fee', '2000');
   insertSetting.run('admin_pin', '');
-  insertSetting.run('admin_email', 'admin@sweetohub.com');
+  insertSetting.run('admin_email', '');
   insertSetting.run('admin_key', 'admin123');
   insertSetting.run('enable_maintenance', 'false');
   insertSetting.run('hero_layout', 'grid');
@@ -391,7 +398,7 @@ if (settingsCount === 0) {
   ensureSetting.run('store_phone', '');
   ensureSetting.run('language', 'en');
   ensureSetting.run('admin_pin', '');
-  ensureSetting.run('admin_email', 'admin@sweetohub.com');
+  ensureSetting.run('admin_email', '');
   ensureSetting.run('admin_key', 'admin123');
   ensureSetting.run('enable_maintenance', 'false');
   ensureSetting.run('hero_layout', 'grid');
