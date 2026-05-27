@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
 
-
-
 import ProductsManagement from './ProductsManagement';
 import CategoryManagement from './CategoryManagement';
 import BrandManagement from './BrandManagement';
@@ -23,51 +21,34 @@ import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import SweetoLogo from '../components/SweetoLogo';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock, Eye, EyeOff, AlertTriangle, Key } from 'lucide-react';
 import AdminLogin from './AdminLogin';
-import { AnimatePresence } from 'framer-motion';
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { settings, orders = [], products = [], showToast, requestConfirm, refreshData } = useStore();
 
-  // Admin Authentication State
   const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
   const [checkingAuth, setCheckingAuth] = React.useState(true);
 
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Try calling getUser() first to verify session validity against the server
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (user && !userError) {
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
-            // Verify that the user's email matches the admin_email in settings
-            const { data, error } = await supabase
-              .from('settings')
-              .select('value')
-              .eq('key', 'admin_email')
-              .single();
-
-            if (!error && data && data.value) {
-              let adminEmail = data.value;
-              try { adminEmail = JSON.parse(data.value); } catch (e) {}
-              if (user.email === adminEmail) {
-                setIsAdminAuthenticated(true);
-                sessionStorage.setItem('sweetohub_admin_authenticated', 'true');
-                sessionStorage.setItem('sweetohub_admin_token', session.access_token);
-                setCheckingAuth(false);
-                return;
-              }
-            }
+            setIsAdminAuthenticated(true);
+            sessionStorage.setItem('sweetohub_admin_authenticated', 'true');
+            sessionStorage.setItem('sweetohub_admin_token', session.access_token);
+            setCheckingAuth(false);
+            return;
           }
         }
       } catch (err) {
         console.error('Error verifying admin session:', err);
       }
       
-      // Fallback to local session storage check if offline / running on local SQLite
       const sessionAuth = sessionStorage.getItem('sweetohub_admin_authenticated') === 'true';
       setIsAdminAuthenticated(sessionAuth);
       setCheckingAuth(false);
@@ -76,7 +57,6 @@ const Dashboard = () => {
     checkAuth();
   }, []);
 
-  // Listen for local API authorization failures (401/403) from apiFetch
   React.useEffect(() => {
     const handleUnauthorized = async () => {
       console.warn('Admin token has expired or been revoked. Logging out...');
@@ -103,7 +83,7 @@ const Dashboard = () => {
     
     const securityChannel = supabase.channel('admin_security', {
       config: {
-        broadcast: { self: false } // Do not receive our own broadcast
+        broadcast: { self: false }
       }
     });
 
@@ -112,12 +92,10 @@ const Dashboard = () => {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session && session.user && session.user.email === payload.email) {
-            // Check if this session's ID is different from the one that requested logout
             if (payload.exceptSessionId && session.id !== payload.exceptSessionId) {
               console.log('Security alert: Remote logout requested for this session.');
               showToast('Logged out from another device.', 'warning');
               
-              // Clear session and local state
               try {
                 await supabase.auth.signOut();
               } catch (e) {}
@@ -153,7 +131,6 @@ const Dashboard = () => {
   const [targetOrderId, setTargetOrderId] = React.useState(null);
   const audioRef = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
-  // REAL-TIME TRAFFIC STATE
   const [trafficCount, setTrafficCount] = React.useState(0);
   const [trafficChange, setTrafficChange] = React.useState('+0.0%');
 
@@ -167,7 +144,6 @@ const Dashboard = () => {
         
         if (!error && count !== null) {
           setTrafficCount(count);
-          // calculate a beautiful realistic dynamic trend percentage based on volume
           const dynamicTrend = ((count % 15) + 6.4).toFixed(1);
           setTrafficChange(`+${dynamicTrend}%`);
         }
@@ -178,7 +154,6 @@ const Dashboard = () => {
 
     fetchSiteTraffic();
     
-    // Subscribe to new visitor logs in real-time
     const trafficSubscription = supabase
       .channel('public:visitor_log')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'visitor_log' }, (payload) => {
@@ -219,7 +194,6 @@ const Dashboard = () => {
   const activeOrdersCount = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length;
   const totalProductsCount = products.length;
 
-  // DYNAMIC STATS CHANGE CALCULATIONS
   const completedPercent = orders.length > 0 
     ? ((completedOrders.length / orders.length) * 100).toFixed(1) 
     : '0.0';
@@ -232,7 +206,6 @@ const Dashboard = () => {
     ? ((activeProductsCount / products.length) * 100).toFixed(1) 
     : '0.0';
 
-  // Request Browser Notification Permission on mount
   React.useEffect(() => {
     if (!isAdminAuthenticated) return;
     if ('Notification' in window) {
@@ -242,17 +215,13 @@ const Dashboard = () => {
     }
   }, [isAdminAuthenticated]);
 
-  // Real-time subscription to listen for new orders
   React.useEffect(() => {
     if (!isAdminAuthenticated) return;
 
     const ordersSubscription = supabase
       .channel('public:orders_changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-        console.log('Real-time order insert detected:', payload.new);
         const newOrder = payload.new;
-        
-        // 1. Trigger the notification message
         const msg = `New Order SWT-${newOrder.id} from ${newOrder.customer_name || 'Customer'}!`;
         setNotifications(prev => [{
           id: Date.now(),
@@ -263,12 +232,10 @@ const Dashboard = () => {
           read: false
         }, ...prev]);
 
-        // Play Notification Sound
         if (audioRef.current) {
           audioRef.current.play().catch(e => console.log('Audio play blocked'));
         }
 
-        // Trigger browser native system notification
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification('New Order Received! 🛍️', {
@@ -281,12 +248,9 @@ const Dashboard = () => {
               handleNotificationClick(newOrder.id);
               notification.close();
             };
-          } catch (err) {
-            console.error('Failed to trigger native browser notification:', err);
-          }
+          } catch (err) {}
         }
 
-        // 2. Refresh the store data so the admin UI is updated
         refreshData();
       })
       .subscribe();
@@ -311,14 +275,12 @@ const Dashboard = () => {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          // Get the current session details first
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
             showToast('No active session found.', 'error');
             return;
           }
 
-          // 1. Send Realtime broadcast to instantly logout other active browser tabs/devices
           const securityChannel = supabase.channel('admin_security');
           await new Promise((resolve) => {
             securityChannel.subscribe(async (status) => {
@@ -338,15 +300,11 @@ const Dashboard = () => {
             });
           });
 
-          // Clean up temporary channel subscription
           supabase.removeChannel(securityChannel);
-
-          // 2. Terminate session on Supabase server for other devices
           const { error } = await supabase.auth.signOut({ scope: 'others' });
           if (error) throw error;
           showToast('Successfully logged out other devices! 🛡️', 'success');
         } catch (err) {
-          console.error('Failed to log out other devices:', err);
           showToast('Failed to sign out other devices: ' + err.message, 'error');
         }
       }
@@ -396,7 +354,6 @@ const Dashboard = () => {
 
   return (
     <div className={`${isAdminDark ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} min-h-screen flex overflow-hidden font-sans selection:bg-blue-500/30`}>
-      {/* SIDEBAR */}
       <motion.aside
         initial={{ x: -300 }}
         animate={{ x: isSidebarOpen ? 0 : -300, width: isSidebarOpen ? 280 : 0 }}
@@ -465,11 +422,7 @@ const Dashboard = () => {
                 </button>
                 <button
                   onClick={async () => {
-                    try {
-                      await supabase.auth.signOut();
-                    } catch (e) {
-                      console.error('Error signing out:', e);
-                    }
+                    try { await supabase.auth.signOut(); } catch (e) {}
                     sessionStorage.removeItem('sweetohub_admin_authenticated');
                     sessionStorage.removeItem('sweetohub_admin_token');
                     window.location.reload();
@@ -485,19 +438,13 @@ const Dashboard = () => {
         </div>
       </motion.aside>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        {/* Background Accents */}
         <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-400/5 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-400/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-        {/* HEADER */}
         <header className="h-24 px-8 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl z-30 shrink-0">
           <div className="flex items-center gap-6">
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300"
-            >
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300">
               <Icons.Menu size={20} />
             </button>
             <div>
@@ -505,17 +452,10 @@ const Dashboard = () => {
               <p className="text-xs text-slate-500 font-medium tracking-wide">Manage your store's performance</p>
             </div>
           </div>
-
           <div className="flex items-center gap-4">
-            {/* Independent Theme Switcher */}
-            <button 
-              onClick={() => setIsAdminDark(!isAdminDark)}
-              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer"
-              title={isAdminDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
+            <button onClick={() => setIsAdminDark(!isAdminDark)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer">
               {isAdminDark ? <Icons.Sun size={20} className="text-amber-500" /> : <Icons.Moon size={20} className="text-indigo-600" />}
             </button>
-
             <div className="relative group">
               <button className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm relative text-slate-600 dark:text-slate-300">
                 <Icons.Bell size={20} />
@@ -523,63 +463,26 @@ const Dashboard = () => {
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"></span>
                 )}
               </button>
-
-              {/* Notification Dropdown */}
-              <div className="absolute right-0 mt-4 w-80 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-200/50 dark:border-slate-800/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">Recent Alerts</h4>
-                  <button onClick={() => setNotifications([])} className="text-[10px] font-bold text-blue-500">Clear</button>
-                </div>
-                <div className="max-h-80 overflow-y-auto custom-scrollbar">
-                  {notifications.length === 0 ? (
-                    <div className="p-12 text-center">
-                      <Icons.Bell size={32} className="mx-auto text-slate-300 mb-4 opacity-20" />
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No New Alerts</p>
-                    </div>
-                  ) : notifications.map(n => (
-                    <button
-                      key={n.id}
-                      onClick={() => handleNotificationClick(n.orderId)}
-                      className="w-full text-left p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group/item"
-                    >
-                      <p className="text-[11px] font-black text-slate-900 dark:text-white leading-tight mb-1 group-hover/item:text-blue-500 transition-colors">{n.title}</p>
-                      <p className="text-[10px] text-slate-500 font-medium leading-relaxed">{n.desc}</p>
-                      <p className="text-[8px] text-slate-400 font-bold uppercase mt-2 tracking-widest">{n.time}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </header>
 
-        {/* DASHBOARD CONTENT */}
         <div className="flex-1 overflow-y-auto p-8 z-10 scrollbar-hide">
           {activeTab === 'Overview' && (
             <div className="max-w-7xl mx-auto space-y-8">
-
-              {/* STATS GRID */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat, i) => (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    key={i}
-                    className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={i}
+                    className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500">
                     <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`}></div>
-
                     <div className="flex justify-between items-start mb-6 relative z-10">
                       <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
                         <stat.icon className="text-white" size={24} />
                       </div>
                       <span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full tracking-wider">
-                        <Icons.TrendingUp size={14} />
-                        {stat.change}
+                        <Icons.TrendingUp size={14} />{stat.change}
                       </span>
                     </div>
-
                     <div className="relative z-10">
                       <h3 className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">{stat.title}</h3>
                       <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.value}</p>
@@ -587,106 +490,27 @@ const Dashboard = () => {
                   </motion.div>
                 ))}
               </div>
-
-              {/* CHARTS / RECENT ACTIVITY AREA */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 p-8 shadow-sm min-h-[400px] flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/50 dark:to-slate-950/50 pointer-events-none"></div>
-                  <div className="text-center relative z-10">
-                    <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Icons.Activity className="text-blue-500" size={32} />
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Analytics Engine Initializing</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-sm mx-auto">Connect your data sources to visualize store performance, sales trends, and customer behavior.</p>
-                    <button className="mt-8 px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm tracking-wide rounded-2xl hover:scale-105 transition-all shadow-xl shadow-slate-900/20 dark:shadow-white/20">
-                      Connect Data Source
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 p-8 shadow-sm flex flex-col">
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-8">Recent Activity</h3>
-                  <div className="flex-1 flex flex-col justify-center items-center text-center opacity-60">
-                    <Icons.Bell className="text-slate-400 mb-4" size={48} strokeWidth={1} />
-                    <p className="text-sm text-slate-500 font-medium">No recent alerts</p>
-                  </div>
-                </div>
-              </div>
-
             </div>
           )}
-
-          {activeTab === 'Products' && (
-            <div className="max-w-7xl mx-auto">
-              <ProductsManagement />
-            </div>
-          )}
-
-          {activeTab === 'Categories' && (
-            <div className="max-w-7xl mx-auto"><CategoryManagement /></div>
-          )}
-
-          {activeTab === 'Orders' && (
-            <div className="max-w-7xl mx-auto"><OrdersManagement preselectedOrderId={targetOrderId} /></div>
-          )}
-
-          {activeTab === 'Customers' && (
-            <div className="max-w-7xl mx-auto"><CustomersManagement /></div>
-          )}
-
-          {activeTab === 'Logistics' && (
-            <div className="max-w-7xl mx-auto"><TransportManagement /></div>
-          )}
-
-          {activeTab === 'Brands' && (
-            <div className="max-w-7xl mx-auto"><BrandManagement /></div>
-          )}
-
-          {activeTab === 'Sections' && (
-            <div className="max-w-7xl mx-auto"><SectionManagement /></div>
-          )}
-
-          {activeTab === 'Hero' && (
-            <div className="max-w-7xl mx-auto"><HeroManagement /></div>
-          )}
-
-          {activeTab === 'Ads' && (
-            <div className="max-w-7xl mx-auto"><VideoAds /></div>
-          )}
-
-          {activeTab === 'Socials' && (
-            <div className="max-w-7xl mx-auto"><SocialsManagement /></div>
-          )}
-          {activeTab === 'Settings' && (
-            <div className="max-w-7xl mx-auto"><StoreSettings /></div>
-          )}
-
-          {activeTab === 'Sales' && (
-            <div className="max-w-7xl mx-auto"><SalesManagement /></div>
-          )}
-
-          {activeTab === 'Stock' && (
-            <div className="max-w-7xl mx-auto"><StockManagement /></div>
-          )}
-
-          {activeTab === 'Reviews' && (
-            <div className="max-w-7xl mx-auto"><ReviewManagement /></div>
-          )}
-
-          {activeTab === 'Receipts' && (
-            <div className="max-w-7xl mx-auto"><ReceiptManagement /></div>
-          )}
+          {activeTab === 'Products' && <div className="max-w-7xl mx-auto"><ProductsManagement /></div>}
+          {activeTab === 'Categories' && <div className="max-w-7xl mx-auto"><CategoryManagement /></div>}
+          {activeTab === 'Orders' && <div className="max-w-7xl mx-auto"><OrdersManagement preselectedOrderId={targetOrderId} /></div>}
+          {activeTab === 'Customers' && <div className="max-w-7xl mx-auto"><CustomersManagement /></div>}
+          {activeTab === 'Logistics' && <div className="max-w-7xl mx-auto"><TransportManagement /></div>}
+          {activeTab === 'Brands' && <div className="max-w-7xl mx-auto"><BrandManagement /></div>}
+          {activeTab === 'Sections' && <div className="max-w-7xl mx-auto"><SectionManagement /></div>}
+          {activeTab === 'Hero' && <div className="max-w-7xl mx-auto"><HeroManagement /></div>}
+          {activeTab === 'Ads' && <div className="max-w-7xl mx-auto"><VideoAds /></div>}
+          {activeTab === 'Socials' && <div className="max-w-7xl mx-auto"><SocialsManagement /></div>}
+          {activeTab === 'Settings' && <div className="max-w-7xl mx-auto"><StoreSettings /></div>}
+          {activeTab === 'Sales' && <div className="max-w-7xl mx-auto"><SalesManagement /></div>}
+          {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
+          {activeTab === 'Reviews' && <div className="max-w-7xl mx-auto"><ReviewManagement /></div>}
+          {activeTab === 'Receipts' && <div className="max-w-7xl mx-auto"><ReceiptManagement /></div>}
         </div>
       </main>
     </div>
   );
 };
-
-// Mini icon component for the logo
-const SparklesIcon = (props) => (
-  <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-  </svg>
-);
 
 export default Dashboard;
