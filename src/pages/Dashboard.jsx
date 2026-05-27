@@ -171,7 +171,7 @@ const Dashboard = () => {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          await supabase.auth.signOut({ scope: 'everywhere' });
+          await supabase.auth.signOut({ scope: 'global' });
           sessionStorage.removeItem('sweetohub_admin_authenticated');
           sessionStorage.removeItem('sweetohub_admin_token');
           setIsAdminAuthenticated(false);
