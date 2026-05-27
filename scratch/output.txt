@@ -1,0 +1,30 @@
+Success: [
+  {
+    "id": 6,
+    "key": "trending",
+    "title": "Trending Now",
+    "subtitle": "Most popular on our network",
+    "is_active": 1,
+    "position": 1,
+    "titleb": null,
+    "subtitleb": null,
+    "categoryb": "All",
+    "roleb": null,
+    "headerstyleb": "bold",
+    "headerimageb": null,
+    "created_at": "2026-05-19T11:05:53.553446+00:00",
+    "categoryB": "All",
+    "is_dual": 0,
+    "isdual": 0,
+    "show_view_all": 1,
+    "showviewall": 1,
+    "max_products": 8,
+    "maxproducts": 8,
+    "header_style": "gradient",
+    "headerstyle": "gradient",
+    "header_image": null,
+    "headerimage": null,
+    "category": "All",
+    "role": "custom"
+  }
+]

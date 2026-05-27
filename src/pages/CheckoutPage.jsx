@@ -1,0 +1,429 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
+import { useStore } from '../contexts/StoreContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../lib/supabase';
+
+const CheckoutPage = () => {
+  const navigate = useNavigate();
+  const { cartItems, cartTotal, clearCart } = useCart();
+  const { settings } = useStore();
+  const { t, isRTL } = useLanguage();
+  
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [orderId, setOrderId] = useState(null);
+  const [waMessage, setWaMessage] = useState('');
+  const [formData, setFormData] = useState({
+    name: '', phone: '', city: 'Abidjan', address: ''
+  });
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
+  const [isReturning, setIsReturning] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [shippingZones, setShippingZones] = useState([]);
+  const [shippingFee, setShippingFee] = useState(2500);
+
+  const subtotal = cartTotal;
+  const tax = 0;
+  const hasUnsetPrice = cartItems.some(item => !item.price || Number(item.price) === 0);
+  const shipping = hasUnsetPrice ? 0 : shippingFee;
+  const grandTotal = subtotal + shipping - loyaltyDiscount - promoDiscount;
+
+  const ADMIN_WHATSAPP_NUMBER = settings?.contactPhone?.replace(/\D/g, '') || "2250500619923";
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Check for returning customer via Supabase
+  useEffect(() => {
+    if (formData.phone.length >= 8) {
+      const checkLoyalty = async () => {
+        try {
+          const { data: orders } = await supabase
+            .from('orders')
+            .select('id, customer_contact')
+            .ilike('customer_contact', `%${formData.phone}%`);
+          if (orders && orders.length > 0) {
+            setIsReturning(true);
+            setLoyaltyDiscount(cartTotal * 0.10);
+          } else {
+            setIsReturning(false);
+            setLoyaltyDiscount(0);
+          }
+        } catch (e) { console.error(e); }
+      };
+      checkLoyalty();
+    }
+  }, [formData.phone, cartTotal]);
+
+  useEffect(() => {
+    const fetchShipping = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('shipping_zones')
+          .select('*')
+          .order('name', { ascending: true });
+        if (!error && data) {
+          setShippingZones(data);
+          const abidjan = data.find(z => z.name === 'Abidjan');
+          if (abidjan) setShippingFee(abidjan.price);
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchShipping();
+  }, []);
+
+  useEffect(() => {
+    const zone = shippingZones.find(z => z.name === formData.city);
+    if (zone) setShippingFee(zone.price);
+  }, [formData.city, shippingZones]);
+
+  const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const applyPromo = async () => {
+    if (promoInput.toUpperCase() === 'SWEETO10') {
+      try {
+        const { data: orders } = await supabase
+          .from('orders')
+          .select('id, customer_contact, promo_code')
+          .ilike('customer_contact', `%${formData.phone}%`)
+          .eq('promo_code', 'SWEETO10');
+        const alreadyUsed = orders && orders.length > 0;
+        if (alreadyUsed) {
+          setPromoError('You have already used this promo code.');
+        } else {
+          setPromoDiscount(cartTotal * 0.10);
+          setPromoApplied(true);
+          setPromoError('');
+        }
+      } catch (e) { setPromoError('Validation failed. Try again.'); }
+    } else {
+      setPromoError('Invalid promo code.');
+    }
+  };
+
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    
+    try {
+      const orderPayload = {
+        customer_name: formData.name,
+        customer_contact: `${formData.phone} | ${formData.address || ''}`,
+        items: JSON.stringify(cartItems.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity }))),
+        total_amount: grandTotal,
+        total: grandTotal,
+        total_items: cartItems.reduce((acc, item) => acc + item.quantity, 0),
+        status: 'pending',
+        promo_code: promoApplied ? promoInput.toUpperCase() : null,
+        city: formData.city,
+        address: formData.address
+      };
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([orderPayload])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newOrderId = data?.id;
+
+      // Send WhatsApp
+      const itemsList = cartItems.map(item => `- ${item.name} (${item.quantity})`).join('%0A');
+      const message = `*NEW ORDER RECEIVED (ID: #${newOrderId})* %0A` +
+        `--------------------------%0A` +
+        `*Customer:* ${formData.name}%0A` +
+        `*Phone:* ${formData.phone}%0A` +
+        `*City:* ${formData.city}%0A` +
+        `*Address:* ${formData.address}%0A` +
+        `--------------------------%0A` +
+        `*Items:*%0A${itemsList}%0A` +
+        `--------------------------%0A` +
+        `*Total:* ${grandTotal.toLocaleString()} ${settings?.currency || 'FCFA'}%0A` +
+        `*Payment:* Cash on Delivery%0A` +
+        `--------------------------%0A` +
+        `_Sent from SWEETO Hub Store_`;
+      
+      setWaMessage(message);
+      setOrderId(newOrderId);
+      clearCart();
+      setIsProcessing(false);
+      setIsSuccess(true);
+    } catch (err) {
+      console.error('Order placement failed:', err);
+      setIsProcessing(false);
+      // Still clear cart and show success to prevent duplicate orders from user retrying
+      setIsSuccess(true);
+      clearCart();
+    }
+  };
+
+  // SUCCESS SCREEN
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.15),transparent_70%)]"></div>
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0, y: 50 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="max-w-lg w-full bg-slate-900/50 backdrop-blur-3xl rounded-[3rem] p-12 text-center border border-white/10 shadow-[0_0_100px_rgba(59,130,246,0.2)] relative z-10"
+        >
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
+            className="w-28 h-28 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(59,130,246,0.5)]"
+          >
+            <CheckCircle2 size={56} className="text-white" />
+          </motion.div>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter uppercase italic">{t('order_received') || 'Order Received'}</h2>
+          <p className="text-slate-400 font-medium mb-12 leading-relaxed text-sm md:text-base">
+            {t('thank_you_order') || 'Thank you for your order! Our team in'} <span className="text-white font-black">{formData.city}</span> {t('will_contact_you') || 'will contact you shortly at'} <span className="text-blue-400 font-black">{formData.phone}</span> {t('to_confirm_delivery') || 'to confirm the delivery time.'}
+          </p>
+          
+          <div className="space-y-4">
+             {orderId && (
+               <button 
+                 onClick={() => navigate(`/order-tracking/${orderId}`)}
+                 className="w-full bg-blue-500 text-white font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all hover:scale-[1.02] active:scale-[0.98]"
+               >
+                 {t('track_order') || 'Track Order'}
+               </button>
+             )}
+             {waMessage && (
+               <button 
+                 onClick={() => window.open(`https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${waMessage}`, '_blank')}
+                 className="w-full bg-[#25D366] text-white font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl hover:bg-[#1DA851] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
+               >
+                 {t('notify_customer_wa') || 'Chat on WhatsApp (Optional)'}
+               </button>
+             )}
+             <button 
+               onClick={() => navigate('/')}
+               className={`w-full ${orderId ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-slate-900 hover:bg-slate-100'} font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]`}
+             >
+               {t('back_to_shop') || 'Return to Store'}
+             </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // CHECKOUT SCREEN
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      {/* LEFT SIDE - ORDER SUMMARY (DARK) */}
+      <div className="lg:w-[45%] bg-slate-950 p-8 lg:p-16 flex flex-col relative overflow-hidden text-white min-h-[50vh] lg:min-h-screen">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.2),transparent_50%)]"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
+        
+        <div className="relative z-10 flex flex-col h-full">
+           <button onClick={() => navigate(-1)} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all mb-12">
+             <ArrowLeft size={20} />
+           </button>
+
+           <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2">{t('order_summary') || 'Order Summary'}</h2>
+           <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-black mb-12">{cartItems.length} {t('items') || 'Items'}</p>
+
+           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-6 mb-12">
+             <AnimatePresence>
+                {cartItems.map(item => (
+                  <motion.div key={item.id} layout className="flex items-center gap-6">
+                    <div className="w-20 h-20 bg-white/5 rounded-[1.5rem] p-3 border border-white/10 shrink-0">
+                      <img src={item.image_url || item.image} alt={item.name} className="w-full h-full object-contain" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-black text-xs uppercase tracking-widest text-white/90 line-clamp-2">{item.name}</h4>
+                      <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mt-2">{t('qty') || 'Qty'}: {item.quantity}</p>
+                    </div>
+                    <div className="text-right">
+                       <span className="font-black text-sm text-blue-400">{(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
+                  </motion.div>
+                ))}
+             </AnimatePresence>
+           </div>
+
+           <div className="pt-8 border-t border-white/10 space-y-4">
+              <div className="flex justify-between text-white/50 text-[10px] font-black uppercase tracking-widest">
+                 <span>{t('subtotal') || 'Subtotal'}</span>
+                 <span>{subtotal.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+              </div>
+
+              <div className="flex justify-between text-white/50 text-[10px] font-black uppercase tracking-widest">
+                 <span>{t('shipping') || 'Shipping'}</span>
+                 <span className={shipping === 0 ? "text-emerald-400" : ""}>{shipping === 0 ? (t('free') || 'FREE') : shipping.toLocaleString()}</span>
+              </div>
+              
+              {loyaltyDiscount > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex justify-between text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20"
+                >
+                   <span className="flex items-center gap-2"><Award size={14} /> {t('loyalty_discount') || 'Loyalty Discount'} (10%)</span>
+                   <span>-{loyaltyDiscount.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                </motion.div>
+              )}
+
+              {promoApplied && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex justify-between text-blue-400 text-[10px] font-black uppercase tracking-widest bg-blue-500/10 p-3 rounded-xl border border-blue-500/20"
+                >
+                   <span className="flex items-center gap-2"><Award size={14} /> Promo: SWEETO10</span>
+                   <span>-{promoDiscount.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                </motion.div>
+              )}
+              
+              <div className="flex justify-between items-end pt-6 mt-6 border-t border-white/10">
+                 <span className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">{t('total_to_pay') || 'Total'}</span>
+                 <span className="text-4xl font-black italic tracking-tighter text-white">{grandTotal.toLocaleString()} <span className="text-lg text-blue-500">{settings?.currency || 'FCFA'}</span></span>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE - CHECKOUT FORM (LIGHT) */}
+      <div className="lg:w-[55%] bg-white p-8 lg:p-16 flex items-center justify-center">
+         <div className="w-full max-w-lg">
+            <div className="mb-12">
+               <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">{t('delivery_details') || 'Delivery Details'}</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">{t('where_send_package') || 'Where should we send your package?'}</p>
+            </div>
+
+            {isReturning && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 p-4 bg-emerald-50 rounded-[1.5rem] border border-emerald-100 flex items-center gap-4 shadow-sm"
+              >
+                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shrink-0">
+                  <UserCheck size={20} />
+                </div>
+                <div>
+                  <p className="text-emerald-900 font-black text-[11px] uppercase tracking-wider">Welcome Back VIP!</p>
+                  <p className="text-emerald-600 text-[9px] font-bold uppercase tracking-widest">We recognized your phone number. A 10% discount has been applied!</p>
+                </div>
+              </motion.div>
+            )}
+
+            <form onSubmit={handleCheckout} className="space-y-6">
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('recipient_name') || 'Recipient Name'}</label>
+                 <div className="relative">
+                   <input required name="name" value={formData.name} onChange={handleInputChange} placeholder={t('eg_name') || "Yao Kouassi"} className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all pl-14" />
+                   <User size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" />
+                 </div>
+               </div>
+
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('contact_phone') || 'Contact Phone'}</label>
+                 <div className="relative">
+                   <input required name="phone" value={formData.phone} onChange={handleInputChange} placeholder="07 XX XX XX XX" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all pl-14" />
+                   <Phone size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" />
+                  </div>
+               </div>
+
+               {/* PROMO CODE BOX */}
+               <div className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Promo Code</label>
+                  <div className="flex gap-3">
+                    <input 
+                      value={promoInput} 
+                      onChange={(e) => setPromoInput(e.target.value)} 
+                      placeholder="Enter code (e.g. SWEETO10)" 
+                      disabled={promoApplied}
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50" 
+                    />
+                    <button 
+                      type="button"
+                      onClick={applyPromo}
+                      disabled={!promoInput || promoApplied}
+                      className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 disabled:opacity-30 transition-all"
+                    >
+                      {promoApplied ? 'Applied' : 'Apply'}
+                    </button>
+                  </div>
+                  {promoError && <p className="text-red-500 text-[9px] font-bold mt-2 ml-1 uppercase">{promoError}</p>}
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('city') || 'City'}</label>
+                    <div className="relative">
+                      <select name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer pl-12">
+                        {shippingZones.length === 0 ? (
+                          <>
+                            <option value="Abidjan">Abidjan</option>
+                            <option value="Yamoussoukro">Yamoussoukro</option>
+                            <option value="Bouaké">Bouaké</option>
+                            <option value="San Pédro">San Pédro</option>
+                          </>
+                        ) : shippingZones.map(z => (
+                          <option key={z.id} value={z.name}>{z.name}</option>
+                        ))}
+                      </select>
+                      <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                    </div>
+                  </div>
+                 <div className="space-y-2">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>
+                   <div className="relative">
+                     <input required name="address" value={formData.address} onChange={handleInputChange} placeholder="Cocody, Block 4" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+                     <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                   </div>
+                 </div>
+               </div>
+
+               <div className="mt-10 p-6 rounded-[2rem] bg-blue-50 border border-blue-100 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
+                     <Package size={20} />
+                  </div>
+                  <div>
+                     <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm italic">{t('pay_on_delivery') || 'Pay on Delivery'}</h4>
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{t('payment_collected_doorstep') || 'Payment collected at doorstep'}</p>
+                  </div>
+               </div>
+
+               <motion.button 
+                 type="submit"
+                 disabled={isProcessing}
+                 whileHover={!isProcessing ? { scale: 1.02 } : {}}
+                 whileTap={!isProcessing ? { scale: 0.98 } : {}}
+                 className="w-full mt-8 bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl shadow-slate-900/20 flex items-center justify-center gap-3 hover:bg-blue-600 transition-all disabled:opacity-50"
+               >
+                 {isProcessing ? (
+                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                 ) : (
+                   <>
+                     {t('confirm_order') || 'Confirm Order'}
+                     <ArrowRight size={16} />
+                   </>
+                 )}
+               </motion.button>
+               
+               <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest mt-6 flex items-center justify-center gap-2">
+                  <ShieldCheck size={12} className="text-emerald-500" />
+                  Secure checkout process
+               </p>
+            </form>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+export default CheckoutPage;

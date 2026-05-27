@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@theme {
+  --color-eas-blue: #0066ff;
+  --color-eas-dark: #001a33;
+  --color-eas-light: #f0f7ff;
+  --color-eas-accent: #00c3ff;
+}
+
+:root {
+  --eas-blue: #0066ff;
+  --eas-light: #f0f7ff;
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+  --eas-blue: #3b82f6;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-slate-900 dark:text-slate-100 bg-white dark:bg-[#020617] transition-colors duration-500;
+    font-feature-settings: "cv02", "cv05", "cv11";
+  }
+
+  ::selection {
+    @apply bg-blue-500/30 text-blue-500;
+  }
+}
+
+/* Premium Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-50 dark:bg-slate-950;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-slate-800 rounded-full border-2 border-slate-50 dark:border-slate-950 transition-all;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-blue-500 dark:bg-blue-600;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism Classes */
+.glass-nav {
+  @apply bg-white/70 dark:bg-[#020617]/70 backdrop-blur-2xl border-b border-slate-100 dark:border-white/5 sticky top-0 z-50;
+}
+
+.glass-card {
+  @apply bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-100 dark:border-white/5 shadow-xl dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)];
+}
+
+.glass-input {
+  @apply bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all;
+}
+
+/* Luxury Dark Mode Overrides */
+.dark .bg-white {
+  @apply bg-slate-900/80;
+}
+
+.dark .text-slate-900 {
+  @apply text-white;
+}
+
+.dark .text-slate-600 {
+  @apply text-slate-400;
+}
+
+.dark .text-slate-500 {
+  @apply text-slate-500;
+}
+
+.dark .text-slate-400 {
+  @apply text-slate-500;
+}
+
+.dark .border-slate-100 {
+  @apply border-white/5;
+}
+
+.dark .border-slate-200 {
+  @apply border-white/10;
+}
+
+.dark .bg-slate-50 {
+  @apply bg-slate-900/40;
+}
+
+.dark .bg-slate-100 {
+  @apply bg-slate-800/50;
+}
+
+/* Ambient Glow Utilities */
+.glow-blue {
+  @apply shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)];
+}
+
+.glow-text-blue {
+  text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+/* Custom Scrollbar for sidebars/menus */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-white/10 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-blue-500;
+}

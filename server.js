@@ -1,0 +1,1506 @@
+import express from 'express';
+import cors from 'cors';
+import Database from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js';
+
+// ESM fix for __dirname
+import multer from 'multer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Supabase server-side client for token verification
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseAdmin = (SUPABASE_URL && SUPABASE_ANON_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+if (!supabaseAdmin) {
+  console.warn('⚠️  Supabase credentials not found — admin auth will reject all requests.');
+}
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage });
+
+const app = express();
+const port = 3000;
+
+// ── Supabase Auth Middleware ──────────────────────────────────────
+async function authenticateAdmin(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token format' });
+  }
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Server auth not configured' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+    }
+
+    // Retrieve admin email from SQLite to compare with JWT email
+    let adminEmail = 'admin@sweetohub.com';
+    try {
+      const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_email'").get();
+      if (row) {
+        try {
+          adminEmail = JSON.parse(row.value);
+        } catch (e) {
+          adminEmail = row.value;
+        }
+      }
+    } catch (dbErr) {
+      console.error('Error fetching admin email from database:', dbErr);
+    }
+
+    const adminEmailEnv = process.env.ADMIN_EMAIL;
+    if (user.email !== adminEmail && (!adminEmailEnv || user.email !== adminEmailEnv)) {
+      return res.status(403).json({ error: 'Forbidden: You are not authorized as an admin' });
+    }
+
+    req.admin = user;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Unauthorized: Token verification failed' });
+  }
+}
+
+// Optional: check if request has a valid admin token (non-blocking)
+async function getAdminFromToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ') || !supabaseAdmin) return null;
+  const token = authHeader.split(' ')[1];
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) return null;
+
+    // Retrieve admin email from SQLite to compare with JWT email
+    let adminEmail = 'admin@sweetohub.com';
+    try {
+      const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_email'").get();
+      if (row) {
+        try {
+          adminEmail = JSON.parse(row.value);
+        } catch (e) {
+          adminEmail = row.value;
+        }
+      }
+    } catch (dbErr) {
+      console.error('Error fetching admin email from database:', dbErr);
+    }
+
+    const adminEmailEnv = process.env.ADMIN_EMAIL;
+    if (user.email !== adminEmail && (!adminEmailEnv || user.email !== adminEmailEnv)) return null;
+
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+console.log('Starting server...');
+// Database Setup
+console.log('Initializing database...');
+const db = new Database('shop.db', { verbose: console.log });
+console.log('Database connected.');
+
+// Create tables if they don't exist
+console.log('Creating tables...');
+db.exec(`
+  CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    slug TEXT UNIQUE,
+    parent_id INTEGER,
+    description TEXT,
+    seo_title TEXT,
+    seo_description TEXT,
+    seo_keywords TEXT,
+    image_url TEXT,
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,
+    category TEXT,
+    description TEXT,
+    image_url TEXT,
+    stock INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    is_featured INTEGER DEFAULT 0,
+    is_trending INTEGER DEFAULT 0,
+    is_daily_deal INTEGER DEFAULT 0,
+    is_new_arrival INTEGER DEFAULT 0,
+    colors TEXT DEFAULT '[]',
+    related_products TEXT DEFAULT '[]',
+    additional_images TEXT DEFAULT '[]',
+    discount REAL DEFAULT 0,
+    original_price REAL,
+    smartphones_placement INTEGER DEFAULT 0,
+    home_cinema_placement INTEGER DEFAULT 0,
+    speakers_placement INTEGER DEFAULT 0,
+    refrigerators_placement INTEGER DEFAULT 0,
+    brand_id INTEGER,
+    rating REAL DEFAULT 0,
+    reviews_count INTEGER DEFAULT 0,
+    condition TEXT DEFAULT 'new',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (brand_id) REFERENCES brands(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_name TEXT,
+    customer_contact TEXT,
+    items TEXT, -- JSON array of products sold
+    total REAL,
+    total_items INTEGER DEFAULT 1,
+    status TEXT DEFAULT 'completed',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS brands (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    logo_url TEXT,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS video_ads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    product_id INTEGER,
+    video_url TEXT,
+    image_url TEXT,
+    type TEXT DEFAULT 'video',
+    description TEXT,
+    is_active INTEGER DEFAULT 1,
+    views INTEGER DEFAULT 0,
+    clicks INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS visitor_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip TEXT,
+    user_agent TEXT,
+    page_path TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS agents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    phone TEXT,
+    zone TEXT,
+    status TEXT DEFAULT 'available',
+    rating REAL DEFAULT 5.0,
+    avatar TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS sections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role TEXT NOT NULL,
+    title TEXT,
+    subtitle TEXT,
+    category TEXT DEFAULT 'All',
+    maxProducts INTEGER DEFAULT 8,
+    position INTEGER DEFAULT 0,
+    isActive INTEGER DEFAULT 1,
+    headerStyle TEXT DEFAULT 'modern',
+    headerImage TEXT,
+    isDual INTEGER DEFAULT 0,
+    titleB TEXT,
+    subtitleB TEXT,
+    categoryB TEXT DEFAULT 'All',
+    roleB TEXT,
+    headerStyleB TEXT DEFAULT 'bold',
+    headerImageB TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS shipping_zones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    customer_name TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    comment TEXT,
+    status TEXT DEFAULT 'pending', -- pending, approved, flagged
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+  );
+`);
+console.log('Tables created.');
+
+// Migrations
+console.log('Running migrations...');
+try { db.exec('ALTER TABLE products ADD COLUMN brand_id INTEGER'); } catch (e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN customer_contact TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN items TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN total_items INTEGER DEFAULT 1'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN total_amount REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN tracking_stage TEXT DEFAULT \'placed\''); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN tracking_number TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN eta TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN tracking_note TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE products ADD COLUMN bought_price REAL DEFAULT 0'); } catch (e) {}
+try { db.exec('ALTER TABLE categories ADD COLUMN image_url TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN isDual INTEGER DEFAULT 0'); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN titleB TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN subtitleB TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN categoryB TEXT DEFAULT \'All\''); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN roleB TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN headerStyleB TEXT DEFAULT \'bold\''); } catch (e) {}
+try { db.exec('ALTER TABLE sections ADD COLUMN headerImageB TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE products ADD COLUMN placements TEXT DEFAULT "[]"'); } catch (e) {}
+try { db.exec('ALTER TABLE products ADD COLUMN condition TEXT DEFAULT "new"'); } catch (e) {}
+
+// Visitor tracking migrations
+try { db.exec('ALTER TABLE visitor_log ADD COLUMN country TEXT DEFAULT "Unknown"'); } catch (e) {}
+try { db.exec('ALTER TABLE visitor_log ADD COLUMN event_type TEXT DEFAULT "page_view"'); } catch (e) {}
+try { db.exec('ALTER TABLE visitor_log ADD COLUMN device_id TEXT'); } catch (e) {}
+
+// Seed visitor logs if empty or small to show realistic analytics
+try {
+  const countryCount = db.prepare("SELECT COUNT(*) as count FROM visitor_log WHERE country IS NOT NULL AND country != 'Unknown'").get().count;
+  if (countryCount < 5) {
+    console.log('Seeding countries event data into visitor_log...');
+    const countries = [
+      { code: 'PH', name: 'PH', events: 638, devices: 1, topEvent: 'sale recorded' },
+      { code: 'CI', name: 'CI', events: 64, devices: 3, topEvent: 'sale recorded' },
+      { code: 'PK', name: 'PK', events: 48, devices: 1, topEvent: 'dashboard shown' },
+      { code: 'KE', name: 'KE', events: 42, devices: 1, topEvent: 'sale recorded' },
+      { code: 'CI', name: 'Ivory Coast', events: 41, devices: 6, topEvent: 'dashboard shown' },
+      { code: 'CR', name: 'CR', events: 37, devices: 1, topEvent: 'sale recorded' },
+      { code: 'ZM', name: 'ZM', events: 13, devices: 1, topEvent: 'item added to stock' },
+      { code: 'GH', name: 'GH', events: 12, devices: 2, topEvent: 'dashboard shown' },
+      { code: 'US', name: 'US', events: 3, devices: 1, topEvent: 'dashboard shown' }
+    ];
+
+    const insertLog = db.prepare(`
+      INSERT INTO visitor_log (ip, user_agent, page_path, country, event_type, device_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const now = new Date();
+    
+    countries.forEach(c => {
+      // Generate distinct device IDs
+      const deviceIds = [];
+      for(let d=0; d<c.devices; d++) {
+        deviceIds.push(`dev_sig_${c.code}_${Math.random().toString(36).substr(2, 9)}`);
+      }
+
+      // Insert events
+      for (let e=0; e<c.events; e++) {
+        const deviceId = deviceIds[e % deviceIds.length];
+        const ip = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+        const userAgent = Math.random() > 0.5 
+          ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15' 
+          : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+        
+        const pagePath = e % 3 === 0 ? '/' : (e % 3 === 1 ? '/dashboard' : `/product/${Math.floor(Math.random() * 10) + 1}`);
+        
+        // Event type mix
+        let eventType = c.topEvent;
+        if (Math.random() > 0.7) {
+          eventType = Math.random() > 0.5 ? 'visit storefront' : 'product viewed';
+        }
+
+        // Generate randomized timestamps within the last 7 days to support calendar query
+        const eventTime = new Date(now.getTime() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000));
+        
+        insertLog.run(
+          ip, 
+          userAgent, 
+          pagePath, 
+          c.name, 
+          eventType, 
+          deviceId, 
+          eventTime.toISOString()
+        );
+      }
+    });
+    console.log('Seeded countries event logs successfully.');
+  }
+} catch (err) {
+  console.error('Error seeding visitor logs:', err);
+}
+
+// Initial Seeding
+console.log('Initial check completed.');
+
+const settingsCount = db.prepare('SELECT COUNT(*) as count FROM settings').get().count;
+if (settingsCount === 0) {
+  const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+  insertSetting.run('store_name', 'SWEETO HUB');
+  insertSetting.run('store_email', 'hello@sweeto.com');
+  insertSetting.run('store_phone', '');
+  insertSetting.run('currency', 'FCFA');
+  insertSetting.run('language', 'en');
+  insertSetting.run('tax_rate', '0');
+  insertSetting.run('shipping_fee', '2000');
+  insertSetting.run('admin_pin', '');
+  insertSetting.run('admin_email', 'admin@sweetohub.com');
+  insertSetting.run('admin_key', 'admin123');
+  insertSetting.run('enable_maintenance', 'false');
+  insertSetting.run('hero_layout', 'grid');
+} else {
+  // Ensure all new keys exist even if settings table was already seeded
+  const ensureSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+  ensureSetting.run('store_phone', '');
+  ensureSetting.run('language', 'en');
+  ensureSetting.run('admin_pin', '');
+  ensureSetting.run('admin_email', 'admin@sweetohub.com');
+  ensureSetting.run('admin_key', 'admin123');
+  ensureSetting.run('enable_maintenance', 'false');
+  ensureSetting.run('hero_layout', 'grid');
+  ensureSetting.run('about_story', '');
+  ensureSetting.run('about_mission', '');
+  ensureSetting.run('social_instagram', '');
+  ensureSetting.run('social_facebook', '');
+  ensureSetting.run('social_twitter', '');
+  ensureSetting.run('social_whatsapp', '');
+  ensureSetting.run('loc_address', '');
+  ensureSetting.run('loc_city', 'Abidjan');
+  ensureSetting.run('loc_country', 'Côte d\'Ivoire');
+  ensureSetting.run('loc_hours_weekday', '08:00 – 20:00');
+  ensureSetting.run('loc_hours_sat', '09:00 – 18:00');
+  ensureSetting.run('loc_hours_sun', 'Closed');
+  ensureSetting.run('loc_map_embed', '');
+  ensureSetting.run('policy_privacy', '');
+  ensureSetting.run('policy_terms', '');
+}
+
+// Sync ADMIN_EMAIL environment variable to database settings if provided
+if (process.env.ADMIN_EMAIL) {
+  try {
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('admin_email', ?)").run(process.env.ADMIN_EMAIL);
+    console.log(`📡 Dynamically synced ADMIN_EMAIL env (${process.env.ADMIN_EMAIL}) to settings database.`);
+  } catch (err) {
+    console.error('Failed to sync ADMIN_EMAIL env variable to SQLite database:', err);
+  }
+}
+
+// Seed Sections if empty
+const sectionCount = db.prepare('SELECT COUNT(*) as count FROM sections').get().count;
+if (sectionCount === 0) {
+  console.log('Seeding default sections...');
+  const insertSection = db.prepare(`
+    INSERT INTO sections (role, title, subtitle, position, isActive, headerStyle)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  
+  insertSection.run('hero', 'Main Hero', 'Welcome to Sweeto Hub', 0, 1, 'modern');
+  insertSection.run('video_ad', 'Video Promotions', 'Featured Advertisements', 1, 1, 'modern');
+  insertSection.run('deal_of_the_day', 'Daily Deals', 'Exclusive offers for 24 hours', 2, 1, 'glass');
+  insertSection.run('featured', 'Featured Gear', 'Handpicked products for you', 3, 1, 'minimal');
+  insertSection.run('trending', 'Trending Now', 'Most popular on our network', 4, 1, 'modern');
+}
+
+// Seed mock reviews if empty
+try {
+  const reviewsCount = db.prepare('SELECT COUNT(*) as count FROM reviews').get().count;
+  if (reviewsCount === 0) {
+    const products = db.prepare('SELECT id FROM products LIMIT 3').all();
+    if (products.length > 0) {
+      const insertReview = db.prepare('INSERT INTO reviews (product_id, customer_name, rating, comment, status) VALUES (?, ?, ?, ?, ?)');
+      insertReview.run(products[0].id, 'Alice Johnson', 5, 'Absolutely spectacular! This is premium build quality at its best.', 'approved');
+      insertReview.run(products[0].id, 'David Miller', 4, 'Very good features. Satisfied with the performance, would buy again!', 'approved');
+      if (products[1]) {
+        insertReview.run(products[1].id, 'Kofi Anan', 3, 'Decent enough, but I expected slightly faster logistics.', 'approved');
+      }
+      console.log('Seeded default product reviews.');
+    }
+  }
+} catch (e) {
+  console.error('Failed to seed reviews:', e);
+}
+
+
+// Private Network Access (PNA) preflight middleware
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    if (['.mp4', '.webm', '.ogg', '.mov', '.m4v', '.mp3', '.wav'].includes(ext)) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+    }
+  }
+}));
+console.log('Middleware configured.');
+
+// Auth Login Route — handled entirely by Supabase Auth on the frontend.
+// This endpoint is kept as a health-check / fallback.
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Supabase not configured on server' });
+  }
+  try {
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+    if (error) return res.status(401).json({ error: error.message });
+    return res.json({ success: true, token: data.session.access_token });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Generic Upload Route (Admin only)
+app.post('/api/upload', authenticateAdmin, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  res.json({ imageUrl: `/uploads/${req.file.filename}`, success: true });
+});
+
+// Customer API Routes
+app.get('/api/categories', (req, res) => {
+  const categories = db.prepare('SELECT * FROM categories').all();
+  res.json(categories);
+});
+
+// Sections API
+app.get('/api/sections', (req, res) => {
+  try {
+    const sections = db.prepare('SELECT * FROM sections ORDER BY position ASC, created_at DESC').all();
+    res.json(sections.map(s => ({
+      ...s,
+      isActive: s.isActive === 1,
+      isDual: s.isDual === 1
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/sections', authenticateAdmin, (req, res) => {
+  const { 
+    role, title, subtitle, category, maxProducts, position, isActive, headerStyle, headerImage,
+    isDual, titleB, subtitleB, categoryB, roleB, headerStyleB, headerImageB
+  } = req.body;
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO sections (
+        role, title, subtitle, category, maxProducts, position, isActive, headerStyle, headerImage,
+        isDual, titleB, subtitleB, categoryB, roleB, headerStyleB, headerImageB
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const info = stmt.run(
+      role, title || null, subtitle || null, category || 'All', 
+      maxProducts || 8, position || 0, isActive === false ? 0 : 1,
+      headerStyle || 'modern', headerImage || null,
+      isDual ? 1 : 0, titleB || null, subtitleB || null, categoryB || 'All',
+      roleB || null, headerStyleB || 'bold', headerImageB || null
+    );
+    res.json({ id: info.lastInsertRowid, success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/sections/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  const { 
+    role, title, subtitle, category, maxProducts, position, isActive, headerStyle, headerImage,
+    isDual, titleB, subtitleB, categoryB, roleB, headerStyleB, headerImageB
+  } = req.body;
+  try {
+    const stmt = db.prepare(`
+      UPDATE sections SET 
+        role = ?, title = ?, subtitle = ?, category = ?, 
+        maxProducts = ?, position = ?, isActive = ?,
+        headerStyle = ?, headerImage = ?,
+        isDual = ?, titleB = ?, subtitleB = ?, categoryB = ?, 
+        roleB = ?, headerStyleB = ?, headerImageB = ?
+      WHERE id = ?
+    `);
+    stmt.run(
+      role, title, subtitle, category, 
+      maxProducts, position, isActive === false ? 0 : 1,
+      headerStyle, headerImage,
+      isDual ? 1 : 0, titleB, subtitleB, categoryB, 
+      roleB, headerStyleB, headerImageB,
+      id
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/sections/:id', authenticateAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM sections WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/brands', (req, res) => {
+  const brands = db.prepare('SELECT * FROM brands').all();
+  res.json(brands);
+});
+
+app.get('/api/products', (req, res) => {
+  try {
+    const products = db.prepare(`
+      SELECT p.*, b.name as brand 
+      FROM products p 
+      LEFT JOIN brands b ON p.brand_id = b.id 
+      ORDER BY p.created_at DESC
+    `).all();
+    
+    const formatted = products.map(p => {
+      let colors = [];
+      let related_products = [];
+      let placements = [];
+      let additional_images = [];
+      try { colors = JSON.parse(p.colors || '[]'); } catch(e) {}
+      try { related_products = JSON.parse(p.related_products || '[]'); } catch(e) {}
+      try { placements = JSON.parse(p.placements || '[]'); } catch(e) {}
+      try { additional_images = JSON.parse(p.additional_images || '[]'); } catch(e) {}
+      
+      return {
+        ...p,
+        colors,
+        related_products,
+        placements,
+        additional_images,
+        images: additional_images
+      };
+    });
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
+  }
+});
+
+app.get('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  console.log(`GET /api/products/${id} requested`);
+  try {
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    if (product) {
+      let colors = [];
+      let related_products = [];
+      let placements = [];
+      let additional_images = [];
+      try { colors = JSON.parse(product.colors || '[]'); } catch(e) {}
+      try { related_products = JSON.parse(product.related_products || '[]'); } catch(e) {}
+      try { placements = JSON.parse(product.placements || '[]'); } catch(e) {}
+      try { additional_images = JSON.parse(product.additional_images || '[]'); } catch(e) {}
+      
+      res.json({
+        ...product,
+        colors,
+        related_products,
+        placements,
+        additional_images,
+        images: additional_images
+      });
+    } else {
+      console.log(`Product ${id} not found in DB`);
+      res.status(404).json({ error: 'Product not found' });
+    }
+  } catch (err) {
+    console.error(`Error fetching product ${id}:`, err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/orders', authenticateAdmin, (req, res) => {
+  try {
+    const orders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/orders/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404).json({ error: 'Order not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/orders', (req, res) => {
+  const { 
+    customer_name, customer_contact, items, 
+    total, total_items, status 
+  } = req.body;
+  
+  try {
+    const info = db.prepare(`
+      INSERT INTO orders (
+        customer_name, customer_contact, items, 
+        total, total_items, status
+      ) VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      customer_name, customer_contact || null, items || '[]', 
+      total, total_items || 1, status || 'completed'
+    );
+    res.json({ id: info.lastInsertRowid, success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/settings is defined later, this is a placeholder removed to prevent duplication
+
+app.get('/api/video-ads', (req, res) => {
+  try {
+    const ads = db.prepare('SELECT * FROM video_ads WHERE is_active = 1 ORDER BY created_at DESC').all();
+    res.json(ads.map(ad => ({
+      ...ad,
+      isActive: ad.is_active === 1,
+      productId: ad.product_id,
+      videoUrl: ad.video_url,
+      imageUrl: ad.image_url,
+      views: ad.views || 0,
+      clicks: ad.clicks || 0
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/video-ads/:id', authenticateAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM video_ads WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/video-ads/:id', authenticateAdmin, upload.single('file'), (req, res) => {
+  const { id } = req.params;
+  const { title, product_id, description, type, is_active } = req.body;
+  let file_url = req.body.file_url;
+
+  if (req.file) {
+    file_url = `/uploads/${req.file.filename}`;
+  }
+
+  try {
+    const active_val = (is_active === 'true' || is_active === 1 || is_active === true) ? 1 : 0;
+    
+    // Determine which URL to update based on type
+    const stmt = db.prepare(`
+      UPDATE video_ads SET 
+        title = ?, product_id = ?, description = ?, type = ?, 
+        video_url = CASE WHEN ? = 'video' AND ? IS NOT NULL THEN ? ELSE video_url END,
+        image_url = CASE WHEN ? = 'image' AND ? IS NOT NULL THEN ? ELSE image_url END,
+        is_active = ?
+      WHERE id = ?
+    `);
+    
+    stmt.run(
+      title, product_id || null, description || null, type, 
+      type, file_url, file_url,
+      type, file_url, file_url,
+      active_val, id
+    );
+    
+    res.json({ success: true });
+  } catch (err) { 
+    console.error('Error updating ad:', err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+app.post('/api/video-ads/:id/track-view', (req, res) => {
+  try {
+    db.prepare('UPDATE video_ads SET views = views + 1 WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/video-ads/:id/track-click', (req, res) => {
+  try {
+    db.prepare('UPDATE video_ads SET clicks = clicks + 1 WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Create Video Ad
+app.post('/api/video-ads', authenticateAdmin, upload.single('file'), (req, res) => {
+  const { title, product_id, description, type } = req.body;
+  let file_url = req.body.file_url; // Fallback if no file uploaded
+
+  if (req.file) {
+    file_url = `/uploads/${req.file.filename}`;
+  }
+
+  try {
+    const stmt = db.prepare('INSERT INTO video_ads (title, product_id, video_url, image_url, type, description) VALUES (?, ?, ?, ?, ?, ?)');
+    // If it's a video type, put file in video_url. If image, put in image_url.
+    const video_path = type === 'video' ? file_url : null;
+    const image_path = type === 'image' ? file_url : null;
+    
+    const info = stmt.run(title, product_id || null, video_path, image_path, type || 'video', description || null);
+    res.json({ id: info.lastInsertRowid, success: true });
+  } catch (err) { 
+    console.error('Error creating video ad:', err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+// Create Category
+app.post('/api/categories', authenticateAdmin, (req, res) => {
+  const { id, name, slug, description, image_url } = req.body;
+  console.log('Adding category:', req.body);
+  try {
+    let info;
+    if (id) {
+      const stmt = db.prepare('INSERT INTO categories (id, name, slug, description, image_url) VALUES (?, ?, ?, ?, ?)');
+      info = stmt.run(id, name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null);
+    } else {
+      const stmt = db.prepare('INSERT INTO categories (name, slug, description, image_url) VALUES (?, ?, ?, ?)');
+      info = stmt.run(name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null);
+    }
+    console.log('Category added:', info);
+    res.json({ id: id || info.lastInsertRowid, success: true });
+  } catch (err) { 
+    console.error('Error adding category:', err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+app.delete('/api/categories/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Create Brand
+app.post('/api/brands', authenticateAdmin, (req, res) => {
+  const { id, name, logo_url, description } = req.body;
+  console.log('Adding brand:', req.body);
+  try {
+    let info;
+    if (id) {
+      const stmt = db.prepare('INSERT INTO brands (id, name, logo_url, description) VALUES (?, ?, ?, ?)');
+      info = stmt.run(id, name, logo_url || null, description || null);
+    } else {
+      const stmt = db.prepare('INSERT INTO brands (name, logo_url, description) VALUES (?, ?, ?)');
+      info = stmt.run(name, logo_url || null, description || null);
+    }
+    console.log('Brand added:', info);
+    res.json({ id: id || info.lastInsertRowid, success: true });
+  } catch (err) { 
+    console.error('Error adding brand:', err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+app.delete('/api/brands/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM brands WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Create Product
+app.post('/api/products', authenticateAdmin, upload.single('image'), (req, res) => {
+  console.log('--- ADD PRODUCT REQUEST ---');
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
+
+  const { 
+    name, price, category, brand, image_url, stock, description,
+    original_price, discount, colors, bought_price,
+    is_featured, is_trending, is_daily_deal, is_new_arrival,
+    smartphones_placement, home_cinema_placement, speakers_placement, refrigerators_placement,
+    placements, condition, additional_images
+  } = req.body;
+
+  let final_image_url = image_url;
+  if (req.file) {
+    final_image_url = `/uploads/${req.file.filename}`;
+  }
+
+  console.log('Adding product with image:', final_image_url);
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO products (
+        name, price, category, brand_id, image_url, stock, description,
+        original_price, discount, colors, bought_price,
+        is_featured, is_trending, is_daily_deal, is_new_arrival,
+        smartphones_placement, home_cinema_placement, speakers_placement, refrigerators_placement,
+        placements, condition, additional_images
+      ) 
+      VALUES (?, ?, ?, (SELECT id FROM brands WHERE name = ?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    
+    const flags = {
+      is_featured: (is_featured === 'true' || is_featured === 1 || is_featured === true) ? 1 : 0,
+      is_trending: (is_trending === 'true' || is_trending === 1 || is_trending === true) ? 1 : 0,
+      is_daily_deal: (is_daily_deal === 'true' || is_daily_deal === 1 || is_daily_deal === true) ? 1 : 0,
+      is_new_arrival: (is_new_arrival === 'true' || is_new_arrival === 1 || is_new_arrival === true) ? 1 : 0,
+      smartphones_placement: (smartphones_placement === 'true' || smartphones_placement === 1 || smartphones_placement === true) ? 1 : 0,
+      home_cinema_placement: (home_cinema_placement === 'true' || home_cinema_placement === 1 || home_cinema_placement === true) ? 1 : 0,
+      speakers_placement: (speakers_placement === 'true' || speakers_placement === 1 || speakers_placement === true) ? 1 : 0,
+      refrigerators_placement: (refrigerators_placement === 'true' || refrigerators_placement === 1 || refrigerators_placement === true) ? 1 : 0
+    };
+    
+    const info = stmt.run(
+      name, 
+      price || 0, 
+      category, 
+      brand || null, 
+      final_image_url || null, 
+      stock || 0, 
+      description || null,
+      original_price || null,
+      discount || 0,
+      colors || '[]',
+      bought_price || 0,
+      flags.is_featured,
+      flags.is_trending,
+      flags.is_daily_deal,
+      flags.is_new_arrival,
+      flags.smartphones_placement,
+      flags.home_cinema_placement,
+      flags.speakers_placement,
+      flags.refrigerators_placement,
+      placements || '[]',
+      condition || 'new',
+      additional_images || '[]'
+    );
+    
+    console.log('Product added successfully:', info);
+    res.json({ id: info.lastInsertRowid, success: true });
+  } catch (err) { 
+    console.error('Error adding product:', err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+app.delete('/api/products/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  console.log(`DELETE /api/products/${id} requested`);
+  try {
+    const result = db.prepare('DELETE FROM products WHERE id = ?').run(id);
+    if (result.changes === 0) return res.status(404).json({ error: 'Product not found' });
+    console.log(`Product ${id} deleted successfully`);
+    res.json({ success: true });
+  } catch (err) { 
+    console.error(`Error deleting product ${id}:`, err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+app.put('/api/products/:id', authenticateAdmin, upload.single('image'), (req, res) => {
+  const { id } = req.params;
+  console.log(`PUT /api/products/${id} requested`);
+  const { 
+    name, price, category, brand, stock, description, original_price, discount, colors, bought_price, 
+    is_featured, is_trending, is_daily_deal, is_new_arrival,
+    smartphones_placement, home_cinema_placement, speakers_placement, refrigerators_placement,
+    placements, condition, additional_images
+  } = req.body;
+  let final_image_url = req.body.image_url;
+
+  if (req.file) {
+    final_image_url = `/uploads/${req.file.filename}`;
+  }
+
+  try {
+    const flags = {
+      is_featured: (is_featured === 'true' || is_featured === 1 || is_featured === true) ? 1 : 0,
+      is_trending: (is_trending === 'true' || is_trending === 1 || is_trending === true) ? 1 : 0,
+      is_daily_deal: (is_daily_deal === 'true' || is_daily_deal === 1 || is_daily_deal === true) ? 1 : 0,
+      is_new_arrival: (is_new_arrival === 'true' || is_new_arrival === 1 || is_new_arrival === true) ? 1 : 0,
+      smartphones_placement: (smartphones_placement === 'true' || smartphones_placement === 1 || smartphones_placement === true) ? 1 : 0,
+      home_cinema_placement: (home_cinema_placement === 'true' || home_cinema_placement === 1 || home_cinema_placement === true) ? 1 : 0,
+      speakers_placement: (speakers_placement === 'true' || speakers_placement === 1 || speakers_placement === true) ? 1 : 0,
+      refrigerators_placement: (refrigerators_placement === 'true' || refrigerators_placement === 1 || refrigerators_placement === true) ? 1 : 0
+    };
+
+    const stmt = db.prepare(`
+      UPDATE products SET 
+        name = ?, price = ?, category = ?, brand_id = (SELECT id FROM brands WHERE name = ?), 
+        image_url = ?, stock = ?, description = ?, original_price = ?, discount = ?, colors = ?,
+        bought_price = ?, is_featured = ?, is_trending = ?, is_daily_deal = ?, is_new_arrival = ?,
+        smartphones_placement = ?, home_cinema_placement = ?, speakers_placement = ?, refrigerators_placement = ?,
+        placements = ?, condition = ?, additional_images = ?
+      WHERE id = ?
+    `);
+    
+    const result = stmt.run(
+      name, price, category, brand, final_image_url, stock, description, original_price, discount, colors, bought_price || 0, 
+      flags.is_featured, flags.is_trending, flags.is_daily_deal, flags.is_new_arrival,
+      flags.smartphones_placement, flags.home_cinema_placement, flags.speakers_placement, flags.refrigerators_placement,
+      placements || '[]',
+      condition || 'new',
+      additional_images || '[]',
+      id
+    );
+    if (result.changes === 0) return res.status(404).json({ error: 'Product not found' });
+    console.log(`Product ${id} updated successfully`);
+    res.json({ success: true });
+  } catch (err) { 
+    console.error(`Error updating product ${id}:`, err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+// Direct Product Stock/Price Quick Update Endpoint
+app.patch('/api/products/:id/stock', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  const { stock, price, bought_price } = req.body;
+  try {
+    const sets = [];
+    const params = [];
+    if (stock !== undefined) { sets.push('stock = ?'); params.push(Number(stock)); }
+    if (price !== undefined) { sets.push('price = ?'); params.push(Number(price)); }
+    if (bought_price !== undefined) { sets.push('bought_price = ?'); params.push(Number(bought_price)); }
+    
+    if (sets.length === 0) return res.status(400).json({ error: 'No fields to update' });
+    params.push(id);
+    
+    const stmt = db.prepare(`UPDATE products SET ${sets.join(', ')} WHERE id = ?`);
+    const result = stmt.run(...params);
+    if (result.changes === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/categories/:id', authenticateAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/categories/:id', authenticateAdmin, (req, res) => {
+  const { name, description, image_url } = req.body;
+  try {
+    db.prepare('UPDATE categories SET name = ?, description = ?, image_url = ? WHERE id = ?').run(name, description, image_url, req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/brands/:id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM brands WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/brands/:id', authenticateAdmin, (req, res) => {
+  const { name, logo_url, description } = req.body;
+  try {
+    db.prepare('UPDATE brands SET name = ?, logo_url = ?, description = ? WHERE id = ?').run(name, logo_url, description, req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Update order status/tracking
+app.patch('/api/orders/:id/status', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  const { tracking_stage, tracking_number, eta, tracking_note, status } = req.body;
+  
+  try {
+    const sets = [];
+    const params = [];
+    
+    if (tracking_stage !== undefined) { sets.push('tracking_stage = ?'); params.push(tracking_stage); }
+    if (tracking_number !== undefined) { sets.push('tracking_number = ?'); params.push(tracking_number); }
+    if (eta !== undefined) { sets.push('eta = ?'); params.push(eta); }
+    if (tracking_note !== undefined) { sets.push('tracking_note = ?'); params.push(tracking_note); }
+    if (status !== undefined) { sets.push('status = ?'); params.push(status); }
+    
+    if (sets.length === 0) return res.status(400).json({ error: 'No fields to update' });
+    
+    params.push(id);
+    const stmt = db.prepare(`UPDATE orders SET ${sets.join(', ')} WHERE id = ?`);
+    const result = stmt.run(...params);
+    
+    if (result.changes === 0) return res.status(404).json({ error: 'Order not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/stats', authenticateAdmin, (req, res) => {
+  try {
+    const totalRevenue = db.prepare('SELECT SUM(total) as total FROM orders').get().total || 0;
+    const orderCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count;
+    const visitorCount = db.prepare('SELECT COUNT(*) as count FROM visitor_log').get().count;
+    const productCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count;
+    
+    // Get sales trend (last 7 days)
+    const salesTrend = db.prepare(`
+      SELECT date(created_at) as date, SUM(total) as revenue, COUNT(*) as count 
+      FROM orders 
+      WHERE created_at >= date('now', '-7 days')
+      GROUP BY date(created_at)
+      ORDER BY date
+    `).all();
+
+    res.json({
+      totalRevenue,
+      orderCount,
+      visitorCount,
+      productCount,
+      salesTrend
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delivery Agents API
+app.get('/api/agents', authenticateAdmin, (req, res) => {
+  try {
+    const agents = db.prepare('SELECT * FROM agents').all();
+    res.json(agents);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/agents', authenticateAdmin, (req, res) => {
+  const { name, phone, zone, avatar } = req.body;
+  try {
+    const stmt = db.prepare('INSERT INTO agents (name, phone, zone, avatar) VALUES (?, ?, ?, ?)');
+    const info = stmt.run(name, phone, zone, avatar || `https://ui-avatars.com/api/?name=${name}&background=0f172a&color=fff`);
+    res.json({ id: info.lastInsertRowid });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.patch('/api/agents/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  const { status, zone, phone } = req.body;
+  try {
+    const sets = [];
+    const params = [];
+    if (status) { sets.push('status = ?'); params.push(status); }
+    if (zone) { sets.push('zone = ?'); params.push(zone); }
+    if (phone) { sets.push('phone = ?'); params.push(phone); }
+    params.push(id);
+    db.prepare(`UPDATE agents SET ${sets.join(', ')} WHERE id = ?`).run(...params);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/agents/:id', authenticateAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM agents WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Shipping Zones API
+app.get('/api/shipping_zones', (req, res) => {
+  try {
+    const zones = db.prepare('SELECT * FROM shipping_zones ORDER BY name ASC').all();
+    res.json(zones);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/shipping_zones', authenticateAdmin, (req, res) => {
+  const { name, price } = req.body;
+  try {
+    const stmt = db.prepare('INSERT INTO shipping_zones (name, price) VALUES (?, ?)');
+    const info = stmt.run(name, price);
+    res.json({ id: info.lastInsertRowid, name, price, success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/shipping_zones/:id', authenticateAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM shipping_zones WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Generic Upload Endpoint
+app.post('/api/upload', authenticateAdmin, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  res.json({ url: `/uploads/${req.file.filename}`, success: true });
+});
+
+// Settings API — filters sensitive keys for unauthenticated visitors
+const SENSITIVE_SETTINGS_KEYS = ['admin_key', 'admin_pin', 'admin_password', 'admin_email'];
+
+app.get('/api/settings', async (req, res) => {
+  try {
+    const settings = db.prepare('SELECT * FROM settings').all();
+    const config = {};
+    settings.forEach(s => {
+      try { config[s.key] = JSON.parse(s.value); } catch (e) { config[s.key] = s.value; }
+    });
+
+    // Check if request is from an authenticated admin
+    const admin = await getAdminFromToken(req);
+    if (!admin) {
+      // Remove sensitive keys for public visitors
+      SENSITIVE_SETTINGS_KEYS.forEach(k => delete config[k]);
+    }
+
+    res.json(config);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/settings', authenticateAdmin, (req, res) => {
+  const config = req.body;
+  try {
+    const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+    Object.entries(config).forEach(([key, value]) => {
+      const finalValue = (typeof value === 'object' && value !== null) 
+        ? JSON.stringify(value) 
+        : String(value);
+      upsert.run(key, finalValue);
+    });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/settings', authenticateAdmin, (req, res) => {
+  const config = req.body;
+  try {
+    const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+    Object.entries(config).forEach(([key, value]) => {
+      const finalValue = (typeof value === 'object' && value !== null) 
+        ? JSON.stringify(value) 
+        : String(value);
+      upsert.run(key, finalValue);
+    });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/track-visit', (req, res) => {
+  const { page_path, country, event_type, device_id } = req.body;
+  const ip = req.ip;
+  const user_agent = req.get('User-Agent');
+  
+  try {
+    db.prepare('INSERT INTO visitor_log (ip, user_agent, page_path, country, event_type, device_id) VALUES (?, ?, ?, ?, ?, ?)').run(
+      ip, 
+      user_agent, 
+      page_path, 
+      country || 'Unknown', 
+      event_type || 'page_view', 
+      device_id || `dev_sig_${ip.replace(/[^a-zA-Z0-9]/g, '')}`
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics', authenticateAdmin, (req, res) => {
+  try {
+    // 1. Core traffic metrics
+    const totalViews = db.prepare('SELECT COUNT(*) as count FROM visitor_log').get().count;
+    const uniqueIPs = db.prepare('SELECT COUNT(DISTINCT COALESCE(device_id, ip)) as count FROM visitor_log').get().count;
+    
+    // 2. Sales metrics
+    const totalOrders = db.prepare('SELECT COUNT(*) as count FROM orders').get().count;
+    const completedOrders = db.prepare("SELECT COUNT(*) as count, SUM(total) as revenue FROM orders WHERE status = 'completed'").get();
+    const completedCount = completedOrders.count || 0;
+    const totalRevenue = completedOrders.revenue || 0;
+    
+    // Conversion Rate
+    const conversionRate = uniqueIPs > 0 ? ((completedCount / uniqueIPs) * 100).toFixed(2) : 0;
+    
+    // 3. Traffic by page path
+    const pageViews = db.prepare(`
+      SELECT page_path, COUNT(*) as count 
+      FROM visitor_log 
+      GROUP BY page_path 
+      ORDER BY count DESC 
+      LIMIT 10
+    `).all();
+    
+    // 4. Device detection using basic user_agent matching
+    const logs = db.prepare('SELECT user_agent FROM visitor_log').all();
+    let mobileCount = 0;
+    let desktopCount = 0;
+    let chromeCount = 0;
+    let safariCount = 0;
+    let firefoxCount = 0;
+    let edgeCount = 0;
+    
+    logs.forEach(l => {
+      const ua = (l.user_agent || '').toLowerCase();
+      if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+        mobileCount++;
+      } else {
+        desktopCount++;
+      }
+      
+      if (ua.includes('edg')) edgeCount++;
+      else if (ua.includes('firefox')) firefoxCount++;
+      else if (ua.includes('chrome')) chromeCount++;
+      else if (ua.includes('safari')) safariCount++;
+    });
+    
+    const devices = {
+      mobile: mobileCount,
+      desktop: desktopCount
+    };
+    
+    const browsers = {
+      Chrome: chromeCount,
+      Safari: safariCount,
+      Firefox: firefoxCount,
+      Edge: edgeCount,
+      Other: logs.length - (chromeCount + safariCount + firefoxCount + edgeCount)
+    };
+
+    // 5. Recent visitor logs
+    const recentLogs = db.prepare(`
+      SELECT id, ip, user_agent, page_path, country, event_type, created_at 
+      FROM visitor_log 
+      ORDER BY created_at DESC 
+      LIMIT 50
+    `).all();
+
+    // 6. 7-day visit trend
+    const trend = db.prepare(`
+      SELECT DATE(created_at) as date, COUNT(*) as count 
+      FROM visitor_log 
+      WHERE created_at >= DATE('now', '-7 days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).all();
+    
+    // 7. 7-day sales trend
+    const salesTrend = db.prepare(`
+      SELECT DATE(created_at) as date, SUM(total) as total, COUNT(*) as count 
+      FROM orders 
+      WHERE status = 'completed' AND created_at >= DATE('now', '-7 days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).all();
+
+    // 8. Countries breakdown analytics dataset
+    const countriesBreakdown = db.prepare(`
+      SELECT 
+        country, 
+        COUNT(*) as events, 
+        COUNT(DISTINCT COALESCE(device_id, ip)) as unique_devices,
+        MAX(created_at) as last_active,
+        (
+          SELECT event_type 
+          FROM visitor_log v2 
+          WHERE v2.country = visitor_log.country 
+          GROUP BY event_type 
+          ORDER BY COUNT(*) DESC 
+          LIMIT 1
+        ) as top_event
+      FROM visitor_log 
+      WHERE country IS NOT NULL AND country != 'Unknown'
+      GROUP BY country 
+      ORDER BY events DESC
+    `).all();
+
+    // 9. Most Viewed Products ranking
+    const topProductsRaw = db.prepare(`
+      SELECT page_path, COUNT(*) as views 
+      FROM visitor_log 
+      WHERE event_type = 'product viewed' OR page_path LIKE '/product/%'
+      GROUP BY page_path 
+      ORDER BY views DESC 
+      LIMIT 6
+    `).all();
+    
+    const topViewedProducts = topProductsRaw.map(r => {
+      const parts = r.page_path.split('/');
+      const productId = parseInt(parts[parts.length - 1]);
+      if (isNaN(productId)) return null;
+      const product = db.prepare('SELECT name, image_url, price FROM products WHERE id = ?').get(productId);
+      if (!product) return null;
+      return {
+        id: productId,
+        name: product.name,
+        image: product.image_url,
+        price: product.price,
+        views: r.views
+      };
+    }).filter(Boolean);
+
+    res.json({
+      summary: {
+        totalViews,
+        uniqueIPs,
+        totalOrders,
+        completedCount,
+        totalRevenue,
+        conversionRate
+      },
+      pageViews,
+      devices,
+      browsers,
+      trend,
+      salesTrend,
+      recentLogs,
+      countriesBreakdown,
+      topViewedProducts
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Duplicate analytics route removed — first definition at line ~596 is used
+// Product Reviews API Endpoints
+app.get('/api/reviews', (req, res) => {
+  try {
+    const reviews = db.prepare(`
+      SELECT r.*, p.name as product_name, p.image_url as product_image 
+      FROM reviews r 
+      LEFT JOIN products p ON r.product_id = p.id 
+      ORDER BY r.created_at DESC
+    `).all();
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/reviews', (req, res) => {
+  const { product_id, customer_name, rating, comment } = req.body;
+  try {
+    const info = db.prepare(`
+      INSERT INTO reviews (product_id, customer_name, rating, comment, status) 
+      VALUES (?, ?, ?, ?, 'approved')
+    `).run(product_id, customer_name, rating, comment || null);
+    
+    // Update product rating and reviews_count
+    const stats = db.prepare('SELECT COUNT(*) as count, AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND status = \'approved\'').get(product_id);
+    db.prepare('UPDATE products SET reviews_count = ?, rating = ? WHERE id = ?').run(stats.count, stats.avg_rating || 0, product_id);
+    
+    res.json({ id: info.lastInsertRowid, success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/reviews/:id/status', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  try {
+    db.prepare('UPDATE reviews SET status = ? WHERE id = ?').run(status, id);
+    
+    // Get product ID for this review to update global product averages
+    const review = db.prepare('SELECT product_id FROM reviews WHERE id = ?').get(id);
+    if (review) {
+      const stats = db.prepare('SELECT COUNT(*) as count, AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND status = \'approved\'').get(review.product_id);
+      db.prepare('UPDATE products SET reviews_count = ?, rating = ? WHERE id = ?').run(stats.count, stats.avg_rating || 0, review.product_id);
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/reviews/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  try {
+    const review = db.prepare('SELECT product_id FROM reviews WHERE id = ?').get(id);
+    db.prepare('DELETE FROM reviews WHERE id = ?').run(id);
+    
+    if (review) {
+      const stats = db.prepare('SELECT COUNT(*) as count, AVG(rating) as avg_rating FROM reviews WHERE product_id = ? AND status = \'approved\'').get(review.product_id);
+      db.prepare('UPDATE products SET reviews_count = ?, rating = ? WHERE id = ?').run(stats.count, stats.avg_rating || 0, review.product_id);
+    }
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+// Catch-all for 404s
+app.use((req, res) => {
+  console.log(`[404 NOT FOUND] ${req.method} ${req.url}`);
+  res.status(404).json({ error: 'Route not found', method: req.method, url: req.url });
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`EAS Local Server running at http://localhost:${port}`);
+  
+  // Keep-alive / Heartbeat
+  setInterval(() => {
+    console.log(`Heartbeat: ${new Date().toISOString()} - Memory: ${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`);
+  }, 10000);
+});
