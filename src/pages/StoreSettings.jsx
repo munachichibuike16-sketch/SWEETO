@@ -82,7 +82,7 @@ const StoreSettings = () => {
     storeAbout: '',
     currency: 'FCFA',
     language: 'en',
-    admin_key: 'admin123'
+    admin_key: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -118,7 +118,7 @@ const StoreSettings = () => {
         storeAbout: settings.storeAbout || '',
         currency: settings.currency || 'FCFA',
         language: settings.language || 'en',
-        admin_key: settings.admin_key || 'admin123'
+        admin_key: settings.admin_key || ''
       });
     }
   }, [settings, isDirty]);
