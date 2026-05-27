@@ -15,8 +15,6 @@ const AdminLogin = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Removed auto-population of email field to prevent leaking admin_email to visitors
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -109,7 +107,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
               <input
                 type="email"
                 required
-                placeholder="admin@yourdomain.com"
+                placeholder="Enter admin email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-14 pr-6 py-5 bg-transparent outline-none font-bold text-slate-100 text-xs tracking-wide placeholder:text-slate-700"
