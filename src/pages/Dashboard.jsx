@@ -67,20 +67,25 @@ const Dashboard = () => {
     return () => window.removeEventListener('admin-unauthorized', handleUnauthorized);
   }, []);
 
-  // Listen for force logout broadcasts from other devices
+  // Listen for logout signals from DB
   React.useEffect(() => {
     if (!isAdminAuthenticated) return;
-    const channel = supabase.channel('admin_security');
-    channel.on('broadcast', { event: 'logout_force' }, (payload) => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session && session.id !== payload.exceptSessionId) {
-          supabase.auth.signOut().then(() => {
+    
+    const channel = supabase
+      .channel('admin_signals_channel')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_signals' }, async (payload) => {
+        const signal = payload.new;
+        if (signal.signal_type === 'logout') {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.id !== signal.except_session_id) {
+            await supabase.auth.signOut();
             sessionStorage.clear();
             window.location.reload();
-          });
+          }
         }
-      });
-    }).subscribe();
+      })
+      .subscribe();
+
     return () => { supabase.removeChannel(channel); };
   }, [isAdminAuthenticated]);
 
@@ -194,20 +199,16 @@ const Dashboard = () => {
             return;
           }
 
+          // Invalidate other sessions on Supabase
           await supabase.auth.signOut({ scope: 'others' });
           
-          const channel = supabase.channel('admin_security');
-          channel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-              await channel.send({
-                type: 'broadcast',
-                event: 'logout_force',
-                payload: { exceptSessionId: session.id }
-              });
-              showToast('Other devices logged out! 🛡️', 'success');
-              supabase.removeChannel(channel);
-            }
+          // Insert signal into DB - other devices are listening for this
+          await supabase.from('admin_signals').insert({
+            signal_type: 'logout',
+            except_session_id: session.id
           });
+          
+          showToast('Other devices logged out! 🛡️', 'success');
         } catch (err) {
           showToast('Failed: ' + err.message, 'error');
         }
