@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  X, Box, Sparkles, ChevronRight, 
+  X, Box, Sparkles, ChevronRight, Globe,
   Smartphone, Laptop, Headphones, Watch, Gamepad2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,8 +14,23 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
   const { isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('filter'); // Default to Categories tab like the screenshot
   const { categories, settings } = useStore();
-  const { t, t_smart, isRTL } = useLanguage();
+  const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [isLangExpanded, setIsLangExpanded] = useState(false);
+
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
+    { code: 'es', name: 'Español' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'pt', name: 'Português' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'zh', name: '中文' },
+    { code: 'ja', name: '日本語' },
+    { code: 'hi', name: 'हिन्दी' },
+    { code: 'ru', name: 'Русский' }
+  ];
 
   useEffect(() => {
     if (isOpen && !embedded) {
@@ -259,6 +274,59 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                         </div>
                       </div>
                     ))}
+
+                    {/* Regional Language Selector Item */}
+                    <div className="flex flex-col bg-white dark:bg-slate-900">
+                      <div className="flex items-stretch justify-between min-h-[52px] border-b border-slate-100 dark:border-slate-800">
+                        <button
+                          onClick={() => setIsLangExpanded(!isLangExpanded)}
+                          className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-red-650 transition-colors cursor-pointer flex items-center gap-2"
+                        >
+                          <Globe size={14} className="text-eas-blue animate-pulse" />
+                          {t('regional_language') || 'Language'} ({lang.toUpperCase()})
+                        </button>
+                        <button
+                          onClick={() => setIsLangExpanded(!isLangExpanded)}
+                          className={`w-12 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                            isLangExpanded 
+                              ? 'bg-red-600 text-white border-l-red-600 shadow-inner' 
+                              : 'text-slate-400 dark:text-slate-500 hover:text-slate-850 dark:hover:text-white'
+                          }`}
+                        >
+                          <ChevronRight className={`w-4 h-4 stroke-[3.5] transition-transform duration-300 ${isLangExpanded ? 'rotate-90' : ''}`} />
+                        </button>
+                      </div>
+
+                      {/* Language Options 2-Column Grid */}
+                      <AnimatePresence initial={false}>
+                        {isLangExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                            className="overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 grid grid-cols-2 gap-2 p-4 border-b border-slate-100 dark:border-slate-800"
+                          >
+                            {languages.map((language) => (
+                              <button
+                                key={language.code}
+                                onClick={() => {
+                                  changeLanguage(language.code);
+                                  onClose();
+                                }}
+                                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center transition-all cursor-pointer ${
+                                  lang === language.code
+                                    ? 'bg-eas-blue text-white shadow-lg shadow-eas-blue/20'
+                                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800/80 hover:border-eas-blue hover:text-eas-blue'
+                                }`}
+                              >
+                                {language.code} - {language.name}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

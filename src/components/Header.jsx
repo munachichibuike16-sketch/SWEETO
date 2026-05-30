@@ -23,12 +23,14 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isLangOpenMobile, setIsLangOpenMobile] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const isWishlistPage = location.pathname === '/wishlist';
   const notifRef = useRef(null);
   const langRef = useRef(null);
+  const langRefMobile = useRef(null);
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -66,6 +68,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
       }
       if (langRef.current && !langRef.current.contains(event.target)) {
         setIsLangOpen(false);
+      }
+      if (langRefMobile.current && !langRefMobile.current.contains(event.target)) {
+        setIsLangOpenMobile(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -482,12 +487,55 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
+            {/* Mobile Language Selector */}
+            <div className="relative" ref={langRefMobile}>
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsLangOpenMobile(!isLangOpenMobile)}
+                className="p-3 text-slate-650 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center cursor-pointer hover:text-eas-blue transition-colors"
+                title={t('language') || 'Language'}
+              >
+                <Globe size={20} className="text-eas-blue animate-pulse" />
+              </motion.button>
+              
+              <AnimatePresence>
+                {isLangOpenMobile && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className={`absolute top-full ${isRTL ? 'start-0' : 'end-0'} mt-2 w-36 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]`}
+                  >
+                    <div className="max-h-[220px] overflow-y-auto scrollbar-hide py-1.5">
+                      {languages.map(language => (
+                        <button
+                          key={language.code}
+                          onClick={() => {
+                            handleLanguageChange(language.code);
+                            setIsLangOpenMobile(false);
+                          }}
+                          className={`w-full text-start px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                            lang === language.code 
+                              ? 'bg-eas-blue/10 text-eas-blue dark:bg-eas-blue/20' 
+                              : 'text-slate-650 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <span className="uppercase tracking-widest me-2 opacity-50">{language.code}</span>
+                          {language.name}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
               <Search size={20} />
             </button>
             <div 
               onClick={onCartClick}
-              className="relative p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10"
+              className="relative p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10 cursor-pointer"
             >
               <ShoppingCart size={20} />
               {cartCount > 0 && <span className="absolute -top-1 -end-1 bg-eas-blue text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-black">{cartCount}</span>}
