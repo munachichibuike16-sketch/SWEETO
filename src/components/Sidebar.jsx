@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { playSound } from '../utils/sound';
 
 const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded = false, products = [] }) => {
   const navigate = useNavigate();
@@ -190,7 +191,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             {/* Custom Tab Header (Stretches full width) */}
             <div className="w-full h-14 shrink-0 bg-[#f5f5f5] dark:bg-slate-800 flex items-stretch border-b border-slate-200 dark:border-slate-700 relative z-10">
               <button 
-                onClick={() => setActiveTab('filter')}
+                onClick={() => { playSound('click'); setActiveTab('filter'); }}
                 className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'filter' 
                     ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
@@ -200,7 +201,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                 {t('categories') || 'Categories'}
               </button>
               <button 
-                onClick={() => setActiveTab('brands')}
+                onClick={() => { playSound('click'); setActiveTab('brands'); }}
                 className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'brands' 
                     ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
@@ -210,7 +211,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                 {t('partner_brands') || 'Brands'}
               </button>
               <button 
-                onClick={() => setActiveTab('menu')}
+                onClick={() => { playSound('click'); setActiveTab('menu'); }}
                 className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'menu' 
                     ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 

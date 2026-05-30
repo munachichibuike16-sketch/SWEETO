@@ -6,6 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
+import { playSound } from '../utils/sound';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,12 @@ const CheckoutPage = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [shippingZones, setShippingZones] = useState([]);
   const [shippingFee, setShippingFee] = useState(2500);
+
+  useEffect(() => {
+    if (isSuccess) {
+      playSound('celebrate');
+    }
+  }, [isSuccess]);
 
   const subtotal = cartTotal;
   const tax = 0;

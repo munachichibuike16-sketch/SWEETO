@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import webpush from 'web-push';
 
 // ESM fix for __dirname
 import multer from 'multer';
@@ -276,6 +277,14 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id)
   );
+
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    endpoint TEXT UNIQUE NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 console.log('Tables created.');
 
@@ -429,6 +438,73 @@ if (process.env.ADMIN_EMAIL) {
   }
 }
 
+// Web Push VAPID Keys Setup
+let vapidPublicKey = '';
+let vapidPrivateKey = '';
+
+try {
+  let publicKeyRow = db.prepare("SELECT value FROM settings WHERE key = 'vapid_public_key'").get();
+  let privateKeyRow = db.prepare("SELECT value FROM settings WHERE key = 'vapid_private_key'").get();
+
+  if (!publicKeyRow || !privateKeyRow) {
+    console.log('🔑 Generating new VAPID keys for background push notifications...');
+    const keys = webpush.generateVAPIDKeys();
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('vapid_public_key', ?)").run(keys.publicKey);
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('vapid_private_key', ?)").run(keys.privateKey);
+    vapidPublicKey = keys.publicKey;
+    vapidPrivateKey = keys.privateKey;
+  } else {
+    vapidPublicKey = publicKeyRow.value;
+    vapidPrivateKey = privateKeyRow.value;
+  }
+
+  // Configure Web Push with VAPID keys
+  webpush.setVapidDetails(
+    'mailto:hello@sweeto.com',
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+  console.log('📡 Web Push service configured.');
+} catch (err) {
+  console.error('Failed to configure Web Push:', err);
+}
+
+// Helper: Send Web Push Notification to all active background subscribers
+async function sendBackgroundPushNotification(title, body, url, image = null) {
+  try {
+    const subscriptions = db.prepare('SELECT * FROM push_subscriptions').all();
+    console.log(`📡 Sending background push notifications to ${subscriptions.length} subscribers...`);
+    
+    const payload = JSON.stringify({ title, body, url, image });
+    
+    const promises = subscriptions.map((sub) => {
+      const pushSubscription = {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: sub.p256dh,
+          auth: sub.auth
+        }
+      };
+      
+      return webpush.sendNotification(pushSubscription, payload)
+        .catch((err) => {
+          // If the subscription has expired or is no longer valid, delete it from database
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            console.log(`🗑️ Removing expired push subscription: ${sub.endpoint}`);
+            db.prepare('DELETE FROM push_subscriptions WHERE id = ?').run(sub.id);
+          } else {
+            console.error('Push notification error for endpoint:', sub.endpoint, err);
+          }
+        });
+    });
+    
+    await Promise.all(promises);
+  } catch (err) {
+    console.error('Failed to send background push notifications:', err);
+  }
+}
+
+
 // Seed Sections if empty
 const sectionCount = db.prepare('SELECT COUNT(*) as count FROM sections').get().count;
 if (sectionCount === 0) {
@@ -518,6 +594,29 @@ app.post('/api/upload', authenticateAdmin, upload.single('image'), (req, res) =>
     return res.status(400).json({ error: 'No file uploaded' });
   }
   res.json({ imageUrl: `/uploads/${req.file.filename}`, success: true });
+});
+
+// Web Push Subscriptions API
+app.get('/api/push/public-key', (req, res) => {
+  res.json({ publicKey: vapidPublicKey });
+});
+
+app.post('/api/push/subscribe', (req, res) => {
+  const { endpoint, keys } = req.body;
+  if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+    return res.status(400).json({ error: 'Subscription missing required fields.' });
+  }
+  
+  try {
+    db.prepare(`
+      INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth)
+      VALUES (?, ?, ?)
+    `).run(endpoint, keys.p256dh, keys.auth);
+    res.json({ success: true, message: 'Push subscription saved successfully.' });
+  } catch (err) {
+    console.error('Error saving push subscription:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Customer API Routes
@@ -947,6 +1046,14 @@ app.post('/api/products', authenticateAdmin, upload.single('image'), (req, res) 
     
     console.log('Product added successfully:', info);
     res.json({ id: info.lastInsertRowid, success: true });
+
+    // Trigger dynamic closed-tab background push notifications
+    sendBackgroundPushNotification(
+      `🆕 New Arrival: ${name}`,
+      `Check out the new ${category || 'product'} now available!`,
+      `/#/product/${info.lastInsertRowid}`,
+      final_image_url
+    );
   } catch (err) { 
     console.error('Error adding product:', err);
     res.status(500).json({ error: err.message }); 
@@ -983,6 +1090,8 @@ app.put('/api/products/:id', authenticateAdmin, upload.single('image'), (req, re
   }
 
   try {
+    const oldProduct = db.prepare('SELECT price, name, image_url, category FROM products WHERE id = ?').get(id);
+    
     const flags = {
       is_featured: (is_featured === 'true' || is_featured === 1 || is_featured === true) ? 1 : 0,
       is_trending: (is_trending === 'true' || is_trending === 1 || is_trending === true) ? 1 : 0,
@@ -1016,6 +1125,18 @@ app.put('/api/products/:id', authenticateAdmin, upload.single('image'), (req, re
     if (result.changes === 0) return res.status(404).json({ error: 'Product not found' });
     console.log(`Product ${id} updated successfully`);
     res.json({ success: true });
+
+    // Trigger dynamic closed-tab background push notifications on price drop
+    if (oldProduct && Number(price) < Number(oldProduct.price)) {
+      const prevPrice = oldProduct.price;
+      const dropPercent = Math.round(((prevPrice - price) / prevPrice) * 100);
+      sendBackgroundPushNotification(
+        `🔥 Price Drop: ${name}`,
+        `Now ${dropPercent}% off! Down to ${Number(price).toLocaleString()} FCFA from ${Number(prevPrice).toLocaleString()} FCFA.`,
+        `/#/product/${id}`,
+        final_image_url || oldProduct.image_url
+      );
+    }
   } catch (err) { 
     console.error(`Error updating product ${id}:`, err);
     res.status(500).json({ error: err.message }); 

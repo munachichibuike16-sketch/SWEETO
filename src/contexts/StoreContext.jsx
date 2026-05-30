@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { playSound } from '../utils/sound';
 
 const StoreContext = createContext();
 
@@ -39,6 +40,20 @@ export const StoreProvider = ({ children }) => {
     setConfirmDialog(null);
   };
 
+  // Helper: Convert URL-safe base64 string to Uint8Array for VAPID subscription
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   // Request browser notification permission on storefront mount (not on admin pages)
   useEffect(() => {
     const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
@@ -46,18 +61,77 @@ export const StoreProvider = ({ children }) => {
     if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       // Small delay so it doesn't fire immediately on page load
       const timer = setTimeout(() => {
-        Notification.requestPermission();
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            window.location.reload();
+          }
+        });
       }, 5000);
       return () => clearTimeout(timer);
     }
   }, []);
 
+  // Register Service Worker and subscribe to closed-tab background push notifications
+  useEffect(() => {
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
+    if (isAdminPage) return;
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(async (registration) => {
+          console.log('✅ Service Worker registered successfully.');
+
+          // Listen for route messages from Service Worker (to open specific product details)
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'ROUTE_TO') {
+              console.log('Routing to Service Worker destination:', event.data.url);
+              window.location.hash = event.data.url.replace(/^\/?#?/, '#');
+            }
+          });
+
+          // Check for push subscription permission
+          if (Notification.permission === 'granted') {
+            try {
+              // 1. Fetch public VAPID key from the backend Express server
+              const keyRes = await fetch('http://localhost:3000/api/push/public-key', {
+                targetAddressSpace: 'private' // CORS/PNA compatible
+              });
+              if (!keyRes.ok) throw new Error('VAPID key fetch failed');
+              const { publicKey } = await keyRes.json();
+              
+              if (!publicKey) return;
+              
+              const applicationServerKey = urlBase64ToUint8Array(publicKey);
+
+              // 2. Subscribe the user device to the push service
+              const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey
+              });
+
+              console.log('✅ Successfully subscribed to closed-tab Web Push API:', subscription);
+
+              // 3. Post subscription keys to our Node.js/SQLite server
+              await fetch('http://localhost:3000/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription),
+                targetAddressSpace: 'private' // CORS/PNA compatible
+              });
+              console.log('✅ Registered Web Push subscription with SQLite database.');
+            } catch (err) {
+              console.warn('⚠️ Web Push subscription failed:', err);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('❌ Service Worker registration failed:', err);
+        });
+    }
+  }, []);
+
   // Helper: fire a native browser notification
   const fireNativeNotification = useCallback((title, body, url) => {
-    // Only fire if user has an account
-    const isUserLoggedIn = localStorage.getItem('sweetohub_session') !== null;
-    if (!isUserLoggedIn) return;
-
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
       const notification = new Notification(title, {
@@ -88,6 +162,9 @@ export const StoreProvider = ({ children }) => {
     // Track recently notified IDs to prevent duplicate alerts
     notifiedProductIdsRef.current.add(product.id);
 
+    // Play latency-free chime sound effect and trigger haptics
+    playSound('chime');
+
     // Trigger visual pop-up state
     setRealtimeNotification(product);
 
@@ -101,10 +178,6 @@ export const StoreProvider = ({ children }) => {
   useEffect(() => {
     const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
     if (isAdminPage) return;
-
-    // Only process notifications if the user is logged in
-    const isUserLoggedIn = localStorage.getItem('sweetohub_session') !== null;
-    if (!isUserLoggedIn) return;
 
     if (!products || products.length === 0) return;
 
@@ -510,21 +583,17 @@ export const StoreProvider = ({ children }) => {
           console.log('Realtime change received:', payload);
           const newProduct = payload.new;
           
-          // Only show notification if the user is logged in
-          const isUserLoggedIn = localStorage.getItem('sweetohub_session') !== null;
-          if (isUserLoggedIn) {
-            const title = `🆕 New Arrival: ${newProduct.name}`;
-            const body = `Check out the new ${newProduct.category || 'product'} now available in store!`;
-            
-            // 1. Native device notification
-            fireNativeNotification(title, body, `/#/product/${newProduct.id}`);
-            
-            // 2. In-app floating clickable notification
-            triggerInAppNotification(newProduct);
-            
-            // 3. Immediately refresh local products state
-            fetchStoreData(true);
-          }
+          const title = `🆕 New Arrival: ${newProduct.name}`;
+          const body = `Check out the new ${newProduct.category || 'product'} now available in store!`;
+          
+          // 1. Native device notification
+          fireNativeNotification(title, body, `/#/product/${newProduct.id}`);
+          
+          // 2. In-app floating clickable notification
+          triggerInAppNotification(newProduct);
+          
+          // 3. Immediately refresh local products state
+          fetchStoreData(true);
         }
       )
       .subscribe();
