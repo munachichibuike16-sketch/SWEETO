@@ -704,7 +704,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             ) : ['privacy', 'terms', 'security'].includes(viewMode) ? (
               <LegalPage type={viewMode} />
             ) : (
-              <div className="bg-slate-50 dark:bg-slate-950 transition-colors duration-500 space-y-12 min-h-screen">
+              <div className="bg-slate-50 dark:bg-slate-950 transition-colors duration-500 min-h-screen">
                 {viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand ? (
                   <>
                     {/* Main Sections */}

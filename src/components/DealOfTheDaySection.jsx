@@ -34,7 +34,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
   };
 
   return (
-    <section className="py-12 px-6 md:px-12">
+    <section className="pt-2 pb-12 px-6 md:px-12">
       <SectionHeader 
         title={t('daily_deals')} 
         subtitle={t('exclusive_daily_discounts') || "Exclusive Daily Discounts"} 

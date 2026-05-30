@@ -120,7 +120,7 @@ export default function TopCategories() {
   };
 
   return (
-    <section className="max-w-[1600px] mx-auto px-4 md:px-8 py-10 relative overflow-hidden">
+    <section className="max-w-[1600px] mx-auto px-4 md:px-8 pt-0 pb-0 relative overflow-hidden">
       {/* Centered Premium Header */}
       <div className="flex flex-col items-center justify-center mb-8 relative">
         {/* Soft Background Neon Backglow */}
