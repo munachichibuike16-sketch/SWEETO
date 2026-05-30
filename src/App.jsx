@@ -20,6 +20,7 @@ import VisitUs from './pages/VisitUs';
 import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
+import BackToTop from './components/BackToTop';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -1148,6 +1149,7 @@ function App() {
       <Toast />
       <ConfirmDialog />
       <RealtimeNotification />
+      <BackToTop />
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
