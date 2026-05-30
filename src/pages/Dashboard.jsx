@@ -89,7 +89,7 @@ const Dashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [isAdminAuthenticated]);
 
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(() => window.innerWidth >= 1024);
   const [isAdminDark, setIsAdminDark] = React.useState(() => {
     const saved = localStorage.getItem('admin_theme');
     return saved !== 'light';
@@ -244,7 +244,20 @@ const Dashboard = () => {
 
   return (
     <div className={`${isAdminDark ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} min-h-screen flex overflow-hidden font-sans selection:bg-blue-500/30`}>
-      <motion.aside initial={{ x: -300 }} animate={{ x: isSidebarOpen ? 0 : -300, width: isSidebarOpen ? 280 : 0 }} className="h-screen bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-40 relative overflow-hidden">
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)} 
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-30 lg:hidden"
+        />
+      )}
+
+      {/* SIDEBAR */}
+      <motion.aside
+        initial={{ x: -300 }}
+        animate={{ x: isSidebarOpen ? 0 : -300, width: isSidebarOpen ? 280 : 0 }}
+        className="fixed lg:relative h-screen bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-40 overflow-hidden shadow-2xl lg:shadow-none"
+      >
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="p-8 flex items-center gap-3">
           <SweetoLogo size={38} className="drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] shrink-0" />

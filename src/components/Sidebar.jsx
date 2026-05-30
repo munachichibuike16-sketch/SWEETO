@@ -17,32 +17,32 @@ const CategoryItem = ({ icon: Icon, name, count, index, active, onClick, t, t_sm
     transition={{ delay: index * 0.05 + 0.2 }}
     whileHover={{ x: 8 }}
     onClick={onClick}
-    className={`flex items-center justify-between group cursor-pointer p-4 rounded-[1.8rem] transition-all relative overflow-hidden mb-2 ${
+    className={`flex items-center justify-between group cursor-pointer p-3 sm:p-4 rounded-[1.5rem] sm:rounded-[1.8rem] transition-all relative overflow-hidden mb-2 ${
       active 
       ? 'bg-blue-600/10 dark:bg-blue-500/10 border border-blue-500/20 shadow-[0_0_20px_-5px_rgba(59,130,246,0.15)]' 
       : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-transparent hover:border-slate-100 dark:hover:border-slate-700/50'
     }`}
   >
-    {active && <div className="absolute inset-y-0 left-0 w-1 bg-blue-500 rounded-full" />}
-    <div className="flex items-center gap-5">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+    {active && <div className="absolute inset-y-0 left-0 w-1 bg-blue-50 rounded-full" />}
+    <div className="flex items-center gap-3 sm:gap-5">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-500 shrink-0 ${
         active 
         ? 'bg-blue-600 text-white shadow-[0_8px_20px_-5px_rgba(37,99,235,0.4)] rotate-6' 
         : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 group-hover:bg-slate-900 dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-slate-900 group-hover:-rotate-3 group-hover:shadow-xl'
       }`}>
-        <Icon size={20} />
+        <Icon className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" />
       </div>
       <div className="flex flex-col">
-        <span className={`text-[11px] font-black uppercase tracking-[0.15em] transition-colors ${active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}`}>{t_smart(name)}</span>
-        <span className="text-[9px] font-bold text-slate-300 dark:text-slate-500 uppercase tracking-widest italic">{count || 0} {t('units_available')}</span>
+        <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] transition-colors leading-tight ${active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}`}>{t_smart(name)}</span>
+        <span className="text-[8px] sm:text-[9px] font-bold text-slate-300 dark:text-slate-500 uppercase tracking-widest italic">{count || 0} {t('units_available')}</span>
       </div>
     </div>
-    <div className={`flex items-center justify-center w-8 h-8 rounded-xl transition-all ${
+    <div className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl transition-all shrink-0 ${
       active 
       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
       : 'bg-slate-100 dark:bg-slate-800/50 text-slate-400'
     }`}>
-      <span className="text-[10px] font-black">{count}</span>
+      <span className="text-[9px] sm:text-[10px] font-black">{count}</span>
     </div>
   </motion.div>
 );
@@ -55,23 +55,23 @@ const MenuItem = ({ icon: Icon, name, active = false, onClick, index }) => (
     whileHover={{ x: 10, backgroundColor: 'rgba(59, 130, 246, 0.03)' }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className={`flex items-center justify-between p-5 rounded-[2rem] cursor-pointer transition-all group relative overflow-hidden mb-3 border ${
+    className={`flex items-center justify-between p-3.5 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] cursor-pointer transition-all group relative overflow-hidden mb-3 border ${
       active 
       ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white shadow-2xl shadow-slate-900/20 dark:shadow-white/10' 
       : 'bg-white dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/50 text-slate-500 dark:text-slate-400'
     }`}
   >
-    <div className="flex items-center gap-5 relative z-10">
-      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
+    <div className="flex items-center gap-3 sm:gap-5 relative z-10">
+      <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shrink-0 ${
         active 
         ? 'bg-blue-600 text-white' 
         : 'bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:shadow-inner'
       }`}>
-        <Icon size={20} />
+        <Icon className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" />
       </div>
-      <span className={`font-black text-[11px] uppercase tracking-[0.25em] ${active ? 'text-white dark:text-slate-900' : ''}`}>{name}</span>
+      <span className={`font-black text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.25em] ${active ? 'text-white dark:text-slate-900' : ''}`}>{name}</span>
     </div>
-    <ChevronRight size={18} className={`${active ? 'text-white dark:text-slate-900' : 'text-slate-200 dark:text-slate-700'} transition-transform group-hover:translate-x-1`} />
+    <ChevronRight className={`w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] ${active ? 'text-white dark:text-slate-900' : 'text-slate-200 dark:text-slate-700'} transition-transform group-hover:translate-x-1`} />
   </motion.div>
 );
 
@@ -180,10 +180,10 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             animate={{ x: 0 }}
             exit={{ x: isRTL ? '100%' : '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-screen w-[400px] bg-white dark:bg-slate-900/95 backdrop-blur-3xl shadow-[50px_0_100px_-20px_rgba(0,0,0,0.2)] z-[210] overflow-hidden flex flex-col border-r border-slate-100 dark:border-slate-800/60`}
+            className={`fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-screen w-full max-w-[400px] bg-white dark:bg-slate-900/95 backdrop-blur-3xl shadow-[50px_0_100px_-20px_rgba(0,0,0,0.2)] z-[210] overflow-hidden flex flex-col border-r border-slate-100 dark:border-slate-800/60`}
           >
-            <div className={`p-10 pb-8 shrink-0 transition-all ${scrolled ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg border-b border-slate-100 dark:border-slate-800/50' : ''}`}>
-              <div className="flex justify-between items-center mb-10">
+            <div className={`p-6 sm:p-10 pb-6 sm:pb-8 shrink-0 transition-all ${scrolled ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg border-b border-slate-100 dark:border-slate-800/50' : ''}`}>
+              <div className="flex justify-between items-center mb-6 sm:mb-10">
                 <div className="flex items-center gap-4">
                   <motion.div 
                     whileHover={{ rotate: 12, scale: 1.1 }}
@@ -230,7 +230,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
 
             <div 
               onScroll={(e) => setScrolled(e.target.scrollTop > 20)}
-              className="flex-1 overflow-y-auto px-10 pb-12 custom-scrollbar space-y-12"
+              className="flex-1 overflow-y-auto px-6 sm:px-10 pb-8 sm:pb-12 custom-scrollbar space-y-8 sm:space-y-12"
             >
               <AnimatePresence mode="wait">
                 {(activeTab === 'menu' && window.innerWidth < 1024) ? (
@@ -254,12 +254,12 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                     <div className="pt-10 mt-12 border-t border-slate-100 dark:border-slate-800/50 space-y-6">
                        <h3 className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.5em] px-4">{t('preference_node')}</h3>
                        
-                       <motion.div whileHover={{ scale: 1.02 }} className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/30 rounded-[2rem] border border-slate-100 dark:border-slate-700/50 group cursor-pointer transition-all">
-                          <div className="flex items-center gap-5">
-                             <Globe size={20} className="text-blue-500" />
-                             <span className="font-black text-[11px] uppercase tracking-widest text-slate-600 dark:text-slate-400">{t('regional_language')}</span>
+                       <motion.div whileHover={{ scale: 1.02 }} className="flex items-center justify-between p-4 sm:p-6 bg-slate-50 dark:bg-slate-800/30 rounded-[1.8rem] sm:rounded-[2rem] border border-slate-100 dark:border-slate-700/50 group cursor-pointer transition-all">
+                          <div className="flex items-center gap-3 sm:gap-5">
+                             <Globe className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] text-blue-500" />
+                             <span className="font-black text-[10px] sm:text-[11px] uppercase tracking-widest text-slate-600 dark:text-slate-400">{t('regional_language')}</span>
                           </div>
-                          <span className="text-[10px] font-black text-blue-500 bg-blue-500/10 px-4 py-1.5 rounded-full border border-blue-500/10 uppercase tracking-widest">{lang.toUpperCase()}</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-blue-500 bg-blue-500/10 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full border border-blue-500/10 uppercase tracking-widest">{lang.toUpperCase()}</span>
                        </motion.div>
                     </div>
                   </motion.div>
@@ -348,20 +348,20 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.6 }}
-                      className="p-10 bg-slate-900 dark:bg-white rounded-[3rem] shadow-2xl relative overflow-hidden group"
+                      className="p-6 sm:p-10 bg-slate-900 dark:bg-white rounded-[2rem] sm:rounded-[3rem] shadow-2xl relative overflow-hidden group"
                     >
                       <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Zap size={100} className="text-white dark:text-slate-950" />
                       </div>
-                      <h3 className="text-[10px] font-black text-white/40 dark:text-slate-400 uppercase tracking-[0.5em] mb-8 relative z-10">{t('matrix_filter')}</h3>
-                      <div className="space-y-4 mb-10 relative z-10">
-                        <input type="number" placeholder="Min. FCFA" className="w-full p-5 bg-white/5 dark:bg-slate-50 border border-white/10 dark:border-slate-200 rounded-2xl text-[11px] font-black text-white dark:text-slate-900 placeholder:text-white/20 dark:placeholder:text-slate-400 outline-none focus:border-blue-500 transition-all shadow-inner" />
-                        <input type="number" placeholder="Max. FCFA" className="w-full p-5 bg-white/5 dark:bg-slate-50 border border-white/10 dark:border-slate-200 rounded-2xl text-[11px] font-black text-white dark:text-slate-900 placeholder:text-white/20 dark:placeholder:text-slate-400 outline-none focus:border-blue-500 transition-all shadow-inner" />
+                      <h3 className="text-[9px] sm:text-[10px] font-black text-white/40 dark:text-slate-400 uppercase tracking-[0.4em] sm:tracking-[0.5em] mb-6 sm:mb-8 relative z-10">{t('matrix_filter')}</h3>
+                      <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10 relative z-10">
+                        <input type="number" placeholder="Min. FCFA" className="w-full p-4 sm:p-5 bg-white/5 dark:bg-slate-50 border border-white/10 dark:border-slate-200 rounded-2xl text-[10px] sm:text-[11px] font-black text-white dark:text-slate-900 placeholder:text-white/20 dark:placeholder:text-slate-400 outline-none focus:border-blue-500 transition-all shadow-inner" />
+                        <input type="number" placeholder="Max. FCFA" className="w-full p-4 sm:p-5 bg-white/5 dark:bg-slate-50 border border-white/10 dark:border-slate-200 rounded-2xl text-[10px] sm:text-[11px] font-black text-white dark:text-slate-900 placeholder:text-white/20 dark:placeholder:text-slate-400 outline-none focus:border-blue-500 transition-all shadow-inner" />
                       </div>
                       <motion.button 
                         whileHover={{ scale: 1.05, y: -5 }}
                         whileTap={{ scale: 0.95 }}
-                        className="w-full bg-blue-600 text-white py-6 rounded-[1.8rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl shadow-blue-600/30 transition-all relative z-10"
+                        className="w-full bg-blue-600 text-white py-5 sm:py-6 rounded-[1.5rem] sm:rounded-[1.8rem] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] shadow-xl shadow-blue-600/30 transition-all relative z-10"
                       >
                         {t('optimize_search')}
                       </motion.button>

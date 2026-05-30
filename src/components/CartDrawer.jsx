@@ -39,7 +39,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             className={`fixed top-0 ${isRTL ? 'left-0' : 'right-0'} h-full w-full max-w-lg bg-white/95 backdrop-blur-3xl shadow-[-50px_0_100px_-20px_rgba(0,0,0,0.1)] z-[310] flex flex-col border-l border-white/20`}
           >
             {/* Header */}
-            <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-white/50">
+            <div className="p-6 sm:p-10 border-b border-slate-50 flex justify-between items-center bg-white/50">
               <div className="flex items-center gap-4">
                 <motion.div 
                   initial={{ scale: 0 }}
@@ -65,7 +65,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             </div>
 
             {/* Cart Items List */}
-            <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6 sm:space-y-8 no-scrollbar">
               <AnimatePresence mode="popLayout">
                 {cartItems.length === 0 && (
                   <motion.div 
@@ -89,31 +89,31 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: isRTL ? -50 : 50, opacity: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex gap-6 p-6 bg-white/50 rounded-[2rem] border border-slate-100 group hover:shadow-xl hover:shadow-slate-900/5 transition-all"
+                    className="flex gap-4 sm:gap-6 p-4 sm:p-6 bg-white/50 rounded-[1.8rem] sm:rounded-[2rem] border border-slate-100 group hover:shadow-xl hover:shadow-slate-900/5 transition-all"
                   >
-                    <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center p-3 shadow-sm group-hover:scale-105 transition-transform">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-3 shadow-sm group-hover:scale-105 transition-transform shrink-0">
                       <img src={item.image_url || item.image || '/hero-banner.png'} alt="" className="w-full h-full object-contain mix-blend-multiply" />
                     </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div className="flex justify-between items-start gap-4">
-                        <h4 className="font-black text-slate-900 text-sm uppercase italic tracking-tighter leading-tight group-hover:text-eas-blue transition-colors line-clamp-2">{item.name}</h4>
+                    <div className="flex-1 flex flex-col justify-between py-0.5">
+                      <div className="flex justify-between items-start gap-2 sm:gap-4">
+                        <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase italic tracking-tighter leading-tight group-hover:text-eas-blue transition-colors line-clamp-2">{item.name}</h4>
                         <motion.button 
                           whileHover={{ scale: 1.2, color: '#ef4444' }}
                           onClick={() => removeFromCart(item.id)} 
-                          className="text-slate-200 transition-colors"
+                          className="text-slate-200 transition-colors shrink-0"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />
                         </motion.button>
                       </div>
-                      <div className="flex justify-between items-center mt-4">
-                        <span className="font-black text-eas-blue text-lg italic tracking-tighter leading-none">{settings?.currency || 'FCFA'} {item.price?.toLocaleString()}</span>
-                        <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+                      <div className="flex justify-between items-center mt-3 sm:mt-4 gap-2">
+                        <span className="font-black text-eas-blue text-sm sm:text-lg italic tracking-tighter leading-none">{settings?.currency || 'FCFA'} {item.price?.toLocaleString()}</span>
+                        <div className="flex items-center gap-3 sm:gap-4 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border border-slate-100 shadow-sm shrink-0">
                           <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-slate-300 hover:text-eas-blue transition-colors">
-                            <Minus size={14} strokeWidth={3} />
+                            <Minus className="w-[10px] h-[10px] sm:w-[14px] sm:h-[14px]" strokeWidth={3} />
                           </motion.button>
-                          <span className="text-xs font-black text-slate-900 min-w-[20px] text-center italic">{item.quantity}</span>
+                          <span className="text-[10px] sm:text-xs font-black text-slate-900 min-w-[15px] sm:min-w-[20px] text-center italic">{item.quantity}</span>
                           <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-slate-300 hover:text-eas-blue transition-colors">
-                            <Plus size={14} strokeWidth={3} />
+                            <Plus className="w-[10px] h-[10px] sm:w-[14px] sm:h-[14px]" strokeWidth={3} />
                           </motion.button>
                         </div>
                       </div>
@@ -125,7 +125,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
             {/* Footer / Checkout Area */}
             {cartItems.length > 0 && (
-              <div className="p-10 border-t border-slate-100 bg-slate-50/50 space-y-8 rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.03)]">
+              <div className="p-6 sm:p-10 border-t border-slate-100 bg-slate-50/50 space-y-6 sm:space-y-8 rounded-t-[2.5rem] sm:rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.03)]">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">
                     <span>{t('subtotal')}</span>
@@ -146,9 +146,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     whileHover={{ scale: 1.02, backgroundColor: '#3B82F6' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleGoToCheckout}
-                    className="w-full bg-slate-900 text-white py-6 rounded-3xl font-black text-[11px] uppercase tracking-[0.3em] flex items-center justify-center gap-4 shadow-2xl shadow-slate-900/20 active:scale-95 transition-all group"
+                    className="w-full bg-slate-900 text-white py-5 sm:py-6 rounded-2xl sm:rounded-3xl font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.3em] flex items-center justify-center gap-3 sm:gap-4 shadow-2xl shadow-slate-900/20 active:scale-95 transition-all group"
                   >
-                    <CreditCard size={20} strokeWidth={3} className="group-hover:rotate-12 transition-transform" />
+                    <CreditCard className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" strokeWidth={3} className="group-hover:rotate-12 transition-transform" />
                     {t('checkout')}
                   </motion.button>
                 </div>
