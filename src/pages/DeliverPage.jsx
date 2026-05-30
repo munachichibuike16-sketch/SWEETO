@@ -60,8 +60,8 @@ const LeafletMap = ({ destLat, destLng, agentLat, agentLng, isDriver = false }) 
         scrollWheelZoom: true
       }).setView([defaultLat, defaultLng], 14);
 
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
+      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
       }).addTo(mapInstanceRef.current);
 
       const homeIcon = window.L.divIcon({
