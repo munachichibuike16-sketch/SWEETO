@@ -31,7 +31,7 @@ export async function apiFetch(path, options = {}) {
     
     // Add Private Network Access (PNA) header to resolve security blocks for local testing
     if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
-      fetchOptions.targetAddressSpace = 'private';
+      fetchOptions.targetAddressSpace = 'loopback';
     }
   }
 

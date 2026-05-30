@@ -96,7 +96,7 @@ export const StoreProvider = ({ children }) => {
               // 1. Fetch public VAPID key from the backend Express server
               const fetchOptions = {};
               if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
-                fetchOptions.targetAddressSpace = 'private';
+                fetchOptions.targetAddressSpace = 'loopback';
               }
               const keyRes = await fetch(`${API_BASE_URL}/api/push/public-key`, fetchOptions);
               if (!keyRes.ok) throw new Error('VAPID key fetch failed');
@@ -121,7 +121,7 @@ export const StoreProvider = ({ children }) => {
                 body: JSON.stringify(subscription)
               };
               if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
-                subOptions.targetAddressSpace = 'private';
+                subOptions.targetAddressSpace = 'loopback';
               }
               await fetch(`${API_BASE_URL}/api/push/subscribe`, subOptions);
               console.log('✅ Registered Web Push subscription with SQLite database.');
