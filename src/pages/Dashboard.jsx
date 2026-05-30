@@ -100,13 +100,50 @@ const Dashboard = () => {
   }, [isAdminDark]);
 
   const [activeTab, setActiveTab] = React.useState('Overview');
-  const [notifications, setNotifications] = React.useState([]);
+  const [notifications, setNotifications] = React.useState(() => {
+    const saved = localStorage.getItem('admin_notifications_timed');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [isNotifOpen, setIsNotifOpen] = React.useState(false);
+  const notifRef = React.useRef(null);
+  const targetOrderIdRef = React.useRef(null);
   const [targetOrderId, setTargetOrderId] = React.useState(null);
   const audioRef = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
   const [trafficCount, setTrafficCount] = React.useState(0);
   const [trafficChange, setTrafficChange] = React.useState('+0.0%');
 
+  // Persistence of notification logs
+  React.useEffect(() => {
+    localStorage.setItem('admin_notifications_timed', JSON.stringify(notifications));
+  }, [notifications]);
+
+  // Timed auto-vanishing of read notifications (vanish 10 minutes after reading)
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setNotifications(prev => prev.filter(n => {
+        if (n.readAt) {
+          const tenMins = 10 * 60 * 1000;
+          return Date.now() - n.readAt <= tenMins;
+        }
+        return true;
+      }));
+    }, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Dropdown outside click handler
+  React.useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  // Poll site traffic stats via Supabase changes
   React.useEffect(() => {
     if (!isAdminAuthenticated) return;
     const fetchSiteTraffic = async () => {
@@ -159,29 +196,172 @@ const Dashboard = () => {
     }
   }, [isAdminAuthenticated]);
 
+  // Unified State Comparison Snapshot Watcher
+  // Triggered whenever orders/products lists update (realtime or polling)
+  const prevOrdersRef = React.useRef(null);
+  const prevProductsRef = React.useRef(null);
+  const isFirstLoadRef = React.useRef(true);
+
   React.useEffect(() => {
     if (!isAdminAuthenticated) return;
-    const ordersSubscription = supabase.channel('public:orders_changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-        const newOrder = payload.new;
+    if (!orders || orders.length === 0) return;
+
+    // Load initial map states to prevent duplicate notifications on refresh
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+      prevOrdersRef.current = new Map(orders.map(o => [o.id, o]));
+      prevProductsRef.current = new Map(products.map(p => [p.id, p]));
+      return;
+    }
+
+    // 1. Detect New Orders
+    const prevOrders = prevOrdersRef.current;
+    if (prevOrders) {
+      const newOrders = orders.filter(o => !prevOrders.has(o.id));
+      newOrders.forEach(newOrder => {
         const msg = `New Order SWT-${newOrder.id} from ${newOrder.customer_name || 'Customer'}!`;
-        setNotifications(prev => [{ id: Date.now(), orderId: newOrder.id, title: 'New Order Received', desc: msg, time: new Date().toLocaleTimeString(), read: false }, ...prev]);
+        
+        setNotifications(prev => [
+          {
+            id: `order-${newOrder.id}-${Date.now()}`,
+            type: 'order',
+            orderId: newOrder.id,
+            title: 'New Order Received 🛍️',
+            desc: msg,
+            time: new Date().toLocaleTimeString(),
+            readAt: null
+          },
+          ...prev
+        ]);
+
         if (audioRef.current) audioRef.current.play().catch(() => {});
+
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
-            const n = new Notification('New Order Received! 🛍️', { body: msg, tag: `new-order-${newOrder.id}`, requireInteraction: true });
-            n.onclick = () => { window.focus(); handleNotificationClick(newOrder.id); n.close(); };
+            const n = new Notification('New Order Received! 🛍️', {
+              body: msg,
+              tag: `new-order-${newOrder.id}`,
+              requireInteraction: true
+            });
+            n.onclick = () => {
+              window.focus();
+              handleNotificationClick(newOrder.id);
+              n.close();
+            };
+            // Tray Auto-dismiss timer
+            setTimeout(() => n.close(), 10 * 60 * 1000); // 10 minutes
           } catch (err) {}
         }
+      });
+      prevOrdersRef.current = new Map(orders.map(o => [o.id, o]));
+    }
+
+    // 2. Detect Low Stock Thresholds
+    const prevProducts = prevProductsRef.current;
+    if (prevProducts && products.length > 0) {
+      const threshold = settings?.low_stock_threshold || 5;
+      products.forEach(p => {
+        const prev = prevProducts.get(p.id);
+        const stockVal = p.stock ?? p.stock_quantity ?? 0;
+        const prevStockVal = prev ? (prev.stock ?? prev.stock_quantity ?? 999) : 999;
+
+        // Trigger alert if stock drops to/below threshold
+        if (stockVal <= threshold && prevStockVal > threshold) {
+          const msg = `Product "${p.name}" is running low on stock (${stockVal} left)!`;
+
+          setNotifications(prev => [
+            {
+              id: `stock-${p.id}-${Date.now()}`,
+              type: 'stock',
+              productId: p.id,
+              title: '⚠️ Low Stock Alert',
+              desc: msg,
+              time: new Date().toLocaleTimeString(),
+              readAt: null
+            },
+            ...prev
+          ]);
+
+          if (audioRef.current) audioRef.current.play().catch(() => {});
+
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              const n = new Notification('⚠️ Low Stock Alert!', {
+                body: msg,
+                tag: `low-stock-${p.id}`,
+                requireInteraction: true
+              });
+              n.onclick = () => {
+                window.focus();
+                setActiveTab('Stock');
+                n.close();
+              };
+              // Tray Auto-dismiss timer
+              setTimeout(() => n.close(), 10 * 60 * 1000); // 10 minutes
+            } catch (err) {}
+          }
+        }
+      });
+      prevProductsRef.current = new Map(products.map(p => [p.id, p]));
+    }
+
+  }, [orders, products, isAdminAuthenticated, settings]);
+
+  // Supabase Real-Time Subscriptions for Orders & Products changes
+  React.useEffect(() => {
+    if (!isAdminAuthenticated) return;
+    if (!supabase) return;
+
+    const channel = supabase.channel('admin-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        console.log('Realtime Order Insert:', payload);
         refreshData();
-      }).subscribe();
-    return () => { supabase.removeChannel(ordersSubscription); };
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'products' }, (payload) => {
+        console.log('Realtime Product Update:', payload);
+        refreshData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isAdminAuthenticated, refreshData]);
+
+  // Background SQLite Polling Fallback (runs every 10 seconds silently, defers if typing)
+  React.useEffect(() => {
+    if (!isAdminAuthenticated) return;
+
+    const pollInterval = setInterval(() => {
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' ||
+        activeEl.tagName === 'TEXTAREA' ||
+        activeEl.hasAttribute('contenteditable') ||
+        activeEl.closest('[contenteditable="true"]')
+      );
+
+      if (!isTyping) {
+        console.log('Admin background poll refreshing data...');
+        refreshData();
+      }
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [isAdminAuthenticated, refreshData]);
+
+  const handleMarkAsRead = (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, readAt: Date.now() } : n));
+  };
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => n.readAt ? n : { ...n, readAt: Date.now() }));
+  };
 
   const handleNotificationClick = (orderId) => {
     setActiveTab('Orders');
     setTargetOrderId(orderId);
-    setNotifications(prev => prev.filter(n => n.orderId !== orderId));
+    setNotifications(prev => prev.map(n => n.orderId === orderId ? { ...n, readAt: Date.now() } : n));
   };
 
   const handleLogoutOthers = () => {
@@ -266,12 +446,15 @@ const Dashboard = () => {
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">
           {navItems.map((item) => {
             const isActive = activeTab === item.name;
+            const hasUnreadOrders = item.name === 'Orders' && notifications.some(n => n.type === 'order' && !n.readAt);
+            const hasUnreadStock = item.name === 'Stock' && notifications.some(n => n.type === 'stock' && !n.readAt);
+            
             return (
               <button key={item.name} onClick={() => setActiveTab(item.name)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white font-medium'}`}>
                 {isActive && <motion.div layoutId="activeTabIndicator" className="absolute inset-0 border-2 border-blue-500/20 dark:border-blue-500/30 rounded-2xl" initial={false} transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />}
                 <item.icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                 <span className="text-sm tracking-wide">{item.name}</span>
-                {item.name === 'Orders' && notifications.length > 0 && <span className="ml-auto w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>}
+                {(hasUnreadOrders || hasUnreadStock) && <span className="ml-auto w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>}
               </button>
             );
           })}
@@ -294,7 +477,91 @@ const Dashboard = () => {
         <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-400/5 rounded-full blur-[120px] pointer-events-none"></div>
         <header className="h-24 px-8 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl z-30 shrink-0">
           <div className="flex items-center gap-6"><button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300"><Icons.Menu size={20} /></button><div><h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{activeTab}</h2><p className="text-xs text-slate-500 font-medium tracking-wide">Manage your store's performance</p></div></div>
-          <div className="flex items-center gap-4"><button onClick={() => setIsAdminDark(!isAdminDark)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer">{isAdminDark ? <Icons.Sun size={20} className="text-amber-500" /> : <Icons.Moon size={20} className="text-indigo-600" />}</button><div className="relative group"><button className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm relative text-slate-600 dark:text-slate-300"><Icons.Bell size={20} />{notifications.length > 0 && <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"></span>}</button></div></div>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsAdminDark(!isAdminDark)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer">
+              {isAdminDark ? <Icons.Sun size={20} className="text-amber-500" /> : <Icons.Moon size={20} className="text-indigo-600" />}
+            </button>
+            <div className="relative" ref={notifRef}>
+              <button 
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm relative text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer"
+              >
+                <Icons.Bell size={20} />
+                {notifications.filter(n => !n.readAt).length > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-slate-950 animate-pulse"></span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {isNotifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-3 w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-3xl border border-slate-200 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-3xl p-5 z-[100] text-left space-y-4"
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Admin Alerts ({notifications.filter(n => !n.readAt).length})</span>
+                      {notifications.some(n => !n.readAt) && (
+                        <button 
+                          onClick={handleMarkAllRead}
+                          className="text-[8px] font-black uppercase text-blue-500 hover:text-blue-600 cursor-pointer"
+                        >
+                          Mark All Read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-72 overflow-y-auto space-y-3 custom-scrollbar pr-1">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-slate-400 dark:text-slate-500 space-y-2">
+                          <Icons.Inbox className="mx-auto" size={24} />
+                          <p className="text-[10px] font-bold uppercase tracking-wider">No alerts active</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div 
+                            key={n.id}
+                            onClick={() => {
+                              handleMarkAsRead(n.id);
+                              if (n.type === 'order') {
+                                handleNotificationClick(n.orderId);
+                              } else if (n.type === 'stock') {
+                                setActiveTab('Stock');
+                              }
+                              setIsNotifOpen(false);
+                            }}
+                            className={`p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer flex gap-3 ${
+                              n.readAt
+                                ? 'bg-slate-50/50 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900 opacity-60'
+                                : 'bg-blue-50/40 dark:bg-blue-950/10 border-blue-500/10 dark:border-blue-500/5 hover:border-blue-500/25'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                              n.type === 'order' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
+                            }`}>
+                              {n.type === 'order' ? <Icons.ShoppingCart size={16} /> : <Icons.AlertTriangle size={16} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h5 className={`text-xs font-bold truncate ${n.readAt ? 'text-slate-500' : 'text-slate-900 dark:text-white'}`}>
+                                {n.title}
+                              </h5>
+                              <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold truncate mt-0.5">
+                                {n.desc}
+                              </p>
+                              <span className="text-[8px] text-slate-300 dark:text-slate-600 block mt-1">
+                                {n.time} {n.readAt && '(Vanish pending)'}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </header>
         <div className="flex-1 overflow-y-auto p-8 z-10 scrollbar-hide">
           {activeTab === 'Overview' && <div className="max-w-7xl mx-auto space-y-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{stats.map((stat, i) => (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={i} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500"><div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`}></div><div className="flex justify-between items-start mb-6 relative z-10"><div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}><stat.icon className="text-white" size={24} /></div><span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full tracking-wider"><Icons.TrendingUp size={14} />{stat.change}</span></div><div className="relative z-10"><h3 className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">{stat.title}</h3><p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.value}</p></div></motion.div>))}</div></div>}
