@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useParams } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams } from 'react-router-dom';
 import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
@@ -23,6 +23,15 @@ import RealtimeNotification from './components/RealtimeNotification';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
+
+const getCurrentPath = () => {
+  const hash = window.location.hash;
+  if (hash) {
+    const path = hash.replace(/^#/, '');
+    return path.startsWith('/') ? path : '/' + path;
+  }
+  return window.location.pathname;
+};
 
 /* ─── CUSTOM SOCIAL ICONS (Lucide Compatibility) ─── */
 const InstagramIcon = ({ size = 20 }) => (
@@ -240,7 +249,7 @@ const Storefront = ({ viewMode = 'home' }) => {
         return true;
       }
       
-      const currentPath = window.location.pathname;
+      const currentPath = getCurrentPath();
       if (currentPath !== '/' && currentPath !== '/home') {
         window.history.back();
         return true;
@@ -1055,7 +1064,7 @@ function App() {
   useEffect(() => {
     // 1. Expose a fallback global hook for custom Android WebView wrappers
     window.handleAndroidBack = () => {
-      const currentPath = window.location.pathname;
+      const currentPath = getCurrentPath();
       if (currentPath !== '/' && currentPath !== '/home') {
         window.history.back();
         return true;
@@ -1124,7 +1133,7 @@ function App() {
       // Track visit storefront event
       Promise.resolve(
         supabase.from('visitor_log').insert([{ 
-          page_path: window.location.pathname,
+          page_path: getCurrentPath(),
           event_type: 'visit storefront',
           country: country
         }])
@@ -1139,7 +1148,7 @@ function App() {
       <Toast />
       <ConfirmDialog />
       <RealtimeNotification />
-      {!window.location.pathname.includes('/dashboard') && <LoadingScreen isVisible={loading} />}
+      {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
         <Routes>

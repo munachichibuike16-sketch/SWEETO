@@ -41,7 +41,7 @@ export const StoreProvider = ({ children }) => {
 
   // Request browser notification permission on storefront mount (not on admin pages)
   useEffect(() => {
-    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin');
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
     if (isAdminPage) return;
     if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       // Small delay so it doesn't fire immediately on page load
@@ -99,7 +99,7 @@ export const StoreProvider = ({ children }) => {
 
   // Detect new products and price drops, fire native and in-app notifications
   useEffect(() => {
-    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin');
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
     if (isAdminPage) return;
 
     // Only process notifications if the user is logged in
@@ -132,7 +132,7 @@ export const StoreProvider = ({ children }) => {
         ? `Check out the new ${first.category || 'product'} now available in store!`
         : `${newProducts.map(p => p.name).slice(0, 3).join(', ')}${newProducts.length > 3 ? '...' : ''} just dropped!`;
       
-      fireNativeNotification(title, body, `/product/${first.id}`);
+      fireNativeNotification(title, body, `/#/product/${first.id}`);
       triggerInAppNotification(first);
     }
 
@@ -152,7 +152,7 @@ export const StoreProvider = ({ children }) => {
         ? `Now ${dropPercent}% off! Don't miss this deal.`
         : `${priceDrops.map(p => p.name).slice(0, 3).join(', ')} and more!`;
       
-      fireNativeNotification(title, body, `/product/${first.id}`);
+      fireNativeNotification(title, body, `/#/product/${first.id}`);
       triggerInAppNotification(first);
     }
 
@@ -485,7 +485,7 @@ export const StoreProvider = ({ children }) => {
   useEffect(() => {
     fetchStoreData();
     // Only poll when NOT on the admin/dashboard pages to prevent input focus loss
-    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin');
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
     if (isAdminPage) return; // No polling on admin pages
     
     // Poll every 30 seconds for near real-time updates on the storefront
@@ -497,7 +497,7 @@ export const StoreProvider = ({ children }) => {
 
   // Subscribe to real-time changes in Supabase products table
   useEffect(() => {
-    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin');
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
     if (isAdminPage) return;
     if (!supabase) return;
 
@@ -517,7 +517,7 @@ export const StoreProvider = ({ children }) => {
             const body = `Check out the new ${newProduct.category || 'product'} now available in store!`;
             
             // 1. Native device notification
-            fireNativeNotification(title, body, `/product/${newProduct.id}`);
+            fireNativeNotification(title, body, `/#/product/${newProduct.id}`);
             
             // 2. In-app floating clickable notification
             triggerInAppNotification(newProduct);

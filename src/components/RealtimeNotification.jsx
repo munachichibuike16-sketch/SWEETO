@@ -12,7 +12,7 @@ const RealtimeNotification = () => {
   const handleView = () => {
     // Navigate using React Router or update window.location. href to trigger route match
     // Since we handle URLs to open modals, changing hash or URL path works.
-    window.location.href = `/product/${realtimeNotification.id}`;
+    window.location.href = `/#/product/${realtimeNotification.id}`;
     setRealtimeNotification(null);
   };
 
