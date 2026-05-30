@@ -28,6 +28,7 @@ CREATE TABLE categories (
   slug VARCHAR(255) UNIQUE NOT NULL,
   icon VARCHAR(255),
   description TEXT,
+  parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   position INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

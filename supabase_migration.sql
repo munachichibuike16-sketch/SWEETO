@@ -23,6 +23,12 @@ ALTER TABLE orders
   ALTER COLUMN customer_phone DROP NOT NULL;
 
 -- ---------------------------------------------------------------
+-- CATEGORIES TABLE: add parent_id column for subcategory relations
+-- ---------------------------------------------------------------
+ALTER TABLE categories
+  ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+
+-- ---------------------------------------------------------------
 -- PRODUCTS TABLE: add new columns used by the app
 -- ---------------------------------------------------------------
 ALTER TABLE products
