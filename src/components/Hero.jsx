@@ -91,7 +91,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
         <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-[600px]">
             {/* Main Large Banner — auto-cycles all products */}
-            <div className="lg:col-span-8 h-full min-h-[350px] sm:min-h-[400px] relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col md:flex-row items-center p-5 md:p-16 gap-6 md:gap-10 group">
+            <div className="lg:col-span-8 h-[350px] sm:h-[400px] lg:h-full relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col md:flex-row items-center p-5 md:p-16 gap-6 md:gap-10 group">
               
               {/* Ambient Background Light Spot */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[350px] sm:h-[350px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -207,7 +207,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
             </div>
 
             {/* Right Column — Side A & Side B Bento Panels */}
-            <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-8 h-full">
+            <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-8 h-auto lg:h-full">
               
               {/* Side A Banner */}
               <div className="flex-1 bg-gradient-to-br from-[#0b1424] to-[#020617] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/5 p-5 md:p-8 flex items-center gap-4 hover:border-white/10 transition-all duration-300 min-h-[140px]">
@@ -287,7 +287,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
           
           {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
-          <div className="lg:col-span-8 h-full min-h-[420px] relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0057ff] via-[#008cff] to-[#00c6ff] shadow-2xl border border-white/10 group">
+          <div className="lg:col-span-8 h-[350px] sm:h-[420px] lg:h-full relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0057ff] via-[#008cff] to-[#00c6ff] shadow-2xl border border-white/10 group">
             
             {/* Full Bleed Image (Vivid 100% Opacity) */}
             {mainSlot.image && (
@@ -380,7 +380,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
           </div>
 
           {/* 2. Right Column — Side A & Side B Bento Panels */}
-          <div className="lg:col-span-4 flex flex-col gap-8 h-full">
+          <div className="lg:col-span-4 flex flex-col gap-8 h-auto lg:h-full">
             
             {/* Side A Banner */}
             <div className="flex-1 bg-gradient-to-tr from-[#9600ff] via-[#ae00ff] to-[#00b7ff] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/10 p-8 flex flex-col justify-center min-h-[190px]">
