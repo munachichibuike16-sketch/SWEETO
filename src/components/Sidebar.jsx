@@ -13,10 +13,18 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('filter'); // Default to Categories tab like the screenshot
-  const { categories, settings } = useStore();
+  const { categories, settings, brands = [], selectedBrand, setSelectedBrand, setSelectedCategory, setSearchQuery } = useStore();
   const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isLangExpanded, setIsLangExpanded] = useState(false);
+
+  const handleBrandSelect = (brandName) => {
+    setSelectedCategory(null);
+    setSearchQuery('');
+    setSelectedBrand(brandName === selectedBrand ? null : brandName);
+    navigate('/');
+    onClose();
+  };
 
   // Touch Swipe-to-Close Gestures
   const [touchStart, setTouchStart] = useState(null);
@@ -183,7 +191,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             <div className="w-full h-14 shrink-0 bg-[#f5f5f5] dark:bg-slate-800 flex items-stretch border-b border-slate-200 dark:border-slate-700 relative z-10">
               <button 
                 onClick={() => setActiveTab('filter')}
-                className={`flex-1 flex items-center justify-center text-xs font-black uppercase tracking-[0.2em] transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'filter' 
                     ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
                     : 'text-slate-400 dark:text-slate-500 bg-[#f5f5f5] dark:bg-slate-800'
@@ -192,8 +200,18 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                 {t('categories') || 'Categories'}
               </button>
               <button 
+                onClick={() => setActiveTab('brands')}
+                className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
+                  activeTab === 'brands' 
+                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
+                    : 'text-slate-400 dark:text-slate-500 bg-[#f5f5f5] dark:bg-slate-800'
+                }`}
+              >
+                {t('partner_brands') || 'Brands'}
+              </button>
+              <button 
                 onClick={() => setActiveTab('menu')}
-                className={`flex-1 flex items-center justify-center text-xs font-black uppercase tracking-[0.2em] transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'menu' 
                     ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
                     : 'text-slate-400 dark:text-slate-500 bg-[#f5f5f5] dark:bg-slate-800'
@@ -206,7 +224,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             {/* Scrollable Categories List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900 pb-24">
               <AnimatePresence mode="wait">
-                {activeTab === 'filter' ? (
+                {activeTab === 'filter' && (
                   <motion.div
                     key="categories-tab"
                     initial={{ opacity: 0 }}
@@ -277,7 +295,43 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       );
                     })}
                   </motion.div>
-                ) : (
+                )}
+
+                {activeTab === 'brands' && (
+                  <motion.div
+                    key="brands-tab"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="divide-y divide-slate-100 dark:divide-slate-800 border-b border-slate-100 dark:border-slate-800"
+                  >
+                    {brands.length > 0 ? (
+                      brands.map((brand, i) => (
+                        <div key={brand.id || i} className="flex items-stretch justify-between bg-white dark:bg-slate-900 min-h-[52px]">
+                          <button
+                            onClick={() => handleBrandSelect(brand.name)}
+                            className={`flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center justify-between ${
+                              selectedBrand === brand.name 
+                                ? 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-extrabold border-l-4 border-red-600 pl-5' 
+                                : 'text-slate-800 dark:text-slate-200 hover:text-red-600'
+                            }`}
+                          >
+                            <span>{brand.name}</span>
+                            {brand.logo && (
+                              <img src={brand.logo} alt={brand.name} className="w-8 h-8 object-contain rounded-lg border border-slate-50 dark:border-slate-800 p-0.5 bg-white shrink-0" />
+                            )}
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-12 text-center text-xs font-black text-slate-400 uppercase tracking-widest">
+                        {t('no_premium_partners') || 'No Premium Partners'}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {activeTab === 'menu' && (
                   <motion.div
                     key="menu-tab"
                     initial={{ opacity: 0 }}
