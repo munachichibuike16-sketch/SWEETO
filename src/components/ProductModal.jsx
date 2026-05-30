@@ -255,30 +255,30 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-eas-accent/5 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none"></div>
 
               {/* Header Actions */}
-              <div className="absolute top-8 right-8 flex items-center gap-3 z-50">
+              <div className="absolute top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-2 sm:gap-3 z-50">
                 <motion.button 
                   onClick={handleToggleWishlist}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg backdrop-blur-md border ${isWishlisted ? 'bg-red-500 border-red-500 text-white' : 'bg-white/80 border-slate-100 text-slate-400 hover:text-red-500'}`}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg backdrop-blur-md border ${isWishlisted ? 'bg-red-500 border-red-500 text-white' : 'bg-white/80 border-slate-100 text-slate-400 hover:text-red-500'}`}
                 >
-                  <Heart size={20} fill={isWishlisted ? "currentColor" : "none"} />
+                  <Heart className="w-[18px] h-[18px] sm:w-5 sm:h-5" fill={isWishlisted ? "currentColor" : "none"} />
                 </motion.button>
                 <motion.button 
                   onClick={handleShare}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-12 h-12 bg-white/80 backdrop-blur-md border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:text-eas-blue transition-colors shadow-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-md border border-slate-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-400 hover:text-eas-blue transition-colors shadow-lg"
                 >
-                  <Share2 size={20} />
+                  <Share2 className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 </motion.button>
                 <motion.button 
                   onClick={onClose}
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 text-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl"
                 >
-                  <X size={20} />
+                  <X className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 </motion.button>
               </div>
 
@@ -289,11 +289,11 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   {/* Image Gallery Column */}
                   <div className="lg:col-span-7 flex flex-col md:flex-row gap-8">
                     {/* Vertical Thumbnails */}
-                    <div className="flex md:flex-col gap-4 order-2 md:order-1">
+                    <div className="flex md:flex-col gap-3 sm:gap-4 order-2 md:order-1 overflow-x-auto py-1 max-w-full custom-scrollbar">
                       <motion.div 
                         whileHover={{ scale: 1.05 }}
                         onClick={() => setSelectedImage(product.image_url || product.image)}
-                        className={`w-20 h-20 rounded-3xl p-3 cursor-pointer bg-slate-50 border-2 transition-all ${selectedImage === (product.image_url || product.image) ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl p-2 sm:p-3 cursor-pointer bg-slate-50 border-2 transition-all shrink-0 ${selectedImage === (product.image_url || product.image) ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
                       >
                         <img src={product.image_url || product.image} className="w-full h-full object-contain" />
                       </motion.div>
@@ -307,7 +307,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                                 key={idx} 
                                 whileHover={{ scale: 1.05 }}
                                 onClick={() => setSelectedImage(img)}
-                                className={`w-20 h-20 rounded-3xl p-3 cursor-pointer bg-slate-50 border-2 transition-all ${selectedImage === img ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
+                                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl p-2 sm:p-3 cursor-pointer bg-slate-50 border-2 transition-all shrink-0 ${selectedImage === img ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
                               >
                                 <img src={img} className="w-full h-full object-contain" />
                               </motion.div>
@@ -328,7 +328,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       }}
                       onMouseEnter={() => setIsZooming(true)}
                       onMouseLeave={() => setIsZooming(false)}
-                      className="flex-1 aspect-square bg-slate-50/50 rounded-[4rem] border border-slate-100/50 relative overflow-hidden flex items-center justify-center cursor-zoom-in order-1 md:order-2 group shadow-inner"
+                      className="flex-1 aspect-square bg-slate-50/50 rounded-3xl sm:rounded-[3rem] md:rounded-[4rem] border border-slate-100/50 relative overflow-hidden flex items-center justify-center cursor-zoom-in order-1 md:order-2 group shadow-inner"
                     >
                       <AnimatePresence mode="wait">
                         <motion.img 
@@ -343,17 +343,17 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           exit={{ opacity: 0, scale: 1.1 }}
                           transition={{ type: 'spring', damping: 30 }}
                           src={selectedImage} 
-                          className="w-full h-full object-contain p-12 mix-blend-multiply"
+                          className="w-full h-full object-contain p-6 sm:p-8 md:p-12 mix-blend-multiply"
                         />
                       </AnimatePresence>
 
                       {/* Brand Watermark */}
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[120px] font-black text-slate-900/[0.02] pointer-events-none select-none uppercase tracking-tighter">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl sm:text-[120px] font-black text-slate-900/[0.02] pointer-events-none select-none uppercase tracking-tighter">
                         {product.brand || 'SWEETO'}
                       </div>
 
                       {product.discount > 0 && (
-                        <div className="absolute top-10 left-10 bg-red-600 text-white text-xs font-black px-5 py-2 rounded-2xl shadow-xl shadow-red-600/30">
+                        <div className="absolute top-4 left-4 sm:top-10 sm:left-10 bg-red-600 text-white text-[10px] sm:text-xs font-black px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xl shadow-red-600/30">
                           -{product.discount}% EXCLUSIVE
                         </div>
                       )}
@@ -362,7 +362,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
 
                   {/* Info Column */}
                   <div className="lg:col-span-5 flex flex-col">
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="px-4 py-1.5 bg-eas-blue/10 text-eas-blue text-[10px] font-black uppercase tracking-[0.2em] rounded-xl border border-eas-blue/20">
                           {product.category || 'Elite'}
@@ -375,7 +375,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <span>{averageRating}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 sm:mt-0">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         {t('in_stock')}
                       </div>
