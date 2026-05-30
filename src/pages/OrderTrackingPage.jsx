@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -16,6 +16,143 @@ import {
 import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../utils/api';
+
+/* ── Leaflet Dynamic Component with Polyline route trail ── */
+const LeafletMap = ({ destLat, destLng, agentLat, agentLng, history }) => {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const destMarkerRef = useRef(null);
+  const agentMarkerRef = useRef(null);
+  const polylineRef = useRef(null);
+
+  useEffect(() => {
+    let leafletCss = document.getElementById('leaflet-css');
+    if (!leafletCss) {
+      leafletCss = document.createElement('link');
+      leafletCss.id = 'leaflet-css';
+      leafletCss.rel = 'stylesheet';
+      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(leafletCss);
+    }
+
+    let leafletJs = document.getElementById('leaflet-js');
+    if (!leafletJs) {
+      leafletJs = document.createElement('script');
+      leafletJs.id = 'leaflet-js';
+      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      document.body.appendChild(leafletJs);
+    }
+
+    const initMap = () => {
+      if (!window.L || !mapRef.current) return;
+      if (mapInstanceRef.current) return;
+
+      const defaultLat = destLat || 5.3484;
+      const defaultLng = destLng || -3.9788;
+
+      mapInstanceRef.current = window.L.map(mapRef.current, {
+        zoomControl: false,
+        scrollWheelZoom: true
+      }).setView([defaultLat, defaultLng], 14);
+
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(mapInstanceRef.current);
+
+      const homeIcon = window.L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #3b82f6; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const motoIcon = window.L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M3 17.5 8 10h5l4 7.5 M10 10l3-5h4l-3 5 M8 15h9"/></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      destMarkerRef.current = window.L.marker([defaultLat, defaultLng], { icon: homeIcon })
+        .addTo(mapInstanceRef.current)
+        .bindPopup("Your Home");
+
+      if (agentLat && agentLng) {
+        agentMarkerRef.current = window.L.marker([agentLat, agentLng], { icon: motoIcon })
+          .addTo(mapInstanceRef.current)
+          .bindPopup("Delivery Courier");
+
+        const group = new window.L.featureGroup([destMarkerRef.current, agentMarkerRef.current]);
+        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.25));
+      }
+    };
+
+    const checkInterval = setInterval(() => {
+      if (window.L && mapRef.current) {
+        initMap();
+        clearInterval(checkInterval);
+      }
+    }, 200);
+
+    return () => {
+      clearInterval(checkInterval);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!window.L || !mapInstanceRef.current) return;
+
+    if (destLat && destLng && destMarkerRef.current) {
+      destMarkerRef.current.setLatLng([destLat, destLng]);
+    }
+
+    if (agentLat && agentLng) {
+      const end = new window.L.LatLng(agentLat, agentLng);
+      if (agentMarkerRef.current) {
+        agentMarkerRef.current.setLatLng(end);
+      } else {
+        const motoIcon = window.L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M3 17.5 8 10h5l4 7.5 M10 10l3-5h4l-3 5 M8 15h9"/></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        agentMarkerRef.current = window.L.marker([agentLat, agentLng], { icon: motoIcon })
+          .addTo(mapInstanceRef.current)
+          .bindPopup("Delivery Courier");
+      }
+
+      const points = [];
+      if (history && history.length > 0) {
+        history.forEach(p => points.push([parseFloat(p.lat), parseFloat(p.lng)]));
+      }
+      points.push([agentLat, agentLng]);
+
+      if (polylineRef.current) {
+        polylineRef.current.setLatLngs(points);
+      } else {
+        polylineRef.current = window.L.polyline(points, {
+          color: '#10b981',
+          weight: 4,
+          opacity: 0.8,
+          dashArray: '5, 10'
+        }).addTo(mapInstanceRef.current);
+      }
+
+      if (destMarkerRef.current && agentMarkerRef.current) {
+        const group = new window.L.featureGroup([destMarkerRef.current, agentMarkerRef.current]);
+        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.25));
+      }
+    }
+  }, [destLat, destLng, agentLat, agentLng, history]);
+
+  return <div ref={mapRef} style={{ width: '100%', height: '100%', borderRadius: '2rem', zIndex: 1 }} />;
+};
 
 const OrderTrackingPage = () => {
   const { orderId } = useParams();
@@ -25,6 +162,7 @@ const OrderTrackingPage = () => {
   const [loading, setLoading] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  const [trackingData, setTrackingData] = useState(null);
 
   const expectedPin = ((parseInt(orderId) * 837 + 1492) % 9000 + 1000).toString();
 
@@ -75,6 +213,39 @@ const OrderTrackingPage = () => {
     const interval = setInterval(fetchOrder, 30000);
     return () => clearInterval(interval);
   }, [orderId]);
+
+  // Fast coordinate and tracking history polling (every 6 seconds)
+  useEffect(() => {
+    let activePoll = null;
+
+    const fetchTracking = async () => {
+      try {
+        const res = await apiFetch(`/api/orders/${orderId}/tracking`);
+        if (res.ok) {
+          const data = await res.json();
+          setTrackingData(data);
+          // If status changes on the backend, update standard state too
+          if (data.status && order && data.status !== order.status) {
+            setOrder(prev => ({ 
+              ...prev, 
+              status: data.status, 
+              tracking_stage: data.tracking_stage, 
+              estimated_minutes: data.estimated_minutes 
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load tracking coordinates:", err);
+      }
+    };
+
+    fetchTracking();
+    activePoll = setInterval(fetchTracking, 6000);
+
+    return () => {
+      if (activePoll) clearInterval(activePoll);
+    };
+  }, [orderId, order?.status]);
 
   const steps = [
     { id: 'pending', label: t('order_placed') || 'Order Placed', desc: t('waiting_admin_confirmation') || 'Waiting for admin confirmation', icon: Clock },
@@ -173,52 +344,50 @@ const OrderTrackingPage = () => {
               {/* LIVE MAP UI */}
               {currentStatus === 'shipping' && (
                 <div className="mt-12 relative z-10">
-                  <div className="bg-slate-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative h-[300px]">
-                    {/* Simulated Map Background */}
-                    <div className="absolute inset-0 bg-[#0b1121]">
-                      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-                      {/* Simulated Roads */}
-                      <svg className="absolute inset-0 w-full h-full opacity-10">
-                        <path d="M0 150 H1000 M300 0 V600 M600 0 V600 M0 300 H1000" stroke="white" strokeWidth="2" fill="none" />
-                      </svg>
+                  <div className="bg-slate-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative h-[380px]">
+                    
+                    {/* Dynamic Leaflet Map Component */}
+                    <div className="absolute inset-0 w-full h-full">
+                      <LeafletMap 
+                        destLat={trackingData?.destination_lat ? parseFloat(trackingData.destination_lat) : 5.3484}
+                        destLng={trackingData?.destination_lng ? parseFloat(trackingData.destination_lng) : -3.9788}
+                        agentLat={trackingData?.agent_lat ? parseFloat(trackingData.agent_lat) : null}
+                        agentLng={trackingData?.agent_lng ? parseFloat(trackingData.agent_lng) : null}
+                        history={trackingData?.history || []}
+                      />
                     </div>
-
-                    {/* Customer Location */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full animate-ping absolute"></div>
-                      <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white relative z-10 shadow-lg shadow-blue-500/50"></div>
-                      <span className="absolute top-6 left-1/2 -translate-x-1/2 text-[8px] font-black text-white uppercase tracking-widest whitespace-nowrap bg-blue-600 px-2 py-1 rounded">You Are Here</span>
-                    </div>
-
-                    {/* Courier Moving Icon */}
-                    <motion.div 
-                      animate={{ 
-                        x: [100, 200, 150, 250, 300], 
-                        y: [50, 100, 200, 150, 180] 
-                      }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute z-20"
-                    >
-                      <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/50 border border-white/20">
-                        <Truck size={20} className="text-white" />
-                      </div>
-                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 px-3 py-1.5 rounded-xl whitespace-nowrap shadow-xl">
-                        <p className="text-[8px] font-black text-white uppercase tracking-widest leading-none">Courier</p>
-                        <p className="text-[10px] font-black text-emerald-400 mt-1">{order?.estimated_minutes || '15-25'} Mins Away</p>
-                      </div>
-                    </motion.div>
 
                     {/* Map Overlay Info */}
-                    <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none">
-                      <div className="bg-slate-900/80 backdrop-blur-md border border-white/10 p-4 rounded-2xl">
+                    <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-[99]">
+                      <div className="bg-slate-900/90 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-2xl">
                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Estimated Arrival</p>
                         <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">{order?.estimated_minutes || '20'} <span className="text-sm">MINS</span></h4>
                       </div>
-                      <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 flex items-center gap-2">
+                      <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 flex items-center gap-2 pointer-events-auto">
                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
                         Live Tracking
                       </div>
                     </div>
+
+                    {/* Quick navigation links */}
+                    {trackingData?.agent && (
+                      <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center pointer-events-none z-[99]">
+                        <div className="bg-slate-900/90 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 shadow-2xl pointer-events-auto">
+                          <img src={trackingData.agent.avatar} alt={trackingData.agent.name} className="w-9 h-9 rounded-xl object-cover" />
+                          <div>
+                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">Your Courier</p>
+                            <p className="text-xs font-black text-white mt-1">{trackingData.agent.name}</p>
+                          </div>
+                        </div>
+                        <a 
+                          href={`tel:${trackingData.agent.phone}`}
+                          className="bg-emerald-500 hover:bg-emerald-400 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/20 border border-white/10 pointer-events-auto transition-transform active:scale-95"
+                          title="Call Courier"
+                        >
+                          <Phone size={18} />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

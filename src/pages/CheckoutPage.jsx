@@ -121,6 +121,10 @@ const CheckoutPage = () => {
     setIsProcessing(true);
     
     try {
+      const selectedZone = shippingZones.find(z => z.name === formData.city);
+      const destLat = selectedZone ? selectedZone.lat : 5.3484; // Fallback to Cocody center
+      const destLng = selectedZone ? selectedZone.lng : -3.9788;
+
       const orderPayload = {
         customer_name: formData.name,
         customer_contact: `${formData.phone} | ${formData.address || ''}`,
@@ -131,7 +135,9 @@ const CheckoutPage = () => {
         status: 'pending',
         promo_code: promoApplied ? promoInput.toUpperCase() : null,
         city: formData.city,
-        address: formData.address
+        address: formData.address,
+        destination_lat: destLat,
+        destination_lng: destLng
       };
 
       const { data, error } = await supabase

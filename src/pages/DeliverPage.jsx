@@ -23,16 +23,127 @@ const STAGES = [
 
 const stageIdx = (key) => STAGES.findIndex(s => s.key === key);
 
-/* ── Login credentials ── */
-const AGENTS = [
-  { id: 1, name: 'Marcus Okafor',  pin: '1234', zone: 'Lagos Island', avatar: 'https://i.pravatar.cc/100?img=11', rating: 4.8 },
-  { id: 2, name: 'Emeka Nwosu',    pin: '2345', zone: 'Ikeja',        avatar: 'https://i.pravatar.cc/100?img=15', rating: 4.6 },
-  { id: 3, name: 'Chidi Adebayo',  pin: '3456', zone: 'Lekki',        avatar: 'https://i.pravatar.cc/100?img=18', rating: 4.9 },
-];
+/* ── Leaflet Dynamic Component ── */
+const LeafletMap = ({ destLat, destLng, agentLat, agentLng, isDriver = false }) => {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const destMarkerRef = useRef(null);
+  const agentMarkerRef = useRef(null);
+
+  useEffect(() => {
+    let leafletCss = document.getElementById('leaflet-css');
+    if (!leafletCss) {
+      leafletCss = document.createElement('link');
+      leafletCss.id = 'leaflet-css';
+      leafletCss.rel = 'stylesheet';
+      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(leafletCss);
+    }
+
+    let leafletJs = document.getElementById('leaflet-js');
+    if (!leafletJs) {
+      leafletJs = document.createElement('script');
+      leafletJs.id = 'leaflet-js';
+      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      document.body.appendChild(leafletJs);
+    }
+
+    const initMap = () => {
+      if (!window.L || !mapRef.current) return;
+      if (mapInstanceRef.current) return;
+
+      const defaultLat = destLat || 5.3484;
+      const defaultLng = destLng || -3.9788;
+
+      mapInstanceRef.current = window.L.map(mapRef.current, {
+        zoomControl: false,
+        scrollWheelZoom: true
+      }).setView([defaultLat, defaultLng], 14);
+
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(mapInstanceRef.current);
+
+      const homeIcon = window.L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #3b82f6; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const motoIcon = window.L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M3 17.5 8 10h5l4 7.5 M10 10l3-5h4l-3 5 M8 15h9"/></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      destMarkerRef.current = window.L.marker([defaultLat, defaultLng], { icon: homeIcon })
+        .addTo(mapInstanceRef.current)
+        .bindPopup("Destination");
+
+      if (agentLat && agentLng) {
+        agentMarkerRef.current = window.L.marker([agentLat, agentLng], { icon: motoIcon })
+          .addTo(mapInstanceRef.current)
+          .bindPopup("Your Location");
+
+        const group = new window.L.featureGroup([destMarkerRef.current, agentMarkerRef.current]);
+        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.2));
+      }
+    };
+
+    const checkInterval = setInterval(() => {
+      if (window.L && mapRef.current) {
+        initMap();
+        clearInterval(checkInterval);
+      }
+    }, 200);
+
+    return () => {
+      clearInterval(checkInterval);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!window.L || !mapInstanceRef.current) return;
+
+    if (destLat && destLng && destMarkerRef.current) {
+      destMarkerRef.current.setLatLng([destLat, destLng]);
+    }
+
+    if (agentLat && agentLng) {
+      const end = new window.L.LatLng(agentLat, agentLng);
+      if (agentMarkerRef.current) {
+        agentMarkerRef.current.setLatLng(end);
+      } else {
+        const motoIcon = window.L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M3 17.5 8 10h5l4 7.5 M10 10l3-5h4l-3 5 M8 15h9"/></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        agentMarkerRef.current = window.L.marker([agentLat, agentLng], { icon: motoIcon })
+          .addTo(mapInstanceRef.current)
+          .bindPopup("Your Location");
+      }
+
+      if (destMarkerRef.current && agentMarkerRef.current) {
+        const group = new window.L.featureGroup([destMarkerRef.current, agentMarkerRef.current]);
+        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.2));
+      }
+    }
+  }, [destLat, destLng, agentLat, agentLng]);
+
+  return <div ref={mapRef} style={{ width: '100%', height: '100%', borderRadius: '1.5rem', zIndex: 1 }} />;
+};
 
 /* ═══════════════════════════════════
    MAIN PAGE
-═══════════════════════════════════ */
+   ═══════════════════════════════════ */
 export default function DeliverPage() {
   const { t } = useLanguage();
   const [agent, setAgent]   = useState(null);
@@ -40,12 +151,62 @@ export default function DeliverPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView]     = useState('list');     // 'list' | 'detail'
   const [selected, setSel]  = useState(null);
+  const [currentCoords, setCurrentCoords] = useState(null);
 
   useEffect(() => {
     if (agent) {
       fetchOrders();
     }
   }, [agent]);
+
+  // Geolocation watch side-effect for background location tracking
+  useEffect(() => {
+    if (!agent || !orders.length) return;
+
+    // Watch location only if an active order is in progress
+    const activeOrder = orders.find(o => o.stage === 'picked_up' || o.stage === 'on_the_way' || o.stage === 'nearby');
+    if (!activeOrder) return;
+
+    console.log("📍 Geolocation watcher active for order ID:", activeOrder.db_id);
+
+    let watchId = null;
+
+    if ('geolocation' in navigator) {
+      watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          setCurrentCoords({ latitude, longitude });
+
+          try {
+            await apiFetch('/api/agents/ping-location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                order_id: activeOrder.db_id,
+                agent_id: agent.id,
+                lat: latitude,
+                lng: longitude,
+                accuracy
+              })
+            });
+            console.log(`📍 Location pinged successfully: ${latitude}, ${longitude}`);
+          } catch (err) {
+            console.error("Failed to send geolocation ping:", err);
+          }
+        },
+        (err) => {
+          console.error("Geolocation tracking error:", err);
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+      );
+    }
+
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [agent, orders]);
 
   const fetchOrders = async () => {
     try {
@@ -57,14 +218,20 @@ export default function DeliverPage() {
         id: `ORD-${o.id}`,
         db_id: o.id,
         customer_name: o.customer_name,
-        address: o.delivery_address || 'Abidjan, CI',
+        address: o.delivery_address || o.address || 'Abidjan, CI',
         phone: o.customer_contact?.split('|')[0] || '',
         items: (() => { try { return JSON.parse(o.items || '[]').map(i => ({ name: i.name, qty: i.quantity, price: i.price })); } catch(e) { return []; } })(),
-        total: o.total_amount || 0,
+        total: o.total_amount || o.total || 0,
         stage: o.tracking_stage || 'assigned',
         tracking: o.tracking_number || `SWTO-${o.id}`,
+        destination_lat: o.destination_lat,
+        destination_lng: o.destination_lng,
+        agent_lat: o.agent_lat,
+        agent_lng: o.agent_lng
       }));
 
+      // Filter orders assigned to this agent
+      const filteredOrders = agentOrders.filter(o => o.delivery_agent_id === agent.id || o.stage !== 'placed');
       setOrders(agentOrders);
     } catch (err) {
       console.error("Failed to fetch agent orders:", err);
@@ -262,6 +429,30 @@ export default function DeliverPage() {
                     </button>
                   </div>
 
+                  {/* Dynamic Geolocation Live Map */}
+                  {selected.stage !== 'delivered' && selected.destination_lat && (
+                    <div className="bg-slate-800/60 rounded-[1.5rem] border border-white/5 p-4 space-y-3 h-[280px] relative">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Live Route Map</p>
+                      <div className="h-[210px] w-full relative">
+                        <LeafletMap 
+                          destLat={parseFloat(selected.destination_lat)} 
+                          destLng={parseFloat(selected.destination_lng)} 
+                          agentLat={currentCoords?.latitude || (selected.agent_lat ? parseFloat(selected.agent_lat) : null)} 
+                          agentLng={currentCoords?.longitude || (selected.agent_lng ? parseFloat(selected.agent_lng) : null)} 
+                          isDriver={true} 
+                        />
+                        {/* Google Maps directions overlay */}
+                        <a 
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${selected.destination_lat},${selected.destination_lng}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="absolute bottom-3 right-3 bg-eas-blue hover:bg-blue-500 text-white px-3 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-1.5 z-[99] border border-white/10"
+                        >
+                          <Navigation size={10} /> Google Maps
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Items */}
                   <div className="bg-slate-800/60 rounded-[1.5rem] border border-white/5 p-6">
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">{t('items_to_deliver') || 'Items to Deliver'}</p>
@@ -375,6 +566,22 @@ function LoginScreen({ onLogin }) {
   const [pin, setPin]                 = useState('');
   const [error, setError]             = useState('');
   const [loading, setLoading]         = useState(false);
+  const [agents, setAgents]           = useState([]);
+
+  useEffect(() => {
+    async function loadAgents() {
+      try {
+        const res = await apiFetch('/api/public/agents');
+        if (res.ok) {
+          const data = await res.json();
+          setAgents(data);
+        }
+      } catch (err) {
+        console.error("Failed to load agents:", err);
+      }
+    }
+    loadAgents();
+  }, []);
 
   /* ── Registration state ── */
   const [form, setForm] = useState({
@@ -404,15 +611,29 @@ function LoginScreen({ onLogin }) {
     setTimeout(() => { setRegLoading(false); setScreen('submitted'); }, 1200);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!selectedAgent) { setError(t('select_name_first') || 'Please select your name first'); return; }
     setLoading(true);
-    setTimeout(() => {
-      const agent = AGENTS.find(a => a.id === selectedAgent.id && a.pin === pin);
-      if (agent) { onLogin(agent); }
-      else { setError(t('wrong_pin') || 'Wrong PIN. Please try again.'); setPin(''); }
+    try {
+      const res = await apiFetch('/api/public/agents/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: selectedAgent.id, pin })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        onLogin(data.agent);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.message || t('wrong_pin') || 'Wrong PIN. Please try again.');
+        setPin('');
+      }
+    } catch (err) {
+      setError('Connection error. Please try again.');
+      setPin('');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   /* ─────────── SUBMITTED ─────────── */
@@ -574,8 +795,8 @@ function LoginScreen({ onLogin }) {
         {/* Agent selector */}
         <div>
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Select Your Name</p>
-          <div className="space-y-2">
-            {AGENTS.map(a => (
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+            {agents.map(a => (
               <button key={a.id} onClick={() => { setSelectedAgent(a); setError(''); }}
                 className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border-2 transition-all ${
                   selectedAgent?.id === a.id ? 'border-eas-blue bg-eas-blue/10' : 'border-white/5 bg-white/5 hover:border-white/20'
@@ -589,6 +810,9 @@ function LoginScreen({ onLogin }) {
                 {selectedAgent?.id === a.id && <CheckCircle2 size={18} className="text-eas-blue ml-auto" />}
               </button>
             ))}
+            {agents.length === 0 && (
+              <p className="text-xs text-slate-500 italic text-center py-4">No active agents found.</p>
+            )}
           </div>
         </div>
 

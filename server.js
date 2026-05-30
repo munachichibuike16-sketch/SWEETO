@@ -233,6 +233,7 @@ db.exec(`
     name TEXT NOT NULL,
     phone TEXT,
     zone TEXT,
+    pin TEXT DEFAULT '1234',
     status TEXT DEFAULT 'available',
     rating REAL DEFAULT 5.0,
     avatar TEXT,
@@ -310,6 +311,28 @@ try { db.exec('ALTER TABLE sections ADD COLUMN headerStyleB TEXT DEFAULT \'bold\
 try { db.exec('ALTER TABLE sections ADD COLUMN headerImageB TEXT'); } catch (e) {}
 try { db.exec('ALTER TABLE products ADD COLUMN placements TEXT DEFAULT "[]"'); } catch (e) {}
 try { db.exec('ALTER TABLE products ADD COLUMN condition TEXT DEFAULT "new"'); } catch (e) {}
+
+// Real-Time Delivery Tracking Migrations
+try { db.exec('ALTER TABLE orders ADD COLUMN delivery_agent_id INTEGER'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN destination_lat REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN destination_lng REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN agent_lat REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN agent_lng REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE shipping_zones ADD COLUMN lat REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE shipping_zones ADD COLUMN lng REAL'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN pin TEXT DEFAULT "1234"'); } catch(e) {}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS agent_location_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER,
+    agent_id INTEGER,
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    accuracy REAL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
 
 // Visitor tracking migrations
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN country TEXT DEFAULT "Unknown"'); } catch (e) {}
@@ -426,6 +449,56 @@ if (settingsCount === 0) {
   ensureSetting.run('loc_map_embed', '');
   ensureSetting.run('policy_privacy', '');
   ensureSetting.run('policy_terms', '');
+}
+
+// Seed standard Côte d'Ivoire shipping zones with coordinates if empty
+try {
+  const zonesCount = db.prepare('SELECT COUNT(*) as count FROM shipping_zones').get().count;
+  if (zonesCount === 0) {
+    console.log('🌍 Seeding standard Côte d\'Ivoire communes and shipping zones...');
+    const defaultZones = [
+      { name: 'Cocody', price: 1500, lat: 5.3484, lng: -3.9788 },
+      { name: 'Yopougon', price: 2000, lat: 5.3484, lng: -4.0615 },
+      { name: 'Marcory', price: 1500, lat: 5.3161, lng: -3.9937 },
+      { name: 'Abobo', price: 2500, lat: 5.4161, lng: -4.0150 },
+      { name: 'Treichville', price: 1500, lat: 5.3090, lng: -4.0130 },
+      { name: 'Koumassi', price: 2000, lat: 5.2970, lng: -3.9630 },
+      { name: 'Adjamé', price: 1500, lat: 5.3530, lng: -4.0200 },
+      { name: 'Port-Bouët', price: 3000, lat: 5.2600, lng: -3.9550 },
+      { name: 'Plateau', price: 1500, lat: 5.3200, lng: -4.0200 },
+      { name: 'Attécoubé', price: 2000, lat: 5.3400, lng: -4.0400 },
+      { name: 'Yamoussoukro', price: 5000, lat: 6.8161, lng: -5.2740 },
+      { name: 'Bouaké', price: 6000, lat: 7.6900, lng: -5.0300 },
+      { name: 'San-Pédro', price: 8000, lat: 4.7500, lng: -6.6400 }
+    ];
+    const insertZone = db.prepare('INSERT INTO shipping_zones (name, price, lat, lng) VALUES (?, ?, ?, ?)');
+    defaultZones.forEach(z => {
+      insertZone.run(z.name, z.price, z.lat, z.lng);
+    });
+    console.log('🌍 Seeding standard Côte d\'Ivoire communes completed successfully.');
+  }
+} catch (err) {
+  console.error('Failed to seed standard shipping zones:', err);
+}
+
+// Seed default agents if empty
+try {
+  const agentsCount = db.prepare('SELECT COUNT(*) as count FROM agents').get().count;
+  if (agentsCount === 0) {
+    console.log('🏍️ Seeding default delivery agents...');
+    const defaultAgents = [
+      { name: 'Marcus Okafor', phone: '+225 0707123456', zone: 'Cocody', pin: '1234', avatar: 'https://i.pravatar.cc/100?img=11', rating: 4.8 },
+      { name: 'Emeka Nwosu', phone: '+225 0505123456', zone: 'Marcory', pin: '2345', avatar: 'https://i.pravatar.cc/100?img=15', rating: 4.6 },
+      { name: 'Chidi Adebayo', phone: '+225 0101123456', zone: 'Plateau', pin: '3456', avatar: 'https://i.pravatar.cc/100?img=18', rating: 4.9 }
+    ];
+    const insertAgent = db.prepare('INSERT INTO agents (name, phone, zone, pin, avatar, rating) VALUES (?, ?, ?, ?, ?, ?)');
+    defaultAgents.forEach(a => {
+      insertAgent.run(a.name, a.phone, a.zone, a.pin, a.avatar, a.rating);
+    });
+    console.log('🏍️ Seeding default delivery agents completed.');
+  }
+} catch (err) {
+  console.error('Failed to seed default delivery agents:', err);
 }
 
 // Sync ADMIN_EMAIL environment variable to database settings if provided
@@ -1315,6 +1388,177 @@ app.delete('/api/shipping_zones/:id', authenticateAdmin, (req, res) => {
     db.prepare('DELETE FROM shipping_zones WHERE id = ?').run(req.params.id);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Real-Time Delivery Tracking API
+
+// GET /api/public/agents (Public list of available agents for selection in DeliverPage)
+app.get('/api/public/agents', (req, res) => {
+  try {
+    const agents = db.prepare('SELECT id, name, zone, avatar, rating FROM agents').all();
+    res.json(agents);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/public/agents/login (Allows agents to log in by validating PIN)
+app.post('/api/public/agents/login', (req, res) => {
+  const { agent_id, pin } = req.body;
+  if (!agent_id || !pin) {
+    return res.status(400).json({ error: 'Missing parameter: agent_id, pin' });
+  }
+  try {
+    const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(agent_id);
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    if (agent.pin === pin) {
+      // Exclude pin from response
+      const { pin: _, ...safeAgent } = agent;
+      res.json({ success: true, agent: safeAgent });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid PIN' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/agents/ping-location (Allows agents to report coordinates)
+app.post('/api/agents/ping-location', (req, res) => {
+  const { order_id, agent_id, lat, lng, accuracy } = req.body;
+  if (!order_id || !agent_id || lat === undefined || lng === undefined) {
+    return res.status(400).json({ error: 'Missing required parameters: order_id, agent_id, lat, lng' });
+  }
+
+  // Support both SWTO-N format and raw numerical N format
+  const numericOrderId = typeof order_id === 'string' && order_id.includes('-') 
+    ? parseInt(order_id.split('-')[1]) 
+    : parseInt(order_id);
+
+  try {
+    // 1. Update order with latest agent position
+    const updateOrder = db.prepare('UPDATE orders SET agent_lat = ?, agent_lng = ? WHERE id = ?');
+    updateOrder.run(lat, lng, numericOrderId);
+
+    // 2. Insert into coordinate history log
+    const insertHistory = db.prepare('INSERT INTO agent_location_history (order_id, agent_id, lat, lng, accuracy) VALUES (?, ?, ?, ?, ?)');
+    insertHistory.run(numericOrderId, agent_id, lat, lng, accuracy || null);
+
+    res.json({ success: true, message: 'Position ping logged successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/orders/:id/tracking (Fetch dynamic status, customer home, agent position, and path logs)
+app.get('/api/orders/:id/tracking', (req, res) => {
+  const { id } = req.params;
+  const numericOrderId = typeof id === 'string' && id.includes('-') 
+    ? parseInt(id.split('-')[1]) 
+    : parseInt(id);
+
+  try {
+    // 1. Fetch order details
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(numericOrderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // 2. Fetch agent info if assigned
+    let agent = null;
+    if (order.delivery_agent_id) {
+      agent = db.prepare('SELECT id, name, phone, zone, avatar, rating FROM agents WHERE id = ?').get(order.delivery_agent_id);
+    }
+
+    // 3. Fetch past route trail
+    const history = db.prepare('SELECT lat, lng, created_at FROM agent_location_history WHERE order_id = ? ORDER BY created_at ASC').all(numericOrderId);
+
+    // 4. Fallback for destination lat/lng based on city
+    let destLat = order.destination_lat;
+    let destLng = order.destination_lng;
+    if ((!destLat || !destLng) && order.city) {
+      const zone = db.prepare('SELECT lat, lng FROM shipping_zones WHERE name = ?').get(order.city);
+      if (zone && zone.lat && zone.lng) {
+        destLat = zone.lat;
+        destLng = zone.lng;
+      } else {
+        destLat = 5.3484;
+        destLng = -3.9788;
+      }
+    }
+
+    res.json({
+      order_id: order.id,
+      customer_name: order.customer_name,
+      customer_contact: order.customer_contact,
+      status: order.status,
+      tracking_stage: order.tracking_stage || 'placed',
+      estimated_minutes: order.estimated_minutes || 20,
+      destination_lat: destLat,
+      destination_lng: destLng,
+      agent_lat: order.agent_lat || null,
+      agent_lng: order.agent_lng || null,
+      agent,
+      history
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/orders/:id/assign-agent (Assigns a delivery courier to an order)
+app.post('/api/orders/:id/assign-agent', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  const { agent_id } = req.body;
+  if (!agent_id) {
+    return res.status(400).json({ error: 'Missing parameter: agent_id' });
+  }
+
+  const numericOrderId = typeof id === 'string' && id.includes('-') 
+    ? parseInt(id.split('-')[1]) 
+    : parseInt(id);
+
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(numericOrderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(agent_id);
+    if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+    // Prepopulate destination coords if null based on city zone coordinates
+    let destLat = order.destination_lat;
+    let destLng = order.destination_lng;
+    if ((!destLat || !destLng) && order.city) {
+      const zone = db.prepare('SELECT lat, lng FROM shipping_zones WHERE name = ?').get(order.city);
+      if (zone && zone.lat && zone.lng) {
+        destLat = zone.lat;
+        destLng = zone.lng;
+      }
+    }
+
+    // Set initial agent position to their zone or standard coordinate center (e.g. Marcory)
+    const agentZone = db.prepare('SELECT lat, lng FROM shipping_zones WHERE name = ?').get(agent.zone || '');
+    const initialAgentLat = agentZone ? agentZone.lat : 5.3161;
+    const initialAgentLng = agentZone ? agentZone.lng : -3.9937;
+
+    const stmt = db.prepare(`
+      UPDATE orders 
+      SET delivery_agent_id = ?, 
+          tracking_stage = 'assigned',
+          destination_lat = COALESCE(destination_lat, ?),
+          destination_lng = COALESCE(destination_lng, ?),
+          agent_lat = ?,
+          agent_lng = ?
+      WHERE id = ?
+    `);
+    stmt.run(agent_id, destLat, destLng, initialAgentLat, initialAgentLng, numericOrderId);
+
+    res.json({ success: true, message: 'Agent assigned and tracking coordinates initialized' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Generic Upload Endpoint
