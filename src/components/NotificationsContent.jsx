@@ -8,10 +8,23 @@ const NotificationsContent = ({ onProductClick }) => {
   const { products, settings } = useStore();
   const { t } = useLanguage();
   const [filter, setFilter] = useState('all'); // all, unread, read
-  const [readIds, setReadIds] = useState(() => {
-    const saved = localStorage.getItem('read_notifications');
-    return saved ? JSON.parse(saved) : [];
+  const [readNotifs, setReadNotifs] = useState(() => {
+    const saved = localStorage.getItem('read_notifications_timed');
+    return saved ? JSON.parse(saved) : {};
   });
+
+  // Tick every 10 seconds to force-refresh the list for vanishing notifications
+  const [, setTick] = useState(0);
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setTick(t => t + 1);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isNotificationRead = (id) => {
+    return !!readNotifs[id];
+  };
 
   // Mock notifications based on products
   const newArrivals = products.filter(p => p.is_new_arrival).map(p => ({
@@ -21,7 +34,7 @@ const NotificationsContent = ({ onProductClick }) => {
     message: `A new ${p.category} just arrived! Don't miss out on the latest tech.`,
     time: '2 hours ago',
     product: p,
-    isRead: readIds.includes(`new-${p.id}`)
+    isRead: isNotificationRead(`new-${p.id}`)
   }));
 
   const priceDrops = products.filter(p => p.original_price > p.price).map(p => ({
@@ -31,10 +44,22 @@ const NotificationsContent = ({ onProductClick }) => {
     message: `Huge savings! The price just dropped by ${Math.round((p.original_price - p.price) / p.original_price * 100)}%.`,
     time: '5 hours ago',
     product: p,
-    isRead: readIds.includes(`price-${p.id}`)
+    isRead: isNotificationRead(`price-${p.id}`)
   }));
 
-  const allNotifications = [...newArrivals, ...priceDrops].sort((a, b) => b.id.localeCompare(a.id));
+  const allNotifications = [...newArrivals, ...priceDrops]
+    .filter(n => {
+      const readAt = readNotifs[n.id];
+      if (readAt) {
+        // If read more than 10 minutes ago, hide it (vanish)
+        const tenMinutes = 10 * 60 * 1000;
+        if (Date.now() - readAt > tenMinutes) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .sort((a, b) => b.id.localeCompare(a.id));
   
   const filteredNotifs = allNotifications.filter(n => {
     if (filter === 'unread') return !n.isRead;
@@ -43,17 +68,35 @@ const NotificationsContent = ({ onProductClick }) => {
   });
 
   const handleMarkAsRead = (id) => {
-    if (!readIds.includes(id)) {
-      const newReadIds = [...readIds, id];
-      setReadIds(newReadIds);
-      localStorage.setItem('read_notifications', JSON.stringify(newReadIds));
+    if (!readNotifs[id]) {
+      const updated = { ...readNotifs, [id]: Date.now() };
+      setReadNotifs(updated);
+      localStorage.setItem('read_notifications_timed', JSON.stringify(updated));
+      
+      // Also sync legacy to keep other views happy if they check it
+      const legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+      if (!legacy.includes(id)) {
+        legacy.push(id);
+        localStorage.setItem('read_notifications', JSON.stringify(legacy));
+      }
     }
   };
 
   const handleMarkAllRead = () => {
-    const allIds = allNotifications.map(n => n.id);
-    setReadIds(allIds);
-    localStorage.setItem('read_notifications', JSON.stringify(allIds));
+    const updated = { ...readNotifs };
+    const legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+    const now = Date.now();
+    allNotifications.forEach(n => {
+      if (!updated[n.id]) {
+        updated[n.id] = now;
+      }
+      if (!legacy.includes(n.id)) {
+        legacy.push(n.id);
+      }
+    });
+    setReadNotifs(updated);
+    localStorage.setItem('read_notifications_timed', JSON.stringify(updated));
+    localStorage.setItem('read_notifications', JSON.stringify(legacy));
   };
 
   return (

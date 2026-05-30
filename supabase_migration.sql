@@ -65,6 +65,7 @@ ALTER TABLE sections
 -- ---------------------------------------------------------------
 -- Run this to enable real-time order notifications in the admin dashboard
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
 
 -- Confirm migration success
 SELECT 'Migration complete' AS status;

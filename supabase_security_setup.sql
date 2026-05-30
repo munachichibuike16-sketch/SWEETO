@@ -274,3 +274,4 @@ CREATE POLICY "Allow admin all access on visitor_log" ON public.visitor_log
 -- CREATE PUBLICATION supabase_realtime;
 -- =====================================================================
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.products;

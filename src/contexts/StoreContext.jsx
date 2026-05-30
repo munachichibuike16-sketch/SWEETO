@@ -16,6 +16,7 @@ export const StoreProvider = ({ children }) => {
   // Track previous products for native notification comparison
   const prevProductsRef = useRef(null);
   const hasInitialLoadRef = useRef(false);
+  const notifiedProductIdsRef = useRef(new Set());
 
   const [settings, setSettings] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +24,7 @@ export const StoreProvider = ({ children }) => {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [realtimeNotification, setRealtimeNotification] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -52,6 +54,10 @@ export const StoreProvider = ({ children }) => {
 
   // Helper: fire a native browser notification
   const fireNativeNotification = useCallback((title, body, url) => {
+    // Only fire if user has an account
+    const isUserLoggedIn = localStorage.getItem('sweetohub_session') !== null;
+    if (!isUserLoggedIn) return;
+
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
       const notification = new Notification(title, {
@@ -64,15 +70,42 @@ export const StoreProvider = ({ children }) => {
         if (url) window.location.href = url;
         notification.close();
       };
+
+      // WhatsApp Style: Auto-dismiss from native notification drawer after 10 minutes if unread
+      setTimeout(() => {
+        notification.close();
+      }, 10 * 60 * 1000); // 10 minutes
     } catch (err) {
       console.log('Native notification error:', err);
     }
   }, []);
 
-  // Detect new products and price drops, fire native notifications
+  // Trigger in-app visual banner notification for online users
+  const triggerInAppNotification = useCallback((product) => {
+    if (!product || !product.id) return;
+    if (notifiedProductIdsRef.current.has(product.id)) return;
+
+    // Track recently notified IDs to prevent duplicate alerts
+    notifiedProductIdsRef.current.add(product.id);
+
+    // Trigger visual pop-up state
+    setRealtimeNotification(product);
+
+    // Auto-dismiss the visual in-app banner after 8 seconds
+    setTimeout(() => {
+      setRealtimeNotification(prev => prev?.id === product.id ? null : prev);
+    }, 8000);
+  }, []);
+
+  // Detect new products and price drops, fire native and in-app notifications
   useEffect(() => {
     const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin');
     if (isAdminPage) return;
+
+    // Only process notifications if the user is logged in
+    const isUserLoggedIn = localStorage.getItem('sweetohub_session') !== null;
+    if (!isUserLoggedIn) return;
+
     if (!products || products.length === 0) return;
 
     // Skip the very first load — only notify on subsequent updates
@@ -98,7 +131,9 @@ export const StoreProvider = ({ children }) => {
       const body = newProducts.length === 1
         ? `Check out the new ${first.category || 'product'} now available in store!`
         : `${newProducts.map(p => p.name).slice(0, 3).join(', ')}${newProducts.length > 3 ? '...' : ''} just dropped!`;
-      fireNativeNotification(title, body, '/new-arrivals');
+      
+      fireNativeNotification(title, body, `/product/${first.id}`);
+      triggerInAppNotification(first);
     }
 
     // Detect price drops
@@ -116,12 +151,14 @@ export const StoreProvider = ({ children }) => {
       const body = priceDrops.length === 1
         ? `Now ${dropPercent}% off! Don't miss this deal.`
         : `${priceDrops.map(p => p.name).slice(0, 3).join(', ')} and more!`;
-      fireNativeNotification(title, body, '/deals');
+      
+      fireNativeNotification(title, body, `/product/${first.id}`);
+      triggerInAppNotification(first);
     }
 
     // Update the snapshot
     prevProductsRef.current = new Map(products.map(p => [p.id, p]));
-  }, [products, fireNativeNotification]);
+  }, [products, fireNativeNotification, triggerInAppNotification]);
 
   const fetchStoreData = async (isBackground = false) => {
     try {
@@ -458,6 +495,45 @@ export const StoreProvider = ({ children }) => {
     return () => clearInterval(pollInterval);
   }, []);
 
+  // Subscribe to real-time changes in Supabase products table
+  useEffect(() => {
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin');
+    if (isAdminPage) return;
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('products-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'products' },
+        (payload) => {
+          console.log('Realtime change received:', payload);
+          const newProduct = payload.new;
+          
+          // Only show notification if the user is logged in
+          const isUserLoggedIn = localStorage.getItem('sweetohub_session') !== null;
+          if (isUserLoggedIn) {
+            const title = `🆕 New Arrival: ${newProduct.name}`;
+            const body = `Check out the new ${newProduct.category || 'product'} now available in store!`;
+            
+            // 1. Native device notification
+            fireNativeNotification(title, body, `/product/${newProduct.id}`);
+            
+            // 2. In-app floating clickable notification
+            triggerInAppNotification(newProduct);
+            
+            // 3. Immediately refresh local products state
+            fetchStoreData(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fireNativeNotification, triggerInAppNotification]);
+
   useEffect(() => {
     if (settings?.language) {
       document.documentElement.lang = settings.language;
@@ -527,6 +603,8 @@ export const StoreProvider = ({ children }) => {
       confirmDialog,
       requestConfirm,
       closeConfirm,
+      realtimeNotification,
+      setRealtimeNotification,
       refreshData: () => fetchStoreData(true) 
     }}>
       {children}
