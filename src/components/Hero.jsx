@@ -10,6 +10,24 @@ const Hero = ({ banners, layout = 'slider' }) => {
   const { products, settings } = useStore();
   const { t, t_smart, isRTL } = useLanguage();
 
+  const handleBannerClick = (link) => {
+    if (!link) return;
+    if (link.startsWith('http://') || link.startsWith('https://')) {
+      window.location.href = link;
+      return;
+    }
+    if (link.startsWith('/')) {
+      if (link.startsWith('/#/')) {
+        window.location.href = link;
+      } else {
+        window.location.href = '/#' + link;
+      }
+      return;
+    }
+    window.location.href = link;
+  };
+
+
   // 1. Parse Settings Banners
   const parsedSettingsBanners = typeof banners === 'string' ? JSON.parse(banners) : (banners || []);
   
@@ -91,7 +109,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
         <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-[600px]">
             {/* Main Large Banner — auto-cycles all products */}
-            <div className="lg:col-span-8 h-[350px] sm:h-[400px] lg:h-full relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col md:flex-row items-center p-5 md:p-16 gap-6 md:gap-10 group">
+            <div 
+              onClick={() => handleBannerClick(mainSlot.link)}
+              className="lg:col-span-8 h-[350px] sm:h-[400px] lg:h-full relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col md:flex-row items-center p-5 md:p-16 gap-6 md:gap-10 group cursor-pointer"
+            >
               
               {/* Ambient Background Light Spot */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[350px] sm:h-[350px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -121,7 +142,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 
                 <div className="flex flex-wrap items-center gap-4 md:gap-5">
                   <button
-                    onClick={() => mainSlot.link && (window.location.href = mainSlot.link)}
+                    onClick={(e) => { e.stopPropagation(); handleBannerClick(mainSlot.link); }}
                     className="px-6 py-3.5 sm:px-8 sm:py-4 bg-gradient-to-r from-eas-blue to-blue-600 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all duration-300 shadow-[0_10px_35px_rgba(59,130,246,0.35)] hover:shadow-[0_15px_45px_rgba(59,130,246,0.5)] active:scale-95"
                   >
                     {t('explore_now')}
@@ -210,7 +231,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
             <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-8 h-auto lg:h-full">
               
               {/* Side A Banner */}
-              <div className="flex-1 bg-gradient-to-br from-[#0b1424] to-[#020617] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/5 p-5 md:p-8 flex items-center gap-4 hover:border-white/10 transition-all duration-300 min-h-[140px]">
+              <div 
+                onClick={() => sideA && handleBannerClick(sideA.link)}
+                className="flex-1 bg-gradient-to-br from-[#0b1424] to-[#020617] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/5 p-5 md:p-8 flex items-center gap-4 hover:border-white/10 transition-all duration-300 min-h-[140px] cursor-pointer"
+              >
                 {sideA ? (
                   <>
                     {/* Left Column Text */}
@@ -218,7 +242,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                       <span className="text-[8px] font-black text-eas-blue uppercase tracking-[0.2em] mb-1.5">{sideA.subtitle || t('exclusive_deal')}</span>
                       <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{sideA.title}</h3>
                       <button 
-                        onClick={() => sideA.link && (window.location.href = sideA.link)} 
+                        onClick={(e) => { e.stopPropagation(); sideA.link && handleBannerClick(sideA.link); }} 
                         className="w-fit px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white hover:text-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-lg"
                       >
                         {t('view_product')}
@@ -243,7 +267,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
               </div>
 
               {/* Side B Banner */}
-              <div className="flex-1 bg-[#0f111a] rounded-3xl relative overflow-hidden group shadow-2xl p-5 md:p-8 flex items-center gap-4 hover:shadow-blue-500/10 transition-shadow border border-white/5 hover:border-white/10 min-h-[140px]">
+              <div 
+                onClick={() => sideB && handleBannerClick(sideB.link)}
+                className="flex-1 bg-[#0f111a] rounded-3xl relative overflow-hidden group shadow-2xl p-5 md:p-8 flex items-center gap-4 hover:shadow-blue-500/10 transition-shadow border border-white/5 hover:border-white/10 min-h-[140px] cursor-pointer"
+              >
                 {sideB ? (
                   <>
                     {/* Left Column Text */}
@@ -251,7 +278,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                       <span className="text-[8px] font-black text-white/70 uppercase tracking-[0.2em] mb-1.5">{sideB.subtitle || t('special_offer')}</span>
                       <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{sideB.title}</h3>
                       <button 
-                        onClick={() => sideB.link && (window.location.href = sideB.link)} 
+                        onClick={(e) => { e.stopPropagation(); sideB.link && handleBannerClick(sideB.link); }} 
                         className="w-fit px-4 py-2 bg-white hover:bg-slate-900 hover:text-white text-eas-blue rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-xl"
                       >
                         {t('claim_offer')}
@@ -287,7 +314,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
           
           {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
-          <div className="lg:col-span-8 h-[350px] sm:h-[420px] lg:h-full relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0057ff] via-[#008cff] to-[#00c6ff] shadow-2xl border border-white/10 group">
+          <div 
+            onClick={() => handleBannerClick(mainSlot.link)}
+            className="lg:col-span-8 h-[350px] sm:h-[420px] lg:h-full relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0057ff] via-[#008cff] to-[#00c6ff] shadow-2xl border border-white/10 group cursor-pointer"
+          >
             
             {/* Full Bleed Image (Vivid 100% Opacity) */}
             {mainSlot.image && (
@@ -333,7 +363,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               
               <div className="flex items-center gap-6">
                 <button
-                  onClick={() => mainSlot.link && (window.location.href = mainSlot.link)}
+                  onClick={(e) => { e.stopPropagation(); handleBannerClick(mainSlot.link); }}
                   className="px-8 py-3 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all rounded-md shadow-2xl active:scale-95"
                 >
                   {t('explore_now')}
@@ -383,7 +413,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
           <div className="lg:col-span-4 flex flex-col gap-8 h-auto lg:h-full">
             
             {/* Side A Banner */}
-            <div className="flex-1 bg-gradient-to-tr from-[#9600ff] via-[#ae00ff] to-[#00b7ff] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/10 p-8 flex flex-col justify-center min-h-[190px]">
+            <div 
+              onClick={() => sideA && handleBannerClick(sideA.link)}
+              className="flex-1 bg-gradient-to-tr from-[#9600ff] via-[#ae00ff] to-[#00b7ff] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/10 p-8 flex flex-col justify-center min-h-[190px] cursor-pointer"
+            >
               
               {/* Full Bleed Image (Vivid 100% Opacity) */}
               {sideA && sideA.image && (
@@ -406,7 +439,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     {sideA.title}
                   </h3>
                   <button 
-                    onClick={() => sideA.link && (window.location.href = sideA.link)} 
+                    onClick={(e) => { e.stopPropagation(); sideA.link && handleBannerClick(sideA.link); }} 
                     className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2 hover:underline group-hover:translate-x-0.5 transition-all"
                   >
                     Shop Now <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
@@ -420,7 +453,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
             </div>
 
             {/* Side B Banner */}
-            <div className="flex-1 bg-[#0f111a] rounded-3xl relative overflow-hidden group shadow-2xl p-8 flex flex-col justify-center min-h-[190px] border border-white/10 hover:border-white/20 transition-all duration-300">
+            <div 
+              onClick={() => sideB && handleBannerClick(sideB.link)}
+              className="flex-1 bg-[#0f111a] rounded-3xl relative overflow-hidden group shadow-2xl p-8 flex flex-col justify-center min-h-[190px] border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
+            >
               
               {/* Full Bleed Image (Vivid 100% Opacity) */}
               {sideB && sideB.image && (
@@ -443,7 +479,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     {sideB.title}
                   </h3>
                   <button 
-                    onClick={() => sideB.link && (window.location.href = sideB.link)} 
+                    onClick={(e) => { e.stopPropagation(); sideB.link && handleBannerClick(sideB.link); }} 
                     className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2 hover:underline group-hover:translate-x-0.5 transition-all"
                   >
                     Shop Now <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
@@ -466,7 +502,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
   if (sliderStyle === 'cover') {
     return (
-      <section className="relative h-[480px] sm:h-[650px] w-full overflow-hidden bg-slate-950 transition-colors duration-1000">
+      <section 
+        onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
+        className="relative h-[480px] sm:h-[650px] w-full overflow-hidden bg-slate-950 transition-colors duration-1000 cursor-pointer"
+      >
         
         {/* Full-Bleed Cover Image */}
         <AnimatePresence mode="sync">
@@ -535,7 +574,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               className="flex items-center gap-4 sm:gap-6 pt-2 sm:pt-4"
             >
               <button 
-                onClick={() => displayBanners[currentSlide]?.link && (window.location.href = displayBanners[currentSlide].link)}
+                onClick={(e) => { e.stopPropagation(); handleBannerClick(displayBanners[currentSlide]?.link); }}
                 className="px-6 py-3 sm:px-10 sm:py-3.5 bg-white text-black rounded-md font-black text-[10px] sm:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all shadow-2xl active:scale-95"
               >
                 {t('shop_now')}
@@ -553,7 +592,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
         </div>
 
         {/* Modern Side Navigation Arrows */}
-        <div className={`hidden md:flex absolute ${isRTL ? 'left-12' : 'right-12'} bottom-12 items-center gap-4 z-40`}>
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className={`hidden md:flex absolute ${isRTL ? 'left-12' : 'right-12'} bottom-12 items-center gap-4 z-40`}
+        >
           <button 
             onClick={prevSlide}
             className="w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-black transition-all group"
@@ -569,7 +611,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
         </div>
    
         {/* Progress Dots */}
-        <div className={`absolute ${isRTL ? 'right-12' : 'left-12'} bottom-4 sm:bottom-12 flex gap-2 sm:gap-3 z-40`}>
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className={`absolute ${isRTL ? 'right-12' : 'left-12'} bottom-4 sm:bottom-12 flex gap-2 sm:gap-3 z-40`}
+        >
           {displayBanners.map((_, i) => (
             <button 
               key={i} 
@@ -584,7 +629,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
   // Default: Classic 'glass' split style with side-by-side elements
   return (
-    <section className="relative h-[520px] sm:h-[650px] w-full overflow-hidden bg-slate-50 dark:bg-[#020617] transition-colors duration-1000">
+    <section 
+      onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
+      className="relative h-[520px] sm:h-[650px] w-full overflow-hidden bg-slate-50 dark:bg-[#020617] transition-colors duration-1000 cursor-pointer"
+    >
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 z-0 overflow-hidden opacity-30 dark:opacity-20 pointer-events-none">
         {[...Array(8)].map((_, i) => (
@@ -648,7 +696,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 className={`flex items-center gap-4 sm:gap-6 justify-center ${isRTL ? 'md:justify-end' : 'md:justify-start'} pt-2 sm:pt-4`}
               >
                 <button 
-                  onClick={() => displayBanners[currentSlide]?.link && (window.location.href = displayBanners[currentSlide].link)}
+                  onClick={(e) => { e.stopPropagation(); handleBannerClick(displayBanners[currentSlide]?.link); }}
                   className="px-6 py-3.5 sm:px-12 sm:py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl sm:rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-eas-blue dark:hover:bg-eas-blue dark:hover:text-white transition-all shadow-2xl shadow-slate-900/20"
                 >
                   {t('shop_now')}
@@ -699,7 +747,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
       </AnimatePresence>
 
        {/* Modern Side Navigation Arrows */}
-      <div className={`hidden md:flex absolute ${isRTL ? 'left-12' : 'right-12'} bottom-12 items-center gap-4 z-40`}>
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className={`hidden md:flex absolute ${isRTL ? 'left-12' : 'right-12'} bottom-12 items-center gap-4 z-40`}
+      >
         <button 
           onClick={prevSlide}
           className="w-16 h-16 bg-white/5 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center hover:bg-eas-blue hover:text-white dark:hover:bg-eas-blue dark:hover:text-white transition-all group"
@@ -715,7 +766,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
       </div>
  
        {/* Progress Dots */}
-       <div className={`absolute ${isRTL ? 'right-12' : 'left-12'} bottom-4 sm:bottom-12 flex gap-2 sm:gap-3 z-40`}>
+       <div 
+         onClick={(e) => e.stopPropagation()}
+         className={`absolute ${isRTL ? 'right-12' : 'left-12'} bottom-4 sm:bottom-12 flex gap-2 sm:gap-3 z-40`}
+       >
         {displayBanners.map((_, i) => (
           <button 
             key={i} 
