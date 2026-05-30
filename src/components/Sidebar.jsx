@@ -18,6 +18,40 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isLangExpanded, setIsLangExpanded] = useState(false);
 
+  // Touch Swipe-to-Close Gestures
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    });
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY
+    });
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distanceX = touchEnd.x - touchStart.x;
+    const distanceY = touchEnd.y - touchStart.y;
+    const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+    if (isHorizontalSwipe) {
+      if (isRTL) {
+        if (distanceX > minSwipeDistance) onClose();
+      } else {
+        if (distanceX < -minSwipeDistance) onClose();
+      }
+    }
+  };
+
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'fr', name: 'Français' },
@@ -140,6 +174,9 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             animate={{ x: 0 }}
             exit={{ x: isRTL ? '100%' : '-100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
             className={`fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-screen w-full max-w-[320px] sm:max-w-[360px] bg-white dark:bg-slate-900 shadow-[20px_0_50px_rgba(0,0,0,0.15)] z-[210] overflow-hidden flex flex-col border-r border-slate-100 dark:border-slate-800/60`}
           >
             {/* Custom Tab Header (Stretches full width) */}
@@ -188,12 +225,8 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                           <div className="flex items-stretch justify-between bg-white dark:bg-slate-900 min-h-[52px]">
                             <button
                               onClick={() => {
-                                if (hasChildren) {
-                                  toggleExpand(cat.id);
-                                } else {
-                                  onCategorySelect(cat.name);
-                                  onClose();
-                                }
+                                onCategorySelect(cat.name);
+                                onClose();
                               }}
                               className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-red-600 transition-colors cursor-pointer"
                             >
@@ -225,7 +258,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                 className="overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 divide-y divide-slate-100/50 dark:divide-slate-800/30"
                               >
                                 {subs.map((sub, subIdx) => (
-                                  <div key={sub.id || subIdx} className="flex items-stretch justify-between pl-12 pr-0 min-h-[48px]">
+                                  <div key={sub.id || subIdx} className="flex items-stretch justify-between pl-12 pr-6 min-h-[48px]">
                                     <button
                                       onClick={() => {
                                         onCategorySelect(sub.name);
@@ -235,9 +268,6 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                     >
                                       {t_smart(sub.name)}
                                     </button>
-                                    <div className="w-12 flex items-center justify-center text-slate-300 dark:text-slate-700 shrink-0">
-                                      <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
-                                    </div>
                                   </div>
                                 ))}
                               </motion.div>
@@ -269,9 +299,6 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                         >
                           {item.name}
                         </button>
-                        <div className="w-12 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-700 shrink-0">
-                          <ChevronRight className="w-4 h-4 stroke-[3]" />
-                        </div>
                       </div>
                     ))}
 
