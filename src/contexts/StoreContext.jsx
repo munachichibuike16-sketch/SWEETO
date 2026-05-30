@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
+import { API_BASE_URL } from '../utils/api';
 
 const StoreContext = createContext();
 
@@ -93,9 +94,11 @@ export const StoreProvider = ({ children }) => {
           if (Notification.permission === 'granted') {
             try {
               // 1. Fetch public VAPID key from the backend Express server
-              const keyRes = await fetch('http://localhost:3000/api/push/public-key', {
-                targetAddressSpace: 'private' // CORS/PNA compatible
-              });
+              const fetchOptions = {};
+              if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
+                fetchOptions.targetAddressSpace = 'private';
+              }
+              const keyRes = await fetch(`${API_BASE_URL}/api/push/public-key`, fetchOptions);
               if (!keyRes.ok) throw new Error('VAPID key fetch failed');
               const { publicKey } = await keyRes.json();
               
@@ -112,12 +115,15 @@ export const StoreProvider = ({ children }) => {
               console.log('✅ Successfully subscribed to closed-tab Web Push API:', subscription);
 
               // 3. Post subscription keys to our Node.js/SQLite server
-              await fetch('http://localhost:3000/api/push/subscribe', {
+              const subOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(subscription),
-                targetAddressSpace: 'private' // CORS/PNA compatible
-              });
+                body: JSON.stringify(subscription)
+              };
+              if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
+                subOptions.targetAddressSpace = 'private';
+              }
+              await fetch(`${API_BASE_URL}/api/push/subscribe`, subOptions);
               console.log('✅ Registered Web Push subscription with SQLite database.');
             } catch (err) {
               console.warn('⚠️ Web Push subscription failed:', err);
@@ -399,7 +405,7 @@ export const StoreProvider = ({ children }) => {
         console.log('Attempting local SQLite database fallback...');
         try {
           const apiFetch = async (path) => {
-            const res = await fetch(`http://localhost:3000${path}`);
+            const res = await fetch(`${API_BASE_URL}${path}`);
             if (!res.ok) throw new Error(`HTTP error ${res.status}`);
             return res.json();
           };

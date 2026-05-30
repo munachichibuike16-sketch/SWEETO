@@ -3,9 +3,11 @@
  * 
  * - In local development (localhost/127.0.0.1): uses relative `/api` paths to route
  *   through Vite's built-in dev proxy. This bypasses PNA/CORS constraints.
- * - In production/public deployment (e.g. Vercel): targets `http://localhost:3000/api`
- *   explicitly and adds the `targetAddressSpace: 'private'` option required by Chrome.
+ * - In production/public deployment: targets custom VITE_API_URL or defaults to `http://localhost:3000/api`
  */
+
+const customBackendUrl = import.meta.env.VITE_API_URL;
+export const API_BASE_URL = customBackendUrl ? customBackendUrl.replace(/\/$/, '') : 'http://localhost:3000';
 
 export async function apiFetch(path, options = {}) {
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -25,9 +27,12 @@ export async function apiFetch(path, options = {}) {
   if (isLocalhost) {
     targetUrl = `/api/${cleanPath}`;
   } else {
-    targetUrl = `http://localhost:3000/api/${cleanPath}`;
-    // Add Private Network Access (PNA) header to resolve security blocks
-    fetchOptions.targetAddressSpace = 'private';
+    targetUrl = `${API_BASE_URL}/api/${cleanPath}`;
+    
+    // Add Private Network Access (PNA) header to resolve security blocks for local testing
+    if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
+      fetchOptions.targetAddressSpace = 'private';
+    }
   }
 
   const response = await fetch(targetUrl, fetchOptions);

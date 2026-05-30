@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
+import { API_BASE_URL } from './api';
 
 export const uploadToStorage = async (fileBlob, folder = 'products') => {
   const ext = fileBlob.type?.split('/')[1] || 'jpg';
@@ -28,14 +29,14 @@ export const uploadToStorage = async (fileBlob, folder = 'products') => {
     formData.append('file', fileBlob, fileName);
     
     try {
-      const res = await fetch('http://localhost:3000/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData
       });
       if (!res.ok) throw new Error('Local upload failed');
       
       const resData = await res.json();
-      return `http://localhost:3000${resData.url}`;
+      return `${API_BASE_URL}${resData.url}`;
     } catch (localErr) {
       throw new Error('Upload completely failed on both cloud and local: ' + localErr.message);
     }
