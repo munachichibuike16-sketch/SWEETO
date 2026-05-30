@@ -11,7 +11,7 @@ import { uploadToStorage } from '../utils/storageHelper';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../utils/api';
 
-const EMPTY_FORM = { name: '', description: '', parentCategory: '', image_url: '', slug: '' };
+const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', is_subcategory: false };
 
 const inputClass =
   'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
@@ -47,7 +47,8 @@ const CategoryManagement = () => {
     setFormData({
       name: cat.name || '',
       description: cat.description || '',
-      parentCategory: cat.parentCategory || '',
+      parent_id: cat.parent_id || '',
+      is_subcategory: !!cat.parent_id,
       image_url: cat.image_url || '',
       slug: cat.slug || ''
     });
@@ -80,16 +81,28 @@ const CategoryManagement = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!formData.name.trim()) { setError('Category name is required.'); return; }
+    if (formData.is_subcategory && !formData.parent_id) { setError('Please select a parent category for this subcategory.'); return; }
 
     setIsSubmitting(true);
     try {
       const slugVal = formData.slug?.trim() || formData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const parentVal = formData.is_subcategory && formData.parent_id ? Number(formData.parent_id) : null;
+      
       const supabasePayload = {
         name: formData.name.trim(),
         slug: slugVal,
         description: formData.description?.trim() || null,
         icon: formData.image_url || null,
+        parent_id: parentVal,
         position: 0
+      };
+
+      const localPayload = {
+        name: formData.name.trim(),
+        slug: slugVal,
+        description: formData.description?.trim() || null,
+        image_url: formData.image_url || null,
+        parent_id: parentVal
       };
 
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -108,7 +121,7 @@ const CategoryManagement = () => {
             const res = await apiFetch(`categories/${editingId}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...formData, slug: slugVal })
+              body: JSON.stringify(localPayload)
             });
             if (!res.ok) console.warn('SQLite Category update responded with error status:', res.status);
           } catch (e) {
@@ -134,7 +147,7 @@ const CategoryManagement = () => {
             const res = await apiFetch('categories', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...formData, id: nextId, slug: slugVal })
+              body: JSON.stringify({ ...localPayload, id: nextId })
             });
             if (!res.ok) console.warn('SQLite Category insert responded with error status:', res.status);
           } catch (e) {
@@ -190,8 +203,8 @@ const CategoryManagement = () => {
     c.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  /* ─── parent category options (exclude self when editing) ─── */
-  const parentOptions = (categories || []).filter(c => c.id !== editingId);
+  /* ─── parent category options (only list top-level parent categories, exclude self) ─── */
+  const parentOptions = (categories || []).filter(c => !c.parent_id && c.id !== editingId);
 
   return (
     <div className="space-y-8">
@@ -258,20 +271,60 @@ const CategoryManagement = () => {
                   />
                 </div>
 
-                {/* Parent Category */}
+                {/* Category Type Choice */}
                 <div>
-                  <label className={labelClass}><FolderOpen size={12} /> Parent Category (Optional)</label>
-                  <select
-                    value={formData.parentCategory}
-                    onChange={e => setFormData(p => ({ ...p, parentCategory: e.target.value }))}
-                    className={`${inputClass} appearance-none`}
-                  >
-                    <option value="">None (Top-level category)</option>
-                    {parentOptions.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
+                  <label className={labelClass}><Grid size={12} /> Category Type</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(p => ({ ...p, is_subcategory: false, parent_id: '' }))}
+                      className={`p-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all text-center flex flex-col items-center gap-2 cursor-pointer ${
+                        !formData.is_subcategory
+                          ? 'border-emerald-500 bg-emerald-50/50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-305'
+                      }`}
+                    >
+                      <FolderOpen size={18} />
+                      <span>Parent Category</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(p => ({ ...p, is_subcategory: true }))}
+                      className={`p-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all text-center flex flex-col items-center gap-2 cursor-pointer ${
+                        formData.is_subcategory
+                          ? 'border-emerald-500 bg-emerald-50/50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-305'
+                      }`}
+                    >
+                      <ChevronRight size={18} />
+                      <span>Subcategory</span>
+                    </button>
+                  </div>
                 </div>
+
+                {/* Parent Category Selector */}
+                <AnimatePresence>
+                  {formData.is_subcategory && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <label className={labelClass}><FolderOpen size={12} /> Select Parent Category *</label>
+                      <select
+                        value={formData.parent_id}
+                        onChange={e => setFormData(p => ({ ...p, parent_id: e.target.value }))}
+                        className={`${inputClass} appearance-none`}
+                      >
+                        <option value="">-- Choose Parent --</option>
+                        {parentOptions.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Description */}
                 <div>
@@ -413,11 +466,15 @@ const CategoryManagement = () => {
                   </div>
 
                   {/* Parent Badge */}
-                  {cat.parentCategory && (
-                    <div className="absolute -top-2 -left-2 px-4 py-1.5 bg-white dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-emerald-500 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
-                      {cat.parentCategory}
-                    </div>
-                  )}
+                  {(() => {
+                    const parent = categories.find(c => c.id === cat.parent_id);
+                    if (!parent) return null;
+                    return (
+                      <div className="absolute -top-2 -left-2 px-4 py-1.5 bg-white dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-emerald-500 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
+                        Sub of {parent.name}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Category Info */}

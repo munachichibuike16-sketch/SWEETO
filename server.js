@@ -922,16 +922,17 @@ app.post('/api/video-ads', authenticateAdmin, upload.single('file'), (req, res) 
 
 // Create Category
 app.post('/api/categories', authenticateAdmin, (req, res) => {
-  const { id, name, slug, description, image_url } = req.body;
+  const { id, name, slug, description, image_url, parent_id } = req.body;
   console.log('Adding category:', req.body);
   try {
     let info;
+    const parentVal = parent_id ? Number(parent_id) : null;
     if (id) {
-      const stmt = db.prepare('INSERT INTO categories (id, name, slug, description, image_url) VALUES (?, ?, ?, ?, ?)');
-      info = stmt.run(id, name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null);
+      const stmt = db.prepare('INSERT INTO categories (id, name, slug, description, image_url, parent_id) VALUES (?, ?, ?, ?, ?, ?)');
+      info = stmt.run(id, name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null, parentVal);
     } else {
-      const stmt = db.prepare('INSERT INTO categories (name, slug, description, image_url) VALUES (?, ?, ?, ?)');
-      info = stmt.run(name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null);
+      const stmt = db.prepare('INSERT INTO categories (name, slug, description, image_url, parent_id) VALUES (?, ?, ?, ?, ?)');
+      info = stmt.run(name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null, parentVal);
     }
     console.log('Category added:', info);
     res.json({ id: id || info.lastInsertRowid, success: true });
@@ -1174,9 +1175,10 @@ app.delete('/api/categories/:id', authenticateAdmin, (req, res) => {
 });
 
 app.put('/api/categories/:id', authenticateAdmin, (req, res) => {
-  const { name, description, image_url } = req.body;
+  const { name, description, image_url, parent_id } = req.body;
   try {
-    db.prepare('UPDATE categories SET name = ?, description = ?, image_url = ? WHERE id = ?').run(name, description, image_url, req.params.id);
+    const parentVal = parent_id ? Number(parent_id) : null;
+    db.prepare('UPDATE categories SET name = ?, description = ?, image_url = ?, parent_id = ? WHERE id = ?').run(name, description, image_url, parentVal, req.params.id);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

@@ -40,3 +40,9 @@ lerna-debug.log*
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Temporary scratch and update scripts
+scratch/
+update_admin.js
+update_admin_supabase.js
+
