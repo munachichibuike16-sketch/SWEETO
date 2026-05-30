@@ -321,6 +321,13 @@ try { db.exec('ALTER TABLE orders ADD COLUMN agent_lng REAL'); } catch(e) {}
 try { db.exec('ALTER TABLE shipping_zones ADD COLUMN lat REAL'); } catch(e) {}
 try { db.exec('ALTER TABLE shipping_zones ADD COLUMN lng REAL'); } catch(e) {}
 try { db.exec('ALTER TABLE agents ADD COLUMN pin TEXT DEFAULT "1234"'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN email TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN dob TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN address TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN plate_number TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN vehicle_name TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN photo_id TEXT'); } catch(e) {}
+try { db.exec('ALTER TABLE agents ADD COLUMN approval_status TEXT DEFAULT "approved"'); } catch(e) {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS agent_location_history (
@@ -1395,7 +1402,7 @@ app.delete('/api/shipping_zones/:id', authenticateAdmin, (req, res) => {
 // GET /api/public/agents (Public list of available agents for selection in DeliverPage)
 app.get('/api/public/agents', (req, res) => {
   try {
-    const agents = db.prepare('SELECT id, name, zone, avatar, rating FROM agents').all();
+    const agents = db.prepare("SELECT id, name, zone, avatar, rating FROM agents WHERE approval_status = 'approved'").all();
     res.json(agents);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1413,6 +1420,9 @@ app.post('/api/public/agents/login', (req, res) => {
     if (!agent) {
       return res.status(404).json({ error: 'Agent not found' });
     }
+    if (agent.approval_status !== 'approved') {
+      return res.status(403).json({ error: 'Account is pending approval or rejected.' });
+    }
     if (agent.pin === pin) {
       // Exclude pin from response
       const { pin: _, ...safeAgent } = agent;
@@ -1420,6 +1430,26 @@ app.post('/api/public/agents/login', (req, res) => {
     } else {
       res.status(401).json({ success: false, message: 'Invalid PIN' });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/public/agents/register (Allows agents to register a new account)
+app.post('/api/public/agents/register', (req, res) => {
+  const { name, phone, dob, email, address, plate_number, vehicle_name, photo_id } = req.body;
+  if (!name || !phone || !dob || !email || !address || !plate_number || !vehicle_name || !photo_id) {
+    return res.status(400).json({ error: 'Missing registration details' });
+  }
+  try {
+    const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
+    const stmt = db.prepare(`
+      INSERT INTO agents (name, phone, dob, email, address, plate_number, vehicle_name, photo_id, pin, approval_status, avatar, rating, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, 5.0, 'offline')
+    `);
+    const info = stmt.run(name, phone, dob, email, address, plate_number, vehicle_name, photo_id, randomPin, defaultAvatar);
+    res.json({ success: true, id: info.lastInsertRowid, pin: randomPin });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

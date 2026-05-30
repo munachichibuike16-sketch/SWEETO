@@ -591,6 +591,7 @@ function LoginScreen({ onLogin }) {
   const [photo, setPhoto]     = useState(null);   // base64 preview
   const [regError, setRegErr] = useState('');
   const [regLoading, setRegLoading] = useState(false);
+  const [generatedPin, setGeneratedPin] = useState('');
   const photoRef = useRef();
 
   const handlePhoto = (e) => {
@@ -601,14 +602,42 @@ function LoginScreen({ onLogin }) {
     reader.readAsDataURL(file);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const required = ['fullName','phone','dob','email','address','plateNumber','vehicleName'];
     for (const k of required) {
       if (!form[k].trim()) { setRegErr(t('fill_all_fields') || 'Please fill in all required fields'); return; }
     }
     if (!photo) { setRegErr(t('upload_photo_id') || 'Please upload your photo ID'); return; }
     setRegLoading(true);
-    setTimeout(() => { setRegLoading(false); setScreen('submitted'); }, 1200);
+    setRegErr('');
+    try {
+      const res = await apiFetch('/api/public/agents/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.fullName,
+          phone: form.phone,
+          dob: form.dob,
+          email: form.email,
+          address: form.address,
+          plate_number: form.plateNumber,
+          vehicle_name: form.vehicleName,
+          photo_id: photo
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGeneratedPin(data.pin);
+        setScreen('submitted');
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setRegErr(errData.error || 'Failed to submit registration. Please try again.');
+      }
+    } catch (err) {
+      setRegErr('Connection error. Please try again.');
+    } finally {
+      setRegLoading(false);
+    }
   };
 
   const handleLogin = async () => {
@@ -658,6 +687,12 @@ function LoginScreen({ onLogin }) {
               <span className="text-xs font-bold text-white">{v}</span>
             </div>
           ))}
+          {generatedPin && (
+            <div className="flex justify-between border-t border-white/5 pt-2 mt-2">
+              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Temporary Pin</span>
+              <span className="text-xs font-extrabold text-emerald-400">{generatedPin}</span>
+            </div>
+          )}
         </div>
         <button onClick={() => setScreen('login')}
           className="w-full py-4 bg-eas-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-500 transition-all flex items-center justify-center gap-2">
