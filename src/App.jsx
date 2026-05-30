@@ -234,7 +234,7 @@ const Storefront = ({ viewMode = 'home' }) => {
     navigate(`/product/${p.id}`);
   };
 
-  // 4. Expose mobile hardware back button handler for this view context
+  // 4. Expose mobile hardware back button handler for app wrappers
   useEffect(() => {
     window.handleAndroidBack = () => {
       if (isCartOpen) {
@@ -262,6 +262,43 @@ const Storefront = ({ viewMode = 'home' }) => {
       delete window.handleAndroidBack;
     };
   }, [isCartOpen, isSidebarOpen, isProductModalOpen, productId, handleProductModalClose]);
+
+  // 5. Manage history state for drawers to capture browser/physical back button (popstate)
+  useEffect(() => {
+    if (isSidebarOpen) {
+      window.history.pushState({ isSidebar: true }, '');
+    }
+    return () => {
+      if (isSidebarOpen && window.history.state?.isSidebar) {
+        window.history.back();
+      }
+    };
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
+    if (isCartOpen) {
+      window.history.pushState({ isCart: true }, '');
+    }
+    return () => {
+      if (isCartOpen && window.history.state?.isCart) {
+        window.history.back();
+      }
+    };
+  }, [isCartOpen]);
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+      if (isCartOpen) {
+        setIsCartOpen(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isSidebarOpen, isCartOpen]);
 
   let allProducts = liveProducts;
   
