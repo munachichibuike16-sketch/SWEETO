@@ -195,7 +195,11 @@ const Storefront = ({ viewMode = 'home' }) => {
       if (p) {
         setSelectedProduct(p);
         setIsProductModalOpen(true);
+      } else {
+        setIsProductModalOpen(false);
       }
+    } else {
+      setIsProductModalOpen(false);
     }
   }, [productId, liveProducts]);
 
@@ -204,7 +208,7 @@ const Storefront = ({ viewMode = 'home' }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeCategory, selectedBrand, viewMode, searchQuery]);
 
-  // 2. Clear Modal / Navigation logic
+  // 3. Clear Modal / Navigation logic
   const handleProductModalClose = () => {
     setIsProductModalOpen(false);
     if (productId) {
@@ -215,9 +219,38 @@ const Storefront = ({ viewMode = 'home' }) => {
   const handleProductClick = (p) => {
     setSelectedProduct(p);
     setIsProductModalOpen(true);
-    // Optional: Update URL without full refresh to support sharing
-    // navigate(`/product/${p.id}`, { replace: true });
+    // Push path to history stack to support back button modal dismissal
+    navigate(`/product/${p.id}`);
   };
+
+  // 4. Expose mobile hardware back button handler for this view context
+  useEffect(() => {
+    window.handleAndroidBack = () => {
+      if (isCartOpen) {
+        setIsCartOpen(false);
+        return true;
+      }
+      if (isSidebarOpen) {
+        setIsSidebarOpen(false);
+        return true;
+      }
+      if (isProductModalOpen) {
+        handleProductModalClose();
+        return true;
+      }
+      
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/' && currentPath !== '/home') {
+        window.history.back();
+        return true;
+      }
+      return false;
+    };
+
+    return () => {
+      delete window.handleAndroidBack;
+    };
+  }, [isCartOpen, isSidebarOpen, isProductModalOpen, productId, handleProductModalClose]);
 
   let allProducts = liveProducts;
   
@@ -1019,7 +1052,7 @@ function App() {
 
   // Handle mobile hardware back button (Cordova, Capacitor, and custom Android WebViews)
   useEffect(() => {
-    // 1. Expose a global hook for custom Android WebView wrappers
+    // 1. Expose a fallback global hook for custom Android WebView wrappers
     window.handleAndroidBack = () => {
       const currentPath = window.location.pathname;
       if (currentPath !== '/' && currentPath !== '/home') {
@@ -1031,10 +1064,8 @@ function App() {
 
     // 2. Cordova / standard hybrid WebView backbutton event listener
     const handleCordovaBackButton = (e) => {
-      const currentPath = window.location.pathname;
-      if (currentPath !== '/' && currentPath !== '/home') {
+      if (window.handleAndroidBack && window.handleAndroidBack()) {
         e.preventDefault();
-        window.history.back();
       } else {
         // At home page: exit the app if navigator.app.exitApp is supported
         if (window.navigator && window.navigator.app && window.navigator.app.exitApp) {
@@ -1051,9 +1082,8 @@ function App() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
       const capApp = window.Capacitor.Plugins.App;
       capApp.addListener('backButton', (data) => {
-        const currentPath = window.location.pathname;
-        if (data.canGoBack && currentPath !== '/' && currentPath !== '/home') {
-          window.history.back();
+        if (window.handleAndroidBack && window.handleAndroidBack()) {
+          // Handled by the state-aware hook
         } else {
           capApp.exitApp();
         }
