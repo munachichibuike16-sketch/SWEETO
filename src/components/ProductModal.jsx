@@ -110,7 +110,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
 
   const handleWhatsApp = () => {
     const message = `Hello SWEETO-HUB, I'm interested in the ${product.name} (${product.price} FCFA). Is it available?`;
-    const url = `https://wa.me/237670000000?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/2550500619923?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
