@@ -2,12 +2,37 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { supabase } from '../lib/supabase';
+import OrdersHistoryContent from '../components/OrdersHistoryContent';
+import { 
+  User, 
+  Package, 
+  Settings as SettingsIcon, 
+  LogOut, 
+  Moon, 
+  Sun, 
+  Globe, 
+  Save, 
+  MapPin, 
+  Phone, 
+  Shield, 
+  Heart, 
+  ShoppingBag, 
+  Lock, 
+  Truck, 
+  ArrowLeft,
+  Calendar,
+  CheckCircle2
+} from 'lucide-react';
 import './AuthPage.css';
 
 const AuthPage = ({ initialTab = 'login' }) => {
   const navigate = useNavigate();
   const { showToast, settings } = useStore();
   const { t } = useLanguage();
+  const { isDarkMode, toggleTheme } = useTheme();
+  
   const [currentTab, setCurrentTab] = useState(initialTab);
   const [showPassword, setShowPassword] = useState({});
   const [loading, setLoading] = useState(false);
@@ -22,6 +47,17 @@ const AuthPage = ({ initialTab = 'login' }) => {
     phone: '', 
     password: '', 
     confirmPassword: '' 
+  });
+
+  const [shippingZones, setShippingZones] = useState([]);
+  const [sessionUser, setSessionUser] = useState(null);
+
+  // Settings form state
+  const [settingsForm, setSettingsForm] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    city: ''
   });
 
   const africanCountries = [
@@ -44,6 +80,34 @@ const AuthPage = ({ initialTab = 'login' }) => {
     { name: "Togo", code: "+228" }, { name: "Tunisia", code: "+216" }, { name: "Uganda", code: "+256" },
     { name: "Zambia", code: "+260" }, { name: "Zimbabwe", code: "+263" }
   ];
+
+  // Fetch session & shipping zones on mount
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+    if (session) {
+      setSessionUser(session);
+      setCurrentTab('overview');
+      setSettingsForm({
+        name: session.name || '',
+        phone: session.phoneNumber || '',
+        address: session.address || '',
+        city: session.city || ''
+      });
+    }
+
+    const fetchShipping = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('shipping_zones')
+          .select('*')
+          .order('name', { ascending: true });
+        if (!error && data) {
+          setShippingZones(data);
+        }
+      } catch (e) { console.error('Error loading shipping zones:', e); }
+    };
+    fetchShipping();
+  }, []);
 
   const switchTab = (tab) => {
     setCurrentTab(tab);
@@ -90,12 +154,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
       const { password: _, ...safeUser } = user;
       localStorage.setItem('sweetohub_session', JSON.stringify(safeUser));
+      setSessionUser(safeUser);
       if (loginData.rememberMe) localStorage.setItem('sweetohub_remembered_email', email);
       else localStorage.removeItem('sweetohub_remembered_email');
 
       showToast(`Welcome back, ${user.name}! ⚡`, 'success');
       setLoading(false);
-      setTimeout(() => navigate('/'), 1200);
+      setCurrentTab('overview');
     }, 1000);
   };
 
@@ -141,21 +206,18 @@ const AuthPage = ({ initialTab = 'login' }) => {
       
       const { password: _, ...safeUser } = newUser;
       localStorage.setItem('sweetohub_session', JSON.stringify(safeUser));
+      setSessionUser(safeUser);
 
       showToast(`Welcome to SWEETO-HUB, ${name}! ⚡`, 'success');
       setLoading(false);
-      setTimeout(() => navigate('/'), 1200);
+      setCurrentTab('overview');
     }, 1000);
   };
 
-  // ============================================
-  // GOOGLE SIGN-IN INTEGRATION
-  // ============================================
-  // REPLACE THIS WITH YOUR REAL CLIENT ID FROM GOOGLE CLOUD CONSOLE
+  // Google Login callbacks
   const GOOGLE_CLIENT_ID = '869701747796-smfrr2fte1uv0t8dsebll4gvumkrjdv7.apps.googleusercontent.com';
 
   useEffect(() => {
-    // Initialize Google Identity Services on mount
     const initGoogle = () => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
@@ -166,7 +228,6 @@ const AuthPage = ({ initialTab = 'login' }) => {
           ux_mode: 'popup'
         });
 
-        // Render the official button in the visible placeholder
         const placeholder = document.getElementById('google-button-official');
         if (placeholder) {
           window.google.accounts.id.renderButton(
@@ -185,7 +246,6 @@ const AuthPage = ({ initialTab = 'login' }) => {
       }
     };
 
-    // Load script if not already there
     if (!document.getElementById('google-jssdk')) {
       const script = document.createElement('script');
       script.id = 'google-jssdk';
@@ -199,32 +259,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
     }
   }, []);
 
-  const handleGoogleSignIn = () => {
-    if (typeof window.google !== 'undefined' && window.google.accounts && window.google.accounts.id) {
-      // First try to trigger the rendered button (most reliable for "Choose Account")
-      const hiddenBtn = document.getElementById('google-button-hidden');
-      if (hiddenBtn && hiddenBtn.querySelector('[role="button"]')) {
-        hiddenBtn.querySelector('[role="button"]').click();
-      } else {
-        // Fallback to prompt
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.warn('Google Prompt not displayed, checking script status...');
-            setTimeout(() => {
-               if (!localStorage.getItem('sweetohub_session')) {
-                 handleGoogleDemoFallback();
-               }
-            }, 3000); // Give it more time
-          }
-        });
-      }
-    } else {
-      handleGoogleDemoFallback();
-    }
-  };
-
   const handleGoogleCredentialResponse = (response) => {
-    // This decodes the JWT token returned by Google
     const parseJwt = (token) => {
       try {
         return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
@@ -252,8 +287,9 @@ const AuthPage = ({ initialTab = 'login' }) => {
       }
       
       localStorage.setItem('sweetohub_session', JSON.stringify(existing));
+      setSessionUser(existing);
       showToast(`Welcome, ${existing.name}!`, 'success');
-      setTimeout(() => navigate('/'), 1200);
+      setCurrentTab('overview');
     }
   };
 
@@ -275,17 +311,11 @@ const AuthPage = ({ initialTab = 'login' }) => {
         existing = demoUser;
       }
       localStorage.setItem('sweetohub_session', JSON.stringify(existing));
+      setSessionUser(existing);
       showToast(`Welcome, ${existing.name}! (Demo)`, 'success');
-      setTimeout(() => navigate('/'), 1200);
+      setCurrentTab('overview');
     }, 1500);
   };
-
-  const [sessionUser, setSessionUser] = useState(null);
-
-  useEffect(() => {
-    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
-    if (session) setSessionUser(session);
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('sweetohub_session');
@@ -294,19 +324,47 @@ const AuthPage = ({ initialTab = 'login' }) => {
     navigate('/');
   };
 
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    if (!settingsForm.name.trim()) {
+      showToast('Name cannot be empty.', 'error');
+      return;
+    }
+
+    const updatedUser = {
+      ...sessionUser,
+      name: settingsForm.name,
+      phoneNumber: settingsForm.phone,
+      address: settingsForm.address,
+      city: settingsForm.city
+    };
+
+    localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
+    setSessionUser(updatedUser);
+
+    const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+    const updatedUsers = users.map(u => u.email.toLowerCase() === sessionUser.email.toLowerCase() ? { ...u, ...updatedUser } : u);
+    localStorage.setItem('sweetohub_users', JSON.stringify(updatedUsers));
+
+    showToast('Profile settings saved! ✨', 'success');
+  };
+
+  const { lang, changeLanguage } = useLanguage();
+
   if (sessionUser) {
     return (
-      <div className="auth-body">
+      <div className="auth-body dark:bg-slate-950 transition-colors duration-500">
         <span className="candy-decoration">⚡</span>
         <span className="candy-decoration">💻</span>
-        <span className="candy-decoration">📱</span>
         <span className="candy-decoration">✨</span>
         <span className="candy-decoration" style={{ top: '20%', left: '15%' }}>💖</span>
         <span className="candy-decoration" style={{ bottom: '20%', right: '15%' }}>🚀</span>
         
-        <div className="main-container">
-          <div className="auth-card" style={{ maxWidth: '600px' }}>
+        <div className="main-container" style={{ maxWidth: currentTab === 'orders' ? '920px' : '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl" style={{ width: '100%' }}>
             <div className="card-content">
+              
+              {/* Header Info */}
               <div className="brand-section">
                 <div className="profile-avatar-wrapper">
                   <div className="profile-avatar-glow"></div>
@@ -314,53 +372,181 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     {sessionUser.name?.charAt(0).toUpperCase()}
                   </div>
                 </div>
-                <h1 className="brand-name" style={{ fontSize: '2.2rem', marginTop: '1rem' }}>
+                <h1 className="brand-name font-black italic tracking-tighter" style={{ fontSize: '2.2rem', marginTop: '1rem' }}>
                   {t('hello') || 'Hello'}, {sessionUser.name?.split(' ')[0]}! 👋
                 </h1>
-                <p className="brand-tagline" style={{ letterSpacing: '1px' }}>{sessionUser.email}</p>
+                <p className="brand-tagline text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em]">{sessionUser.email}</p>
               </div>
 
-              <div className="profile-dashboard">
-                <div className="profile-grid">
-                  <div className="profile-stat-box adorable-card">
-                    <div className="stat-icon-circle"><i className="fas fa-calendar-alt"></i></div>
-                    <span className="stat-label">{t('member_since') || 'Member Since'}</span>
-                    <span className="stat-value">{new Date(sessionUser.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
-                  </div>
-                  <div className="profile-stat-box adorable-card">
-                    <div className="stat-icon-circle" style={{ background: '#e0f2fe', color: '#0ea5e9' }}><i className="fas fa-shield-alt"></i></div>
-                    <span className="stat-label">{t('security') || 'Security'}</span>
-                    <span className="stat-value uppercase">{sessionUser.provider || 'Verified'}</span>
-                  </div>
-                </div>
+              {/* Tab Selector */}
+              <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
+                <button 
+                  className={`tab-btn text-xs font-black uppercase tracking-widest gap-2 ${currentTab === 'overview' ? 'active' : ''}`}
+                  onClick={() => switchTab('overview')}
+                >
+                  <User size={14} /> {t('profile') || 'Profile'}
+                </button>
+                <button 
+                  className={`tab-btn text-xs font-black uppercase tracking-widest gap-2 ${currentTab === 'orders' ? 'active' : ''}`}
+                  onClick={() => switchTab('orders')}
+                >
+                  <Package size={14} /> {t('my_orders') || 'Orders'}
+                </button>
+                <button 
+                  className={`tab-btn text-xs font-black uppercase tracking-widest gap-2 ${currentTab === 'settings' ? 'active' : ''}`}
+                  onClick={() => switchTab('settings')}
+                >
+                  <SettingsIcon size={14} /> {t('settings') || 'Settings'}
+                </button>
+              </div>
 
-                <div className="quick-links">
-                  <div className="quick-link-item" onClick={() => navigate('/')}>
-                    <div className="ql-icon"><i className="fas fa-shopping-cart"></i></div>
-                    <div className="ql-text">
-                      <span className="ql-title">{t('continue_shopping') || 'Continue Shopping'}</span>
-                      <span className="ql-desc">{t('explore_premium_arrivals') || 'Explore our latest premium arrivals'}</span>
+              {/* Content Panels */}
+              <div className="profile-dashboard mt-0">
+                {currentTab === 'overview' && (
+                  <div className="space-y-8 animate-fade-in">
+                    <div className="profile-grid">
+                      <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
+                        <div className="stat-icon-circle bg-blue-50 dark:bg-blue-950/30 text-blue-500"><Calendar size={16} /></div>
+                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('member_since') || 'Member Since'}</span>
+                        <span className="stat-value text-xs font-bold text-slate-700 dark:text-slate-355 mt-1">{new Date(sessionUser.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                      </div>
+                      <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
+                        <div className="stat-icon-circle bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500"><Shield size={16} /></div>
+                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('security') || 'Security'}</span>
+                        <span className="stat-value text-xs font-bold text-slate-700 dark:text-slate-355 uppercase mt-1">{sessionUser.provider || 'Verified'}</span>
+                      </div>
                     </div>
-                    <i className="fas fa-chevron-right ql-arrow"></i>
-                  </div>
-                  <div className="quick-link-item" onClick={() => navigate('/wishlist')}>
-                    <div className="ql-icon" style={{ background: '#fdf2f8', color: '#ec4899' }}><i className="fas fa-heart"></i></div>
-                    <div className="ql-text">
-                      <span className="ql-title">{t('my_wishlist') || 'My Wishlist'}</span>
-                      <span className="ql-desc">{t('check_saved_items') || 'Check the items you saved for later'}</span>
-                    </div>
-                    <i className="fas fa-chevron-right ql-arrow"></i>
-                  </div>
-                </div>
 
-                <div className="profile-actions" style={{ marginTop: '2rem' }}>
-                  <button className="btn-google logout-btn-adorable" onClick={handleLogout}>
-                    <i className="fas fa-sign-out-alt"></i> &nbsp; {t('secure_sign_out') || 'Secure Sign Out'}
-                  </button>
-                </div>
+                    <div className="quick-links">
+                      <div className="quick-link-item dark:bg-slate-900/40 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900/70" onClick={() => navigate('/')}>
+                        <div className="ql-icon bg-blue-50 dark:bg-blue-950/30 text-blue-500"><ShoppingBag size={18} /></div>
+                        <div className="ql-text">
+                          <span className="ql-title text-slate-900 dark:text-white">{t('continue_shopping') || 'Continue Shopping'}</span>
+                          <span className="ql-desc text-slate-400 dark:text-slate-500">{t('explore_premium_arrivals') || 'Explore our latest premium arrivals'}</span>
+                        </div>
+                        <ChevronRight className="ql-arrow" size={16} />
+                      </div>
+                      <div className="quick-link-item dark:bg-slate-900/40 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900/70" onClick={() => navigate('/wishlist')}>
+                        <div className="ql-icon bg-pink-50 dark:bg-pink-950/30 text-pink-500"><Heart size={18} /></div>
+                        <div className="ql-text">
+                          <span className="ql-title text-slate-900 dark:text-white">{t('my_wishlist') || 'My Wishlist'}</span>
+                          <span className="ql-desc text-slate-400 dark:text-slate-500">{t('check_saved_items') || 'Check the items you saved for later'}</span>
+                        </div>
+                        <ChevronRight className="ql-arrow" size={16} />
+                      </div>
+                    </div>
+
+                    <div className="profile-actions pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <button className="btn-google logout-btn-adorable w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest dark:bg-red-950/10 dark:border-red-900/20" onClick={handleLogout}>
+                        <LogOut size={16} /> {t('secure_sign_out') || 'Secure Sign Out'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {currentTab === 'orders' && (
+                  <div className="animate-fade-in w-full overflow-hidden">
+                    <OrdersHistoryContent />
+                  </div>
+                )}
+
+                {currentTab === 'settings' && (
+                  <form onSubmit={handleSaveSettings} className="space-y-6 text-left animate-fade-in">
+                    
+                    <div className="input-group">
+                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
+                      <div className="input-wrapper mt-1">
+                        <User className="input-icon" size={18} />
+                        <input 
+                          type="text" 
+                          placeholder="Name" 
+                          value={settingsForm.name}
+                          onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
+                          className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="input-group">
+                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
+                      <div className="input-wrapper mt-1">
+                        <Phone className="input-icon" size={18} />
+                        <input 
+                          type="tel" 
+                          placeholder="Phone number" 
+                          value={settingsForm.phone}
+                          onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
+                          className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="input-group">
+                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Commune / City</label>
+                        <select 
+                          value={settingsForm.city}
+                          onChange={(e) => setSettingsForm({...settingsForm, city: e.target.value})}
+                          className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
+                        >
+                          <option value="">Select Commune</option>
+                          {shippingZones.map(zone => (
+                            <option key={zone.id} value={zone.name}>{zone.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="input-group">
+                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Language</label>
+                        <select 
+                          value={lang}
+                          onChange={(e) => changeLanguage(e.target.value)}
+                          className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
+                        >
+                          <option value="en">🇺🇸 English</option>
+                          <option value="fr">🇫🇷 Français</option>
+                          <option value="es">🇪🇸 Español</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="input-group">
+                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Default Shipping Address</label>
+                      <textarea 
+                        rows="3"
+                        placeholder="Default Address" 
+                        value={settingsForm.address}
+                        onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
+                        className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-750 dark:text-white outline-none focus:border-eas-blue focus:ring-2 focus:ring-eas-blue/10 transition-all"
+                      />
+                    </div>
+
+                    <div className="input-group">
+                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Appearance Theme</label>
+                      <button 
+                        type="button"
+                        onClick={toggleTheme}
+                        className="w-full mt-1 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100/50 dark:hover:bg-slate-900"
+                      >
+                        <span className="flex items-center gap-2">
+                          {isDarkMode ? <Moon size={16} className="text-purple-500" /> : <Sun size={16} className="text-amber-500" />}
+                          {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                        </span>
+                        <span className="text-eas-blue font-black uppercase tracking-wider text-[10px]">Toggle</span>
+                      </button>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      className="w-full py-4 rounded-[2rem] bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4"
+                    >
+                      <Save size={16} /> Save Changes
+                    </button>
+                  </form>
+                )}
               </div>
               
-              <div className="auth-footer-text" style={{ marginTop: '2rem', opacity: 0.7 }}>
+              <div className="auth-footer-text dark:text-slate-500" style={{ marginTop: '2rem', opacity: 0.7 }}>
                 {t('premium_experience_by') || 'Premium Experience by'} <strong>SWEETO-HUB</strong>
               </div>
             </div>
@@ -371,19 +557,15 @@ const AuthPage = ({ initialTab = 'login' }) => {
   }
 
   return (
-    <div className="auth-body">
-      {/* Floating tech-themed decorations */}
+    <div className="auth-body dark:bg-slate-950 transition-colors duration-500">
       <span className="candy-decoration">⚡</span>
       <span className="candy-decoration">💻</span>
-      <span className="candy-decoration">📱</span>
-      <span className="candy-decoration">🔌</span>
-      <span className="candy-decoration">🖥️</span>
+      <span className="candy-decoration">✨</span>
       <span className="candy-decoration">🔋</span>
       <span className="candy-decoration">🎧</span>
-      <span className="candy-decoration">✨</span>
 
-      <div className="main-container">
-        <div className="auth-card">
+      <div className="main-container" style={{ maxWidth: currentTab === 'track' ? '920px' : '500px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl">
           <div className="card-content">
             <div className="brand-section">
               <div className="brand-icon">⚡</div>
@@ -391,35 +573,41 @@ const AuthPage = ({ initialTab = 'login' }) => {
               <p className="brand-tagline">{t('powering_digital_life') || 'Powering Your Digital Life'}</p>
             </div>
 
-            <div className="tab-switcher">
+            <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
               <button 
-                className={`tab-btn ${currentTab === 'login' ? 'active' : ''}`} 
+                className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'login' ? 'active' : ''}`} 
                 onClick={() => switchTab('login')}
               >
-                <i className="fas fa-sign-in-alt"></i> &nbsp;{t('login') || 'Login'}
+                {t('login') || 'Login'}
               </button>
               <button 
-                className={`tab-btn ${currentTab === 'signup' ? 'active' : ''}`} 
+                className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'signup' ? 'active' : ''}`} 
                 onClick={() => switchTab('signup')}
               >
-                <i className="fas fa-user-plus"></i> &nbsp;{t('sign_up') || 'Sign Up'}
+                {t('sign_up') || 'Sign Up'}
+              </button>
+              <button 
+                className={`tab-btn text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${currentTab === 'track' ? 'active' : ''}`} 
+                onClick={() => switchTab('track')}
+              >
+                <Truck size={14} /> {t('track') || 'Track'}
               </button>
             </div>
 
             <div className="form-container">
-              {currentTab === 'login' ? (
+              {currentTab === 'login' && (
                 <div className="form-panel active">
                   <form onSubmit={handleLogin} noValidate>
                     <div className="input-group">
                       <label>{t('email_address') || 'Email Address'}</label>
                       <div className="input-wrapper">
-                        <i className="fas fa-envelope input-icon"></i>
+                        <User className="input-icon" size={18} />
                         <input 
                           type="email" 
                           placeholder={t('email_placeholder') || "you@example.com"} 
                           value={loginData.email}
                           onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                          className={errors.loginEmail ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.loginEmail ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.loginEmail}</div>
@@ -427,13 +615,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     <div className="input-group">
                       <label>{t('password') || 'Password'}</label>
                       <div className="input-wrapper">
-                        <i className="fas fa-lock input-icon"></i>
+                        <Lock className="input-icon" size={18} />
                         <input 
                           type={showPassword.login ? 'text' : 'password'} 
                           placeholder="••••••••" 
                           value={loginData.password}
                           onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                          className={errors.loginPassword ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.loginPassword ? 'input-error' : ''}`}
                         />
                         <button type="button" className="toggle-password" onClick={() => togglePassword('login')}>
                           <i className={`fas ${showPassword.login ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -442,13 +630,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       <div className="error-message">{errors.loginPassword}</div>
                     </div>
                     <div className="options-row">
-                      <label className="remember-me">
+                      <label className="remember-me dark:text-slate-400">
                         <input 
                           type="checkbox" 
                           checked={loginData.rememberMe}
                           onChange={(e) => setLoginData({...loginData, rememberMe: e.target.checked})}
                         />
-                        <span className="custom-checkbox"><i className="fas fa-check"></i></span>
+                        <span className="custom-checkbox dark:border-slate-700"><i className="fas fa-check"></i></span>
                         {t('remember_me') || 'Remember me'}
                       </label>
                       <a className="forgot-link" onClick={() => showToast('Reset link sent!', 'success')}>{t('forgot_password') || 'Forgot Password?'}</a>
@@ -459,19 +647,21 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     </button>
                   </form>
                 </div>
-              ) : (
+              )}
+
+              {currentTab === 'signup' && (
                 <div className="form-panel active">
                   <form onSubmit={handleSignup} noValidate>
                     <div className="input-group">
                       <label>{t('full_name') || 'Full Name'}</label>
                       <div className="input-wrapper">
-                        <i className="fas fa-user input-icon"></i>
+                        <User className="input-icon" size={18} />
                         <input 
                           type="text" 
                           placeholder={t('name_placeholder') || "Jane Doe"} 
                           value={signupData.name}
                           onChange={(e) => setSignupData({...signupData, name: e.target.value})}
-                          className={errors.signupName ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupName ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupName}</div>
@@ -479,13 +669,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     <div className="input-group">
                       <label>{t('email_address') || 'Email Address'}</label>
                       <div className="input-wrapper">
-                        <i className="fas fa-envelope input-icon"></i>
+                        <User className="input-icon" size={18} />
                         <input 
                           type="email" 
                           placeholder={t('email_placeholder') || "you@example.com"} 
                           value={signupData.email}
                           onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                          className={errors.signupEmail ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupEmail ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupEmail}</div>
@@ -496,7 +686,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         <select 
                           value={signupData.countryCode}
                           onChange={(e) => setSignupData({...signupData, countryCode: e.target.value})}
-                          className={errors.signupPhone ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPhone ? 'input-error' : ''}`}
                         >
                           <option value="">{t('select_code') || 'Select code'}</option>
                           {africanCountries.map(c => (
@@ -508,7 +698,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder="Phone number" 
                           value={signupData.phone}
                           onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
-                          className={errors.signupPhone ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPhone ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupPhone}</div>
@@ -516,13 +706,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     <div className="input-group">
                       <label>{t('password') || 'Password'}</label>
                       <div className="input-wrapper">
-                        <i className="fas fa-lock input-icon"></i>
+                        <Lock className="input-icon" size={18} />
                         <input 
                           type={showPassword.signup ? 'text' : 'password'} 
                           placeholder={t('min_8_chars') || "Min. 8 characters"} 
                           value={signupData.password}
                           onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                          className={errors.signupPassword ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPassword ? 'input-error' : ''}`}
                         />
                         <button type="button" className="toggle-password" onClick={() => togglePassword('signup')}>
                           <i className={`fas ${showPassword.signup ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -533,13 +723,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     <div className="input-group">
                       <label>{t('confirm_password') || 'Confirm Password'}</label>
                       <div className="input-wrapper">
-                        <i className="fas fa-shield-halved input-icon"></i>
+                        <Lock className="input-icon" size={18} />
                         <input 
                           type={showPassword.confirm ? 'text' : 'password'} 
                           placeholder={t('re_enter_password') || "Re-enter password"} 
                           value={signupData.confirmPassword}
                           onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
-                          className={errors.signupConfirmPassword ? 'input-error' : ''}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupConfirmPassword ? 'input-error' : ''}`}
                         />
                         <button type="button" className="toggle-password" onClick={() => togglePassword('confirm')}>
                           <i className={`fas ${showPassword.confirm ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -554,31 +744,39 @@ const AuthPage = ({ initialTab = 'login' }) => {
                   </form>
                 </div>
               )}
+
+              {currentTab === 'track' && (
+                <div className="form-panel active w-full">
+                  <OrdersHistoryContent />
+                </div>
+              )}
             </div>
 
-            {/* Native Google Identity Services Button Container */}
-            <div className="w-full flex justify-center items-center min-h-[46px] my-2">
-              <div id="google-button-official" className="w-full flex justify-center"></div>
-            </div>
+            {currentTab !== 'track' && (
+              <>
+                <div className="w-full flex justify-center items-center min-h-[46px] my-2">
+                  <div id="google-button-official" className="w-full flex justify-center"></div>
+                </div>
 
-            {/* Fallback button if Google script is blocked or still loading */}
-            {!googleLoaded && (
-              <button className="btn-google" onClick={handleGoogleDemoFallback}>
-                <svg className="google-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                {t('continue_google') || 'Continue with Google'}
-              </button>
+                {!googleLoaded && (
+                  <button className="btn-google" onClick={handleGoogleDemoFallback}>
+                    <svg className="google-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    {t('continue_google') || 'Continue with Google'}
+                  </button>
+                )}
+
+                <p className="auth-footer-text">
+                  {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}
+                  <a href="#">{t('terms') || 'Terms'}</a> &
+                  <a href="#">{t('privacy_policy') || 'Privacy Policy'}</a>
+                </p>
+              </>
             )}
-
-            <p className="auth-footer-text">
-              {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}
-              <a href="#">{t('terms') || 'Terms'}</a> &
-              <a href="#">{t('privacy_policy') || 'Privacy Policy'}</a>
-            </p>
           </div>
         </div>
       </div>
