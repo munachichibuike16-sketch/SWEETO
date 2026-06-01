@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -409,6 +409,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
               >
                 <MapPin size={19} />
               </motion.button>
+
+              {/* My Orders / Track Order */}
+              <motion.button 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                onClick={() => navigate('/orders')}
+                className="p-2.5 rounded-xl text-slate-400 hover:text-eas-blue hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                title={t('my_orders') || 'My Orders'}
+              >
+                <Package size={19} />
+              </motion.button>
             </div>
 
             {/* User + Cart Group */}
@@ -482,6 +493,23 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
+            <button 
+              onClick={() => navigate('/notifications')} 
+              className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl relative"
+              title={t('notifications')}
+            >
+              <Bell size={20} />
+              {products.filter(p => p.is_new_arrival).length > 0 && (
+                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+              )}
+            </button>
+            <button 
+              onClick={() => navigate('/orders')} 
+              className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl"
+              title={t('my_orders') || 'My Orders'}
+            >
+              <Package size={20} />
+            </button>
             <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
               <Search size={20} />
             </button>

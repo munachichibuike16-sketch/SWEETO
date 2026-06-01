@@ -92,7 +92,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
         </div>
 
         {/* Video Promo Card (2/5 on XL) */}
-        <div className="xl:col-span-2 relative rounded-[2.5rem] overflow-hidden group shadow-2xl min-h-[450px]">
+        <div className="xl:col-span-2 relative rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden group shadow-2xl min-h-[320px] sm:min-h-[450px]">
           {/* Background */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -128,26 +128,26 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
 
           {/* Content */}
-          <div className="absolute inset-0 p-8 flex flex-col justify-end">
-            <div className="space-y-6">
+          <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
+            <div className="space-y-4 sm:space-y-6">
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                className="bg-eas-blue text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 self-start shadow-lg shadow-eas-blue/30"
+                className="bg-eas-blue text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 sm:gap-2 self-start shadow-lg shadow-eas-blue/30"
               >
-                <Zap size={14} className="fill-white" />
+                <Zap size={12} className="fill-white" />
                 {t('video_promo')}
               </motion.div>
 
-              <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic leading-none">
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic leading-none">
                 {activeAd.title}
               </h2>
 
               <button 
                 onClick={() => navigate('/deals')}
-                className="bg-white text-slate-900 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-eas-blue hover:text-white transition-all shadow-xl flex items-center gap-3 w-full justify-center"
+                className="bg-white text-slate-900 px-4 py-3.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest hover:bg-eas-blue hover:text-white transition-all shadow-xl flex items-center gap-2 sm:gap-3 w-full justify-center"
               >
-                {t('explore_all')} <Play size={16} className="fill-current" />
+                {t('explore_all')} <Play size={14} className="fill-current" />
               </button>
             </div>
           </div>
@@ -156,9 +156,11 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
           <motion.div 
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}
-            className="absolute bottom-4 right-4 z-20 md:hidden" // Only show on mobile as a float, or hide if we want it like the screenshot
+            className="absolute bottom-4 right-4 z-20 md:hidden cursor-pointer" // Only show on mobile as a float, or hide if we want it like the screenshot
+            onClick={() => navigate('/checkout')}
+            whileTap={{ scale: 0.95 }}
           >
-             <div className="bg-[#007aff] text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/20 backdrop-blur-xl">
+             <div className="bg-[#007aff] hover:bg-[#0062cc] active:scale-95 transition-all text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/20 backdrop-blur-xl">
                 <div className="relative">
                    <ShoppingBag size={24} />
                    {cartCount > 0 && (

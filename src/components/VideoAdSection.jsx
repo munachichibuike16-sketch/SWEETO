@@ -62,8 +62,8 @@ const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
       className={isPermanent ? "h-[500px]" : "py-12 px-4 md:px-8 max-w-[1600px] mx-auto"}
     >
       <div className={`
-        relative rounded-[3rem] overflow-hidden shadow-2xl group ${isPermanent ? 'bg-black' : 'bg-slate-900'} h-full
-        ${!isPermanent && 'aspect-[16/9] md:aspect-[21/9] w-full'}
+        relative rounded-[2.5rem] overflow-hidden shadow-2xl group ${isPermanent ? 'bg-black' : 'bg-slate-900'} h-full
+        ${!isPermanent && 'aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9] w-full'}
       `}>
         {/* Background */}
         <AnimatePresence mode="wait">
@@ -99,46 +99,46 @@ const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
         <div className={`absolute inset-0 ${isPermanent ? 'bg-black/40' : 'bg-gradient-to-t from-slate-900 via-transparent to-slate-900/40'}`}></div>
         
         {/* Content */}
-        <div className={`absolute inset-0 p-8 md:p-16 flex flex-col justify-end items-start`}>
+        <div className="absolute inset-0 p-5 sm:p-8 md:p-16 flex flex-col justify-end items-start z-10">
           <motion.div 
-            initial={{ y: 30, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="w-full space-y-8"
+            className="w-full space-y-3 sm:space-y-6 md:space-y-8"
           >
-            <div className="flex items-center gap-4">
-              <span className="px-6 py-3 bg-pink-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-lg flex items-center gap-2">
-                <Zap size={14} className="fill-white" /> {ad.type === 'video' ? t('video_commercial') : t('premium_banner')}
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="px-3 py-1.5 sm:px-6 sm:py-3 bg-pink-500 text-white text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] rounded-xl sm:rounded-2xl shadow-lg flex items-center gap-1.5 sm:gap-2">
+                <Zap size={10} className="fill-white sm:w-[14px] sm:h-[14px]" /> {ad.type === 'video' ? t('video_commercial') : t('premium_banner')}
               </span>
             </div>
 
-            <h2 className={`text-5xl md:text-7xl font-black text-white tracking-tighter uppercase italic leading-none max-w-2xl`}>
+            <h2 className="text-2xl sm:text-4xl md:text-7xl font-black text-white tracking-tighter uppercase italic leading-none max-w-2xl">
               {ad.title || t('exclusive_tech_deals')}
             </h2>
 
             {!isPermanent && ad.description && (
-              <p className="text-white/60 text-sm md:text-xl font-medium leading-relaxed max-w-2xl line-clamp-2">
+              <p className="text-white/60 text-xs sm:text-base md:text-xl font-medium leading-relaxed max-w-2xl line-clamp-2">
                 {ad.description}
               </p>
             )}
 
-            <div className="flex flex-wrap gap-4 pt-4">
+            <div className="flex items-center gap-3 pt-1.5 sm:pt-4 w-full sm:w-auto">
               <button 
                 onClick={handleAction} 
-                className="bg-white text-slate-900 px-10 py-5 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] hover:bg-pink-500 hover:text-white transition-all shadow-2xl flex items-center gap-6 group"
+                className="bg-white text-slate-900 px-5 py-3 sm:px-10 sm:py-5 rounded-xl sm:rounded-[2rem] font-black text-[10px] sm:text-[12px] uppercase tracking-[0.1em] sm:tracking-[0.2em] hover:bg-pink-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 sm:gap-6 group flex-1 sm:flex-none justify-center"
               >
                 {linkedProduct ? t('shop_now') : t('discover_deals')}
-                <div className="w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center group-hover:border-white transition-colors">
-                  <Play size={16} className="fill-current translate-x-0.5" />
+                <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-slate-900 flex items-center justify-center group-hover:border-white transition-colors shrink-0">
+                  <Play size={12} className="fill-current translate-x-0.5 sm:w-[16px] sm:h-[16px]" />
                 </div>
               </button>
               
               {ad.type === 'video' && (
                 <button 
                   onClick={() => setIsMuted(!isMuted)}
-                  className="w-16 h-16 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                  className="w-11 h-11 sm:w-16 sm:h-16 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl sm:rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shrink-0"
                 >
-                  {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+                  {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
               )}
             </div>
