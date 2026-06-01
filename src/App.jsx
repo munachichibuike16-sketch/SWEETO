@@ -11,7 +11,6 @@ import CartDrawer from './components/CartDrawer';
 import ProductModal from './components/ProductModal';
 import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
-import OrdersHistoryContent from './components/OrdersHistoryContent';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
@@ -726,7 +725,7 @@ const Storefront = ({ viewMode = 'home' }) => {
       >
         
         <main className="flex-1 pb-20">
-          {viewMode !== 'notifications' && <DiscoveryBar />}
+          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1600px] mx-auto ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
@@ -737,8 +736,6 @@ const Storefront = ({ viewMode = 'home' }) => {
               <WishlistContent onProductClick={handleProductClick} />
             ) : viewMode === 'notifications' ? (
               <NotificationsContent onProductClick={handleProductClick} />
-            ) : viewMode === 'orders' ? (
-              <OrdersHistoryContent />
             ) : viewMode === 'visit' ? (
               <VisitUs />
             ) : ['privacy', 'terms', 'security'].includes(viewMode) ? (
@@ -1198,7 +1195,6 @@ function App() {
           <Route path="/product/:productId" element={<Storefront viewMode="home" />} />
           <Route path="/wishlist" element={<Storefront viewMode="wishlist" />} />
           <Route path="/notifications" element={<Storefront viewMode="notifications" />} />
-          <Route path="/orders" element={<Storefront viewMode="orders" />} />
           <Route path="/login" element={<AuthPage initialTab="login" />} />
           <Route path="/register" element={<AuthPage initialTab="signup" />} />
           <Route path="/auth" element={<AuthPage />} />
