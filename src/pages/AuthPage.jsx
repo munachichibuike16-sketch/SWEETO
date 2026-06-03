@@ -586,20 +586,6 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center py-1 border-b border-slate-100/30 dark:border-slate-850/50 last:border-0">
-                          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Address</span>
-                          <div className="flex items-center gap-2 max-w-[70%]">
-                            <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">
-                              {sessionUser.address || 'Not set'}
-                            </span>
-                            <button 
-                              onClick={() => switchTab('settings')}
-                              className="text-eas-blue hover:text-blue-700 text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg shrink-0"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
@@ -682,46 +668,6 @@ const AuthPage = ({ initialTab = 'login' }) => {
                             className="dark:bg-slate-950 dark:border-slate-800 dark:text-white flex-1"
                           />
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="input-group">
-                          <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Commune / City</label>
-                          <select 
-                            value={settingsForm.city}
-                            onChange={(e) => setSettingsForm({...settingsForm, city: e.target.value})}
-                            className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-955 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
-                          >
-                            <option value="">Select Commune</option>
-                            {shippingZones.map(zone => (
-                              <option key={zone.id} value={zone.name}>{zone.name}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="input-group">
-                          <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Language</label>
-                          <select 
-                            value={lang}
-                            onChange={(e) => changeLanguage(e.target.value)}
-                            className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-955 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
-                          >
-                            <option value="en">🇺🇸 English</option>
-                            <option value="fr">🇫🇷 Français</option>
-                            <option value="es">🇪🇸 Español</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="input-group">
-                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Default Shipping Address</label>
-                        <textarea 
-                          rows="2"
-                          placeholder="Default Address" 
-                          value={settingsForm.address}
-                          onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
-                          className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-755 dark:text-white outline-none focus:border-eas-blue focus:ring-2 focus:ring-eas-blue/10 transition-all resize-none"
-                        />
                       </div>
                     </div>
 
