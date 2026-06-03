@@ -21,6 +21,20 @@ const CheckoutPage = () => {
   const [formData, setFormData] = useState({
     name: '', phone: '', city: 'Abidjan', address: ''
   });
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+    if (session) {
+      setCurrentUser(session);
+      setFormData({
+        name: session.name || '',
+        phone: session.phoneNumber || session.phone || '',
+        city: session.city || 'Abidjan',
+        address: session.address || ''
+      });
+    }
+  }, []);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
   const [isReturning, setIsReturning] = useState(false);
   const [promoInput, setPromoInput] = useState('');
@@ -125,9 +139,18 @@ const CheckoutPage = () => {
       const destLat = selectedZone ? selectedZone.lat : 5.3484; // Fallback to Cocody center
       const destLng = selectedZone ? selectedZone.lng : -3.9788;
 
+      const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+      const contactInfo = [
+        formData.phone,
+        formData.address || '',
+        session?.email || '',
+        session?.id || ''
+      ].join(' | ');
+
       const orderPayload = {
         customer_name: formData.name,
-        customer_contact: `${formData.phone} | ${formData.address || ''}`,
+        customer_contact: contactInfo,
+        customer_phone: formData.phone,
         items: JSON.stringify(cartItems.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity }))),
         total_amount: grandTotal,
         total: grandTotal,

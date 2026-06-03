@@ -365,14 +365,32 @@ const AuthPage = ({ initialTab = 'login' }) => {
     const wishlistCount = savedWishlist.length;
 
     let ordersCount = 0;
-    if (user.phoneNumber) {
+    const queries = [];
+    
+    if (user.email) {
+      queries.push(`customer_contact.ilike.%| ${user.email.toLowerCase()} |%`);
+    }
+    if (user.id) {
+      queries.push(`customer_contact.ilike.%| ${user.id}%`);
+    }
+
+    const phoneVal = user.phoneNumber || user.phone;
+    const cleanPhone = phoneVal ? phoneVal.replace(/\D/g, '') : '';
+    if (cleanPhone && cleanPhone.length >= 8) {
+      queries.push(`customer_contact.ilike.${cleanPhone} |%`);
+      queries.push(`customer_contact.ilike.+${cleanPhone} |%`);
+      queries.push(`customer_contact.ilike.${phoneVal} |%`);
+      queries.push(`customer_phone.eq.${phoneVal}`);
+      queries.push(`customer_phone.eq.${cleanPhone}`);
+    }
+
+    if (queries.length > 0) {
       try {
-        const cleanPhone = user.phoneNumber.replace(/\D/g, '');
-        const searchFilter = `%${cleanPhone}%`;
+        const orQuery = queries.join(',');
         const { count, error } = await supabase
           .from('orders')
           .select('*', { count: 'exact', head: true })
-          .or(`customer_contact.ilike.${searchFilter},customer_phone.ilike.${searchFilter}`);
+          .or(orQuery);
         if (!error) {
           ordersCount = count || 0;
         }

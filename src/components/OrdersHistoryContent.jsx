@@ -30,19 +30,47 @@ const OrdersHistoryContent = ({ isProfileTab = false }) => {
   const fetchUserOrders = async (user) => {
     setLoading(true);
     try {
-      if (!user?.phoneNumber) {
+      if (!user) {
         setOrders([]);
         setLoading(false);
         return;
       }
       
-      const cleanPhone = user.phoneNumber.replace(/\D/g, '');
-      const searchFilter = `%${cleanPhone}%`;
+      const queries = [];
+      
+      // 1. Strict email match if user has email
+      if (user.email) {
+        queries.push(`customer_contact.ilike.%| ${user.email.toLowerCase()} |%`);
+      }
+      
+      // 2. Strict user ID match if user has ID
+      if (user.id) {
+        queries.push(`customer_contact.ilike.%| ${user.id}%`);
+      }
 
+      // 3. Exact phone match to support legacy / other orders placed with the phone number
+      const phoneVal = user.phoneNumber || user.phone;
+      const cleanPhone = phoneVal ? phoneVal.replace(/\D/g, '') : '';
+      if (cleanPhone && cleanPhone.length >= 8) {
+        // Match exact phone prefix before the first pipe character
+        queries.push(`customer_contact.ilike.${cleanPhone} |%`);
+        queries.push(`customer_contact.ilike.+${cleanPhone} |%`);
+        queries.push(`customer_contact.ilike.${phoneVal} |%`);
+        queries.push(`customer_phone.eq.${phoneVal}`);
+        queries.push(`customer_phone.eq.${cleanPhone}`);
+      }
+
+      if (queries.length === 0) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      const orQuery = queries.join(',');
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .or(`customer_contact.ilike.${searchFilter},customer_phone.ilike.${searchFilter}`)
+        .or(orQuery)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
