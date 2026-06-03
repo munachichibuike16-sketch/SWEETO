@@ -60,6 +60,25 @@ const AuthPage = ({ initialTab = 'login' }) => {
     city: ''
   });
 
+  // Chilling custom preferences
+  const [preferences, setPreferences] = useState({
+    smsAlerts: true,
+    whatsappUpdates: true,
+    promoEmails: false
+  });
+
+  const [stats, setStats] = useState({
+    ordersCount: 0,
+    wishlistCount: 0
+  });
+
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmNewPassword: ''
+  });
+
   const africanCountries = [
     { name: "Algeria", code: "+213" }, { name: "Angola", code: "+244" }, { name: "Benin", code: "+229" },
     { name: "Botswana", code: "+267" }, { name: "Burkina Faso", code: "+226" }, { name: "Burundi", code: "+257" },
@@ -93,6 +112,10 @@ const AuthPage = ({ initialTab = 'login' }) => {
         address: session.address || '',
         city: session.city || ''
       });
+      if (session.preferences) {
+        setPreferences(session.preferences);
+      }
+      fetchStats(session);
     }
 
     const fetchShipping = async () => {
@@ -317,6 +340,37 @@ const AuthPage = ({ initialTab = 'login' }) => {
     }, 1500);
   };
 
+  const fetchStats = async (user) => {
+    if (!user) return;
+    const savedWishlist = JSON.parse(localStorage.getItem('sweeto_wishlist') || '[]');
+    const wishlistCount = savedWishlist.length;
+
+    let ordersCount = 0;
+    if (user.phoneNumber) {
+      try {
+        const cleanPhone = user.phoneNumber.replace(/\D/g, '');
+        const searchFilter = `%${cleanPhone}%`;
+        const { count, error } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .or(`customer_contact.ilike.${searchFilter},customer_phone.ilike.${searchFilter}`);
+        if (!error) {
+          ordersCount = count || 0;
+        }
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
+    }
+
+    setStats({ ordersCount, wishlistCount });
+  };
+
+  useEffect(() => {
+    if (sessionUser && currentTab === 'overview') {
+      fetchStats(sessionUser);
+    }
+  }, [currentTab, sessionUser]);
+
   const handleLogout = () => {
     localStorage.removeItem('sweetohub_session');
     setSessionUser(null);
@@ -336,7 +390,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
       name: settingsForm.name,
       phoneNumber: settingsForm.phone,
       address: settingsForm.address,
-      city: settingsForm.city
+      city: settingsForm.city,
+      preferences: preferences
     };
 
     localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
@@ -349,7 +404,53 @@ const AuthPage = ({ initialTab = 'login' }) => {
     showToast('Profile settings saved! ✨', 'success');
   };
 
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    const { oldPassword, newPassword, confirmNewPassword } = passwordForm;
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      showToast('Please fill in all password fields.', 'error');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showToast('New password must be at least 8 characters long.', 'error');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      showToast('New passwords do not match.', 'error');
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+    const userIndex = users.findIndex(u => u.email.toLowerCase() === sessionUser.email.toLowerCase());
+
+    if (userIndex === -1) {
+      showToast('User account not found.', 'error');
+      return;
+    }
+
+    const user = users[userIndex];
+    if (user.password && user.password !== oldPassword) {
+      showToast('Incorrect current password.', 'error');
+      return;
+    }
+
+    users[userIndex].password = newPassword;
+    localStorage.setItem('sweetohub_users', JSON.stringify(users));
+
+    const updatedSession = { ...sessionUser, password: newPassword };
+    localStorage.setItem('sweetohub_session', JSON.stringify(updatedSession));
+    setSessionUser(updatedSession);
+
+    showToast('Password changed successfully! 🔒', 'success');
+    setPasswordForm({ oldPassword: '', newPassword: '', confirmNewPassword: '' });
+    setShowPasswordChange(false);
+  };
+
   const { lang, changeLanguage } = useLanguage();
+  const isGoogleUser = sessionUser?.provider === 'google';
 
   if (sessionUser) {
     return (
@@ -404,16 +505,55 @@ const AuthPage = ({ initialTab = 'login' }) => {
               <div className="profile-dashboard mt-0">
                 {currentTab === 'overview' && (
                   <div className="space-y-8 animate-fade-in">
-                    <div className="profile-grid">
-                      <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
-                        <div className="stat-icon-circle bg-blue-50 dark:bg-blue-950/30 text-blue-500"><Calendar size={16} /></div>
-                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('member_since') || 'Member Since'}</span>
-                        <span className="stat-value text-xs font-bold text-slate-700 dark:text-slate-355 mt-1">{new Date(sessionUser.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Orders Count Card */}
+                      <div 
+                        onClick={() => switchTab('orders')}
+                        className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center cursor-pointer hover:border-eas-blue hover:scale-[1.03] transition-all group"
+                      >
+                        <div className="stat-icon-circle bg-blue-50 dark:bg-blue-950/30 text-blue-500 group-hover:bg-eas-blue group-hover:text-white transition-all">
+                          <Package size={16} />
+                        </div>
+                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('my_orders') || 'Orders'}</span>
+                        <span className="stat-value text-base font-black text-slate-900 dark:text-white mt-1">
+                          {stats.ordersCount}
+                        </span>
                       </div>
+
+                      {/* Wishlist Count Card */}
+                      <div 
+                        onClick={() => navigate('/wishlist')}
+                        className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center cursor-pointer hover:border-pink-500 hover:scale-[1.03] transition-all group"
+                      >
+                        <div className="stat-icon-circle bg-pink-50 dark:bg-pink-950/30 text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all">
+                          <Heart size={16} />
+                        </div>
+                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('wishlist') || 'Wishlist'}</span>
+                        <span className="stat-value text-base font-black text-slate-900 dark:text-white mt-1">
+                          {stats.wishlistCount}
+                        </span>
+                      </div>
+
+                      {/* Member Since Card */}
                       <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
-                        <div className="stat-icon-circle bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500"><Shield size={16} /></div>
+                        <div className="stat-icon-circle bg-purple-50 dark:bg-purple-950/30 text-purple-500">
+                          <Calendar size={16} />
+                        </div>
+                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('member_since') || 'Member Since'}</span>
+                        <span className="stat-value text-[11px] font-black text-slate-700 dark:text-slate-300 mt-1.5 text-center leading-tight">
+                          {new Date(sessionUser.createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+
+                      {/* Security Status Card */}
+                      <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
+                        <div className="stat-icon-circle bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500">
+                          <Shield size={16} />
+                        </div>
                         <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('security') || 'Security'}</span>
-                        <span className="stat-value text-xs font-bold text-slate-700 dark:text-slate-355 uppercase mt-1">{sessionUser.provider || 'Verified'}</span>
+                        <span className="stat-value text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase mt-1.5 text-center leading-tight">
+                          {sessionUser.provider || 'Verified'}
+                        </span>
                       </div>
                     </div>
 
@@ -446,87 +586,136 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
                 {currentTab === 'orders' && (
                   <div className="animate-fade-in w-full overflow-hidden">
-                    <OrdersHistoryContent />
+                    <OrdersHistoryContent isProfileTab={true} />
                   </div>
                 )}
 
                 {currentTab === 'settings' && (
-                  <form onSubmit={handleSaveSettings} className="space-y-6 text-left animate-fade-in">
+                  <div className="space-y-6 text-left animate-fade-in">
                     
-                    <div className="input-group">
-                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
-                      <div className="input-wrapper mt-1">
-                        <User className="input-icon" size={18} />
-                        <input 
-                          type="text" 
-                          placeholder="Name" 
-                          value={settingsForm.name}
-                          onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
-                          className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                    {/* Profile Details Block */}
+                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
+                        <User className="text-eas-blue" size={15} />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Profile Details</span>
+                      </div>
+                      
+                      <div className="input-group">
+                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
+                        <div className="input-wrapper mt-1">
+                          <User className="input-icon" size={18} />
+                          <input 
+                            type="text" 
+                            placeholder="Name" 
+                            value={settingsForm.name}
+                            onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
+                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="input-group">
+                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
+                        <div className="input-wrapper mt-1">
+                          <Phone className="input-icon" size={18} />
+                          <input 
+                            type="tel" 
+                            placeholder="Phone number" 
+                            value={settingsForm.phone}
+                            onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
+                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="input-group">
+                          <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Commune / City</label>
+                          <select 
+                            value={settingsForm.city}
+                            onChange={(e) => setSettingsForm({...settingsForm, city: e.target.value})}
+                            className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-955 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
+                          >
+                            <option value="">Select Commune</option>
+                            {shippingZones.map(zone => (
+                              <option key={zone.id} value={zone.name}>{zone.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="input-group">
+                          <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Language</label>
+                          <select 
+                            value={lang}
+                            onChange={(e) => changeLanguage(e.target.value)}
+                            className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-955 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
+                          >
+                            <option value="en">🇺🇸 English</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="es">🇪🇸 Español</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="input-group">
+                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Default Shipping Address</label>
+                        <textarea 
+                          rows="2"
+                          placeholder="Default Address" 
+                          value={settingsForm.address}
+                          onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
+                          className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-755 dark:text-white outline-none focus:border-eas-blue focus:ring-2 focus:ring-eas-blue/10 transition-all resize-none"
                         />
                       </div>
                     </div>
 
-                    <div className="input-group">
-                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
-                      <div className="input-wrapper mt-1">
-                        <Phone className="input-icon" size={18} />
-                        <input 
-                          type="tel" 
-                          placeholder="Phone number" 
-                          value={settingsForm.phone}
-                          onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                          className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
-                        />
+                    {/* Preferences Block */}
+                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3">
+                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
+                        <Bell className="text-amber-500" size={15} />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white font-black">Notification Preferences</span>
+                      </div>
+                      <div className="space-y-2.5">
+                        <label className="flex items-center justify-between cursor-pointer py-0.5">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Order Status SMS Alerts</span>
+                          <input 
+                            type="checkbox" 
+                            checked={preferences.smsAlerts}
+                            onChange={(e) => setPreferences({...preferences, smsAlerts: e.target.checked})}
+                            className="w-4 h-4 rounded text-eas-blue border-slate-300 dark:border-slate-700 focus:ring-eas-blue/30"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer py-0.5">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">WhatsApp Delivery Updates</span>
+                          <input 
+                            type="checkbox" 
+                            checked={preferences.whatsappUpdates}
+                            onChange={(e) => setPreferences({...preferences, whatsappUpdates: e.target.checked})}
+                            className="w-4 h-4 rounded text-eas-blue border-slate-300 dark:border-slate-700 focus:ring-eas-blue/30"
+                          />
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer py-0.5">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Promotional Emails & Offers</span>
+                          <input 
+                            type="checkbox" 
+                            checked={preferences.promoEmails}
+                            onChange={(e) => setPreferences({...preferences, promoEmails: e.target.checked})}
+                            className="w-4 h-4 rounded text-eas-blue border-slate-300 dark:border-slate-700 focus:ring-eas-blue/30"
+                          />
+                        </label>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="input-group">
-                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Commune / City</label>
-                        <select 
-                          value={settingsForm.city}
-                          onChange={(e) => setSettingsForm({...settingsForm, city: e.target.value})}
-                          className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
-                        >
-                          <option value="">Select Commune</option>
-                          {shippingZones.map(zone => (
-                            <option key={zone.id} value={zone.name}>{zone.name}</option>
-                          ))}
-                        </select>
+                    {/* Appearance Block */}
+                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3">
+                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
+                        <Sun className="text-purple-500" size={15} />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white font-black">Theme Appearance</span>
                       </div>
-
-                      <div className="input-group">
-                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Language</label>
-                        <select 
-                          value={lang}
-                          onChange={(e) => changeLanguage(e.target.value)}
-                          className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 outline-none"
-                        >
-                          <option value="en">🇺🇸 English</option>
-                          <option value="fr">🇫🇷 Français</option>
-                          <option value="es">🇪🇸 Español</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="input-group">
-                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Default Shipping Address</label>
-                      <textarea 
-                        rows="3"
-                        placeholder="Default Address" 
-                        value={settingsForm.address}
-                        onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
-                        className="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-750 dark:text-white outline-none focus:border-eas-blue focus:ring-2 focus:ring-eas-blue/10 transition-all"
-                      />
-                    </div>
-
-                    <div className="input-group">
-                      <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Appearance Theme</label>
                       <button 
                         type="button"
                         onClick={toggleTheme}
-                        className="w-full mt-1 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100/50 dark:hover:bg-slate-900"
+                        className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-955 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100/50 dark:hover:bg-slate-900"
                       >
                         <span className="flex items-center gap-2">
                           {isDarkMode ? <Moon size={16} className="text-purple-500" /> : <Sun size={16} className="text-amber-500" />}
@@ -536,13 +725,104 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </button>
                     </div>
 
+                    {/* Security Block (Change Password) */}
+                    {!isGoogleUser && (
+                      <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordChange(!showPasswordChange)}
+                          className="w-full flex items-center justify-between text-left focus:outline-none"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Lock className="text-red-500" size={15} />
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Change Account Password</span>
+                          </span>
+                          <span className="text-eas-blue text-[10px] font-black uppercase tracking-widest">
+                            {showPasswordChange ? 'Collapse' : 'Expand'}
+                          </span>
+                        </button>
+
+                        <AnimatePresence>
+                          {showPasswordChange && (
+                            <motion.div 
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden pt-4 space-y-4 border-t border-slate-100 dark:border-slate-800/60"
+                            >
+                              <div className="input-group">
+                                <label className="text-[10px] font-black text-slate-400 tracking-wider">Current Password</label>
+                                <div className="input-wrapper mt-1">
+                                  <Lock className="input-icon" size={18} />
+                                  <input 
+                                    type="password" 
+                                    placeholder="••••••••" 
+                                    value={passwordForm.oldPassword}
+                                    onChange={(e) => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
+                                    className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="input-group">
+                                  <label className="text-[10px] font-black text-slate-400 tracking-wider">New Password</label>
+                                  <div className="input-wrapper mt-1">
+                                    <Lock className="input-icon" size={18} />
+                                    <input 
+                                      type="password" 
+                                      placeholder="••••••••" 
+                                      value={passwordForm.newPassword}
+                                      onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                                      className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="input-group">
+                                  <label className="text-[10px] font-black text-slate-400 tracking-wider">Confirm New Password</label>
+                                  <div className="input-wrapper mt-1">
+                                    <Lock className="input-icon" size={18} />
+                                    <input 
+                                      type="password" 
+                                      placeholder="••••••••" 
+                                      value={passwordForm.confirmNewPassword}
+                                      onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
+                                      className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button 
+                                type="button"
+                                onClick={handlePasswordChange}
+                                className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-black text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow cursor-pointer w-full text-center"
+                              >
+                                Update Security Password
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+
+                    {isGoogleUser && (
+                      <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 size={16} />
+                          Google Account Authentication Active
+                        </span>
+                        <span className="text-[9px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Secure</span>
+                      </div>
+                    )}
+
                     <button 
-                      type="submit" 
+                      onClick={handleSaveSettings}
                       className="w-full py-4 rounded-[2rem] bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4"
                     >
                       <Save size={16} /> Save Changes
                     </button>
-                  </form>
+                  </div>
                 )}
               </div>
               

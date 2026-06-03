@@ -6,7 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
-const OrdersHistoryContent = () => {
+const OrdersHistoryContent = ({ isProfileTab = false }) => {
   const { settings, showToast } = useStore();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -134,59 +134,67 @@ const OrdersHistoryContent = () => {
   });
 
   return (
-    <div className="relative min-h-screen px-4 py-8 md:px-8 max-w-4xl mx-auto overflow-hidden pb-32">
+    <div className={isProfileTab ? "w-full relative py-2" : "relative min-h-screen px-4 py-8 md:px-8 max-w-4xl mx-auto overflow-hidden pb-32"}>
       {/* Background Decorative Elements */}
-      <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-eas-blue/5 blur-3xl rounded-full" />
-      <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-purple-500/5 blur-3xl rounded-full" />
+      {!isProfileTab && (
+        <>
+          <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-eas-blue/5 blur-3xl rounded-full" />
+          <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-purple-500/5 blur-3xl rounded-full" />
+        </>
+      )}
 
       {/* Header */}
-      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-3 bg-eas-blue/5 text-eas-blue border border-eas-blue/20 px-6 py-2 rounded-full mb-6 shadow-sm"
-          >
-            <Package size={18} />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">DELIVERY_TRACKING</span>
-          </motion.div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none">
-            Track <span className="text-eas-blue underline decoration-purple-500/30">Your Orders</span>
-          </h1>
+      {!isProfileTab && (
+        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="inline-flex items-center gap-3 bg-eas-blue/5 text-eas-blue border border-eas-blue/20 px-6 py-2 rounded-full mb-6 shadow-sm"
+            >
+              <Package size={18} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">DELIVERY_TRACKING</span>
+            </motion.div>
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none">
+              Track <span className="text-eas-blue underline decoration-purple-500/30">Your Orders</span>
+            </h1>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lookup Card for Guest Users / Quick Lookup */}
-      <div className="bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80 rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-slate-900/5 dark:shadow-none mb-8">
-        <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tight mb-2">
-          {currentUser ? 'Quick Search' : 'Find Your Orders'}
-        </h3>
-        <p className="text-xs text-slate-400 font-bold mb-6">
-          {currentUser 
-            ? 'Search for another order by ID or phone number, or check your linked history below.' 
-            : 'Enter the Phone Number used during checkout, or your specific 4-digit Order ID.'}
-        </p>
+      {!isProfileTab && (
+        <div className="bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/80 rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-slate-900/5 dark:shadow-none mb-8">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tight mb-2">
+            {currentUser ? 'Quick Search' : 'Find Your Orders'}
+          </h3>
+          <p className="text-xs text-slate-400 font-bold mb-6">
+            {currentUser 
+              ? 'Search for another order by ID or phone number, or check your linked history below.' 
+              : 'Enter the Phone Number used during checkout, or your specific 4-digit Order ID.'}
+          </p>
 
-        <form onSubmit={handleLookup} className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text"
-              placeholder="e.g. 1045 or 07070707"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white text-xs font-black placeholder:text-slate-300 dark:placeholder:text-slate-700 focus:outline-none focus:border-eas-blue focus:ring-2 focus:ring-eas-blue/10 transition-all"
-            />
-          </div>
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-eas-blue/10 disabled:opacity-50"
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Lookup'}
-          </button>
-        </form>
-      </div>
+          <form onSubmit={handleLookup} className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text"
+                placeholder="e.g. 1045 or 07070707"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white text-xs font-black placeholder:text-slate-300 dark:placeholder:text-slate-700 focus:outline-none focus:border-eas-blue focus:ring-2 focus:ring-eas-blue/10 transition-all"
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-eas-blue/10 disabled:opacity-50"
+            >
+              {loading ? <Loader2 size={16} className="animate-spin" /> : 'Lookup'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Tabs */}
       {orders.length > 0 && (
@@ -351,20 +359,22 @@ const OrdersHistoryContent = () => {
       </div>
 
       {/* Info Card */}
-      <div className="mt-12 p-8 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-800 dark:from-eas-blue dark:to-blue-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-white/10 shadow-xl">
-        <div className="text-center md:text-left">
-          <p className="text-blue-400 dark:text-blue-200 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Live Support Available</p>
-          <h4 className="text-2xl font-black italic uppercase leading-none">Need delivery assistance?</h4>
-          <p className="text-slate-400 dark:text-blue-100/60 text-xs mt-2">Contact our logistics team via WhatsApp for immediate support.</p>
+      {!isProfileTab && (
+        <div className="mt-12 p-8 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-800 dark:from-eas-blue dark:to-blue-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-white/10 shadow-xl">
+          <div className="text-center md:text-left">
+            <p className="text-blue-400 dark:text-blue-200 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Live Support Available</p>
+            <h4 className="text-2xl font-black italic uppercase leading-none">Need delivery assistance?</h4>
+            <p className="text-slate-400 dark:text-blue-100/60 text-xs mt-2">Contact our logistics team via WhatsApp for immediate support.</p>
+          </div>
+          <button 
+            onClick={() => window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}`, '_blank')}
+            className="bg-white text-slate-900 hover:bg-slate-100 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-2xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer"
+          >
+            Chat with Support
+            <ExternalLink size={14} />
+          </button>
         </div>
-        <button 
-          onClick={() => window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}`, '_blank')}
-          className="bg-white text-slate-900 hover:bg-slate-100 font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-2xl transition-all shadow-md shrink-0 flex items-center gap-2 cursor-pointer"
-        >
-          Chat with Support
-          <ExternalLink size={14} />
-        </button>
-      </div>
+      )}
     </div>
   );
 };
