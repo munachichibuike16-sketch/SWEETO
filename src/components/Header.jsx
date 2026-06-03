@@ -29,6 +29,33 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const isWishlistPage = location.pathname === '/wishlist';
   const notifRef = useRef(null);
   const langRef = useRef(null);
+  const headerRef = useRef(null);
+
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        document.documentElement.style.setProperty(
+          '--header-height',
+          `${headerRef.current.offsetHeight}px`
+        );
+      }
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    window.addEventListener('scroll', updateHeaderHeight);
+    let resizeObserver;
+    if (headerRef.current && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        updateHeaderHeight();
+      });
+      resizeObserver.observe(headerRef.current);
+    }
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      window.removeEventListener('scroll', updateHeaderHeight);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [isScrolled, isSearchOpen]);
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -144,7 +171,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
   return (
     <>
       {/* --- Desktop & Tablet Header --- */}
-      <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
+      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
         isScrolled 
         ? 'py-3 px-4 md:px-12 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-3xl shadow-2xl border-b border-slate-100 dark:border-white/5' 
         : 'py-4 md:py-6 px-4 md:px-12 bg-transparent border-b border-transparent'
