@@ -262,7 +262,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
             { 
               theme: 'outline', 
               size: 'large', 
-              width: '320', 
+              width: '400', 
               text: 'continue_with',
               shape: 'pill',
               logo_alignment: 'left'
@@ -1080,12 +1080,12 @@ const AuthPage = ({ initialTab = 'login' }) => {
               )}
             </div>
 
-            <div className="w-full flex justify-center items-center min-h-[46px] my-2">
-              <div id="google-button-official" className="w-full flex justify-center"></div>
-            </div>
-
-            {!googleLoaded && (
-              <button className="btn-google" onClick={handleGoogleDemoFallback}>
+            <div className="relative w-full max-w-[400px] mx-auto min-h-[46px] my-2">
+              <button 
+                type="button"
+                className="btn-google w-full flex items-center justify-center gap-2"
+                onClick={handleGoogleDemoFallback}
+              >
                 <svg className="google-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -1094,7 +1094,13 @@ const AuthPage = ({ initialTab = 'login' }) => {
                 </svg>
                 {t('continue_google') || 'Continue with Google'}
               </button>
-            )}
+              
+              <div 
+                id="google-button-official" 
+                className="absolute inset-0 w-full h-full opacity-0 overflow-hidden"
+                style={{ zIndex: 10, pointerEvents: googleLoaded ? 'auto' : 'none' }}
+              />
+            </div>
 
             <p className="auth-footer-text">
               {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}

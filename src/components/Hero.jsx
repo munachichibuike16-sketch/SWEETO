@@ -197,7 +197,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
               {/* Slide Navigation Pill Capsule (Bottom Center) */}
               {activeProducts.length > 1 && (
-                <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2 sm:px-5 sm:py-2.5 z-20 shadow-2xl gap-3 sm:gap-4">
+                <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-3 py-1.5 z-20 shadow-2xl gap-3">
                   <button 
                     onClick={() => setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length)} 
                     className="text-white hover:text-cyan-400 transition-colors p-1"
@@ -205,18 +205,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     <ChevronLeft size={14} sm:size={16} strokeWidth={3} />
                   </button>
                   
-                  <div className="flex items-center gap-1.5">
-                    {activeProducts.slice(0, 8).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setGridMainSlide(i)}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                          i === gridMainSlide % activeProducts.length ? 'bg-white w-4' : 'bg-white/30 w-1.5'
-                        }`}
-                      />
-                    ))}
-                  </div>
-
                   <button 
                     onClick={() => setGridMainSlide(prev => (prev + 1) % activeProducts.length)} 
                     className="text-white hover:text-cyan-400 transition-colors p-1"
@@ -379,7 +367,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
             {/* Slide Navigation Pill Capsule (Bottom Center) */}
             {activeProducts.length > 1 && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-5 py-2.5 z-20 shadow-2xl gap-4">
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2 z-20 shadow-2xl gap-4">
                 <button 
                   onClick={() => setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length)} 
                   className="text-white hover:text-cyan-400 transition-colors p-1"
@@ -387,18 +375,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   <ChevronLeft size={16} strokeWidth={3} />
                 </button>
                 
-                <div className="flex items-center gap-1.5">
-                  {activeProducts.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setGridMainSlide(i)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === gridMainSlide % activeProducts.length ? 'bg-white w-4' : 'bg-white/30 w-1.5'
-                      }`}
-                    />
-                  ))}
-                </div>
-
                 <button 
                   onClick={() => setGridMainSlide(prev => (prev + 1) % activeProducts.length)} 
                   className="text-white hover:text-cyan-400 transition-colors p-1"
@@ -610,19 +586,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
           </button>
         </div>
    
-        {/* Progress Dots */}
-        <div 
-          onClick={(e) => e.stopPropagation()}
-          className={`absolute ${isRTL ? 'right-12' : 'left-12'} bottom-4 sm:bottom-12 flex gap-2 sm:gap-3 z-40`}
-        >
-          {displayBanners.map((_, i) => (
-            <button 
-              key={i} 
-              onClick={() => setCurrentSlide(i)}
-              className={`h-1 rounded-full transition-all duration-500 ${i === currentSlide ? 'bg-white w-8 sm:w-12' : 'bg-white/20 w-3 sm:w-4'}`} 
-            />
-          ))}
-        </div>
+        {/* Progress Dots Removed */}
       </section>
     );
   }
@@ -765,19 +729,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
         </button>
       </div>
  
-       {/* Progress Dots */}
-       <div 
-         onClick={(e) => e.stopPropagation()}
-         className={`absolute ${isRTL ? 'right-12' : 'left-12'} bottom-4 sm:bottom-12 flex gap-2 sm:gap-3 z-40`}
-       >
-        {displayBanners.map((_, i) => (
-          <button 
-            key={i} 
-            onClick={() => setCurrentSlide(i)}
-            className={`h-1.5 rounded-full transition-all duration-500 ${i === currentSlide ? 'bg-eas-blue w-8 sm:w-12' : 'bg-slate-300 dark:bg-slate-800 w-3 sm:w-4'}`} 
-          />
-        ))}
-      </div>
+       {/* Progress Dots Removed */}
     </section>
   );
 };
