@@ -163,13 +163,13 @@ export default function VideoAds() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="absolute bottom-3 right-3 flex gap-2 transition-all">
-                  <button onClick={() => openEdit(a)} className="w-9 h-9 bg-white/90 backdrop-blur-md text-blue-600 rounded-xl flex items-center justify-center hover:bg-white shadow-lg"><Edit size={15}/></button>
-                  <button onClick={() => setConfirmDel({ id: a.id, name: a.title })} className="w-9 h-9 bg-white/90 backdrop-blur-md text-red-500 rounded-xl flex items-center justify-center hover:bg-white shadow-lg"><Trash2 size={15}/></button>
+                <div className="absolute bottom-3 right-3 flex gap-2 transition-all z-10">
+                  <button onClick={() => openEdit(a)} className="w-9 h-9 bg-white/90 backdrop-blur-md text-blue-600 rounded-xl flex items-center justify-center hover:bg-white shadow-lg cursor-pointer"><Edit size={15}/></button>
+                  <button onClick={() => setConfirmDel({ id: a.id, name: a.title })} className="w-9 h-9 bg-white/90 backdrop-blur-md text-red-500 rounded-xl flex items-center justify-center hover:bg-white shadow-lg cursor-pointer"><Trash2 size={15}/></button>
                 </div>
                 {/* Play icon for video */}
                 {a.type === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
                     <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30">
                       <Play className="text-white ml-1" size={22}/>
                     </div>
