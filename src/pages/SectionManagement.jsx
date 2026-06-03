@@ -61,7 +61,7 @@ const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-sla
 const lbl = 'flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1';
 
 export default function SectionManagement() {
-  const { sections = [], refreshData, categories = [] } = useStore();
+  const { sections = [], refreshData, categories = [], videoAds = [] } = useStore();
   const [view, setView] = useState('list');
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
@@ -347,7 +347,14 @@ export default function SectionManagement() {
 
                 {/* Content: Title & Details */}
                 <div className="flex-1">
-                  <h3 className="font-black text-slate-900 dark:text-white text-lg leading-tight mb-1">{s.title}</h3>
+                  <h3 className="font-black text-slate-900 dark:text-white text-lg leading-tight mb-1">{s.title || (s.role === 'video_ad' ? 'Video/Image Ad' : 'Untitled Section')}</h3>
+                  {s.role === 'video_ad' && (
+                    <p className="text-[10px] text-pink-500 font-bold uppercase tracking-widest mb-2">
+                      {s.category && s.category !== 'All' 
+                        ? `Ad: ${videoAds.find(ad => String(ad.id) === String(s.category))?.title || `Ad #${s.category}`}`
+                        : 'Ad: Rotating Active Ads'}
+                    </p>
+                  )}
                   {s.subtitle && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4 truncate">{s.subtitle}</p>}
                 </div>
 
@@ -445,15 +452,27 @@ export default function SectionManagement() {
                   <label className={lbl}>Max Products to Show</label>
                   <input type="number" min="1" max="50" value={form.maxProducts} onChange={e => setForm(p => ({ ...p, maxProducts: e.target.value }))} className={`${inp} font-mono font-bold`}/>
                 </div>
-                <div>
-                  <label className={lbl}>Filter by Product Category</label>
-                  <select value={form.category || 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
-                    <option value="All">All Categories (No filter)</option>
-                    {categories.map(cat => (
-                      <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {form.role === 'video_ad' ? (
+                  <div>
+                    <label className={lbl}>Choose Video/Image Ad to Display</label>
+                    <select value={form.category || 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
+                      <option value="All">Rotate Active Ads (Default)</option>
+                      {videoAds.filter(ad => ad.isActive).map(ad => (
+                        <option key={ad.id} value={String(ad.id)}>{ad.title} ({ad.type})</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={lbl}>Filter by Product Category</label>
+                    <select value={form.category || 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
+                      <option value="All">All Categories (No filter)</option>
+                      {categories.map(cat => (
+                        <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className={lbl}>Side Banner Image URL (Optional)</label>
                   <input type="text" value={form.headerImage || ''} onChange={e => setForm(p => ({ ...p, headerImage: e.target.value }))} placeholder="e.g. https://images.unsplash.com/... or /images/banner.jpg" className={inp}/>

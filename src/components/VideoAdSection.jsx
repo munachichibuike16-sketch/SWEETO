@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { isLocalHost } from '../utils/api';
 
-const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
+const VideoAdSection = ({ isPermanent = false, adIndex = 0, section }) => {
   const { videoAds, products } = useStore();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -18,18 +18,23 @@ const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
   const activeAds = videoAds.filter(ad => ad.isActive);
   const [currentIdx, setCurrentIdx] = useState(adIndex % (activeAds.length || 1));
 
-  // Rotate ads every 15 seconds
+  // Determine if this section displays a specific chosen ad
+  const specificAd = section?.category && section.category !== 'All'
+    ? activeAds.find(ad => String(ad.id) === String(section.category))
+    : null;
+
+  // Rotate ads every 15 seconds if not showing a specific ad
   useEffect(() => {
-    if (activeAds.length <= 1) return;
+    if (specificAd || activeAds.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIdx(prev => (prev + 1) % activeAds.length);
     }, 15000);
     return () => clearInterval(interval);
-  }, [activeAds.length]);
+  }, [activeAds.length, specificAd]);
 
   if (activeAds.length === 0) return null;
 
-  const ad = activeAds[currentIdx] || activeAds[0] || {};
+  const ad = specificAd || activeAds[currentIdx] || activeAds[0] || {};
   const linkedProduct = ad?.productId ? products.find(p => p.id === ad.productId) : null;
 
   useEffect(() => {

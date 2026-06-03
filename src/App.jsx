@@ -390,7 +390,7 @@ const Storefront = ({ viewMode = 'home' }) => {
         if (settings?.hero_enabled === false) return null;
         return <Hero key={key} banners={settings?.hero_banners} layout={settings?.hero_mode} />;
       case 'video_ad':
-        return <VideoAdSection key={key} adIndex={idx} />;
+        return <VideoAdSection key={key} adIndex={idx} section={section} />;
 
       case 'dealOfDay':
       case 'deal_of_the_day':
