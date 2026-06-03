@@ -161,13 +161,24 @@ export default function OrdersManagement({ preselectedOrderId }) {
 
   const fetchAgents = async () => {
     try {
-      const res = await apiFetch('/api/agents');
-      if (res.ok) {
-        const data = await res.json();
+      const { data, error } = await supabase
+        .from('delivery_agents')
+        .select('*')
+        .eq('approval_status', 'approved')
+        .order('name', { ascending: true });
+        
+      if (!error && data) {
         setAgents(data);
+      } else {
+        const localApproved = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]')
+          .filter(a => a.approval_status === 'approved');
+        setAgents(localApproved);
       }
     } catch (err) {
-      console.error("Failed to fetch agents:", err);
+      console.error("Failed to fetch agents from Supabase:", err);
+      const localApproved = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]')
+        .filter(a => a.approval_status === 'approved');
+      setAgents(localApproved);
     }
   };
 
@@ -201,13 +212,48 @@ export default function OrdersManagement({ preselectedOrderId }) {
 
     const loadTracking = async () => {
       try {
-        const res = await apiFetch(`/api/orders/${selectedOrder.id}/tracking`);
-        if (res.ok) {
-          const data = await res.json();
-          setTrackingData(data);
+        // 1. Fetch current order coordinates and agent details from Supabase
+        const { data: orderData, error: orderErr } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', selectedOrder.id)
+          .single();
+          
+        if (orderErr) throw orderErr;
+        
+        let agent = null;
+        if (orderData.delivery_agent_id) {
+          const { data: agentData } = await supabase
+            .from('delivery_agents')
+            .select('id, name, phone, zone, avatar, rating')
+            .eq('id', orderData.delivery_agent_id)
+            .single();
+          agent = agentData;
         }
+        
+        // 2. Fetch history
+        const { data: historyData } = await supabase
+          .from('agent_location_history')
+          .select('lat, lng, created_at')
+          .eq('order_id', selectedOrder.id)
+          .order('created_at', { ascending: true });
+          
+        setTrackingData({
+          order_id: orderData.id,
+          customer_name: orderData.customer_name,
+          customer_contact: orderData.customer_contact,
+          status: orderData.status,
+          tracking_stage: orderData.tracking_stage || 'placed',
+          estimated_minutes: orderData.estimated_minutes || 20,
+          destination_lat: orderData.destination_lat || 5.3484,
+          destination_lng: orderData.destination_lng || -3.9788,
+          agent_lat: orderData.agent_lat || null,
+          agent_lng: orderData.agent_lng || null,
+          agent,
+          history: historyData || []
+        });
       } catch (err) {
-        console.error("Failed to load tracking data for admin:", err);
+        console.error("Failed to load tracking data for admin from Supabase:", err);
       }
     };
 
@@ -227,21 +273,34 @@ export default function OrdersManagement({ preselectedOrderId }) {
     if (!agentId || !selectedOrder) return;
     try {
       setAssignLoading(true);
-      const res = await apiFetch(`/api/orders/${selectedOrder.id}/assign-agent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent_id: parseInt(agentId) })
-      });
-      if (res.ok) {
+      
+      const destLat = selectedOrder.destination_lat || 5.3484;
+      const destLng = selectedOrder.destination_lng || -3.9788;
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          delivery_agent_id: parseInt(agentId),
+          tracking_stage: 'assigned',
+          destination_lat: destLat,
+          destination_lng: destLng,
+          agent_lat: 5.3161, // Marcory
+          agent_lng: -3.9937
+        })
+        .eq('id', selectedOrder.id);
+        
+      if (!error) {
         fetchOrders();
         setSelectedOrder(prev => ({ 
           ...prev, 
           delivery_agent_id: parseInt(agentId),
           tracking_stage: 'assigned' 
         }));
+      } else {
+        throw error;
       }
     } catch (err) {
-      console.error("Failed to assign agent:", err);
+      console.error("Failed to assign agent on Supabase:", err);
     } finally {
       setAssignLoading(false);
     }

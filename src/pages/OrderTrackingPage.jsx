@@ -220,22 +220,55 @@ const OrderTrackingPage = () => {
 
     const fetchTracking = async () => {
       try {
-        const res = await apiFetch(`/api/orders/${orderId}/tracking`);
-        if (res.ok) {
-          const data = await res.json();
-          setTrackingData(data);
-          // If status changes on the backend, update standard state too
-          if (data.status && order && data.status !== order.status) {
-            setOrder(prev => ({ 
-              ...prev, 
-              status: data.status, 
-              tracking_stage: data.tracking_stage, 
-              estimated_minutes: data.estimated_minutes 
-            }));
-          }
+        // 1. Fetch current order coordinates and agent details from Supabase
+        const { data: orderData, error: orderErr } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+          
+        if (orderErr) throw orderErr;
+        
+        let agent = null;
+        if (orderData.delivery_agent_id) {
+          const { data: agentData } = await supabase
+            .from('delivery_agents')
+            .select('id, name, phone, zone, avatar, rating')
+            .eq('id', orderData.delivery_agent_id)
+            .single();
+          agent = agentData;
+        }
+        
+        // 2. Fetch location history trail
+        const { data: historyData } = await supabase
+          .from('agent_location_history')
+          .select('lat, lng, created_at')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: true });
+          
+        const formattedData = {
+          order_id: orderData.id,
+          customer_name: orderData.customer_name,
+          customer_contact: orderData.customer_contact,
+          status: orderData.status,
+          tracking_stage: orderData.tracking_stage || 'placed',
+          estimated_minutes: orderData.estimated_minutes || 20,
+          destination_lat: orderData.destination_lat || 5.3484,
+          destination_lng: orderData.destination_lng || -3.9788,
+          agent_lat: orderData.agent_lat || null,
+          agent_lng: orderData.agent_lng || null,
+          agent,
+          history: historyData || []
+        };
+        
+        setTrackingData(formattedData);
+        
+        // If status changes on the backend, update standard state too
+        if (orderData.status && order && orderData.status !== order.status) {
+          setOrder(orderData);
         }
       } catch (err) {
-        console.error("Failed to load tracking coordinates:", err);
+        console.error("Failed to load tracking data from Supabase:", err);
       }
     };
 

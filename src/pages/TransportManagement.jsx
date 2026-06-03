@@ -5,8 +5,60 @@ import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../utils/api';
 
+const MIGRATION_SQL = `-- 1. Create delivery_agents table
+CREATE TABLE IF NOT EXISTS public.delivery_agents (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(100) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  dob VARCHAR(50),
+  address TEXT,
+  vehicle_name VARCHAR(255),
+  plate_number VARCHAR(100),
+  photo_id TEXT,
+  pin VARCHAR(50) DEFAULT '1234',
+  avatar TEXT,
+  rating NUMERIC(3, 2) DEFAULT 5.0,
+  approval_status VARCHAR(50) DEFAULT 'pending',
+  zone VARCHAR(255) DEFAULT 'Global',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Create agent_location_history table
+CREATE TABLE IF NOT EXISTS public.agent_location_history (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL,
+  agent_id INTEGER NOT NULL,
+  lat NUMERIC(9, 6) NOT NULL,
+  lng NUMERIC(9, 6) NOT NULL,
+  accuracy NUMERIC(10, 2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Add logistics columns to orders table
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS delivery_agent_id INTEGER,
+  ADD COLUMN IF NOT EXISTS tracking_stage VARCHAR(50) DEFAULT 'placed',
+  ADD COLUMN IF NOT EXISTS destination_lat NUMERIC(9, 6),
+  ADD COLUMN IF NOT EXISTS destination_lng NUMERIC(9, 6),
+  ADD COLUMN IF NOT EXISTS agent_lat NUMERIC(9, 6),
+  ADD COLUMN IF NOT EXISTS agent_lng NUMERIC(9, 6);
+
+-- 4. Enable RLS
+ALTER TABLE public.delivery_agents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.agent_location_history ENABLE ROW LEVEL SECURITY;
+
+-- 5. Create access policies
+CREATE POLICY "Allow public select on delivery_agents" ON public.delivery_agents FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on delivery_agents" ON public.delivery_agents FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on delivery_agents" ON public.delivery_agents FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete on delivery_agents" ON public.delivery_agents FOR DELETE USING (true);
+
+CREATE POLICY "Allow public select on agent_location_history" ON public.agent_location_history FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on agent_location_history" ON public.agent_location_history FOR INSERT WITH CHECK (true);`;
+
 export default function TransportManagement() {
-  const { settings, requestConfirm } = useStore();
+  const { settings, requestConfirm, showToast } = useStore();
   const currency = settings?.currency || 'FCFA';
   
   // Tabs State
@@ -24,6 +76,11 @@ export default function TransportManagement() {
   const [agentsLoading, setAgentsLoading] = React.useState(true);
   const [agentSearch, setAgentSearch] = React.useState('');
   
+  // Supabase Sync States
+  const [usingSupabase, setUsingSupabase] = React.useState(true);
+  const [showSqlModal, setShowSqlModal] = React.useState(false);
+  const [copiedSql, setCopiedSql] = React.useState(false);
+
   // Interactivity state
   const [showPinMap, setShowPinMap] = React.useState({});
   const [editingPinId, setEditingPinId] = React.useState(null);
@@ -54,11 +111,38 @@ export default function TransportManagement() {
   const fetchAgents = async () => {
     try {
       setAgentsLoading(true);
-      const res = await apiFetch('/api/agents');
-      if (res.ok) {
-        const data = await res.json();
-        setAgents(data || []);
+      
+      let fetchedAgents = [];
+      let activeUsingSupabase = true;
+      
+      try {
+        const { data, error } = await supabase
+          .from('delivery_agents')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (!error && data) {
+          fetchedAgents = data;
+          setUsingSupabase(true);
+          activeUsingSupabase = true;
+        } else {
+          if (error && error.code !== 'PGRST205') {
+            console.error("Supabase delivery agents fetch warning:", error);
+          }
+          setUsingSupabase(false);
+          activeUsingSupabase = false;
+        }
+      } catch (err) {
+        console.warn("Supabase fetch failed for delivery agents, using local storage:", err);
+        setUsingSupabase(false);
+        activeUsingSupabase = false;
       }
+      
+      if (!activeUsingSupabase) {
+        fetchedAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+      }
+      
+      setAgents(fetchedAgents);
     } catch (err) {
       console.error("Failed to fetch agents:", err);
     } finally {
@@ -117,16 +201,22 @@ export default function TransportManagement() {
   // AGENT WORKFLOW ACTIONS
   const handleApproveAgent = async (agentId) => {
     try {
-      const res = await apiFetch(`/api/agents/${agentId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approval_status: 'approved' })
-      });
-      if (res.ok) {
-        fetchAgents();
+      if (usingSupabase) {
+        const { error } = await supabase
+          .from('delivery_agents')
+          .update({ approval_status: 'approved' })
+          .eq('id', agentId);
+        if (error) throw error;
+      } else {
+        const localAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+        const updated = localAgents.map(a => a.id === agentId ? { ...a, approval_status: 'approved' } : a);
+        localStorage.setItem('sweetohub_agents', JSON.stringify(updated));
       }
+      showToast("Courier approved successfully! 🏍️", "success");
+      fetchAgents();
     } catch (err) {
       console.error("Failed to approve agent:", err);
+      showToast("Failed to approve agent.", "error");
     }
   };
 
@@ -139,16 +229,22 @@ export default function TransportManagement() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const res = await apiFetch(`/api/agents/${agentId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ approval_status: 'rejected' })
-          });
-          if (res.ok) {
-            fetchAgents();
+          if (usingSupabase) {
+            const { error } = await supabase
+              .from('delivery_agents')
+              .update({ approval_status: 'rejected' })
+              .eq('id', agentId);
+            if (error) throw error;
+          } else {
+            const localAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+            const updated = localAgents.map(a => a.id === agentId ? { ...a, approval_status: 'rejected' } : a);
+            localStorage.setItem('sweetohub_agents', JSON.stringify(updated));
           }
+          showToast("Application rejected.", "warning");
+          fetchAgents();
         } catch (err) {
           console.error("Failed to reject agent:", err);
+          showToast("Failed to reject agent.", "error");
         }
       }
     });
@@ -157,18 +253,24 @@ export default function TransportManagement() {
   const handleUpdatePin = async (agentId) => {
     if (!pinInputValue.trim()) return;
     try {
-      const res = await apiFetch(`/api/agents/${agentId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: pinInputValue })
-      });
-      if (res.ok) {
-        setEditingPinId(null);
-        setPinInputValue('');
-        fetchAgents();
+      if (usingSupabase) {
+        const { error } = await supabase
+          .from('delivery_agents')
+          .update({ pin: pinInputValue })
+          .eq('id', agentId);
+        if (error) throw error;
+      } else {
+        const localAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+        const updated = localAgents.map(a => a.id === agentId ? { ...a, pin: pinInputValue } : a);
+        localStorage.setItem('sweetohub_agents', JSON.stringify(updated));
       }
+      showToast("Security PIN updated! 🔑", "success");
+      setEditingPinId(null);
+      setPinInputValue('');
+      fetchAgents();
     } catch (err) {
       console.error("Failed to update PIN:", err);
+      showToast("Failed to update PIN.", "error");
     }
   };
 
@@ -181,14 +283,22 @@ export default function TransportManagement() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const res = await apiFetch(`/api/agents/${agentId}`, {
-            method: 'DELETE'
-          });
-          if (res.ok) {
-            fetchAgents();
+          if (usingSupabase) {
+            const { error } = await supabase
+              .from('delivery_agents')
+              .delete()
+              .eq('id', agentId);
+            if (error) throw error;
+          } else {
+            const localAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+            const updated = localAgents.filter(a => a.id !== agentId);
+            localStorage.setItem('sweetohub_agents', JSON.stringify(updated));
           }
+          showToast("Courier deleted permanently.", "success");
+          fetchAgents();
         } catch (err) {
           console.error("Failed to delete agent:", err);
+          showToast("Failed to delete agent.", "error");
         }
       }
     });
@@ -263,6 +373,27 @@ export default function TransportManagement() {
           </button>
         ))}
       </div>
+
+      {/* Supabase connection alert */}
+      {!usingSupabase && (
+        <div className="bg-amber-500/5 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-6 rounded-[2rem] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+          <div>
+            <h5 className="font-black uppercase tracking-wider text-xs flex items-center gap-2">
+              <Icons.AlertCircle size={16} className="text-amber-500" /> Offline Mock Mode Active
+            </h5>
+            <p className="text-[11px] font-bold text-slate-500 mt-1 max-w-2xl leading-relaxed">
+              The remote Supabase table <code className="bg-amber-500/10 dark:bg-amber-500/20 px-1.5 py-0.5 rounded font-bold font-mono text-amber-600 dark:text-amber-400">delivery_agents</code> was not found. 
+              Agents are currently stored locally in your browser's local storage. Other devices won't sync until you run the SQL migration.
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowSqlModal(true)}
+            className="px-5 py-3 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-amber-500/10 shrink-0 cursor-pointer"
+          >
+            Show SQL Script
+          </button>
+        </div>
+      )}
 
       {/* RENDER ACTIVE TAB VIEW */}
       <AnimatePresence mode="wait">
@@ -683,6 +814,68 @@ export default function TransportManagement() {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Supabase SQL Setup instructions */}
+      <AnimatePresence>
+        {showSqlModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSqlModal(false)}
+              className="fixed inset-0 bg-black z-[1200]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-auto md:left-1/2 md:-translate-x-1/2 bg-white dark:bg-slate-900 max-w-2xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-[1210] flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
+            >
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 shrink-0">
+                <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-md flex items-center gap-2">
+                  <Icons.Shield size={18} className="text-amber-500" /> Database Migration SQL
+                </h3>
+                <button 
+                  onClick={() => setShowSqlModal(false)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <Icons.X size={18} />
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider leading-relaxed mb-6 text-left">
+                Log into your <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-purple-500 hover:underline">Supabase Dashboard</a>, select your project, open the <span className="text-slate-900 dark:text-white">SQL Editor</span>, paste the following SQL code, and click <span className="text-slate-900 dark:text-white">Run</span>.
+              </p>
+
+              <div className="relative bg-slate-950 p-6 rounded-2xl border border-slate-850 font-mono text-[10px] text-emerald-400 text-left overflow-x-auto select-all max-h-[300px] custom-scrollbar mb-6 shrink-0">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(MIGRATION_SQL);
+                    setCopiedSql(true);
+                    showToast("SQL script copied to clipboard! 📋", "success");
+                    setTimeout(() => setCopiedSql(false), 2000);
+                  }}
+                  className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl transition-all shadow-md cursor-pointer"
+                  title="Copy SQL to Clipboard"
+                >
+                  {copiedSql ? <Icons.Check size={14} className="text-emerald-400" /> : <Icons.Copy size={14} />}
+                </button>
+                <pre className="whitespace-pre">{MIGRATION_SQL}</pre>
+              </div>
+
+              <button 
+                type="button"
+                onClick={() => setShowSqlModal(false)}
+                className="w-full py-4 bg-slate-900 hover:bg-slate-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-lg"
+              >
+                Dismiss
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

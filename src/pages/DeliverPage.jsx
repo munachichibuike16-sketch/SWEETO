@@ -178,20 +178,26 @@ export default function DeliverPage() {
           setCurrentCoords({ latitude, longitude });
 
           try {
-            await apiFetch('/api/agents/ping-location', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
+            // 1. Update latest coordinates on the order record
+            await supabase
+              .from('orders')
+              .update({ agent_lat: latitude, agent_lng: longitude })
+              .eq('id', activeOrder.db_id);
+
+            // 2. Insert into coordinate history log for route pathing
+            await supabase
+              .from('agent_location_history')
+              .insert([{
                 order_id: activeOrder.db_id,
                 agent_id: agent.id,
                 lat: latitude,
                 lng: longitude,
-                accuracy
-              })
-            });
-            console.log(`📍 Location pinged successfully: ${latitude}, ${longitude}`);
+                accuracy: accuracy || null
+              }]);
+
+            console.log(`📍 Location updated on Supabase: ${latitude}, ${longitude}`);
           } catch (err) {
-            console.error("Failed to send geolocation ping:", err);
+            console.error("Failed to update geolocation on Supabase:", err);
           }
         },
         (err) => {
@@ -571,13 +577,25 @@ function LoginScreen({ onLogin }) {
   useEffect(() => {
     async function loadAgents() {
       try {
-        const res = await apiFetch('/api/public/agents');
-        if (res.ok) {
-          const data = await res.json();
+        const { data, error } = await supabase
+          .from('delivery_agents')
+          .select('id, name, zone, avatar, rating')
+          .eq('approval_status', 'approved')
+          .order('name', { ascending: true });
+        
+        if (!error && data) {
           setAgents(data);
+        } else {
+          // local fallback
+          const localApproved = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]')
+            .filter(a => a.approval_status === 'approved');
+          setAgents(localApproved);
         }
       } catch (err) {
         console.error("Failed to load agents:", err);
+        const localApproved = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]')
+          .filter(a => a.approval_status === 'approved');
+        setAgents(localApproved);
       }
     }
     loadAgents();
@@ -610,11 +628,14 @@ function LoginScreen({ onLogin }) {
     if (!photo) { setRegErr(t('upload_photo_id') || 'Please upload your photo ID'); return; }
     setRegLoading(true);
     setRegErr('');
+    
+    // Generate a random 4-digit PIN for login
+    const pinVal = Math.floor(1000 + Math.random() * 9000).toString();
+    
     try {
-      const res = await apiFetch('/api/public/agents/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data, error } = await supabase
+        .from('delivery_agents')
+        .insert([{
           name: form.fullName,
           phone: form.phone,
           dob: form.dob,
@@ -622,19 +643,59 @@ function LoginScreen({ onLogin }) {
           address: form.address,
           plate_number: form.plateNumber,
           vehicle_name: form.vehicleName,
-          photo_id: photo
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setGeneratedPin(data.pin);
+          photo_id: photo,
+          pin: pinVal,
+          approval_status: 'pending',
+          zone: 'Global',
+          rating: 5.0
+        }])
+        .select()
+        .single();
+        
+      if (!error && data) {
+        setGeneratedPin(pinVal);
         setScreen('submitted');
       } else {
-        const errData = await res.json().catch(() => ({}));
-        setRegErr(errData.error || 'Failed to submit registration. Please try again.');
+        if (error && error.code === '23505') {
+          throw new Error("A courier application with this phone number already exists.");
+        }
+        throw error || new Error("Insert failed");
       }
     } catch (err) {
-      setRegErr('Connection error. Please try again.');
+      console.warn("Supabase agent registration failed, writing to localStorage fallback:", err);
+      try {
+        const localAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+        
+        // Check for duplicates in local storage
+        if (localAgents.some(a => a.phone === form.phone)) {
+          setRegErr("A courier application with this phone number already exists.");
+          setRegLoading(false);
+          return;
+        }
+        
+        const newAgent = {
+          id: 'local-' + Date.now(),
+          name: form.fullName,
+          phone: form.phone,
+          dob: form.dob,
+          email: form.email,
+          address: form.address,
+          plate_number: form.plateNumber,
+          vehicle_name: form.vehicleName,
+          photo_id: photo,
+          pin: pinVal,
+          approval_status: 'pending',
+          zone: 'Global',
+          rating: 5.0,
+          created_at: new Date().toISOString()
+        };
+        localAgents.push(newAgent);
+        localStorage.setItem('sweetohub_agents', JSON.stringify(localAgents));
+        setGeneratedPin(pinVal);
+        setScreen('submitted');
+      } catch (fallbackErr) {
+        setRegErr(err.message || 'Failed to submit registration. Please try again.');
+      }
     } finally {
       setRegLoading(false);
     }
@@ -644,17 +705,38 @@ function LoginScreen({ onLogin }) {
     if (!selectedAgent) { setError(t('select_name_first') || 'Please select your name first'); return; }
     setLoading(true);
     try {
-      const res = await apiFetch('/api/public/agents/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent_id: selectedAgent.id, pin })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        onLogin(data.agent);
+      let loggedAgent = null;
+      
+      // Try Supabase verification first
+      try {
+        const { data, error } = await supabase
+          .from('delivery_agents')
+          .select('*')
+          .eq('id', selectedAgent.id)
+          .eq('pin', pin)
+          .eq('approval_status', 'approved')
+          .single();
+          
+        if (!error && data) {
+          loggedAgent = data;
+        }
+      } catch (err) {
+        console.warn("Supabase verification failed, checking local storage:", err);
+      }
+      
+      // Fallback to local storage verification
+      if (!loggedAgent) {
+        const localAgents = JSON.parse(localStorage.getItem('sweetohub_agents') || '[]');
+        const match = localAgents.find(a => String(a.id) === String(selectedAgent.id) && String(a.pin) === String(pin) && a.approval_status === 'approved');
+        if (match) {
+          loggedAgent = match;
+        }
+      }
+      
+      if (loggedAgent) {
+        onLogin(loggedAgent);
       } else {
-        const errData = await res.json().catch(() => ({}));
-        setError(errData.message || t('wrong_pin') || 'Wrong PIN. Please try again.');
+        setError(t('wrong_pin') || 'Wrong PIN. Please try again.');
         setPin('');
       }
     } catch (err) {

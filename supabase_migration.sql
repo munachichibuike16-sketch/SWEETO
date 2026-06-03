@@ -114,5 +114,87 @@ CREATE POLICY "Allow public update on customer_accounts" ON public.customer_acco
 CREATE POLICY "Allow admin delete on customer_accounts" ON public.customer_accounts
   FOR DELETE TO authenticated USING (public.is_admin());
 
+-- ---------------------------------------------------------------
+-- DELIVERY AGENTS TABLE: Stores delivery couriers' credentials & details
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.delivery_agents (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(100) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  dob VARCHAR(50),
+  address TEXT,
+  vehicle_name VARCHAR(255),
+  plate_number VARCHAR(100),
+  photo_id TEXT, -- Base64 or URL
+  pin VARCHAR(50) DEFAULT '1234',
+  avatar TEXT,
+  rating NUMERIC(3, 2) DEFAULT 5.0,
+  approval_status VARCHAR(50) DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
+  zone VARCHAR(255) DEFAULT 'Global',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable RLS
+ALTER TABLE public.delivery_agents ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+DROP POLICY IF EXISTS "Allow public select on delivery_agents" ON public.delivery_agents;
+DROP POLICY IF EXISTS "Allow public insert on delivery_agents" ON public.delivery_agents;
+DROP POLICY IF EXISTS "Allow public update on delivery_agents" ON public.delivery_agents;
+DROP POLICY IF EXISTS "Allow public delete on delivery_agents" ON public.delivery_agents;
+
+CREATE POLICY "Allow public select on delivery_agents" ON public.delivery_agents
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert on delivery_agents" ON public.delivery_agents
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update on delivery_agents" ON public.delivery_agents
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public delete on delivery_agents" ON public.delivery_agents
+  FOR DELETE USING (true);
+
+
+-- ---------------------------------------------------------------
+-- AGENT LOCATION HISTORY TABLE: Stores location path trails
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.agent_location_history (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL,
+  agent_id INTEGER NOT NULL,
+  lat NUMERIC(9, 6) NOT NULL,
+  lng NUMERIC(9, 6) NOT NULL,
+  accuracy NUMERIC(10, 2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable RLS
+ALTER TABLE public.agent_location_history ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+DROP POLICY IF EXISTS "Allow public select on agent_location_history" ON public.agent_location_history;
+DROP POLICY IF EXISTS "Allow public insert on agent_location_history" ON public.agent_location_history;
+
+CREATE POLICY "Allow public select on agent_location_history" ON public.agent_location_history
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert on agent_location_history" ON public.agent_location_history
+  FOR INSERT WITH CHECK (true);
+
+
+-- ---------------------------------------------------------------
+-- ADD LOGISTICS COLUMNS TO ORDERS TABLE
+-- ---------------------------------------------------------------
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS delivery_agent_id INTEGER,
+  ADD COLUMN IF NOT EXISTS tracking_stage VARCHAR(50) DEFAULT 'placed',
+  ADD COLUMN IF NOT EXISTS destination_lat NUMERIC(9, 6),
+  ADD COLUMN IF NOT EXISTS destination_lng NUMERIC(9, 6),
+  ADD COLUMN IF NOT EXISTS agent_lat NUMERIC(9, 6),
+  ADD COLUMN IF NOT EXISTS agent_lng NUMERIC(9, 6);
+
 -- Confirm migration success
 SELECT 'Migration complete' AS status;
+
