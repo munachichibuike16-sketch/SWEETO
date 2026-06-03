@@ -5,7 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 import { supabase } from '../lib/supabase';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isLocalHost } from '../utils/api';
 
 const EMPTY = { name: '', description: '', logo_url: '', website: '' };
 const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
@@ -47,7 +47,7 @@ export default function BrandManagement() {
         description: form.description?.trim() || null
       };
 
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isLocalhost = isLocalHost();
 
       if (editingId) {
         // Update in Supabase
@@ -111,7 +111,7 @@ export default function BrandManagement() {
 
   const handleDelete = async (id) => {
     setDeletingId(id);
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
     try {
       // Delete from Supabase
       const { error: sbErr } = await supabase

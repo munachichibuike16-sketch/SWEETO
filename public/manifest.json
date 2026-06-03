@@ -1,0 +1,17 @@
+{
+  "name": "SWEETO HUB",
+  "short_name": "SWEETO",
+  "description": "EAS Local Storefront & Luxury Shopping",
+  "start_url": "/#/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}

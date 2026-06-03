@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isLocalHost } from '../utils/api';
 const ROLES = [
   { key: 'hero',                  label: 'Hero Banner',      icon: Layers,      color: 'indigo'  },
   { key: 'video_ad',              label: 'Video/Image Ad',   icon: Monitor,     color: 'rose'    },
@@ -142,7 +142,7 @@ export default function SectionManagement() {
         headerImageB: form.isDual ? (form.headerImageB || null) : null
       };
 
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isLocalhost = isLocalHost();
 
       if (editingId) {
         // Update in Supabase
@@ -201,7 +201,7 @@ export default function SectionManagement() {
 
   const handleDelete = async (id) => {
     setDeletingId(id);
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
     try {
       // Delete in Supabase
       const { error: err } = await supabase.from('sections').delete().eq('id', id);
@@ -239,7 +239,7 @@ export default function SectionManagement() {
     const finalNewPos = direction === 'up' ? Math.max(0, newPos) : newPos;
     const finalOldPos = direction === 'up' ? newPos + 1 : Math.max(0, newPos - 1);
 
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
 
     try {
       // Swap positions in Supabase
@@ -271,7 +271,7 @@ export default function SectionManagement() {
 
   const toggleActive = async (s) => {
     const nextActive = !s.isActive;
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
     try {
       // Toggle in Supabase
       await supabase.from('sections').update({ is_active: nextActive ? 1 : 0 }).eq('id', s.id);

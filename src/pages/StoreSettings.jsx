@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../utils/api';
 
 const SectionHeader = ({ icon: Icon, title, color, subtitle }) => (
   <div className="flex flex-col mb-8">
@@ -648,6 +649,48 @@ const StoreSettings = () => {
                   </p>
                   This key decrypts the admin dashboard. Changing this key will immediately require re-entry of the new key across active devices.
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Push Diagnostics Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+            >
+              <SectionHeader 
+                icon={Zap} 
+                title="Push Notifications" 
+                color="orange" 
+                subtitle="Diagnostic & Broadcast Tools"
+              />
+              <div className="space-y-6">
+                <div className="p-6 bg-orange-500/5 rounded-2xl border border-orange-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
+                  <p className="font-bold text-orange-500 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
+                    <Info size={12} /> Diagnostic Assistant
+                  </p>
+                  Click the button below to broadcast a test push notification to all devices registered to this local server. Make sure you have granted notification permissions on your device.
+                </div>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await apiFetch('push/test', { method: 'POST' });
+                      if (res.ok) {
+                        showToast('Test notification triggered successfully!');
+                      } else {
+                        showToast('Failed to trigger test notification.', 'error');
+                      }
+                    } catch (err) {
+                      showToast('Network error triggering notification: ' + err.message, 'error');
+                    }
+                  }}
+                  className="w-full py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl active:scale-95 transition-all shadow-xl shadow-orange-500/10 flex items-center justify-center gap-2"
+                >
+                  <Zap size={16} /> Broadcast Test Push
+                </button>
               </div>
             </motion.div>
           </div>

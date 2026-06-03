@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
-import { API_BASE_URL } from '../utils/api';
+import { API_BASE_URL, apiFetch, isLocalHost } from '../utils/api';
 
 const StoreContext = createContext();
 
@@ -94,11 +94,7 @@ export const StoreProvider = ({ children }) => {
           if (Notification.permission === 'granted') {
             try {
               // 1. Fetch public VAPID key from the backend Express server
-              const fetchOptions = {};
-              if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
-                fetchOptions.targetAddressSpace = 'loopback';
-              }
-              const keyRes = await fetch(`${API_BASE_URL}/api/push/public-key`, fetchOptions);
+              const keyRes = await apiFetch('/api/push/public-key');
               if (!keyRes.ok) throw new Error('VAPID key fetch failed');
               const { publicKey } = await keyRes.json();
               
@@ -115,15 +111,19 @@ export const StoreProvider = ({ children }) => {
               console.log('✅ Successfully subscribed to closed-tab Web Push API:', subscription);
 
               // 3. Post subscription keys to our Node.js/SQLite server
+              const rawSub = subscription.toJSON();
               const subOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(subscription)
+                body: JSON.stringify({
+                  endpoint: subscription.endpoint,
+                  keys: {
+                    p256dh: rawSub.keys?.p256dh || null,
+                    auth: rawSub.keys?.auth || null
+                  }
+                })
               };
-              if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
-                subOptions.targetAddressSpace = 'loopback';
-              }
-              await fetch(`${API_BASE_URL}/api/push/subscribe`, subOptions);
+              await apiFetch('/api/push/subscribe', subOptions);
               console.log('✅ Registered Web Push subscription with SQLite database.');
             } catch (err) {
               console.warn('⚠️ Web Push subscription failed:', err);
@@ -399,13 +399,12 @@ export const StoreProvider = ({ children }) => {
       setError(null);
     } catch (err) {
       console.error('Error fetching store data from Supabase:', err);
-      // Fallback to SQLite local server if on localhost
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocalhost) {
+      // Fallback to SQLite local server if on localhost or local network
+      if (isLocalHost()) {
         console.log('Attempting local SQLite database fallback...');
         try {
-          const apiFetch = async (path) => {
-            const res = await fetch(`${API_BASE_URL}${path}`);
+          const localFetch = async (path) => {
+            const res = await apiFetch(path);
             if (!res.ok) throw new Error(`HTTP error ${res.status}`);
             return res.json();
           };
@@ -420,14 +419,14 @@ export const StoreProvider = ({ children }) => {
             ordersData,
             reviewsData
           ] = await Promise.all([
-            apiFetch('/api/categories').catch(() => []),
-            apiFetch('/api/products').catch(() => []),
-            apiFetch('/api/settings').catch(() => ({})),
-            apiFetch('/api/video-ads').catch(() => []),
-            apiFetch('/api/sections').catch(() => []),
-            apiFetch('/api/brands').catch(() => []),
-            apiFetch('/api/orders').catch(() => []),
-            apiFetch('/api/reviews').catch(() => [])
+            localFetch('/api/categories').catch(() => []),
+            localFetch('/api/products').catch(() => []),
+            localFetch('/api/settings').catch(() => ({})),
+            localFetch('/api/video-ads').catch(() => []),
+            localFetch('/api/sections').catch(() => []),
+            localFetch('/api/brands').catch(() => []),
+            localFetch('/api/orders').catch(() => []),
+            localFetch('/api/reviews').catch(() => [])
           ]);
 
           if (catData) {

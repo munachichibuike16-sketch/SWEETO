@@ -10,7 +10,7 @@ import {
 
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isLocalHost } from '../utils/api';
 
 /* ── Delivery stages ── */
 const STAGES = [
@@ -532,7 +532,7 @@ export default function DeliverPage() {
                           onChange={(e) => {
                             const val = e.target.value;
                             setSel({ ...selected, estimated_minutes: val });
-                            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                            const isLocalhost = isLocalHost();
                             if (isLocalhost) {
                               fetch(`/api/orders/${selected.db_id}/status`, {
                                 method: 'PATCH',

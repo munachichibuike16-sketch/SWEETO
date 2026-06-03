@@ -699,6 +699,20 @@ app.post('/api/push/subscribe', (req, res) => {
   }
 });
 
+app.post('/api/push/test', (req, res) => {
+  try {
+    sendBackgroundPushNotification(
+      '🔔 SWEETO HUB - Test Push Notification',
+      'Awesome! If you are seeing this, push notifications are working perfectly on your mobile device.',
+      '/#/'
+    );
+    res.json({ success: true, message: 'Test push notification triggered.' });
+  } catch (err) {
+    console.error('Error sending test push:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Customer API Routes
 app.get('/api/categories', (req, res) => {
   const categories = db.prepare('SELECT * FROM categories').all();

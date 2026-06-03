@@ -7,10 +7,33 @@
  */
 
 const customBackendUrl = import.meta.env.VITE_API_URL;
-export const API_BASE_URL = customBackendUrl ? customBackendUrl.replace(/\/$/, '') : 'http://localhost:3000';
+
+export function isLocalHost() {
+  const host = window.location.hostname;
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    /^127\.\d+\.\d+\.\d+$/.test(host) ||
+    /^192\.168\.\d+\.\d+$/.test(host) ||
+    /^10\.\d+\.\d+\.\d+$/.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(host) ||
+    host.endsWith('.local') ||
+    !!import.meta.env.DEV
+  );
+}
+
+const getDefaultBackendUrl = () => {
+  const { protocol, hostname } = window.location;
+  if (hostname && isLocalHost()) {
+    return `${protocol}//${hostname}:3000`;
+  }
+  return 'http://localhost:3000';
+};
+
+export const API_BASE_URL = customBackendUrl ? customBackendUrl.replace(/\/$/, '') : getDefaultBackendUrl();
 
 export async function apiFetch(path, options = {}) {
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isLocal = isLocalHost();
   
   // Normalize path (remove leading slash and optional 'api/' prefix)
   const cleanPath = path.replace(/^\/?(api\/)?/, '');
@@ -24,7 +47,7 @@ export async function apiFetch(path, options = {}) {
   }
   fetchOptions.headers = headers;
   
-  if (isLocalhost) {
+  if (isLocal) {
     targetUrl = `/api/${cleanPath}`;
   } else {
     targetUrl = `${API_BASE_URL}/api/${cleanPath}`;

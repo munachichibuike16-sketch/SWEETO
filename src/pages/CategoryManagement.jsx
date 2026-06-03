@@ -9,7 +9,7 @@ import { useStore } from '../contexts/StoreContext';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 import { supabase } from '../lib/supabase';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isLocalHost } from '../utils/api';
 
 const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', is_subcategory: false };
 
@@ -105,7 +105,7 @@ const CategoryManagement = () => {
         parent_id: parentVal
       };
 
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isLocalhost = isLocalHost();
 
       if (editingId) {
         // Update in Supabase
@@ -170,7 +170,7 @@ const CategoryManagement = () => {
   /* ─── delete ─── */
   const handleDelete = async (id) => {
     setDeletingId(id);
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
     try {
       // Delete from Supabase
       const { error: sbErr } = await supabase

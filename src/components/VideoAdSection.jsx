@@ -4,6 +4,7 @@ import { useStore } from '../contexts/StoreContext';
 import { Play, Volume2, VolumeX, ExternalLink, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { isLocalHost } from '../utils/api';
 
 const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
   const { videoAds, products } = useStore();
@@ -32,7 +33,7 @@ const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
   const linkedProduct = ad?.productId ? products.find(p => p.id === ad.productId) : null;
 
   useEffect(() => {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
     if (isLocalhost && isInView && ad?.id) {
       fetch(`/api/video-ads/${ad.id}/track-view`, { method: 'POST' })
         .catch(() => {});
@@ -40,7 +41,7 @@ const VideoAdSection = ({ isPermanent = false, adIndex = 0 }) => {
   }, [isInView, ad?.id]);
 
   const handleAction = () => {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalHost();
     if (isLocalhost && ad?.id) {
       fetch(`/api/video-ads/${ad.id}/track-click`, { method: 'POST' })
         .catch(() => {});
