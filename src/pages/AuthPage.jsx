@@ -25,9 +25,12 @@ import {
   Calendar,
   CheckCircle2,
   ChevronRight,
-  Bell
+  Bell,
+  Camera
 } from 'lucide-react';
 import './AuthPage.css';
+import { compressImage } from '../utils/imageCompressor';
+import { uploadToStorage } from '../utils/storageHelper';
 
 const AuthPage = ({ initialTab = 'login' }) => {
   const navigate = useNavigate();
@@ -40,6 +43,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [googleLoaded, setGoogleLoaded] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef(null);
 
   const [loginData, setLoginData] = useState({ email: '', password: '', rememberMe: false });
   const [signupData, setSignupData] = useState({ 
@@ -60,7 +65,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
     countryCode: '',
     phone: '',
     address: '',
-    city: ''
+    city: '',
+    avatarUrl: ''
   });
 
   // Chilling custom preferences
@@ -114,7 +120,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
         countryCode: session.phoneCountryCode || session.countryCode || '',
         phone: session.phoneNumber || session.phone || '',
         address: session.address || '',
-        city: session.city || ''
+        city: session.city || '',
+        avatarUrl: session.avatarUrl || ''
       });
       if (session.preferences) {
         setPreferences(session.preferences);
@@ -387,6 +394,57 @@ const AuthPage = ({ initialTab = 'login' }) => {
     navigate('/');
   };
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      showToast('Please select a JPG, PNG, or WEBP image file.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image file is too large (max 5MB).', 'error');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    showToast('Uploading profile photo... ⏳', 'info');
+
+    try {
+      const compressedBlob = await compressImage(file, 400, 0.85);
+      const url = await uploadToStorage(compressedBlob, 'profiles');
+      
+      if (url) {
+        const updatedUser = {
+          ...sessionUser,
+          avatarUrl: url
+        };
+        
+        localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
+        setSessionUser(updatedUser);
+
+        setSettingsForm(prev => ({
+          ...prev,
+          avatarUrl: url
+        }));
+
+        const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+        const updatedUsers = users.map(u => 
+          u.email.toLowerCase() === sessionUser.email.toLowerCase() ? { ...u, avatarUrl: url } : u
+        );
+        localStorage.setItem('sweetohub_users', JSON.stringify(updatedUsers));
+
+        showToast('Profile photo updated successfully! 📸✨', 'success');
+      }
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      showToast('Failed to upload profile photo.', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleSaveSettings = (e) => {
     e.preventDefault();
     if (!settingsForm.name.trim()) {
@@ -401,7 +459,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
       phoneNumber: settingsForm.phone,
       address: settingsForm.address,
       city: settingsForm.city,
-      preferences: preferences
+      preferences: preferences,
+      avatarUrl: settingsForm.avatarUrl
     };
 
     localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
@@ -477,11 +536,32 @@ const AuthPage = ({ initialTab = 'login' }) => {
               
               {/* Header Info */}
               <div className="brand-section">
-                <div className="profile-avatar-wrapper">
+                <div className="profile-avatar-wrapper group cursor-pointer relative" onClick={() => avatarInputRef.current?.click()}>
                   <div className="profile-avatar-glow"></div>
-                  <div className="brand-icon profile-main-avatar">
-                    {sessionUser.name?.charAt(0).toUpperCase()}
+                  {sessionUser.avatarUrl || sessionUser.picture ? (
+                    <img 
+                      src={sessionUser.avatarUrl || sessionUser.picture} 
+                      alt={sessionUser.name} 
+                      className="brand-icon profile-main-avatar object-cover rounded-2xl border border-slate-100 dark:border-slate-800"
+                    />
+                  ) : (
+                    <div className="brand-icon profile-main-avatar">
+                      {sessionUser.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {/* Hover edit overlay */}
+                  <div className="absolute inset-0 bg-black/40 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <Camera size={16} className="text-white mb-0.5" />
+                    <span className="text-[8px] text-white font-black uppercase tracking-wider">Change</span>
                   </div>
+                  
+                  <input 
+                    type="file"
+                    ref={avatarInputRef}
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp"
+                  />
                 </div>
                 <h1 className="brand-name font-black italic tracking-tighter" style={{ fontSize: '2.2rem', marginTop: '1rem' }}>
                   {t('hello') || 'Hello'}, {sessionUser.name?.split(' ')[0]}! 👋
@@ -638,10 +718,42 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
                       
                       <div className="input-group">
+                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Profile Photo</label>
+                        <div className="flex items-center gap-4 mt-2">
+                          {isUploadingAvatar ? (
+                            <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                              <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          ) : (settingsForm.avatarUrl || sessionUser?.picture) ? (
+                            <img 
+                              src={settingsForm.avatarUrl || sessionUser?.picture} 
+                              alt="Avatar Preview" 
+                              className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-slate-800"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-blue-600 flex items-center justify-center text-white font-black text-xl shadow-md">
+                              {sessionUser?.name?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex flex-col gap-1">
+                            <button
+                              type="button"
+                              onClick={() => avatarInputRef.current?.click()}
+                              className="px-4 py-2.5 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
+                              disabled={isUploadingAvatar}
+                            >
+                              {isUploadingAvatar ? 'Uploading...' : 'Choose Image'}
+                            </button>
+                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">JPG, PNG or WEBP. Max 5MB.</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="input-group">
                         <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
                         <div className="input-wrapper mt-1">
                           <User className="input-icon" size={18} />
-                          <input 
+                           <input 
                             type="text" 
                             placeholder="Name" 
                             value={settingsForm.name}

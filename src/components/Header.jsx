@@ -417,9 +417,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm px-3 py-2">
                   <div 
                     onClick={() => navigate('/auth')}
-                    className="w-8 h-8 bg-eas-blue text-white rounded-xl flex items-center justify-center font-black text-xs shadow cursor-pointer hover:scale-110 transition-transform"
+                    className="w-8 h-8 bg-eas-blue text-white rounded-xl flex items-center justify-center font-black text-xs shadow cursor-pointer hover:scale-110 transition-transform overflow-hidden"
                   >
-                    {user.name?.charAt(0).toUpperCase()}
+                    {user.avatarUrl || user.picture ? (
+                      <img 
+                        src={user.avatarUrl || user.picture} 
+                        alt={user.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      user.name?.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div className="flex flex-col cursor-pointer" onClick={() => navigate('/auth')}>
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('welcome')}</span>
