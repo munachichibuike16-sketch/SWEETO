@@ -170,17 +170,52 @@ const AuthPage = ({ initialTab = 'login' }) => {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      
+    try {
+      // 1. Try to fetch from Supabase first
+      let user = null;
+      try {
+        const { data, error } = await supabase
+          .from('customer_accounts')
+          .select('*')
+          .eq('email', email.toLowerCase());
+        
+        if (!error && data && data.length > 0) {
+          const dbUser = data[0];
+          user = {
+            id: dbUser.id,
+            name: dbUser.name,
+            email: dbUser.email,
+            phoneCountryCode: dbUser.phone_country_code,
+            phoneNumber: dbUser.phone_number,
+            password: dbUser.password,
+            avatarUrl: dbUser.avatar_url,
+            picture: dbUser.avatar_url,
+            provider: dbUser.provider,
+            address: dbUser.address,
+            city: dbUser.city,
+            preferences: dbUser.preferences,
+            createdAt: dbUser.created_at
+          };
+        } else if (error && error.code !== 'PGRST205') {
+          console.warn("Supabase query warning during login:", error);
+        }
+      } catch (dbErr) {
+        console.warn("Failed to contact Supabase for login, will use local storage:", dbErr);
+      }
+
+      // 2. Fall back to local storage if user not found in Supabase
+      if (!user) {
+        const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+        user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      }
+
       if (!user) {
         setErrors({ loginEmail: 'No account found with this email.' });
         showToast('Account not found. Please sign up first.', 'error');
         setLoading(false);
         return;
       }
+
       if (user.password !== password) {
         setErrors({ loginPassword: 'Incorrect password.' });
         showToast('Incorrect password.', 'error');
@@ -191,13 +226,25 @@ const AuthPage = ({ initialTab = 'login' }) => {
       const { password: _, ...safeUser } = user;
       localStorage.setItem('sweetohub_session', JSON.stringify(safeUser));
       setSessionUser(safeUser);
+      
       if (loginData.rememberMe) localStorage.setItem('sweetohub_remembered_email', email);
       else localStorage.removeItem('sweetohub_remembered_email');
 
+      // Sync user to local sweetohub_users storage if not already there, for backwards compatibility
+      const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+      if (!users.some(u => u.email.toLowerCase() === user.email.toLowerCase())) {
+        users.push(user);
+        localStorage.setItem('sweetohub_users', JSON.stringify(users));
+      }
+
       showToast(`Welcome back, ${user.name}! ⚡`, 'success');
-      setLoading(false);
       setCurrentTab('overview');
-    }, 1000);
+    } catch (err) {
+      console.error("Login failed:", err);
+      showToast("Authentication service error.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignup = async (e) => {
@@ -218,15 +265,34 @@ const AuthPage = ({ initialTab = 'login' }) => {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
-    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-      setErrors({ signupEmail: 'Email already registered.' });
-      showToast('Email already exists. Please log in.', 'error');
-      return;
-    }
-
     setLoading(true);
-    setTimeout(() => {
+    try {
+      // 1. Check if email already registered in Supabase
+      let existsInSupabase = false;
+      try {
+        const { data, error } = await supabase
+          .from('customer_accounts')
+          .select('id')
+          .eq('email', email.toLowerCase());
+        
+        if (!error && data && data.length > 0) {
+          existsInSupabase = true;
+        }
+      } catch (dbErr) {
+        console.warn("Could not check email existence in Supabase:", dbErr);
+      }
+
+      // 2. Check in local storage
+      const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+      const existsLocally = users.some(u => u.email.toLowerCase() === email.toLowerCase());
+
+      if (existsInSupabase || existsLocally) {
+        setErrors({ signupEmail: 'Email already registered.' });
+        showToast('Email already exists. Please log in.', 'error');
+        setLoading(false);
+        return;
+      }
+
       const newUser = {
         id: 'user_' + Date.now(),
         name,
@@ -238,17 +304,47 @@ const AuthPage = ({ initialTab = 'login' }) => {
         createdAt: new Date().toISOString(),
         provider: 'email'
       };
+
+      // 3. Try to save to Supabase
+      try {
+        const { error } = await supabase
+          .from('customer_accounts')
+          .insert([{
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            phone_country_code: newUser.phoneCountryCode,
+            phone_number: newUser.phoneNumber,
+            password: newUser.password,
+            avatar_url: newUser.avatarUrl,
+            provider: newUser.provider,
+            created_at: newUser.createdAt
+          }]);
+        
+        if (error && error.code !== 'PGRST205') {
+          console.error("Failed to insert account in Supabase:", error);
+        }
+      } catch (dbInsertErr) {
+        console.warn("Could not write account to Supabase, continuing with local fallback:", dbInsertErr);
+      }
+
+      // 4. Always save to local storage for offline redundancy/fallback
       users.push(newUser);
       localStorage.setItem('sweetohub_users', JSON.stringify(users));
-      
+
+      // 5. Create local session
       const { password: _, ...safeUser } = newUser;
       localStorage.setItem('sweetohub_session', JSON.stringify(safeUser));
       setSessionUser(safeUser);
 
       showToast(`Welcome to SWEETO-HUB, ${name}! ⚡`, 'success');
-      setLoading(false);
       setCurrentTab('overview');
-    }, 1000);
+    } catch (err) {
+      console.error("Sign up failed:", err);
+      showToast("Registration service error.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Google Login callbacks
@@ -301,7 +397,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
     }
   }, [googleLoaded]);
 
-  const handleGoogleCredentialResponse = (response) => {
+  const handleGoogleCredentialResponse = async (response) => {
     const parseJwt = (token) => {
       try {
         return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
@@ -313,31 +409,87 @@ const AuthPage = ({ initialTab = 'login' }) => {
       const googleUser = {
         id: payload.sub,
         name: payload.name || 'Google User',
-        email: payload.email,
-        picture: payload.picture,
+        email: payload.email.toLowerCase(),
+        picture: payload.picture || '',
         provider: 'google',
         createdAt: new Date().toISOString()
       };
-      
-      const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
-      let existing = users.find(u => u.email.toLowerCase() === googleUser.email.toLowerCase());
-      
-      if (!existing) {
-        users.push({ ...googleUser, password: null });
-        localStorage.setItem('sweetohub_users', JSON.stringify(users));
-        existing = googleUser;
+
+      // 1. Sync with Supabase
+      let existing = null;
+      try {
+        const { data, error } = await supabase
+          .from('customer_accounts')
+          .select('*')
+          .eq('email', googleUser.email);
+        
+        if (!error && data && data.length > 0) {
+          existing = {
+            id: data[0].id,
+            name: data[0].name,
+            email: data[0].email,
+            phoneCountryCode: data[0].phone_country_code,
+            phoneNumber: data[0].phone_number,
+            avatarUrl: data[0].avatar_url,
+            picture: data[0].avatar_url,
+            provider: data[0].provider,
+            address: data[0].address,
+            city: data[0].city,
+            preferences: data[0].preferences,
+            createdAt: data[0].created_at
+          };
+          
+          // Update details in case name/picture changed on Google
+          await supabase
+            .from('customer_accounts')
+            .update({
+              name: googleUser.name,
+              avatar_url: googleUser.picture
+            })
+            .eq('email', googleUser.email);
+        } else if (!error || error.code === 'PGRST205') {
+          // Insert new Google user to Supabase
+          const { error: insErr } = await supabase
+            .from('customer_accounts')
+            .insert([{
+              id: googleUser.id,
+              name: googleUser.name,
+              email: googleUser.email,
+              avatar_url: googleUser.picture,
+              provider: 'google',
+              created_at: googleUser.createdAt
+            }]);
+          if (insErr && insErr.code !== 'PGRST205') console.error("Google user Supabase save error:", insErr);
+        }
+      } catch (dbErr) {
+        console.warn("Supabase Google Auth sync failed:", dbErr);
       }
-      
-      localStorage.setItem('sweetohub_session', JSON.stringify(existing));
-      setSessionUser(existing);
-      showToast(`Welcome, ${existing.name}!`, 'success');
+
+      // 2. Also save to local sweetohub_users list for safety
+      const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
+      let localUser = users.find(u => u.email.toLowerCase() === googleUser.email);
+      if (!localUser) {
+        localUser = { ...googleUser, avatarUrl: googleUser.picture, password: null };
+        users.push(localUser);
+        localStorage.setItem('sweetohub_users', JSON.stringify(users));
+      } else {
+        localUser.name = googleUser.name;
+        localUser.avatarUrl = googleUser.picture;
+        localUser.picture = googleUser.picture;
+        localStorage.setItem('sweetohub_users', JSON.stringify(users));
+      }
+
+      const activeUser = existing || localUser;
+      localStorage.setItem('sweetohub_session', JSON.stringify(activeUser));
+      setSessionUser(activeUser);
+      showToast(`Welcome, ${activeUser.name}! ⚡`, 'success');
       setCurrentTab('overview');
     }
   };
 
   const handleGoogleDemoFallback = () => {
     showToast('🔷 Demo Mode: Simulating Google Login...', 'info');
-    setTimeout(() => {
+    setTimeout(async () => {
       const demoUser = {
         id: 'google_demo_' + Date.now(),
         name: 'Sweeto User',
@@ -345,18 +497,54 @@ const AuthPage = ({ initialTab = 'login' }) => {
         provider: 'google',
         createdAt: new Date().toISOString()
       };
+      
+      // Try Supabase sync
+      let existing = null;
+      try {
+        const { data, error } = await supabase
+          .from('customer_accounts')
+          .select('*')
+          .eq('email', demoUser.email);
+        if (!error && data && data.length > 0) {
+          existing = {
+            id: data[0].id,
+            name: data[0].name,
+            email: data[0].email,
+            phoneCountryCode: data[0].phone_country_code,
+            phoneNumber: data[0].phone_number,
+            avatarUrl: data[0].avatar_url,
+            picture: data[0].avatar_url,
+            provider: data[0].provider,
+            address: data[0].address,
+            city: data[0].city,
+            preferences: data[0].preferences,
+            createdAt: data[0].created_at
+          };
+        } else if (!error || error.code === 'PGRST205') {
+          await supabase.from('customer_accounts').insert([{
+            id: demoUser.id,
+            name: demoUser.name,
+            email: demoUser.email,
+            provider: 'google',
+            created_at: demoUser.createdAt
+          }]);
+        }
+      } catch (e) {}
+
       const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
-      let existing = users.find(u => u.email === demoUser.email);
-      if (!existing) {
-        users.push({ ...demoUser, password: null });
+      let localUser = users.find(u => u.email === demoUser.email);
+      if (!localUser) {
+        localUser = { ...demoUser, password: null };
+        users.push(localUser);
         localStorage.setItem('sweetohub_users', JSON.stringify(users));
-        existing = demoUser;
       }
-      localStorage.setItem('sweetohub_session', JSON.stringify(existing));
-      setSessionUser(existing);
-      showToast(`Welcome, ${existing.name}! (Demo)`, 'success');
+
+      const activeUser = existing || localUser;
+      localStorage.setItem('sweetohub_session', JSON.stringify(activeUser));
+      setSessionUser(activeUser);
+      showToast(`Welcome, ${activeUser.name}! (Demo) ⚡`, 'success');
       setCurrentTab('overview');
-    }, 1500);
+    }, 1000);
   };
 
   const fetchStats = async (user) => {
@@ -439,7 +627,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
       if (url) {
         const updatedUser = {
           ...sessionUser,
-          avatarUrl: url
+          avatarUrl: url,
+          picture: url
         };
         
         localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
@@ -450,9 +639,21 @@ const AuthPage = ({ initialTab = 'login' }) => {
           avatarUrl: url
         }));
 
+        // 1. Sync with Supabase
+        try {
+          const { error } = await supabase
+            .from('customer_accounts')
+            .update({ avatar_url: url })
+            .eq('email', sessionUser.email.toLowerCase());
+          if (error && error.code !== 'PGRST205') console.error("Failed to update avatar in Supabase:", error);
+        } catch (dbErr) {
+          console.warn("Supabase avatar update failed:", dbErr);
+        }
+
+        // 2. Sync locally
         const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
         const updatedUsers = users.map(u => 
-          u.email.toLowerCase() === sessionUser.email.toLowerCase() ? { ...u, avatarUrl: url } : u
+          u.email.toLowerCase() === sessionUser.email.toLowerCase() ? { ...u, avatarUrl: url, picture: url } : u
         );
         localStorage.setItem('sweetohub_users', JSON.stringify(updatedUsers));
 
@@ -502,7 +703,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
     }
   };
 
-  const handleSaveSettings = (e) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
     if (!settingsForm.name.trim()) {
       showToast('Name cannot be empty.', 'error');
@@ -523,6 +724,26 @@ const AuthPage = ({ initialTab = 'login' }) => {
     localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
     setSessionUser(updatedUser);
 
+    // 1. Sync with Supabase
+    try {
+      const { error } = await supabase
+        .from('customer_accounts')
+        .update({
+          name: settingsForm.name,
+          phone_country_code: settingsForm.countryCode,
+          phone_number: settingsForm.phone,
+          address: settingsForm.address,
+          city: settingsForm.city,
+          preferences: preferences,
+          avatar_url: settingsForm.avatarUrl
+        })
+        .eq('email', sessionUser.email.toLowerCase());
+      if (error && error.code !== 'PGRST205') console.error("Failed to update settings in Supabase:", error);
+    } catch (dbErr) {
+      console.warn("Supabase settings update failed:", dbErr);
+    }
+
+    // 2. Sync locally
     const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
     const updatedUsers = users.map(u => u.email.toLowerCase() === sessionUser.email.toLowerCase() ? { ...u, ...updatedUser } : u);
     localStorage.setItem('sweetohub_users', JSON.stringify(updatedUsers));
@@ -530,7 +751,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
     showToast('Profile settings saved! ✨', 'success');
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
     const { oldPassword, newPassword, confirmNewPassword } = passwordForm;
 
@@ -549,22 +770,50 @@ const AuthPage = ({ initialTab = 'login' }) => {
       return;
     }
 
+    // Check if user is in localStorage or Supabase
     const users = JSON.parse(localStorage.getItem('sweetohub_users') || '[]');
     const userIndex = users.findIndex(u => u.email.toLowerCase() === sessionUser.email.toLowerCase());
+    let user = users[userIndex];
+    
+    // Try Supabase fetch if not found locally
+    if (!user) {
+      try {
+        const { data, error } = await supabase
+          .from('customer_accounts')
+          .select('password')
+          .eq('email', sessionUser.email.toLowerCase());
+        if (!error && data && data.length > 0) {
+          user = data[0];
+        }
+      } catch (e) {}
+    }
 
-    if (userIndex === -1) {
+    if (!user) {
       showToast('User account not found.', 'error');
       return;
     }
 
-    const user = users[userIndex];
     if (user.password && user.password !== oldPassword) {
       showToast('Incorrect current password.', 'error');
       return;
     }
 
-    users[userIndex].password = newPassword;
-    localStorage.setItem('sweetohub_users', JSON.stringify(users));
+    // 1. Sync with Supabase
+    try {
+      const { error } = await supabase
+        .from('customer_accounts')
+        .update({ password: newPassword })
+        .eq('email', sessionUser.email.toLowerCase());
+      if (error && error.code !== 'PGRST205') console.error("Failed to update password in Supabase:", error);
+    } catch (dbErr) {
+      console.warn("Supabase password update failed:", dbErr);
+    }
+
+    // 2. Sync locally
+    if (userIndex !== -1) {
+      users[userIndex].password = newPassword;
+      localStorage.setItem('sweetohub_users', JSON.stringify(users));
+    }
 
     const updatedSession = { ...sessionUser, password: newPassword };
     localStorage.setItem('sweetohub_session', JSON.stringify(updatedSession));

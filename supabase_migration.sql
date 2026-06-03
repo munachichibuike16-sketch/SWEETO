@@ -67,11 +67,52 @@ ALTER TABLE sections
   ADD COLUMN IF NOT EXISTS headerimageb VARCHAR(255);
 
 -- ---------------------------------------------------------------
+-- ---------------------------------------------------------------
 -- ENABLE REALTIME ON KEY TABLES
 -- ---------------------------------------------------------------
 -- Run this to enable real-time order notifications in the admin dashboard
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.products;
+
+-- ---------------------------------------------------------------
+-- CUSTOMER ACCOUNTS TABLE: Stores registered customer credentials
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.customer_accounts (
+  id VARCHAR(255) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  phone_country_code VARCHAR(50),
+  phone_number VARCHAR(100),
+  password VARCHAR(255), -- Stores password (plaintext or hashed)
+  avatar_url TEXT,
+  provider VARCHAR(50) DEFAULT 'email',
+  address TEXT,
+  city TEXT,
+  preferences JSONB DEFAULT '{"smsAlerts": true, "whatsappUpdates": true, "promoEmails": false}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable RLS
+ALTER TABLE public.customer_accounts ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Allow public select on customer_accounts" ON public.customer_accounts;
+DROP POLICY IF EXISTS "Allow public insert on customer_accounts" ON public.customer_accounts;
+DROP POLICY IF EXISTS "Allow public update on customer_accounts" ON public.customer_accounts;
+DROP POLICY IF EXISTS "Allow admin delete on customer_accounts" ON public.customer_accounts;
+
+-- Create policies
+CREATE POLICY "Allow public select on customer_accounts" ON public.customer_accounts
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert on customer_accounts" ON public.customer_accounts
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update on customer_accounts" ON public.customer_accounts
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow admin delete on customer_accounts" ON public.customer_accounts
+  FOR DELETE TO authenticated USING (public.is_admin());
 
 -- Confirm migration success
 SELECT 'Migration complete' AS status;
