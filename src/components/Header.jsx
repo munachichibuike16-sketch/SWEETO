@@ -334,56 +334,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 </AnimatePresence>
               </motion.button>
 
-
-              {/* Notifications */}
-              <div className="relative" ref={notifRef}>
-                <motion.button 
-                  whileHover={{ scale: 1.1 }} 
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className="p-2.5 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all relative"
-                >
-                  <Bell size={19} />
-                  {products.filter(p => p.is_new_arrival).length > 0 && !isNotifOpen && (
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border border-white dark:border-slate-800 rounded-full animate-pulse"></span>
-                  )}
-                </motion.button>
-
-                <AnimatePresence>
-                  {isNotifOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className={`absolute top-full ${isRTL ? 'start-0' : 'end-0'} mt-3 w-80 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]`}
-                    >
-                      <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">{t('recent_arrivals')}</span>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-eas-blue bg-eas-blue/10 px-2 py-1 rounded-lg">{t('new')}</span>
-                      </div>
-                      <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
-                        {products.filter(p => p.is_new_arrival).slice(0, 5).map(product => (
-                          <div key={product.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-4 transition-colors">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-                              <img src={product.image_url} alt="" className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-[11px] font-black text-slate-900 dark:text-white line-clamp-1">{product.name}</p>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t('just_arrived')}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <button 
-                        onClick={() => { setIsNotifOpen(false); navigate('/notifications'); }}
-                        className="w-full p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-eas-blue transition-colors border-t border-slate-50 dark:border-slate-800"
-                      >
-                        {t('view_all_new')}
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* Language */}
               <div className="relative" ref={langRef}>
                 <motion.button 
@@ -484,6 +434,56 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   </div>
                 </motion.div>
               )}
+
+              {/* Notifications */}
+              <div className="relative" ref={notifRef}>
+                <motion.button 
+                  whileHover={{ scale: 1.1 }} 
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors relative"
+                >
+                  <Bell size={20} />
+                  {products.filter(p => p.is_new_arrival).length > 0 && !isNotifOpen && (
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  )}
+                </motion.button>
+
+                <AnimatePresence>
+                  {isNotifOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className={`absolute top-full ${isRTL ? 'start-0' : 'end-0'} mt-3 w-80 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]`}
+                    >
+                      <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">{t('recent_arrivals')}</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-eas-blue bg-eas-blue/10 px-2 py-1 rounded-lg">{t('new')}</span>
+                      </div>
+                      <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
+                        {products.filter(p => p.is_new_arrival).slice(0, 5).map(product => (
+                          <div key={product.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-4 transition-colors">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+                              <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-[11px] font-black text-slate-900 dark:text-white line-clamp-1">{product.name}</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t('just_arrived')}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <button 
+                        onClick={() => { setIsNotifOpen(false); navigate('/notifications'); }}
+                        className="w-full p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-eas-blue transition-colors border-t border-slate-50 dark:border-slate-800"
+                      >
+                        {t('view_all_new')}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               
               {/* Cart Button */}
               <motion.div 
@@ -517,6 +517,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
+            <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
+              <Search size={20} />
+            </button>
             <button 
               onClick={() => navigate('/notifications')} 
               className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl relative"
@@ -526,9 +529,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
               {products.filter(p => p.is_new_arrival).length > 0 && (
                 <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
               )}
-            </button>
-            <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
-              <Search size={20} />
             </button>
             <div 
               onClick={onCartClick}
