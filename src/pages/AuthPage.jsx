@@ -4,6 +4,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 import OrdersHistoryContent from '../components/OrdersHistoryContent';
 import { 
   User, 
@@ -23,7 +24,9 @@ import {
   Truck, 
   ArrowLeft,
   Calendar,
-  CheckCircle2
+  CheckCircle2,
+  ChevronRight,
+  Bell
 } from 'lucide-react';
 import './AuthPage.css';
 
@@ -55,6 +58,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({
     name: '',
+    countryCode: '',
     phone: '',
     address: '',
     city: ''
@@ -108,7 +112,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
       setCurrentTab('overview');
       setSettingsForm({
         name: session.name || '',
-        phone: session.phoneNumber || '',
+        countryCode: session.phoneCountryCode || session.countryCode || '',
+        phone: session.phoneNumber || session.phone || '',
         address: session.address || '',
         city: session.city || ''
       });
@@ -388,6 +393,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
     const updatedUser = {
       ...sessionUser,
       name: settingsForm.name,
+      phoneCountryCode: settingsForm.countryCode,
       phoneNumber: settingsForm.phone,
       address: settingsForm.address,
       city: settingsForm.city,
@@ -557,6 +563,47 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
                     </div>
 
+                    {/* Personal Information */}
+                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3.5 text-left">
+                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
+                        <User className="text-eas-blue" size={15} />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Personal Information</span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center py-1 border-b border-slate-100/30 dark:border-slate-850/50 last:border-0">
+                          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Phone</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                              {sessionUser.phoneCountryCode || sessionUser.countryCode ? `${sessionUser.phoneCountryCode || sessionUser.countryCode} ` : ''}
+                              {sessionUser.phoneNumber || sessionUser.phone || 'Not set'}
+                            </span>
+                            <button 
+                              onClick={() => switchTab('settings')}
+                              className="text-eas-blue hover:text-blue-700 text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center py-1 border-b border-slate-100/30 dark:border-slate-850/50 last:border-0">
+                          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Address</span>
+                          <div className="flex items-center gap-2 max-w-[70%]">
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">
+                              {sessionUser.address || 'Not set'}
+                            </span>
+                            <button 
+                              onClick={() => switchTab('settings')}
+                              className="text-eas-blue hover:text-blue-700 text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg shrink-0"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="quick-links">
                       <div className="quick-link-item dark:bg-slate-900/40 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900/70" onClick={() => navigate('/')}>
                         <div className="ql-icon bg-blue-50 dark:bg-blue-950/30 text-blue-500"><ShoppingBag size={18} /></div>
@@ -616,14 +663,24 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
                       <div className="input-group">
                         <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
-                        <div className="input-wrapper mt-1">
-                          <Phone className="input-icon" size={18} />
+                        <div className="phone-row mt-1 flex gap-2">
+                          <select 
+                            value={settingsForm.countryCode}
+                            onChange={(e) => setSettingsForm({...settingsForm, countryCode: e.target.value})}
+                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                            style={{ width: '130px', flexShrink: 0 }}
+                          >
+                            <option value="">Code</option>
+                            {africanCountries.map(c => (
+                              <option key={c.name} value={c.code}>{c.code} {c.name}</option>
+                            ))}
+                          </select>
                           <input 
                             type="tel" 
                             placeholder="Phone number" 
                             value={settingsForm.phone}
                             onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white flex-1"
                           />
                         </div>
                       </div>
