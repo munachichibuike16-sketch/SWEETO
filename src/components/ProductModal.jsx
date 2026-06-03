@@ -504,7 +504,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 px-4">
                       {/* Review Summary */}
                       <div className="lg:col-span-4">
-                        <div className="sticky top-32 p-10 bg-slate-50 rounded-[3.5rem] border border-slate-100 flex flex-col items-center">
+                        <div className="sticky top-32 p-6 sm:p-10 bg-slate-50 rounded-[2.5rem] sm:rounded-[3.5rem] border border-slate-100 flex flex-col items-center">
                           <span className="text-8xl font-black text-slate-900 tracking-tighter mb-4 italic leading-none">{averageRating}</span>
                           <div className="flex text-amber-400 mb-6 gap-1">
                             {[...Array(5)].map((_, i) => <Star key={i} size={24} fill={i < Math.round(Number(averageRating)) ? "currentColor" : "none"} strokeWidth={3} />)}
@@ -516,7 +516,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       {/* Review List & Form */}
                       <div className="lg:col-span-8 space-y-12">
                         {/* Write Review */}
-                        <div className="bg-white border border-slate-100 p-10 rounded-[3rem] shadow-xl shadow-slate-100/50 relative overflow-hidden group">
+                        <div className="bg-white border border-slate-100 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-xl shadow-slate-100/50 relative overflow-hidden group">
                           {!currentUser && (
                             <div className="absolute inset-0 bg-white/60 backdrop-blur-md z-20 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
                               <div className="w-20 h-20 bg-eas-blue/10 rounded-3xl flex items-center justify-center text-eas-blue mb-6">
@@ -535,17 +535,19 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             </div>
                           )}
 
-                          <h4 className="font-black text-slate-900 mb-8 uppercase text-xs tracking-[0.3em]">{t('leave_review')}</h4>
-                          <div className="flex gap-3 mb-8">
+                          <h4 className="font-black text-slate-900 mb-6 uppercase text-xs tracking-[0.3em]">{t('leave_review')}</h4>
+                          <div className="flex gap-2 sm:gap-3 mb-8 flex-wrap">
                             {[1, 2, 3, 4, 5].map(i => (
                               <button 
                                 key={i}
+                                type="button"
                                 onMouseEnter={() => setHoverRating(i)}
                                 onMouseLeave={() => setHoverRating(0)}
                                 onClick={() => setUserRating(i)}
-                                className={`transition-all duration-300 ${ (hoverRating || userRating) >= i ? 'text-amber-400 scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : 'text-slate-100' }`}
+                                style={{ minWidth: '44px', minHeight: '44px' }}
+                                className={`w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl transition-all duration-300 ${ (hoverRating || userRating) >= i ? 'text-amber-400 scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : 'text-slate-200 dark:text-slate-800' }`}
                               >
-                                <Star size={40} fill="currentColor" strokeWidth={0} />
+                                <Star size={32} className="sm:w-[36px] sm:h-[36px]" fill={(hoverRating || userRating) >= i ? "currentColor" : "none"} strokeWidth={2} />
                               </button>
                             ))}
                           </div>
@@ -553,7 +555,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             disabled={!currentUser}
-                            className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-eas-blue/5 focus:bg-white transition-all outline-none mb-8 min-h-[160px] resize-none"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] p-5 sm:p-8 text-sm font-medium focus:ring-4 focus:ring-eas-blue/5 focus:bg-white transition-all outline-none mb-8 min-h-[160px] resize-none"
                             placeholder={currentUser ? t('share_experience') : "Login to share your thoughts..."}
                           />
                           <motion.button 
@@ -561,7 +563,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             whileTap={currentUser ? { scale: 0.98 } : {}}
                             onClick={handleReviewSubmit}
                             disabled={!currentUser}
-                            className={`bg-slate-900 text-white font-black text-xs uppercase tracking-[0.3em] px-12 py-6 rounded-2xl shadow-2xl shadow-slate-900/30 w-full md:w-auto ${!currentUser ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-slate-900 text-white font-black text-xs uppercase tracking-[0.3em] px-8 py-4 sm:px-12 sm:py-6 rounded-2xl shadow-2xl shadow-slate-900/30 w-full md:w-auto ${!currentUser ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {t('submit_experience')}
                           </motion.button>
@@ -575,7 +577,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                               initial={{ opacity: 0, y: 20 }}
                               whileInView={{ opacity: 1, y: 0 }}
                               viewport={{ once: true }}
-                              className="p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all duration-500"
+                              className="p-6 sm:p-10 bg-slate-50 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all duration-500"
                             >
                               <div className="flex justify-between items-start mb-8">
                                 <div className="flex items-center gap-5">
