@@ -45,6 +45,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef(null);
+  const signupAvatarInputRef = useRef(null);
 
   const [loginData, setLoginData] = useState({ email: '', password: '', rememberMe: false });
   const [signupData, setSignupData] = useState({ 
@@ -53,7 +54,8 @@ const AuthPage = ({ initialTab = 'login' }) => {
     countryCode: '', 
     phone: '', 
     password: '', 
-    confirmPassword: '' 
+    confirmPassword: '',
+    avatarUrl: ''
   });
 
   const [shippingZones, setShippingZones] = useState([]);
@@ -232,6 +234,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
         phoneCountryCode: countryCode,
         phoneNumber: phone.replace(/\s/g, ''),
         password,
+        avatarUrl: signupData.avatarUrl || '',
         createdAt: new Date().toISOString(),
         provider: 'email'
       };
@@ -439,6 +442,42 @@ const AuthPage = ({ initialTab = 'login' }) => {
       }
     } catch (err) {
       console.error('Avatar upload failed:', err);
+      showToast('Failed to upload profile photo.', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleSignupAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      showToast('Please select a JPG, PNG, or WEBP image file.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1025) {
+      showToast('Image file is too large (max 5MB).', 'error');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    showToast('Uploading profile photo... ⏳', 'info');
+
+    try {
+      const compressedBlob = await compressImage(file, 400, 0.85);
+      const url = await uploadToStorage(compressedBlob, 'profiles');
+      
+      if (url) {
+        setSignupData(prev => ({
+          ...prev,
+          avatarUrl: url
+        }));
+        showToast('Profile photo uploaded successfully! 📸✨', 'success');
+      }
+    } catch (err) {
+      console.error('Signup avatar upload failed:', err);
       showToast('Failed to upload profile photo.', 'error');
     } finally {
       setIsUploadingAvatar(false);
@@ -1050,6 +1089,48 @@ const AuthPage = ({ initialTab = 'login' }) => {
               {currentTab === 'signup' && (
                 <div className="form-panel active">
                   <form onSubmit={handleSignup} noValidate>
+                    <div className="input-group flex flex-col items-center mb-6">
+                      <label className="text-center w-full mb-2 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('profile_photo') || 'Profile Photo (Optional)'}</label>
+                      <div 
+                        onClick={() => signupAvatarInputRef.current?.click()}
+                        className="relative group cursor-pointer w-24 h-24 rounded-3xl flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-eas-blue transition-all overflow-hidden bg-slate-50 dark:bg-slate-950/40 shadow-sm"
+                      >
+                        {isUploadingAvatar ? (
+                          <div className="flex flex-col items-center justify-center gap-1.5">
+                            <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
+                            <span className="text-[8px] font-black uppercase text-slate-400">Uploading...</span>
+                          </div>
+                        ) : signupData.avatarUrl ? (
+                          <>
+                            <img 
+                              src={signupData.avatarUrl} 
+                              alt="Profile Preview" 
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Camera size={16} className="text-white mb-0.5" />
+                              <span className="text-[8px] text-white font-black uppercase tracking-wider">Change</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors">
+                            <Camera size={22} className="mb-1" />
+                            <span className="text-[9px] font-black uppercase tracking-wider">Upload Photo</span>
+                          </div>
+                        )}
+                      </div>
+                      <input 
+                        type="file"
+                        ref={signupAvatarInputRef}
+                        onChange={handleSignupAvatarChange}
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/webp"
+                      />
+                      <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 text-center">
+                        JPG, PNG or WEBP. Max 5MB.
+                      </span>
+                    </div>
+
                     <div className="input-group">
                       <label>{t('full_name') || 'Full Name'}</label>
                       <div className="input-wrapper">
