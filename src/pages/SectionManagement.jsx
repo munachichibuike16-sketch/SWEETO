@@ -167,7 +167,7 @@ export default function SectionManagement() {
         }
       } else {
         // Create in Supabase
-        const uniqueKey = form.isDual ? `dual_${Date.now()}` : (form.role || `section_${Date.now()}`);
+        const uniqueKey = form.isDual ? `dual_${Date.now()}` : `${form.role || 'section'}_${Date.now()}`;
         const { error: err } = await supabase
           .from('sections')
           .insert([{ ...supabasePayload, key: uniqueKey }]);

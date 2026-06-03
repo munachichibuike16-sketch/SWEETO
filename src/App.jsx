@@ -359,6 +359,15 @@ const Storefront = ({ viewMode = 'home' }) => {
     }
   }, [sectionFilteredProducts, sortBy]);
 
+  const getSectionType = (sec) => {
+    let t = (sec.role && sec.role !== 'custom') ? sec.role : (sec.key || sec.type);
+    if (t && typeof t === 'string' && t.includes('_')) {
+      const base = t.replace(/_\d+$/, '');
+      t = base;
+    }
+    return t;
+  };
+
   const renderSection = (section, idx) => {
     // Handle both legacy and new section formats
     const isEnabled = section.isActive !== false && section.enabled !== false;
@@ -380,7 +389,7 @@ const Storefront = ({ viewMode = 'home' }) => {
     }
 
     const key = section.id || `section-${idx}`;
-    const type = section.key || section.role || section.type;
+    const type = getSectionType(section);
     const title = section.title || section.name;
     const subtitle = section.subtitle || section.tagline;
     const maxProducts = section.maxProducts || 8;
@@ -748,7 +757,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                     {homepageSections.length > 0 ? (
                       homepageSections.map((section, idx) => {
                         const rendered = renderSection(section, idx);
-                        if ((section.key || section.role || section.type) === 'hero' && rendered) {
+                        if (getSectionType(section) === 'hero' && rendered) {
                           return (
                             <React.Fragment key={section.id || `hero-wrap-${idx}`}>
                               {rendered}
