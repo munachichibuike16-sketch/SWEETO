@@ -116,7 +116,7 @@ export default function SectionManagement() {
         role: form.isDual ? 'custom' : form.role,
         titleb: form.isDual ? (form.titleB || null) : null,
         subtitleb: form.isDual ? (form.subtitleB || null) : null,
-        categoryb: form.isDual ? (form.categoryB || 'All') : 'All',
+        categoryb: form.isDual ? (form.categoryB || 'All') : (form.role === 'dealOfDay' ? (form.categoryB || 'All') : 'All'),
         roleb: form.isDual ? (form.roleB || 'custom') : 'custom',
         headerstyleb: form.isDual ? (form.headerStyleB || 'bold') : 'bold',
         headerimageb: form.isDual ? (form.headerImageB || null) : null
@@ -136,7 +136,7 @@ export default function SectionManagement() {
         isDual: form.isDual ? 1 : 0,
         titleB: form.isDual ? (form.titleB || null) : null,
         subtitleB: form.isDual ? (form.subtitleB || null) : null,
-        categoryB: form.isDual ? (form.categoryB || 'All') : 'All',
+        categoryB: form.isDual ? (form.categoryB || 'All') : (form.role === 'dealOfDay' ? (form.categoryB || 'All') : 'All'),
         roleB: form.isDual ? (form.roleB || 'custom') : 'custom',
         headerStyleB: form.isDual ? (form.headerStyleB || 'bold') : 'bold',
         headerImageB: form.isDual ? (form.headerImageB || null) : null
@@ -355,6 +355,13 @@ export default function SectionManagement() {
                         : 'Ad: Rotating Active Ads'}
                     </p>
                   )}
+                  {s.role === 'dealOfDay' && (
+                    <p className="text-[10px] text-pink-500 font-bold uppercase tracking-widest mb-2">
+                      {s.categoryB && s.categoryB !== 'All' 
+                        ? `Side Ad: ${videoAds.find(ad => String(ad.id) === String(s.categoryB))?.title || `Ad #${s.categoryB}`}`
+                        : 'Side Ad: Rotating Active Ads'}
+                    </p>
+                  )}
                   {s.subtitle && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4 truncate">{s.subtitle}</p>}
                 </div>
 
@@ -463,15 +470,28 @@ export default function SectionManagement() {
                     </select>
                   </div>
                 ) : (
-                  <div>
-                    <label className={lbl}>Filter by Product Category</label>
-                    <select value={form.category || 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
-                      <option value="All">All Categories (No filter)</option>
-                      {categories.map(cat => (
-                        <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <>
+                    <div>
+                      <label className={lbl}>Filter by Product Category</label>
+                      <select value={form.category || 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
+                        <option value="All">All Categories (No filter)</option>
+                        {categories.map(cat => (
+                          <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {form.role === 'dealOfDay' && (
+                      <div>
+                        <label className={lbl}>Choose Side Promo Video/Image Ad</label>
+                        <select value={form.categoryB || 'All'} onChange={e => setForm(p => ({ ...p, categoryB: e.target.value }))} className={inp}>
+                          <option value="All">Rotate Active Ads (Default)</option>
+                          {videoAds.filter(ad => ad.isActive).map(ad => (
+                            <option key={ad.id} value={String(ad.id)}>{ad.title} ({ad.type})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div>
                   <label className={lbl}>Side Banner Image URL (Optional)</label>

@@ -410,6 +410,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             bannerImage={section.headerImage}
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
+            videoAdId={section.categoryB}
           />
         );
       case 'newArrival':

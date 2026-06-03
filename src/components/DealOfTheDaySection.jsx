@@ -9,25 +9,30 @@ import { useStore } from '../contexts/StoreContext';
 import { SectionBanner, SectionHeader } from './ProductSection';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle }) => {
+const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId }) => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
   const { videoAds } = useStore();
   const { t } = useLanguage();
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  
+  const selectedAd = videoAdId && videoAdId !== 'All'
+    ? videoAds.find(ad => String(ad.id) === String(videoAdId))
+    : null;
+
   const activeAds = videoAds.filter(ad => ad.isActive);
   
-  // Rotate ads every 15 seconds
+  // Rotate ads every 15 seconds ONLY if we are not showing a specific pinned ad
   useEffect(() => {
-    if (activeAds.length <= 1) return;
+    if (selectedAd || activeAds.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentAdIndex(prev => (prev + 1) % activeAds.length);
     }, 15000); // 15 seconds
     return () => clearInterval(interval);
-  }, [activeAds.length]);
+  }, [activeAds.length, selectedAd]);
 
   // Get current active video ad
-  const activeAd = activeAds[currentAdIndex] || {
+  const activeAd = selectedAd || activeAds[currentAdIndex] || {
     title: "EXCLUSIVE TECH DEALS",
     type: "image",
     imageUrl: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80"
