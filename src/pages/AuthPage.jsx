@@ -21,7 +21,6 @@ import {
   Heart, 
   ShoppingBag, 
   Lock, 
-  Truck, 
   ArrowLeft,
   Calendar,
   CheckCircle2,
@@ -901,7 +900,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
       <span className="candy-decoration">🔋</span>
       <span className="candy-decoration">🎧</span>
 
-      <div className="main-container" style={{ maxWidth: currentTab === 'track' ? '920px' : '500px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="main-container" style={{ maxWidth: '500px' }}>
         <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl">
           <div className="card-content">
             <div className="brand-section">
@@ -922,12 +921,6 @@ const AuthPage = ({ initialTab = 'login' }) => {
                 onClick={() => switchTab('signup')}
               >
                 {t('sign_up') || 'Sign Up'}
-              </button>
-              <button 
-                className={`tab-btn text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${currentTab === 'track' ? 'active' : ''}`} 
-                onClick={() => switchTab('track')}
-              >
-                <Truck size={14} /> {t('track') || 'Track'}
               </button>
             </div>
 
@@ -950,7 +943,12 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       <div className="error-message">{errors.loginEmail}</div>
                     </div>
                     <div className="input-group">
-                      <label>{t('password') || 'Password'}</label>
+                      <div className="flex justify-between items-center">
+                        <label>{t('password') || 'Password'}</label>
+                        <button type="button" className="forgot-btn" onClick={() => switchTab('forgot')}>
+                          {t('forgot_password') || 'Forgot Password?'}
+                        </button>
+                      </div>
                       <div className="input-wrapper">
                         <Lock className="input-icon" size={18} />
                         <input 
@@ -966,20 +964,19 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
                       <div className="error-message">{errors.loginPassword}</div>
                     </div>
-                    <div className="options-row">
-                      <label className="remember-me dark:text-slate-400">
+                    <div className="flex items-center justify-between py-1">
+                      <label className="checkbox-container">
                         <input 
                           type="checkbox" 
                           checked={loginData.rememberMe}
                           onChange={(e) => setLoginData({...loginData, rememberMe: e.target.checked})}
                         />
-                        <span className="custom-checkbox dark:border-slate-700"><i className="fas fa-check"></i></span>
-                        {t('remember_me') || 'Remember me'}
+                        <span className="checkbox-checkmark"></span>
+                        <span className="checkbox-label text-xs font-bold text-slate-655 dark:text-slate-400">{t('remember_me') || 'Remember Me'}</span>
                       </label>
-                      <a className="forgot-link" onClick={() => showToast('Reset link sent!', 'success')}>{t('forgot_password') || 'Forgot Password?'}</a>
                     </div>
                     <button type="submit" className={`btn-submit ${loading ? 'loading' : ''}`} disabled={loading}>
-                      <span className="btn-text">{t('login_account') || 'Login to Your Account'}</span>
+                      <span className="btn-text">{t('sign_in') || 'Sign In'}</span>
                       <span className="spinner"></span>
                     </button>
                   </form>
@@ -995,7 +992,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         <User className="input-icon" size={18} />
                         <input 
                           type="text" 
-                          placeholder={t('name_placeholder') || "Jane Doe"} 
+                          placeholder={t('name_placeholder') || "e.g. Yao Kouassi"} 
                           value={signupData.name}
                           onChange={(e) => setSignupData({...signupData, name: e.target.value})}
                           className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupName ? 'input-error' : ''}`}
@@ -1018,24 +1015,24 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       <div className="error-message">{errors.signupEmail}</div>
                     </div>
                     <div className="input-group">
-                      <label>{t('phone_number') || 'Phone Number'}</label>
-                      <div className="phone-row">
+                      <label>{t('contact_phone') || 'Contact Phone (African country code)'}</label>
+                      <div className="phone-row flex gap-2">
                         <select 
                           value={signupData.countryCode}
                           onChange={(e) => setSignupData({...signupData, countryCode: e.target.value})}
                           className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPhone ? 'input-error' : ''}`}
                         >
-                          <option value="">{t('select_code') || 'Select code'}</option>
+                          <option value="">Code</option>
                           {africanCountries.map(c => (
                             <option key={c.name} value={c.code}>{c.code} {c.name}</option>
                           ))}
                         </select>
                         <input 
                           type="tel" 
-                          placeholder="Phone number" 
+                          placeholder={t('phone_placeholder') || "e.g. 07070707"} 
                           value={signupData.phone}
                           onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPhone ? 'input-error' : ''}`}
+                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white flex-1 ${errors.signupPhone ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupPhone}</div>
@@ -1046,7 +1043,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         <Lock className="input-icon" size={18} />
                         <input 
                           type={showPassword.signup ? 'text' : 'password'} 
-                          placeholder={t('min_8_chars') || "Min. 8 characters"} 
+                          placeholder="••••••••" 
                           value={signupData.password}
                           onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                           className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPassword ? 'input-error' : ''}`}
@@ -1063,7 +1060,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         <Lock className="input-icon" size={18} />
                         <input 
                           type={showPassword.confirm ? 'text' : 'password'} 
-                          placeholder={t('re_enter_password') || "Re-enter password"} 
+                          placeholder="••••••••" 
                           value={signupData.confirmPassword}
                           onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
                           className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupConfirmPassword ? 'input-error' : ''}`}
@@ -1081,39 +1078,29 @@ const AuthPage = ({ initialTab = 'login' }) => {
                   </form>
                 </div>
               )}
-
-              {currentTab === 'track' && (
-                <div className="form-panel active w-full">
-                  <OrdersHistoryContent />
-                </div>
-              )}
             </div>
 
-            {currentTab !== 'track' && (
-              <>
-                <div className="w-full flex justify-center items-center min-h-[46px] my-2">
-                  <div id="google-button-official" className="w-full flex justify-center"></div>
-                </div>
+            <div className="w-full flex justify-center items-center min-h-[46px] my-2">
+              <div id="google-button-official" className="w-full flex justify-center"></div>
+            </div>
 
-                {!googleLoaded && (
-                  <button className="btn-google" onClick={handleGoogleDemoFallback}>
-                    <svg className="google-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    {t('continue_google') || 'Continue with Google'}
-                  </button>
-                )}
-
-                <p className="auth-footer-text">
-                  {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}
-                  <a href="#">{t('terms') || 'Terms'}</a> &
-                  <a href="#">{t('privacy_policy') || 'Privacy Policy'}</a>
-                </p>
-              </>
+            {!googleLoaded && (
+              <button className="btn-google" onClick={handleGoogleDemoFallback}>
+                <svg className="google-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                {t('continue_google') || 'Continue with Google'}
+              </button>
             )}
+
+            <p className="auth-footer-text">
+              {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}
+              <a href="#">{t('terms') || 'Terms'}</a> &
+              <a href="#">{t('privacy_policy') || 'Privacy Policy'}</a>
+            </p>
           </div>
         </div>
       </div>
