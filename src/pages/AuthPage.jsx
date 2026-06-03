@@ -671,61 +671,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
                     </div>
 
-                    {/* Preferences Block */}
-                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3">
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
-                        <Bell className="text-amber-500" size={15} />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white font-black">Notification Preferences</span>
-                      </div>
-                      <div className="space-y-2.5">
-                        <label className="flex items-center justify-between cursor-pointer py-0.5">
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Order Status SMS Alerts</span>
-                          <input 
-                            type="checkbox" 
-                            checked={preferences.smsAlerts}
-                            onChange={(e) => setPreferences({...preferences, smsAlerts: e.target.checked})}
-                            className="w-4 h-4 rounded text-eas-blue border-slate-300 dark:border-slate-700 focus:ring-eas-blue/30"
-                          />
-                        </label>
-                        <label className="flex items-center justify-between cursor-pointer py-0.5">
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">WhatsApp Delivery Updates</span>
-                          <input 
-                            type="checkbox" 
-                            checked={preferences.whatsappUpdates}
-                            onChange={(e) => setPreferences({...preferences, whatsappUpdates: e.target.checked})}
-                            className="w-4 h-4 rounded text-eas-blue border-slate-300 dark:border-slate-700 focus:ring-eas-blue/30"
-                          />
-                        </label>
-                        <label className="flex items-center justify-between cursor-pointer py-0.5">
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Promotional Emails & Offers</span>
-                          <input 
-                            type="checkbox" 
-                            checked={preferences.promoEmails}
-                            onChange={(e) => setPreferences({...preferences, promoEmails: e.target.checked})}
-                            className="w-4 h-4 rounded text-eas-blue border-slate-300 dark:border-slate-700 focus:ring-eas-blue/30"
-                          />
-                        </label>
-                      </div>
-                    </div>
 
-                    {/* Appearance Block */}
-                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3">
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
-                        <Sun className="text-purple-500" size={15} />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white font-black">Theme Appearance</span>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={toggleTheme}
-                        className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-955 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100/50 dark:hover:bg-slate-900"
-                      >
-                        <span className="flex items-center gap-2">
-                          {isDarkMode ? <Moon size={16} className="text-purple-500" /> : <Sun size={16} className="text-amber-500" />}
-                          {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-                        </span>
-                        <span className="text-eas-blue font-black uppercase tracking-wider text-[10px]">Toggle</span>
-                      </button>
-                    </div>
 
                     {/* Security Block (Change Password) */}
                     {!isGoogleUser && (
