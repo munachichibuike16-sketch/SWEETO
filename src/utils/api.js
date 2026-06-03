@@ -23,9 +23,12 @@ export function isLocalHost() {
 }
 
 const getDefaultBackendUrl = () => {
-  const { protocol, hostname } = window.location;
-  if (hostname && isLocalHost()) {
-    return `${protocol}//${hostname}:3000`;
+  const { protocol, hostname, origin } = window.location;
+  if (hostname) {
+    if (isLocalHost()) {
+      return `${protocol}//${hostname}:3000`;
+    }
+    return origin;
   }
   return 'http://localhost:3000';
 };
