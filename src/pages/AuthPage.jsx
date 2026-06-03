@@ -792,61 +792,61 @@ const AuthPage = ({ initialTab = 'login' }) => {
   return (
     <div className="auth-split-wrapper dark:bg-slate-950 transition-colors duration-500">
       {/* Left side: Premium Branding Column (Hidden on mobile/tablet) */}
-      <div className="auth-brand-column bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] border-r border-white/5 relative overflow-hidden hidden lg:flex flex-col justify-between p-16">
+      <div className="auth-brand-column bg-gradient-to-br from-blue-900 via-blue-600 to-blue-500 border-r border-blue-500/20 relative overflow-hidden hidden lg:flex flex-col justify-between p-16">
         {/* Glow ambient background lights */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-200/20 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Top brand header logo */}
         <div className="relative z-10 flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-eas-blue to-blue-600 flex items-center justify-center text-white font-black text-lg shadow-[0_8px_20px_rgba(0,102,255,0.3)]">
+          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-blue-600 font-black text-lg shadow-[0_8px_20px_rgba(255,255,255,0.2)]">
             ⚡
           </div>
-          <span className="font-black text-xl italic text-white tracking-tighter">SWEETO<span className="text-eas-blue font-bold not-italic">HUB</span></span>
+          <span className="font-black text-xl italic text-white tracking-tighter">SWEETO<span className="text-blue-200 font-bold not-italic">HUB</span></span>
         </div>
 
         {/* Center premium visual showcase */}
         <div className="relative z-10 my-auto text-left space-y-6 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-eas-blue animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-300">Premium Local Commerce</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white">Premium Local Commerce</span>
           </div>
 
           <h1 className="text-5xl font-black text-white leading-tight tracking-tighter uppercase italic">
             Your Premium <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-eas-blue via-blue-400 to-indigo-400">Digital Gateway</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">Digital Gateway</span>
           </h1>
 
-          <p className="text-slate-400 text-sm font-medium leading-relaxed">
+          <p className="text-blue-100 text-sm font-medium leading-relaxed">
             Gain access to high-end electronics, elite tech gadgets, and seamless local delivery diagnostics built for power users.
           </p>
 
           {/* Bullet features list */}
           <div className="pt-6 space-y-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-eas-blue flex items-center justify-center font-black text-sm">✓</div>
-              <span className="text-xs font-bold text-slate-300">Verified Authentic Premium Products Only</span>
+              <div className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center font-black text-sm">✓</div>
+              <span className="text-xs font-bold text-white">Verified Authentic Premium Products Only</span>
             </div>
             <div className="flex items-center gap-3.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-eas-blue flex items-center justify-center font-black text-sm">✓</div>
-              <span className="text-xs font-bold text-slate-300">High-Performance Custom Tech Diagnostics</span>
+              <div className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center font-black text-sm">✓</div>
+              <span className="text-xs font-bold text-white">High-Performance Custom Tech Diagnostics</span>
             </div>
             <div className="flex items-center gap-3.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-eas-blue flex items-center justify-center font-black text-sm">✓</div>
-              <span className="text-xs font-bold text-slate-300">Express Regional Courier Handshake</span>
+              <div className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center font-black text-sm">✓</div>
+              <span className="text-xs font-bold text-white">Express Regional Courier Handshake</span>
             </div>
           </div>
         </div>
 
         {/* Bottom copyright/meta */}
-        <div className="relative z-10 flex justify-between items-center text-[11px] text-slate-500 font-bold uppercase tracking-widest">
+        <div className="relative z-10 flex justify-between items-center text-[11px] text-blue-200 font-bold uppercase tracking-widest">
           <span>© {new Date().getFullYear()} SWEETO-HUB</span>
           <span>Security Guaranteed</span>
         </div>
       </div>
 
       {/* Right side: Auth Card Column */}
-      <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+      <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30 dark:bg-slate-950 transition-colors duration-500">
         {/* Floating tech background decorations for mobile view */}
         <span className="candy-decoration lg:hidden">⚡</span>
         <span className="candy-decoration lg:hidden">💻</span>
