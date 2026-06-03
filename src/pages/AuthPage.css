@@ -633,3 +633,40 @@
     min-height: 46px !important;
     cursor: pointer !important;
 }
+
+/* Split Layout for Authentication */
+.auth-split-wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 30%, #e0f2fe 60%, #ffffff 100%);
+    overflow-x: hidden;
+}
+
+.auth-brand-column {
+    display: none;
+    width: 50%;
+    min-height: 100vh;
+    position: relative;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.auth-form-column {
+    flex: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+@media (min-width: 1024px) {
+    .auth-brand-column {
+        display: flex;
+    }
+}
+

@@ -785,39 +785,94 @@ const AuthPage = ({ initialTab = 'login' }) => {
   }
 
   return (
-    <div className="auth-body dark:bg-slate-950 transition-colors duration-500">
-      <span className="candy-decoration">⚡</span>
-      <span className="candy-decoration">💻</span>
-      <span className="candy-decoration">✨</span>
-      <span className="candy-decoration">🔋</span>
-      <span className="candy-decoration">🎧</span>
+    <div className="auth-split-wrapper dark:bg-slate-950 transition-colors duration-500">
+      {/* Left side: Premium Branding Column (Hidden on mobile/tablet) */}
+      <div className="auth-brand-column bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] border-r border-white/5 relative overflow-hidden hidden lg:flex flex-col justify-between p-16">
+        {/* Glow ambient background lights */}
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="main-container" style={{ maxWidth: '500px' }}>
-        <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl">
-          <div className="card-content">
-            <div className="brand-section">
-              <div className="brand-icon">⚡</div>
-              <h1 className="brand-name">SWEETO-HUB</h1>
-              <p className="brand-tagline">{t('powering_digital_life') || 'Powering Your Digital Life'}</p>
+        {/* Top brand header logo */}
+        <div className="relative z-10 flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-eas-blue to-blue-600 flex items-center justify-center text-white font-black text-lg shadow-[0_8px_20px_rgba(0,102,255,0.3)]">
+            ⚡
+          </div>
+          <span className="font-black text-xl italic text-white tracking-tighter">SWEETO<span className="text-eas-blue font-bold not-italic">HUB</span></span>
+        </div>
+
+        {/* Center premium visual showcase */}
+        <div className="relative z-10 my-auto text-left space-y-6 max-w-lg">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-eas-blue animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-300">Premium Local Commerce</span>
+          </div>
+
+          <h1 className="text-5xl font-black text-white leading-tight tracking-tighter uppercase italic">
+            Your Premium <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-eas-blue via-blue-400 to-indigo-400">Digital Gateway</span>
+          </h1>
+
+          <p className="text-slate-400 text-sm font-medium leading-relaxed">
+            Gain access to high-end electronics, elite tech gadgets, and seamless local delivery diagnostics built for power users.
+          </p>
+
+          {/* Bullet features list */}
+          <div className="pt-6 space-y-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-eas-blue flex items-center justify-center font-black text-sm">✓</div>
+              <span className="text-xs font-bold text-slate-300">Verified Authentic Premium Products Only</span>
             </div>
-
-            <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
-              <button 
-                className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'login' ? 'active' : ''}`} 
-                onClick={() => switchTab('login')}
-              >
-                {t('login') || 'Login'}
-              </button>
-              <button 
-                className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'signup' ? 'active' : ''}`} 
-                onClick={() => switchTab('signup')}
-              >
-                {t('sign_up') || 'Sign Up'}
-              </button>
+            <div className="flex items-center gap-3.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-eas-blue flex items-center justify-center font-black text-sm">✓</div>
+              <span className="text-xs font-bold text-slate-300">High-Performance Custom Tech Diagnostics</span>
             </div>
+            <div className="flex items-center gap-3.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-eas-blue flex items-center justify-center font-black text-sm">✓</div>
+              <span className="text-xs font-bold text-slate-300">Express Regional Courier Handshake</span>
+            </div>
+          </div>
+        </div>
 
-            <div className="form-container">
-              {currentTab === 'login' && (
+        {/* Bottom copyright/meta */}
+        <div className="relative z-10 flex justify-between items-center text-[11px] text-slate-500 font-bold uppercase tracking-widest">
+          <span>© {new Date().getFullYear()} SWEETO-HUB</span>
+          <span>Security Guaranteed</span>
+        </div>
+      </div>
+
+      {/* Right side: Auth Card Column */}
+      <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+        {/* Floating tech background decorations for mobile view */}
+        <span className="candy-decoration lg:hidden">⚡</span>
+        <span className="candy-decoration lg:hidden">💻</span>
+        <span className="candy-decoration lg:hidden">✨</span>
+
+        <div className="main-container max-w-[500px] w-full relative z-10">
+          <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl">
+            <div className="card-content">
+              <div className="brand-section">
+                <div className="brand-icon cursor-pointer mx-auto" onClick={() => navigate('/')}>⚡</div>
+                <h1 className="brand-name">SWEETO-HUB</h1>
+                <p className="brand-tagline">{t('powering_digital_life') || 'Powering Your Digital Life'}</p>
+              </div>
+
+              <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
+                <button 
+                  className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'login' ? 'active' : ''}`} 
+                  onClick={() => switchTab('login')}
+                >
+                  {t('login') || 'Login'}
+                </button>
+                <button 
+                  className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'signup' ? 'active' : ''}`} 
+                  onClick={() => switchTab('signup')}
+                >
+                  {t('sign_up') || 'Sign Up'}
+                </button>
+              </div>
+
+              <div className="form-container">
+                {currentTab === 'login' && (
                 <div className="form-panel active">
                   <form onSubmit={handleLogin} noValidate>
                     <div className="input-group">
@@ -996,13 +1051,14 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
             <p className="auth-footer-text">
               {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}
-              <a href="#">{t('terms') || 'Terms'}</a> &
+              <a href="#">{t('terms') || 'Terms'}</a> {' & '}
               <a href="#">{t('privacy_policy') || 'Privacy Policy'}</a>
             </p>
           </div>
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
