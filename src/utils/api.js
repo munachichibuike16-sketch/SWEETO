@@ -40,6 +40,16 @@ export async function apiFetch(path, options = {}) {
   
   // Normalize path (remove leading slash and optional 'api/' prefix)
   const cleanPath = path.replace(/^\/?(api\/)?/, '');
+
+  // Bypass fetching if the backend is the default placeholder, preventing CORS/preflight errors
+  if (!isLocal && API_BASE_URL.includes('your-backend-service.onrender.com')) {
+    console.warn(`📡 API fetch bypassed: Backend URL is unconfigured placeholder. Request path: ${cleanPath}`);
+    return new Response(JSON.stringify([]), {
+      status: 200,
+      statusText: 'OK',
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
   
   let targetUrl;
   const fetchOptions = { ...options };
