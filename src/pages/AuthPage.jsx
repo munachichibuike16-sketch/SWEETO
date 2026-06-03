@@ -488,19 +488,19 @@ const AuthPage = ({ initialTab = 'login' }) => {
               {/* Tab Selector */}
               <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
                 <button 
-                  className={`tab-btn text-xs font-black uppercase tracking-widest gap-2 ${currentTab === 'overview' ? 'active' : ''}`}
+                  className={`tab-btn ${currentTab === 'overview' ? 'active' : ''}`}
                   onClick={() => switchTab('overview')}
                 >
                   <User size={14} /> {t('profile') || 'Profile'}
                 </button>
                 <button 
-                  className={`tab-btn text-xs font-black uppercase tracking-widest gap-2 ${currentTab === 'orders' ? 'active' : ''}`}
+                  className={`tab-btn ${currentTab === 'orders' ? 'active' : ''}`}
                   onClick={() => switchTab('orders')}
                 >
                   <Package size={14} /> {t('my_orders') || 'Orders'}
                 </button>
                 <button 
-                  className={`tab-btn text-xs font-black uppercase tracking-widest gap-2 ${currentTab === 'settings' ? 'active' : ''}`}
+                  className={`tab-btn ${currentTab === 'settings' ? 'active' : ''}`}
                   onClick={() => switchTab('settings')}
                 >
                   <SettingsIcon size={14} /> {t('settings') || 'Settings'}

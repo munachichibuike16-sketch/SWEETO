@@ -150,11 +150,19 @@
 
 .tab-switcher {
     display: flex;
+    width: 100%;
+    box-sizing: border-box;
     background: #f1f5f9;
     border-radius: 30px;
     padding: 5px;
     margin-bottom: 28px;
     border: 1px solid rgba(191, 219, 254, 0.7);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.tab-switcher::-webkit-scrollbar {
+    display: none;
 }
 .tab-btn {
     flex: 1;
@@ -163,15 +171,17 @@
     background: transparent;
     border-radius: 26px;
     font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-weight: 900;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     cursor: pointer;
     transition: var(--transition);
     color: var(--gray);
-    letter-spacing: 0.3px;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
 }
 .tab-btn.active {
     background: var(--gradient-primary);
@@ -477,7 +487,7 @@
     .auth-card { padding: 28px 18px 25px; border-radius: 20px; }
     .brand-name { font-size: 2.2rem; }
     .brand-icon { width: 52px; height: 52px; font-size: 1.6rem; border-radius: 16px; }
-    .tab-btn { padding: 10px 14px; font-size: 0.85rem; }
+    .tab-btn { padding: 10px 6px; font-size: 0.68rem; letter-spacing: 0.2px; white-space: nowrap; flex-shrink: 0; gap: 4px; }
     .input-wrapper input { padding: 12px 14px 12px 40px; font-size: 0.85rem; }
     .btn-submit { padding: 13px; font-size: 0.9rem; }
     .phone-row select { width: 45%; font-size: 0.8rem; }

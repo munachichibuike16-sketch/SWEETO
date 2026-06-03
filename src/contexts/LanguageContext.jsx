@@ -6,6 +6,7 @@ export const translations = {
   en: {
     // Header & Nav
     home: "Home", saved: "Saved", profile: "Profile", me: "Me", cart: "Cart",
+    my_orders: "Orders", settings: "Settings", member_since: "Member Since", security: "Security", wishlist: "Wishlist", hello: "Hello",
     search_placeholder: "Search premium store...", welcome: "Welcome", sign_in: "SIGN IN", account: "Account",
     recent_arrivals: "Recent Arrivals", new: "New", just_arrived: "Just arrived!", view_all_new: "View All New Goods",
     visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications",
@@ -98,6 +99,7 @@ export const translations = {
   fr: {
     // Header & Nav
     home: "Accueil", saved: "Enregistré", profile: "Profil", me: "Moi", cart: "Panier",
+    my_orders: "Commandes", settings: "Paramètres", member_since: "Membre depuis", security: "Sécurité", wishlist: "Favoris", hello: "Bonjour",
     search_placeholder: "Recherche premium...", welcome: "Bienvenue", sign_in: "SE CONNECTER", account: "Compte",
     recent_arrivals: "Nouveautés", new: "Nouveau", just_arrived: "Vient d'arriver !", view_all_new: "Voir tout",
     visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications",
@@ -190,6 +192,7 @@ export const translations = {
   es: {
     // Header & Nav
     home: "Inicio", saved: "Guardado", profile: "Perfil", me: "Yo", cart: "Carrito",
+    my_orders: "Pedidos", settings: "Ajustes", member_since: "Miembro desde", security: "Seguridad", wishlist: "Favoritos", hello: "Hola",
     search_placeholder: "Búsqueda premium...", welcome: "Bienvenido", sign_in: "INICIAR SESIÓN", account: "Cuenta",
     recent_arrivals: "Recién Llegados", new: "Nuevo", just_arrived: "¡Recién llegado!", view_all_new: "Ver todo",
     visit_us: "Visítanos", language: "Idioma", theme: "Tema", notifications: "Notificaciones",
@@ -262,6 +265,7 @@ export const translations = {
   },
   de: {
     home: "Startseite", saved: "Gespeichert", profile: "Profil", me: "Ich", cart: "Warenkorb",
+    my_orders: "Bestellungen", settings: "Einstellungen", member_since: "Mitglied seit", security: "Sicherheit", wishlist: "Wunschliste", hello: "Hallo",
     search_placeholder: "Premium Suche...", welcome: "Willkommen", sign_in: "ANMELDEN", account: "Konto",
     recent_arrivals: "Neuankömmlinge", new: "Neu", just_arrived: "Gerade eingetroffen!", view_all_new: "Alle ansehen",
     experience_hub: "Erlebe Sweeto Hub", visit_store: "Besuchen Sie unseren", physical_store: "Physischen Laden",
@@ -328,6 +332,7 @@ export const translations = {
   },
   it: {
     home: "Home", saved: "Salvato", profile: "Profilo", me: "Io", cart: "Carrello",
+    my_orders: "Ordini", settings: "Impostazioni", member_since: "Membro da", security: "Sicurezza", wishlist: "Preferiti", hello: "Ciao",
     search_placeholder: "Ricerca premium...", welcome: "Benvenuto", sign_in: "ACCEDI", account: "Account",
     recent_arrivals: "Nuovi Arrivi", new: "Nuovo", just_arrived: "Appena arrivato!", view_all_new: "Vedi tutto",
     experience_hub: "Vivi Sweeto Hub", visit_store: "Visita il Nostro", physical_store: "Negozio Fisico",
@@ -390,6 +395,7 @@ export const translations = {
   },
   pt: {
     home: "Início", saved: "Salvo", profile: "Perfil", me: "Eu", cart: "Carrinho",
+    my_orders: "Pedidos", settings: "Configurações", member_since: "Membro desde", security: "Segurança", wishlist: "Favoritos", hello: "Olá",
     search_placeholder: "Pesquisa premium...", welcome: "Bem-vindo", sign_in: "ENTRAR", account: "Conta",
     recent_arrivals: "Recém-chegados", new: "Novo", just_arrived: "Acabou de chegar!", view_all_new: "Ver tudo",
     experience_hub: "Experimente o Sweeto Hub", visit_store: "Visite a Nossa", physical_store: "Loja Física",
@@ -456,6 +462,7 @@ export const translations = {
   },
   ar: {
     home: "الرئيسية", saved: "محفوظ", profile: "الملف الشخصي", me: "أنا", cart: "السلة",
+    my_orders: "الطلبات", settings: "الإعدادات", member_since: "عضو منذ", security: "الأمان", wishlist: "المفضلة", hello: "مرحباً",
     search_placeholder: "ابحث عن المنتجات...", welcome: "مرحباً", sign_in: "تسجيل الدخول", account: "حساب",
     recent_arrivals: "وصل حديثاً", new: "جديد", just_arrived: "وصل للتو!", view_all_new: "عرض الكل",
     experience_hub: "جرب سويتو هب", visit_store: "قم بزيارة", physical_store: "متجرنا الفعلي",
@@ -518,6 +525,7 @@ export const translations = {
   },
   zh: {
     home: "首页", saved: "已保存", profile: "资料", me: "我", cart: "购物车",
+    my_orders: "我的订单", settings: "设置", member_since: "成员自", security: "安全", wishlist: "心愿单", hello: "你好",
     search_placeholder: "搜索高级商品...", welcome: "欢迎", sign_in: "登录", account: "账户",
     recent_arrivals: "最新到达", new: "新", just_arrived: "刚刚到达！", view_all_new: "查看全部",
     experience_hub: "体验 Sweeto Hub", visit_store: "访问我们的", physical_store: "实体店",
@@ -584,6 +592,7 @@ export const translations = {
   },
   ja: {
     home: "ホーム", saved: "保存", profile: "プロフ", me: "私", cart: "カート",
+    my_orders: "注文履歴", settings: "設定", member_since: "メンバー登録", security: "セキュリティ", wishlist: "お気に入り", hello: "こんにちは",
     search_placeholder: "検索...", welcome: "ようこそ", sign_in: "ログイン", account: "アカウント",
     recent_arrivals: "新着情報", new: "新着", just_arrived: "到着したばかり！", view_all_new: "すべて見る",
     experience_hub: "Sweeto Hubを体験", visit_store: "私たちの", physical_store: "実店舗を訪問",
