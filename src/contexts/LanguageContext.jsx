@@ -9,7 +9,7 @@ export const translations = {
     my_orders: "Orders", settings: "Settings", member_since: "Member Since", security: "Security", wishlist: "Wishlist", hello: "Hello",
     search_placeholder: "Search premium store...", welcome: "Welcome", sign_in: "SIGN IN", account: "Account",
     recent_arrivals: "Recent Arrivals", new: "New", just_arrived: "Just arrived!", view_all_new: "View All New Goods",
-    visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications",
+    visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications", activity: "Activity",
     // Sidebar & Filters
     home_intelligence: "Home Intelligence", luxury_collection: "Luxury Collection", corporate_location: "Corporate Location",
     curated_wishlist: "Curated Wishlist", global_account: "Global Account", preference_node: "Preference Node",
@@ -132,7 +132,7 @@ export const translations = {
     my_orders: "Commandes", settings: "Paramètres", member_since: "Membre depuis", security: "Sécurité", wishlist: "Favoris", hello: "Bonjour",
     search_placeholder: "Recherche premium...", welcome: "Bienvenue", sign_in: "SE CONNECTER", account: "Compte",
     recent_arrivals: "Nouveautés", new: "Nouveau", just_arrived: "Vient d'arriver !", view_all_new: "Voir tout",
-    visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications",
+    visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications", activity: "Activité",
     // Sidebar & Filters
     home_intelligence: "Accueil Intelligence", luxury_collection: "Collection Luxe", corporate_location: "Siège Social",
     curated_wishlist: "Liste de Souhaits", global_account: "Compte Global", preference_node: "Préférences",
@@ -255,7 +255,7 @@ export const translations = {
     my_orders: "Pedidos", settings: "Ajustes", member_since: "Miembro desde", security: "Seguridad", wishlist: "Favoritos", hello: "Hola",
     search_placeholder: "Búsqueda premium...", welcome: "Bienvenido", sign_in: "INICIAR SESIÓN", account: "Cuenta",
     recent_arrivals: "Recién Llegados", new: "Nuevo", just_arrived: "¡Recién llegado!", view_all_new: "Ver todo",
-    visit_us: "Visítanos", language: "Idioma", theme: "Tema", notifications: "Notificaciones",
+    visit_us: "Visítanos", language: "Idioma", theme: "Tema", notifications: "Notificaciones", activity: "Actividad",
     // Sidebar & Filters
     home_intelligence: "Inteligencia Hogar", luxury_collection: "Colección Lujo", corporate_location: "Ubicación Corporativa",
     curated_wishlist: "Lista Deseos", global_account: "Cuenta Global", preference_node: "Preferencias",

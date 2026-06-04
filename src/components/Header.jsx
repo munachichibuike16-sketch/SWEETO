@@ -631,7 +631,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      <nav className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-900 z-[100] lg:hidden px-10 py-3.5 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
+      <nav className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-900 z-[100] lg:hidden px-6 sm:px-10 py-3.5 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
         {/* Accueil */}
         <motion.button 
           onClick={() => {
@@ -671,6 +671,21 @@ const Header = ({ onMenuClick, onCartClick }) => {
           <span className="text-[8px] font-black uppercase tracking-wider">
             {t('saved')}
           </span>
+        </motion.button>
+
+        {/* Activité */}
+        <motion.button 
+          onClick={() => navigate('/notifications')} 
+          whileTap={{ scale: 0.9 }} 
+          className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
+            location.pathname === '/notifications' ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+          }`}
+        >
+          <Bell size={20} strokeWidth={2.5} className="transition-all" />
+          {products.filter(p => p.is_new_arrival).length > 0 && location.pathname !== '/notifications' && (
+            <span className="absolute top-0 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+          )}
+          <span className="text-[8px] font-black uppercase tracking-wider">{t('activity')}</span>
         </motion.button>
 
         {/* Thème */}
