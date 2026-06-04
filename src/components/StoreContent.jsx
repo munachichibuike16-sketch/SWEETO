@@ -212,13 +212,13 @@ const StoreContent = () => {
 
       {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
       <div className="sticky top-[var(--header-height,96px)] z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 flex items-center justify-between">
-        {/* Back Button: Premium frosted-ice styling with tactile feedback */}
+        {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
         <button 
           onClick={goBack} 
-          className="active-tap w-10 h-10 rounded-full border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all duration-300 flex-shrink-0 cursor-pointer"
+          className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
           aria-label="Retour"
         >
-          <i className="fa-solid fa-chevron-left text-sm"></i>
+          <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
         </button>
 
         {/* Store Hub Button with custom pill border (verbatim from image_3143c1.png) */}
