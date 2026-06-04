@@ -28,6 +28,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [swipeStartY, setSwipeStartY] = useState(null);
+  const [activeTab, setActiveTab] = useState('specs');
 
   const handleTouchStart = (e) => {
     setSwipeStartY(e.touches[0].clientY);
@@ -321,6 +322,13 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                 className="md:hidden w-16 h-1.5 bg-slate-200 dark:bg-slate-800/80 rounded-full mx-auto my-4 cursor-grab active:cursor-grabbing shrink-0 z-50 relative"
                 title="Swipe down to close"
               />
+
+              {/* Top Left Brand Accent */}
+              <div className="absolute top-6 left-6 sm:top-8 sm:left-8 flex items-center gap-2 z-50 pointer-events-none select-none">
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-eas-blue dark:text-cyan-400 italic drop-shadow-sm">
+                  @sweeto
+                </span>
+              </div>
               {/* Dynamic Design Accents */}
               <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-eas-blue/5 rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-eas-accent/5 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none"></div>
@@ -373,7 +381,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                     </div>
 
                     {/* Stage Image Container with Touch Snap Swiping */}
-                    <div className="flex-1 aspect-square bg-slate-50/50 rounded-3xl sm:rounded-[3rem] md:rounded-[4rem] border border-slate-100/50 relative overflow-hidden flex items-center justify-center shadow-inner order-1 md:order-2">
+                    <div className="flex-1 bg-slate-50/50 dark:bg-slate-900/35 rounded-3xl sm:rounded-[3rem] md:rounded-[4rem] border border-slate-100/50 dark:border-white/5 relative overflow-hidden flex items-center justify-center shadow-inner order-1 md:order-2">
                       
                       {/* Mobile Horizontal Snap Swiper */}
                       <div 
@@ -381,8 +389,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         className="md:hidden absolute inset-0 overflow-x-auto flex snap-x snap-mandatory scroll-smooth no-scrollbar"
                       >
                         {imagesList.map((img, idx) => (
-                          <div key={idx} className="w-full h-full shrink-0 snap-center flex items-center justify-center p-6">
-                            <img src={img} className="w-full h-full object-contain mix-blend-multiply" />
+                          <div key={idx} className="w-full h-full shrink-0 snap-center modal-image-container bg-transparent dark:bg-transparent p-0 rounded-none">
+                            <img src={img} className="mix-blend-multiply dark:mix-blend-normal" />
                           </div>
                         ))}
                       </div>
@@ -409,7 +417,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         }}
                         onMouseEnter={() => setIsZooming(true)}
                         onMouseLeave={() => setIsZooming(false)}
-                        className="hidden md:flex w-full h-full items-center justify-center cursor-zoom-in relative"
+                        className="hidden md:flex w-full h-full items-center justify-center cursor-zoom-in relative modal-image-container bg-transparent dark:bg-transparent p-0 rounded-none"
                       >
                         <AnimatePresence mode="wait">
                           <motion.img 
@@ -424,7 +432,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             exit={{ opacity: 0, scale: 1.1 }}
                             transition={{ type: 'spring', damping: 30 }}
                             src={selectedImage} 
-                            className="w-full h-full object-contain p-8 md:p-12 mix-blend-multiply"
+                            className="w-full h-full object-contain p-8 md:p-12 mix-blend-multiply dark:mix-blend-normal"
                           />
                         </AnimatePresence>
                       </div>
@@ -467,16 +475,22 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       {product.name}
                     </h2>
 
-                    <div className="flex items-baseline gap-4 mb-6 bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-100 dark:border-white/5">
-                      <span className="text-4xl font-black text-eas-blue tracking-tighter italic">
-                        {product.price?.toLocaleString()}
-                        <span className="text-lg ml-2 not-italic opacity-40">{settings?.currency || 'FCFA'}</span>
-                      </span>
-                      {product.oldPrice && (
-                        <span className="text-lg text-slate-300 dark:text-slate-500 line-through font-black">
-                          {product.oldPrice.toLocaleString()}
+                    <div className="flex flex-col gap-2 mb-6">
+                      <div className="flex items-baseline gap-4 bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-100 dark:border-white/5">
+                        <span className="text-4xl font-black text-eas-blue tracking-tighter italic">
+                          {product.price?.toLocaleString()}
+                          <span className="text-lg ml-2 not-italic opacity-40">{settings?.currency || 'FCFA'}</span>
                         </span>
-                      )}
+                        {product.oldPrice && (
+                          <span className="text-lg text-slate-300 dark:text-slate-500 line-through font-black">
+                            {product.oldPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 ml-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        {lang === 'fr' ? '« En stock à Adjamé Mirador »' : '« In Stock at Adjamé Mirador »'}
+                      </span>
                     </div>
 
                     {/* Live Urgency Tickers */}
@@ -524,10 +538,62 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       </div>
                     )}
 
-                    <div className="mb-8 px-2">
-                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm">
-                        {t_smart(product.description) || t('premium_material_desc')}
-                      </p>
+                    {/* Collapsible Accordions for Specs & Warranty */}
+                    <div className="mb-8 border-y border-slate-100 dark:border-white/5 divide-y divide-slate-100 dark:divide-white/5">
+                      {/* Specifications Accordion */}
+                      <div className="py-4">
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTab(activeTab === 'specs' ? null : 'specs')}
+                          className="w-full flex items-center justify-between font-black text-xs uppercase tracking-widest text-slate-800 dark:text-slate-200 text-left cursor-pointer outline-none"
+                        >
+                          <span>⚙️ {lang === 'fr' ? 'Spécifications / Caractéristiques' : 'Specifications / Features'}</span>
+                          <span className="text-slate-400 text-lg font-bold">{activeTab === 'specs' ? '−' : '+'}</span>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {activeTab === 'specs' && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                              animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                              exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm">
+                                {t_smart(product.description) || t('premium_material_desc')}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Warranty & Support Accordion */}
+                      <div className="py-4">
+                        <button 
+                          type="button"
+                          onClick={() => setActiveTab(activeTab === 'warranty' ? null : 'warranty')}
+                          className="w-full flex items-center justify-between font-black text-xs uppercase tracking-widest text-slate-800 dark:text-slate-200 text-left cursor-pointer outline-none"
+                        >
+                          <span>🛡️ {lang === 'fr' ? 'Garantie & Service Client' : 'Warranty & Customer Support'}</span>
+                          <span className="text-slate-400 text-lg font-bold">{activeTab === 'warranty' ? '−' : '+'}</span>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {activeTab === 'warranty' && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                              animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                              exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="text-slate-550 dark:text-slate-400 text-xs font-bold leading-relaxed space-y-2 uppercase tracking-wide pt-2">
+                                <p>📍 {lang === 'fr' ? 'Boutique physique à Adjamé Mirador (Abidjan).' : 'Physical store located at Adjamé Mirador (Abidjan).'}</p>
+                                <p>⚡ {lang === 'fr' ? 'Retrait sur place ou Livraison Express sous 24H.' : 'In-store pickup or 24H Express Delivery.'}</p>
+                                <p>💳 {lang === 'fr' ? 'Paiement sécurisé en espèces, Orange Money ou Wave à la livraison.' : 'Pay on Delivery via Wave, Orange Money, or Cash.'}</p>
+                                <p>🛡️ {lang === 'fr' ? 'Garantie de satisfaction de 7 jours (retour & échange).' : '7-day satisfaction warranty (return & exchange).'}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
 
                     {/* Local Logistics & Trust Banner */}
@@ -626,6 +692,14 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           WhatsApp
                         </motion.button>
                       </div>
+
+                      {/* Continue Shopping secondary link for desktop */}
+                      <button 
+                        onClick={onClose}
+                        className="w-full text-center py-3 text-[10px] font-black text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase tracking-[0.2em] transition-colors mt-4 cursor-pointer border border-dashed border-slate-100 dark:border-white/5 rounded-xl hover:border-slate-300 dark:hover:border-white/20"
+                      >
+                        {lang === 'fr' ? '← Continuer mes achats' : '← Continue Shopping'}
+                      </button>
                     </div>           </div>
                   </div>
                 </div>
@@ -810,6 +884,16 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       ))}
                     </div>
                   </section>
+
+                  {/* Continue Shopping link for mobile viewports */}
+                  <div className="flex justify-center pt-4 pb-8 md:hidden">
+                    <button 
+                      onClick={onClose}
+                      className="px-8 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase tracking-[0.2em] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
+                    >
+                      <span>{lang === 'fr' ? '← Continuer mes achats' : '← Continue Shopping'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
