@@ -197,16 +197,19 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
               {/* Slide Navigation Pill Capsule (Bottom Center) */}
               {activeProducts.length > 1 && (
-                <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-3 py-1.5 z-20 shadow-2xl gap-3">
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-3 py-1.5 z-20 shadow-2xl gap-3"
+                >
                   <button 
-                    onClick={() => setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length)} 
+                    onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length); }} 
                     className="text-white hover:text-cyan-400 transition-colors p-1"
                   >
                     <ChevronLeft size={14} sm:size={16} strokeWidth={3} />
                   </button>
                   
                   <button 
-                    onClick={() => setGridMainSlide(prev => (prev + 1) % activeProducts.length)} 
+                    onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev + 1) % activeProducts.length); }} 
                     className="text-white hover:text-cyan-400 transition-colors p-1"
                   >
                     <ChevronRight size={14} sm:size={16} strokeWidth={3} />
@@ -367,16 +370,19 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
             {/* Slide Navigation Pill Capsule (Bottom Center) */}
             {activeProducts.length > 1 && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2 z-20 shadow-2xl gap-4">
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-black/30 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2 z-20 shadow-2xl gap-4"
+              >
                 <button 
-                  onClick={() => setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length)} 
+                  onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length); }} 
                   className="text-white hover:text-cyan-400 transition-colors p-1"
                 >
                   <ChevronLeft size={16} strokeWidth={3} />
                 </button>
                 
                 <button 
-                  onClick={() => setGridMainSlide(prev => (prev + 1) % activeProducts.length)} 
+                  onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev + 1) % activeProducts.length); }} 
                   className="text-white hover:text-cyan-400 transition-colors p-1"
                 >
                   <ChevronRight size={16} strokeWidth={3} />
