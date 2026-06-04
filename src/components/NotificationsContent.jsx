@@ -446,7 +446,7 @@ const NotificationsContent = ({ onProductClick }) => {
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
       {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="sticky z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 -mx-4 md:-mx-8 px-4 md:px-8 flex flex-col gap-4 mb-8" style={{ top: 'var(--header-height, 96px)' }}>
+      <div className="sticky z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 -mx-4 md:-mx-8 px-4 md:px-8 flex flex-col gap-4 mb-8 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
         
         {/* Top Row: Back Button & Title */}
         <div className="flex items-center justify-between w-full">

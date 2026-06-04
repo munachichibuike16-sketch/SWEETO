@@ -27,7 +27,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isWishlistPage = location.pathname === '/wishlist';
-  const isHomePage = location.pathname === '/' || location.pathname === '';
+  const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
   const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
   const notifRef = useRef(null);
   const langRef = useRef(null);
@@ -174,8 +174,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
     <>
       {/* --- Desktop & Tablet Header --- */}
       <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
-        isScrolled 
-        ? 'py-3 px-4 md:px-12 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-3xl shadow-2xl border-b border-slate-100 dark:border-white/5' 
+        (isScrolled || !isHomePage) 
+        ? 'py-3 px-4 md:px-12 bg-white/95 dark:bg-[#020617]/95 backdrop-blur-3xl shadow-md border-b border-slate-100 dark:border-white/5' 
         : 'py-4 md:py-6 px-4 md:px-12 bg-transparent border-b border-transparent'
       }`}>
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2 md:gap-6">
