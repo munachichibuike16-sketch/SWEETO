@@ -9,7 +9,7 @@ export const translations = {
     my_orders: "Orders", settings: "Settings", member_since: "Member Since", security: "Security", wishlist: "Wishlist", hello: "Hello",
     search_placeholder: "Search premium store...", welcome: "Welcome", sign_in: "SIGN IN", account: "Account",
     recent_arrivals: "Recent Arrivals", new: "New", just_arrived: "Just arrived!", view_all_new: "View All New Goods",
-    visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Store", activity: "Activity",
+    visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications", store_tab: "Store", activity: "Activity",
     // Sidebar & Filters
     home_intelligence: "Home Intelligence", luxury_collection: "Luxury Collection", corporate_location: "Corporate Location",
     curated_wishlist: "Curated Wishlist", global_account: "Global Account", preference_node: "Preference Node",
@@ -132,7 +132,7 @@ export const translations = {
     my_orders: "Commandes", settings: "Paramètres", member_since: "Membre depuis", security: "Sécurité", wishlist: "Favoris", hello: "Bonjour",
     search_placeholder: "Recherche premium...", welcome: "Bienvenue", sign_in: "SE CONNECTER", account: "Compte",
     recent_arrivals: "Nouveautés", new: "Nouveau", just_arrived: "Vient d'arriver !", view_all_new: "Voir tout",
-    visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Boutique", activity: "Activité",
+    visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications", store_tab: "Boutique", activity: "Activité",
     // Sidebar & Filters
     home_intelligence: "Accueil Intelligence", luxury_collection: "Collection Luxe", corporate_location: "Siège Social",
     curated_wishlist: "Liste de Souhaits", global_account: "Compte Global", preference_node: "Préférences",
@@ -255,7 +255,7 @@ export const translations = {
     my_orders: "Pedidos", settings: "Ajustes", member_since: "Miembro desde", security: "Seguridad", wishlist: "Favoritos", hello: "Hola",
     search_placeholder: "Búsqueda premium...", welcome: "Bienvenido", sign_in: "INICIAR SESIÓN", account: "Cuenta",
     recent_arrivals: "Recién Llegados", new: "Nuevo", just_arrived: "¡Recién llegado!", view_all_new: "Ver todo",
-    visit_us: "Visítanos", language: "Idioma", theme: "Tema", notifications: "Tienda", activity: "Actividad",
+    visit_us: "Visítanos", language: "Idioma", theme: "Tema", notifications: "Notificaciones", store_tab: "Tienda", activity: "Actividad",
     // Sidebar & Filters
     home_intelligence: "Inteligencia Hogar", luxury_collection: "Colección Lujo", corporate_location: "Ubicación Corporativa",
     curated_wishlist: "Lista Deseos", global_account: "Cuenta Global", preference_node: "Preferencias",
@@ -324,7 +324,7 @@ export const translations = {
     ready_checkout: "Listo para el pago", curation_status: "Estado de curación"
   },
   de: {
-    home: "Startseite", saved: "Gespeichert", profile: "Profil", me: "Ich", cart: "Warenkorb",
+    home: "Startseite", store_tab: "Shop", saved: "Gespeichert", profile: "Profil", me: "Ich", cart: "Warenkorb",
     my_orders: "Bestellungen", settings: "Einstellungen", member_since: "Mitglied seit", security: "Sicherheit", wishlist: "Wunschliste", hello: "Hallo",
     search_placeholder: "Premium Suche...", welcome: "Willkommen", sign_in: "ANMELDEN", account: "Konto",
     recent_arrivals: "Neuankömmlinge", new: "Neu", just_arrived: "Gerade eingetroffen!", view_all_new: "Alle ansehen",
@@ -391,7 +391,7 @@ export const translations = {
     ready_checkout: "Bereit zur Kasse", curation_status: "Kuratierungsstatus"
   },
   it: {
-    home: "Home", saved: "Salvato", profile: "Profilo", me: "Io", cart: "Carrello",
+    home: "Home", store_tab: "Negozio", saved: "Salvato", profile: "Profilo", me: "Io", cart: "Carrello",
     my_orders: "Ordini", settings: "Impostazioni", member_since: "Membro da", security: "Sicurezza", wishlist: "Preferiti", hello: "Ciao",
     search_placeholder: "Ricerca premium...", welcome: "Benvenuto", sign_in: "ACCEDI", account: "Account",
     recent_arrivals: "Nuovi Arrivi", new: "Nuovo", just_arrived: "Appena arrivato!", view_all_new: "Vedi tutto",
@@ -454,7 +454,7 @@ export const translations = {
     top_picks_for_you: "Le Migliori Scelte per Te"
   },
   pt: {
-    home: "Início", saved: "Salvo", profile: "Perfil", me: "Eu", cart: "Carrinho",
+    home: "Início", store_tab: "Loja", saved: "Salvo", profile: "Perfil", me: "Eu", cart: "Carrinho",
     my_orders: "Pedidos", settings: "Configurações", member_since: "Membro desde", security: "Segurança", wishlist: "Favoritos", hello: "Olá",
     search_placeholder: "Pesquisa premium...", welcome: "Bem-vindo", sign_in: "ENTRAR", account: "Conta",
     recent_arrivals: "Recém-chegados", new: "Novo", just_arrived: "Acabou de chegar!", view_all_new: "Ver tudo",
@@ -521,7 +521,7 @@ export const translations = {
     ready_checkout: "Pronto para o Checkout", curation_status: "Status de Curadoria"
   },
   ar: {
-    home: "الرئيسية", saved: "محفوظ", profile: "الملف الشخصي", me: "أنا", cart: "السلة",
+    home: "الرئيسية", store_tab: "المتجر", saved: "محفوظ", profile: "الملف الشخصي", me: "أنا", cart: "السلة",
     my_orders: "الطلبات", settings: "الإعدادات", member_since: "عضو منذ", security: "الأمان", wishlist: "المفضلة", hello: "مرحباً",
     search_placeholder: "ابحث عن المنتجات...", welcome: "مرحباً", sign_in: "تسجيل الدخول", account: "حساب",
     recent_arrivals: "وصل حديثاً", new: "جديد", just_arrived: "وصل للتو!", view_all_new: "عرض الكل",
@@ -584,7 +584,7 @@ export const translations = {
     ready_checkout: "جاهز للدفع", curation_status: "حالة التنسيق"
   },
   zh: {
-    home: "首页", saved: "已保存", profile: "资料", me: "我", cart: "购物车",
+    home: "首页", store_tab: "商店", saved: "已保存", profile: "资料", me: "我", cart: "购物车",
     my_orders: "我的订单", settings: "设置", member_since: "成员自", security: "安全", wishlist: "心愿单", hello: "你好",
     search_placeholder: "搜索高级商品...", welcome: "欢迎", sign_in: "登录", account: "账户",
     recent_arrivals: "最新到达", new: "新", just_arrived: "刚刚到达！", view_all_new: "查看全部",
@@ -651,7 +651,7 @@ export const translations = {
     ready_checkout: "准备结账", curation_status: "策划状态"
   },
   ja: {
-    home: "ホーム", saved: "保存", profile: "プロフ", me: "私", cart: "カート",
+    home: "ホーム", store_tab: "ストア", saved: "保存", profile: "プロフ", me: "私", cart: "カート",
     my_orders: "注文履歴", settings: "設定", member_since: "メンバー登録", security: "セキュリティ", wishlist: "お気に入り", hello: "こんにちは",
     search_placeholder: "検索...", welcome: "ようこそ", sign_in: "ログイン", account: "アカウント",
     recent_arrivals: "新着情報", new: "新着", just_arrived: "到着したばかり！", view_all_new: "すべて見る",
@@ -718,7 +718,7 @@ export const translations = {
     ready_checkout: "チェックアウト準備完了", curation_status: "キュレーションステータス"
   },
   hi: {
-    home: "होम", saved: "सहेजा गया", profile: "प्रोफ़ाइल", me: "मैं", cart: "कार्ट",
+    home: "होम", store_tab: "स्टोर", saved: "सहेजा गया", profile: "प्रोफ़ाइल", me: "मैं", cart: "कार्ट",
     search_placeholder: "खोजें...", welcome: "स्वागत है", sign_in: "साइन इन", account: "खाता",
     recent_arrivals: "नई आवक", new: "नया", just_arrived: "अभी आया!", view_all_new: "सभी देखें",
     experience_hub: "स्वीटो हब का अनुभव लें", visit_store: "हमारे", physical_store: "स्टोर पर आएं",
@@ -784,7 +784,7 @@ export const translations = {
     ready_checkout: "चेकआउट के लिए तैयार", curation_status: "क्यूरेशन स्थिति"
   },
   ru: {
-    home: "Главная", saved: "Сохранено", profile: "Профиль", me: "Я", cart: "Корзина",
+    home: "Главная", store_tab: "Магазин", saved: "Сохранено", profile: "Профиль", me: "Я", cart: "Корзина",
     search_placeholder: "Поиск...", welcome: "Добро пожаловать", sign_in: "ВОЙТИ", account: "Аккаунт",
     recent_arrivals: "Новые поступления", new: "Новое", just_arrived: "Только что прибыло!", view_all_new: "Смотреть все",
     experience_hub: "Испытайте Sweeto Hub", visit_store: "Посетите Наш", physical_store: "Физический Магазин",

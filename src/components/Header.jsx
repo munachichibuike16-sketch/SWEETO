@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -673,19 +673,21 @@ const Header = ({ onMenuClick, onCartClick }) => {
           </span>
         </motion.button>
 
-        {/* Notifications */}
+        {/* Store */}
         <motion.button 
-          onClick={() => navigate('/notifications')} 
+          onClick={() => {
+            setSearchQuery('');
+            setSelectedCategory(null);
+            setSelectedBrand(null);
+            navigate('/products');
+          }} 
           whileTap={{ scale: 0.9 }} 
           className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
-            location.pathname === '/notifications' ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+            location.pathname === '/products' ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
-          <Bell size={20} strokeWidth={2.5} className="transition-all" />
-          {products.filter(p => p.is_new_arrival).length > 0 && location.pathname !== '/notifications' && (
-            <span className="absolute top-0 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-          )}
-          <span className="text-[8px] font-black uppercase tracking-wider">{t('notifications')}</span>
+          <ShoppingBag size={20} strokeWidth={2.5} className="transition-all" />
+          <span className="text-[8px] font-black uppercase tracking-wider">{t('store_tab')}</span>
         </motion.button>
 
         {/* Thème */}

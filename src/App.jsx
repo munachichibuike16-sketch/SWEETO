@@ -1251,6 +1251,7 @@ function App() {
           <Route path="/product/:productId" element={<Storefront viewMode="home" />} />
           <Route path="/wishlist" element={<Storefront viewMode="wishlist" />} />
           <Route path="/notifications" element={<Storefront viewMode="notifications" />} />
+          <Route path="/products" element={<Storefront viewMode="products" />} />
           <Route path="/login" element={<AuthPage initialTab="login" />} />
           <Route path="/register" element={<AuthPage initialTab="signup" />} />
           <Route path="/auth" element={<AuthPage />} />
