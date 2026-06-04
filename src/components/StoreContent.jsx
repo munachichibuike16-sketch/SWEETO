@@ -391,8 +391,9 @@ const StoreContent = () => {
       {/* Background Decorative Accents */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full" />
 
-      {/* Styled Top Centered Pill Header */}
-      <div className="w-full flex justify-center mb-8">
+      {/* Sticky Header Section */}
+      <div className="sticky top-[80px] z-50 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-4 mb-6 w-full flex flex-col items-center gap-4">
+        {/* Styled Top Centered Pill Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -404,12 +405,9 @@ const StoreContent = () => {
             {lang === 'fr' ? 'ESPACE BOUTIQUE' : 'STORE HUB'}
           </span>
         </motion.div>
-      </div>
 
-      {/* Category Tabs & Actions Header Row (Sub-header) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 mt-2 w-full">
         {/* Category grouping tabs */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-2xl border border-slate-100 dark:border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
+        <div className="flex flex-wrap items-center justify-center gap-2 bg-slate-100/50 dark:bg-slate-900/40 p-2 rounded-2xl border border-slate-200/40 dark:border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {[
             { id: 'all', label: lang === 'fr' ? '🌐 Tout' : '🌐 All', count: allNotifications.length },
             { id: 'orders', label: lang === 'fr' ? '🛍️ Commandes' : '🛍️ Orders', count: allNotifications.filter(n => n.category === 'orders').length },
@@ -438,52 +436,6 @@ const StoreContent = () => {
             </button>
           ))}
         </div>
-
-        {/* Global actions */}
-        <div className="flex items-center gap-3 shrink-0 sm:self-auto self-end">
-          {filteredNotifs.some(n => !n.isRead) && (
-            <button 
-              onClick={handleMarkAllRead}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-eas-blue hover:text-eas-blue/80 transition-colors bg-eas-blue/5 dark:bg-eas-blue/10 px-4 py-2.5 rounded-xl border border-eas-blue/20"
-            >
-              <CheckCheck size={14} />
-              <span>{lang === 'fr' ? 'Tout lire' : 'Mark all read'}</span>
-            </button>
-          )}
-
-          {filteredNotifs.length > 0 && (
-            <button 
-              onClick={handleClearHistory}
-              className="flex items-center justify-center p-2.5 text-slate-400 hover:text-red-500 transition-colors bg-slate-50 dark:bg-slate-800/80 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl border border-slate-100 dark:border-white/5"
-              title={lang === 'fr' ? "Effacer l'historique" : "Clear history"}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Read Status Filters */}
-      <div className="flex items-center gap-2 mb-8 bg-white dark:bg-slate-850 p-1.5 rounded-xl border border-slate-100 dark:border-white/5 w-fit">
-        {[
-          { id: 'all', label: lang === 'fr' ? 'Tous' : 'All' },
-          { id: 'unread', label: lang === 'fr' ? 'Non lus' : 'Unread' },
-          { id: 'read', label: lang === 'fr' ? 'Lus' : 'Read' }
-        ].map((btn) => (
-          <button
-            key={btn.id}
-            onClick={() => setFilter(btn.id)}
-            className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-              filter === btn.id 
-                ? 'bg-eas-blue text-white shadow-sm' 
-                : 'text-slate-400 hover:text-slate-650 dark:hover:text-slate-200'
-            }`}
-          >
-            {btn.label}
-          </button>
-        ))}
       </div>
 
       {/* Swipeable Notifications Feed */}
