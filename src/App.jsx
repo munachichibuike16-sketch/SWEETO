@@ -189,7 +189,7 @@ const Storefront = ({ viewMode = 'home' }) => {
   const [subscribed, setSubscribed] = useState(false);
   
   const { products: liveProducts, categories, searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
-  const { t, t_smart } = useLanguage();
+  const { t, t_smart, lang } = useLanguage();
 
   const getProductCountForCategory = (catName) => {
     let count = liveProducts?.filter(p => p.category === catName && p.status === 'active').length || 0;
