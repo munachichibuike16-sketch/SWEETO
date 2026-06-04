@@ -30,8 +30,11 @@ const WishlistContent = ({ onProductClick }) => {
         <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic mb-6 leading-tight">
           {t('wishlist_empty') || 'Your Wishlist is Empty'}
         </h2>
-        <p className="text-slate-400 max-w-lg mx-auto mb-12 font-black text-sm uppercase tracking-[0.2em] leading-relaxed px-6">
+        <p className="text-slate-400 max-w-lg mx-auto mb-4 font-black text-sm uppercase tracking-[0.2em] leading-relaxed px-6">
           {t('wishlist_empty_desc') || "Your curated collection is waiting. Explore our premium inventory and save your favorites here."}
+        </p>
+        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic max-w-xs leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 mt-2 mb-12">
+          « Elite Local Commerce • Managed by @sweeto »
         </p>
         
         <motion.button 

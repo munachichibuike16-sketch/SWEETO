@@ -187,7 +187,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed top-[var(--header-height,72px)] bottom-0 left-0 right-0 bg-slate-950/60 backdrop-blur-sm z-[200] cursor-zoom-out"
+            className="fixed top-[var(--header-height,72px)] bottom-0 left-0 right-0 bg-slate-950/60 backdrop-blur-6 z-[200] cursor-zoom-out"
           />
 
           {/* Drawer Panel */}

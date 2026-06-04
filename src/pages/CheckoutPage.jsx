@@ -374,7 +374,7 @@ const CheckoutPage = () => {
                <div className="space-y-2">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('contact_phone') || 'Contact Phone'}</label>
                  <div className="relative">
-                   <input required name="phone" value={formData.phone} onChange={handleInputChange} placeholder="07 XX XX XX XX" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all pl-14" />
+                   <input required type="tel" inputmode="numeric" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="07 XX XX XX XX" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all pl-14" />
                    <Phone size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" />
                   </div>
                </div>

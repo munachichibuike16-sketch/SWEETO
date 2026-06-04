@@ -30,7 +30,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [swipeStartY, setSwipeStartY] = useState(null);
   const [activeTab, setActiveTab] = useState('specs');
-  const [showMobileStickyBar, setShowMobileStickyBar] = useState(false);
+  const [showMobileStickyBar, setShowMobileStickyBar] = useState(window.innerWidth < 768);
 
   const handleTouchStart = (e) => {
     setSwipeStartY(e.touches[0].clientY);
@@ -78,6 +78,10 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   };
 
   const handleScroll = (e) => {
+    if (window.innerWidth < 768) {
+      setShowMobileStickyBar(true);
+      return;
+    }
     if (e.currentTarget.scrollTop > 450) {
       setShowMobileStickyBar(true);
     } else {
@@ -98,6 +102,12 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
         setCurrentUser(JSON.parse(session));
       } catch (e) { console.error(e); }
     }
+
+    const handleResize = () => {
+      setShowMobileStickyBar(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isOpen]);
 
   const isWishlisted = product ? isInWishlist(product.id) : false;
@@ -327,7 +337,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-[500]"
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-6 z-[500]"
           />
           
           <div 
@@ -1060,10 +1070,10 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   <button 
                     type="button"
                     onClick={handleWhatsApp}
-                    className="flex-1 bg-[#25D366] text-white font-black text-[9px] uppercase tracking-[0.15em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5 animate-pulse"
+                    className="flex-1 bg-[#25D366] text-white font-black text-[8px] sm:text-[9px] uppercase tracking-tighter h-11 rounded-xl shadow-md flex items-center justify-center gap-1 animate-pulse px-1"
                   >
-                    <MessageCircle size={14} fill="currentColor" />
-                    <span>WhatsApp ⚡</span>
+                    <MessageCircle size={13} fill="currentColor" />
+                    <span>{lang === 'fr' ? 'WhatsApp ⚡' : 'WhatsApp ⚡'}</span>
                   </button>
                     </div>
                   </motion.div>

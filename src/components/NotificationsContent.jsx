@@ -492,8 +492,8 @@ const NotificationsContent = ({ onProductClick }) => {
               <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase italic tracking-tighter mb-2">
                 {lang === 'fr' ? 'Boîte de réception vide' : 'All caught up!'}
               </h3>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-600">
-                {lang === 'fr' ? 'Vous êtes à jour ! Propulsé par @sweeto' : 'All caught up! Powered by @sweeto'}
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic max-w-xs leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
+                « Elite Local Commerce • Managed by @sweeto »
               </p>
             </motion.div>
           )}

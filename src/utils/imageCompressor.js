@@ -24,9 +24,21 @@ export const compressImage = async (file, maxWidth = 1200, quality = 0.8) => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob((blob) => {
-          resolve(blob);
-        }, 'image/jpeg', quality);
+        try {
+          canvas.toBlob((blob) => {
+            if (blob && blob.size > 0) {
+              resolve(blob);
+            } else {
+              canvas.toBlob((fallbackBlob) => {
+                resolve(fallbackBlob);
+              }, 'image/jpeg', quality);
+            }
+          }, 'image/webp', quality);
+        } catch (e) {
+          canvas.toBlob((fallbackBlob) => {
+            resolve(fallbackBlob);
+          }, 'image/jpeg', quality);
+        }
       };
     };
   });

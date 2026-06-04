@@ -27,7 +27,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[300]"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-6 z-[300]"
           />
 
           {/* Drawer */}
@@ -78,13 +78,16 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   <motion.div 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="h-full flex flex-col items-center justify-center text-center"
+                    className="h-full flex flex-col items-center justify-center text-center p-8"
                   >
-                    <div className="w-32 h-32 bg-slate-50 rounded-[3rem] flex items-center justify-center mb-8 text-slate-200 border border-slate-100 shadow-inner">
-                      <ShoppingBag size={64} />
+                    <div className="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] flex items-center justify-center mb-6 text-slate-300 dark:text-slate-700 border border-slate-100 dark:border-slate-800 shadow-inner">
+                      <ShoppingBag size={36} />
                     </div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase italic mb-2 tracking-tighter">{t('empty_cart')}</h3>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">{t('select_gear')}</p>
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase italic mb-2 tracking-tighter">{t('empty_cart')}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-600 mb-6">{t('select_gear')}</p>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 italic max-w-xs leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 w-full">
+                      « Elite Local Commerce • Managed by @sweeto »
+                    </p>
                   </motion.div>
                 )}
 

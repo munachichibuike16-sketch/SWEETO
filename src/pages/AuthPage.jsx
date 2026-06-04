@@ -1085,6 +1085,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           </select>
                           <input 
                             type="tel" 
+                            inputMode="numeric"
                             placeholder="Phone number" 
                             value={settingsForm.phone}
                             onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
@@ -1441,6 +1442,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         </select>
                         <input 
                           type="tel" 
+                          inputmode="numeric"
                           placeholder={t('phone_placeholder') || "e.g. 07070707"} 
                           value={signupData.phone}
                           onChange={(e) => setSignupData({...signupData, phone: e.target.value})}

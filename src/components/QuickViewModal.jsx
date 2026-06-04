@@ -53,7 +53,7 @@ const QuickViewModal = ({ product, isOpen, onClose, onViewDetails }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl"
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-6"
           />
 
           {/* Modal Container */}

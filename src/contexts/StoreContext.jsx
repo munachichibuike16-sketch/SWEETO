@@ -3,6 +3,18 @@ import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
 import { API_BASE_URL, apiFetch, isLocalHost } from '../utils/api';
 
+const normalizeProductTitle = (title) => {
+  if (!title) return '';
+  let cleaned = title.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  const acronyms = ['jbl', 'hp', 'lg', 'tv', 'anc', 'ssd', 'ram', 'usb', 'cpu', 'gpu', 'probook', 'fcfa', 'otg', 'hdmi'];
+  return cleaned.split(' ').map(word => {
+    const lowerWord = word.toLowerCase();
+    if (acronyms.includes(lowerWord)) return word.toUpperCase();
+    if (/^[a-z]+\d+$/i.test(word) || /^\d+$/.test(word)) return word.toUpperCase();
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(' ');
+};
+
 const StoreContext = createContext();
 
 export const StoreProvider = ({ children }) => {
@@ -287,6 +299,7 @@ export const StoreProvider = ({ children }) => {
 
           return {
             ...p,
+            name: normalizeProductTitle(p.name),
             // Support both old schema (stock_quantity/cost_price) and new schema (stock/bought_price)
             stock: p.stock ?? p.stock_quantity ?? 0,
             bought_price: p.bought_price ?? p.cost_price ?? 0,
@@ -454,6 +467,7 @@ export const StoreProvider = ({ children }) => {
 
               return {
                 ...p,
+                name: normalizeProductTitle(p.name),
                 stock: p.stock ?? p.stock_quantity ?? 0,
                 bought_price: p.bought_price ?? p.cost_price ?? 0,
                 status: p.status || (p.is_active ? 'active' : 'inactive'),

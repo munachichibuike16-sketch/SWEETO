@@ -889,10 +889,19 @@ export const LanguageProvider = ({ children }) => {
     if (lower.startsWith('desk fan')) {
       return lang === 'fr' ? 'Ventilateur de Bureau' : 'High-Performance Desk Fan';
     }
-    if (lower.startsWith('jbl tune')) {
-      return cleaned.split(' ').map(w => w.toUpperCase() === 'JBL' ? 'JBL' : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    }
-    return cleaned;
+    
+    const acronyms = ['jbl', 'hp', 'lg', 'tv', 'anc', 'ssd', 'ram', 'usb', 'cpu', 'gpu', 'probook', 'fcfa', 'otg', 'hdmi'];
+    
+    return cleaned.split(' ').map(word => {
+      const lowerWord = word.toLowerCase();
+      if (acronyms.includes(lowerWord)) {
+        return word.toUpperCase();
+      }
+      if (/^[a-z]+\d+$/i.test(word) || /^\d+$/.test(word)) {
+        return word.toUpperCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(' ');
   };
 
   const t_smart = (str) => {

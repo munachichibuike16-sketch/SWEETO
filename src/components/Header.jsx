@@ -212,16 +212,38 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,242,254,0.3)]" />
                 </motion.div>
               )}
-              <span className="inline-block text-lg sm:text-2xl font-black text-eas-blue tracking-tighter uppercase italic group-hover:tracking-normal transition-all duration-500">
-                {settings?.shopName ? (
-                  <>
-                    {settings.shopName.split(' ')[0]}
-                    <span className="text-slate-900 dark:text-white">{settings.shopName.split(' ').slice(1).join(' ') || 'HUB'}</span>
-                  </>
-                ) : (
-                  <>SWEETO<span className="text-slate-900 dark:text-white">HUB</span></>
-                )}
-              </span>
+              <div className="flex flex-col justify-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block text-lg sm:text-2xl font-black text-eas-blue tracking-tighter uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
+                    {settings?.shopName ? (
+                      <>
+                        {settings.shopName.split(' ')[0]}
+                        <span className="text-slate-900 dark:text-white">{settings.shopName.split(' ').slice(1).join(' ') || 'HUB'}</span>
+                      </>
+                    ) : (
+                      <>SWEETO<span className="text-slate-900 dark:text-white">HUB</span></>
+                    )}
+                  </span>
+                  
+                  {/* Glowing Active Online Dot */}
+                  <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none border border-emerald-500/20">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    Connected
+                  </span>
+                </div>
+                
+                {/* Under logo Connected text for extra small mobile */}
+                <span className="inline-flex sm:hidden items-center gap-1 text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none mt-0.5">
+                  <span className="relative flex h-1 w-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
+                  </span>
+                  Connected
+                </span>
+              </div>
             </motion.div>
 
             {/* Menu button */}
