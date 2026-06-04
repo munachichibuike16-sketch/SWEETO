@@ -206,3 +206,10 @@ body {
 h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold, .font-black, .font-extrabold, .currency-text, .currency-display, [class*="currency-"] {
   font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
+
+/* Prevent Touch Delay & Text Selection on Interactive Elements */
+button, a, .category-chip, .product-card {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
