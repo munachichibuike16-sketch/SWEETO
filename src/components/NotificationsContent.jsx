@@ -446,24 +446,12 @@ const NotificationsContent = ({ onProductClick }) => {
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
       {/* BRAND SUB-BAR */}
-      <div className="w-full bg-transparent py-4 px-2 flex items-center justify-between mb-8 mt-2">
-        {/* Back Button */}
-        <button 
-          onClick={goBack} 
-          className="active-tap group w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/40 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] transition-all duration-300 flex-shrink-0 cursor-pointer"
-          aria-label="Retour"
-        >
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform duration-300" />
-        </button>
-
+      <div className="w-full bg-transparent py-4 px-2 flex items-center justify-center mb-8 mt-2">
         {/* Center Pill Badge */}
         <div className="border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)]">
           <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400 animate-pulse" />
           <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">NOTIFICATIONS</span>
         </div>
-
-        {/* Symmetric Spacer */}
-        <div className="w-10 h-10 flex-shrink-0"></div>
       </div>
 
       {/* Sub-bar: Read Status Filters and Mark All Read */}
@@ -569,34 +557,6 @@ const NotificationsContent = ({ onProductClick }) => {
         </AnimatePresence>
       </div>
 
-      {/* Stats/Footer */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-12 p-8 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-800 dark:from-eas-blue dark:to-blue-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-white/10"
-      >
-        <div className="text-center md:text-left">
-          <p className="text-blue-400 dark:text-blue-200 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Live Ecosystem</p>
-          <h4 className="text-2xl font-black italic uppercase leading-none">Real-time alerts active</h4>
-          <p className="text-slate-400 dark:text-blue-100/60 text-xs mt-2">We monitor stock and prices 24/7 for you.</p>
-        </div>
-        <div className="flex items-center gap-4">
-           <div className="flex -space-x-3">
-            {products.slice(0, 3).map((p, i) => (
-              <img key={i} src={p.image_url} alt="" className="w-12 h-12 rounded-2xl border-2 border-white dark:border-slate-900 object-cover shadow-lg" />
-            ))}
-            <div className="w-12 h-12 rounded-2xl border-2 border-white dark:border-slate-900 bg-white/10 backdrop-blur-md flex items-center justify-center text-[10px] font-black">
-              +{products.length}
-            </div>
-          </div>
-          <div className="h-12 w-[1px] bg-white/10 hidden md:block" />
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-emerald-400">● 100% Secure</span>
-            <span className="text-[10px] text-white/50">Encrypted Updates</span>
-          </div>
-        </div>
-      </motion.div>
     </div>
   );
 };
