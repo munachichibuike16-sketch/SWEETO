@@ -445,83 +445,88 @@ const NotificationsContent = ({ onProductClick }) => {
       <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
-      {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="sticky z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 -mx-4 md:-mx-8 px-4 md:px-8 flex flex-col gap-4 mb-8 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
-        
-        {/* Top Row: Back Button & Title */}
-        <div className="flex items-center justify-between w-full">
-          {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
-          <button 
-            onClick={goBack} 
-            className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
-            aria-label="Retour"
-          >
-            <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
-          </button>
-
-          {/* Center Pill Badge */}
-          <div className="border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)]">
-            <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400 animate-pulse" />
-            <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">NOTIFICATIONS</span>
-          </div>
-
-          {/* Symmetric Spacer */}
-          <div className="w-10 h-10 flex-shrink-0"></div>
-        </div>
-
-        {/* Bottom Row: Read Status Filters and Mark All Read */}
-        <div className="flex items-center justify-between gap-4 px-1 w-full">
-          {/* Left Tabs */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all select-none ${
-                filter === 'all'
-                  ? 'bg-white text-slate-950 shadow-sm border border-slate-150 dark:border-white/10'
-                  : 'text-slate-450 dark:text-slate-450 bg-slate-100 dark:bg-slate-900/40 border border-transparent'
-              }`}
+      {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
+      <div className="fixed z-30 left-0 right-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col gap-4 px-4 md:px-8">
+          
+          {/* Top Row: Back Button & Title */}
+          <div className="flex items-center justify-between w-full">
+            {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
+            <button 
+              onClick={goBack} 
+              className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
+              aria-label="Retour"
             >
-              {lang === 'fr' ? 'Tout' : 'All'}
+              <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
             </button>
 
-            <button
-              onClick={() => setFilter('unread')}
-              className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 select-none ${
-                filter === 'unread'
-                  ? 'bg-white text-slate-950 shadow-sm border border-slate-150 dark:border-white/10'
-                  : 'text-slate-450 dark:text-slate-450 bg-slate-100 dark:bg-slate-900/40 border border-transparent'
-              }`}
-            >
-              <span>{lang === 'fr' ? 'Non lus' : 'Unread'}</span>
-              {unreadCount > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+            {/* Center Pill Badge */}
+            <div className="border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)]">
+              <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400 animate-pulse" />
+              <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">NOTIFICATIONS</span>
+            </div>
+
+            {/* Symmetric Spacer */}
+            <div className="w-10 h-10 flex-shrink-0"></div>
+          </div>
+
+          {/* Bottom Row: Read Status Filters and Mark All Read */}
+          <div className="flex items-center justify-between gap-4 px-1 w-full">
+            {/* Left Tabs */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all select-none ${
+                  filter === 'all'
+                    ? 'bg-white text-slate-950 shadow-sm border border-slate-150 dark:border-white/10'
+                    : 'text-slate-450 dark:text-slate-450 bg-slate-100 dark:bg-slate-900/40 border border-transparent'
+                }`}
+              >
+                {lang === 'fr' ? 'Tout' : 'All'}
+              </button>
+
+              <button
+                onClick={() => setFilter('unread')}
+                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 select-none ${
                   filter === 'unread'
-                    ? 'bg-slate-950/10 text-slate-950 font-black'
-                    : 'bg-sky-500/20 text-sky-600 dark:text-sky-400 font-black'
-                }`}>
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          </div>
+                    ? 'bg-white text-slate-950 shadow-sm border border-slate-150 dark:border-white/10'
+                    : 'text-slate-450 dark:text-slate-450 bg-slate-100 dark:bg-slate-900/40 border border-transparent'
+                }`}
+              >
+                <span>{lang === 'fr' ? 'Non lus' : 'Unread'}</span>
+                {unreadCount > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                    filter === 'unread'
+                      ? 'bg-slate-950/10 text-slate-950 font-black'
+                      : 'bg-sky-500/20 text-sky-600 dark:text-sky-400 font-black'
+                  }`}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
 
-          {/* Right Action Button */}
-          {filteredNotifs.length > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              disabled={unreadCount === 0}
-              className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors bg-transparent border-none select-none ${
-                unreadCount === 0
-                  ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50'
-                  : 'text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 cursor-pointer'
-              }`}
-            >
-              <CheckSquare className="w-4 h-4" />
-              <span>{lang === 'fr' ? 'TOUT MARQUER COMME LU' : 'MARK ALL AS READ'}</span>
-            </button>
-          )}
+            {/* Right Action Button */}
+            {filteredNotifs.length > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                disabled={unreadCount === 0}
+                className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors bg-transparent border-none select-none ${
+                  unreadCount === 0
+                    ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50'
+                    : 'text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 cursor-pointer'
+                }`}
+              >
+                <CheckSquare className="w-4 h-4" />
+                <span>{lang === 'fr' ? 'TOUT MARQUER COMME LU' : 'MARK ALL AS READ'}</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Spacer to push content down below the fixed sub-header */}
+      <div className="h-[128px] md:h-[136px] mb-8"></div>
 
       {/* Swipeable Notifications Feed */}
       <div className="space-y-6">
