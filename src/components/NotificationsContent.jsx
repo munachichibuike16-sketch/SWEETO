@@ -17,23 +17,7 @@ const NotificationsContent = ({ onProductClick }) => {
   const [userOrders, setUserOrders] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Base timestamps in localStorage for mock items, initialized on mount so they tick relative to real time
-  const [mockTimestamps] = useState(() => {
-    const saved = localStorage.getItem('notification_base_timestamps');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
-    const init = {
-      'order-hp-probook': Date.now() - 10 * 60 * 1000,
-      'order-standing-fan': Date.now() - 60 * 60 * 1000,
-      'sec-login': Date.now() - 6 * 60 * 60 * 1000,
-      'sec-hub-updates': Date.now() - 24 * 60 * 60 * 1000,
-    };
-    localStorage.setItem('notification_base_timestamps', JSON.stringify(init));
-    return init;
-  });
+
 
   // Fetch real-time orders linked to the logged-in user
   useEffect(() => {
@@ -204,103 +188,14 @@ const NotificationsContent = ({ onProductClick }) => {
     };
   });
 
-  // 🛍️ Order tracker notifications (fallback to mock with dynamic times if no real orders)
-  const orderUpdates = realOrderUpdates.length > 0 ? realOrderUpdates : [
-    {
-      id: 'order-hp-probook',
-      type: 'order_tracker',
-      category: 'orders',
-      title: lang === 'fr' ? 'Commande prête pour retrait 🏪' : 'Order ready for pickup 🏪',
-      message: lang === 'fr' 
-        ? 'Votre ordinateur HP ProBook est prêt à Adjamé Mirador !' 
-        : 'Your HP ProBook is ready for pickup at Adjamé Mirador!',
-      time: getRelativeTime(mockTimestamps['order-hp-probook']),
-      isRead: isNotificationRead('order-hp-probook'),
-      isDeleted: isNotificationDeleted('order-hp-probook'),
-      actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
-      accentColor: '#22c55e', // Green
-      icon: '📦',
-      product: products.find(p => p.name.toLowerCase().includes('probook')) || products[0]
-    },
-    {
-      id: 'order-standing-fan',
-      type: 'order_tracker',
-      category: 'orders',
-      title: lang === 'fr' ? 'Livraison Express en cours 🚚' : 'Express Delivery on route 🚚',
-      message: lang === 'fr' 
-        ? 'Le coursier est en route vers Yopougon avec votre Standing Fan.' 
-        : 'The courier is on route to Yopougon with your Standing Fan.',
-      time: getRelativeTime(mockTimestamps['order-standing-fan']),
-      isRead: isNotificationRead('order-standing-fan'),
-      isDeleted: isNotificationDeleted('order-standing-fan'),
-      actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
-      accentColor: '#22c55e',
-      icon: '🚚',
-      product: products.find(p => p.name.toLowerCase().includes('fan') || p.name.toLowerCase().includes('ventilateur')) || products[1]
-    }
-  ];
+  // 🛍️ Order tracker notifications (only real orders)
+  const orderUpdates = realOrderUpdates;
 
-  // 🔥 Promos & Stock updates (based on active products)
-  const promosAndStock = products.map((p, index) => {
-    const isNew = p.is_new_arrival;
-    const isSale = p.original_price > p.price;
-    if (!isNew && !isSale) return null;
-    
-    const id = `promo-${p.id}`;
-    const productTime = p.created_at ? new Date(p.created_at).getTime() : (Date.now() - (isNew ? 3 : 5) * 60 * 60 * 1000 - index * 10 * 60 * 1000);
+  // 🔥 Promos & Stock updates (currently empty to avoid mock notifications)
+  const promosAndStock = [];
 
-    return {
-      id,
-      type: isNew ? 'new_arrival' : 'price_drop',
-      category: 'promos',
-      title: isNew 
-        ? (lang === 'fr' ? `Nouveauté : ${p.name} ⚡` : `New Arrival: ${p.name} ⚡`)
-        : (lang === 'fr' ? `Baisse de Prix : ${p.name} 🎉` : `Price Drop: ${p.name} 🎉`),
-      message: isNew 
-        ? (lang === 'fr' ? `Le tout nouveau ${p.category} vient d'arriver dans notre boutique.` : `The brand new ${p.category} has arrived in our boutique.`)
-        : (lang === 'fr' ? `Grosse économie ! Le prix a baissé de ${Math.round((p.original_price - p.price) / p.original_price * 100)}% sur cet article.` : `Big savings! The price dropped by ${Math.round((p.original_price - p.price) / p.original_price * 100)}% on this item.`),
-      time: getRelativeTime(productTime),
-      isRead: isNotificationRead(id),
-      isDeleted: isNotificationDeleted(id),
-      accentColor: isNew ? '#3b82f6' : '#eab308', // Blue or Gold
-      icon: isNew ? '⚡' : '🎉',
-      product: p
-    };
-  }).filter(Boolean);
-
-  // ⚙️ Account Security alerts
-  const securityUpdates = [
-    {
-      id: 'sec-login',
-      type: 'security',
-      category: 'security',
-      title: lang === 'fr' ? 'Connexion établie 🔐' : 'Secure Login Established 🔐',
-      message: lang === 'fr' 
-        ? 'Nouvelle connexion réussie détectée depuis Cocody (Abidjan).' 
-        : 'Successful login detected from Cocody (Abidjan).',
-      time: getRelativeTime(mockTimestamps['sec-login']),
-      isRead: isNotificationRead('sec-login'),
-      isDeleted: isNotificationDeleted('sec-login'),
-      accentColor: '#64748b', // Gray
-      icon: '👤',
-      product: null
-    },
-    {
-      id: 'sec-hub-updates',
-      type: 'security',
-      category: 'security',
-      title: lang === 'fr' ? 'Hub de livraison mis à jour 🔐' : 'Delivery Hub Configured 🔐',
-      message: lang === 'fr' 
-        ? 'Les tarifs d\'expédition pour Adjamé Mirador ont été ajustés.' 
-        : 'Shipping rates for Adjamé Mirador have been calibrated.',
-      time: getRelativeTime(mockTimestamps['sec-hub-updates']),
-      isRead: isNotificationRead('sec-hub-updates'),
-      isDeleted: isNotificationDeleted('sec-hub-updates'),
-      accentColor: '#64748b',
-      icon: '🔐',
-      product: null
-    }
-  ];
+  // ⚙️ Account Security alerts (currently empty to avoid mock alerts)
+  const securityUpdates = [];
 
   // Combine and filter notifications
   const allNotifications = [...orderUpdates, ...promosAndStock, ...securityUpdates]
