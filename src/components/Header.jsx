@@ -172,12 +172,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      {/* --- Desktop & Tablet Header --- */}
-      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
-        (isScrolled || !isHomePage) 
-        ? 'py-3 px-4 md:px-12 bg-white/95 dark:bg-[#020617]/95 backdrop-blur-3xl shadow-md border-b border-slate-100 dark:border-white/5' 
-        : 'py-4 md:py-6 px-4 md:px-12 bg-transparent border-b border-transparent'
-      }`}>
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/95 dark:bg-[#020617]/95 backdrop-blur-3xl shadow-md border-b border-slate-100 dark:border-white/5 transition-all duration-500">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2 md:gap-6">
           
           {/* Menu & Logo Section */}
