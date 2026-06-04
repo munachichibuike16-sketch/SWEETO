@@ -745,7 +745,8 @@ const Storefront = ({ viewMode = 'home' }) => {
           borderRadius: isProductModalOpen ? '40px' : '0px'
         }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col origin-center transition-colors duration-300 pt-24"
+        className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col origin-center transition-colors duration-300"
+        style={{ paddingTop: 'var(--header-height, 96px)' }}
       >
         
         <main className="flex-1 pb-20">

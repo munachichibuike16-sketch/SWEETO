@@ -211,7 +211,7 @@ const StoreContent = () => {
       `}</style>
 
       {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="sticky top-[var(--header-height,96px)] z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 flex items-center justify-between">
+      <div className="sticky z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 flex items-center justify-between" style={{ top: 'var(--header-height, 96px)' }}>
         {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
         <button 
           onClick={goBack} 
