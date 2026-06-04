@@ -23,6 +23,16 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
   const scrollRef = React.useRef(null);
+  const wrapperRef = React.useRef(null);
+  const [showMobileStickyBar, setShowMobileStickyBar] = useState(false);
+
+  const handleScroll = (e) => {
+    if (e.currentTarget.scrollTop > 450) {
+      setShowMobileStickyBar(true);
+    } else {
+      setShowMobileStickyBar(false);
+    }
+  };
   
   const [reviews, setReviews] = useState([]);
   const [userRating, setUserRating] = useState(0);
@@ -109,8 +119,9 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   };
 
   const handleWhatsApp = () => {
-    const message = `Hello SWEETO-HUB, I'm interested in the ${product.name} (${product.price} FCFA). Is it available?`;
-    const url = `https://wa.me/2550500619923?text=${encodeURIComponent(message)}`;
+    const phone = settings?.social_whatsapp ? settings.social_whatsapp.replace(/\D/g, '') : '2250500619923';
+    const message = `Hello SWEETO-HUB, I'm interested in the ${product.name} (${product.price} ${settings?.currency || 'FCFA'}). Is it available?`;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
@@ -238,6 +249,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
           />
           
           <div 
+            ref={wrapperRef}
+            onScroll={handleScroll}
             onClick={onClose}
             className="fixed inset-0 z-[510] overflow-y-auto custom-scrollbar flex justify-center items-start py-8 px-4 sm:px-6 cursor-zoom-out"
           >
@@ -248,7 +261,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               exit={{ scale: 0.9, opacity: 0, y: 40 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-6xl relative overflow-hidden flex flex-col"
+              className="bg-white dark:bg-slate-950 border dark:border-white/5 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-6xl relative overflow-hidden flex flex-col transition-colors duration-500"
             >
               {/* Dynamic Design Accents */}
               <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-eas-blue/5 rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none"></div>
@@ -381,20 +394,40 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       </div>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1] mb-4 uppercase italic">
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-4 uppercase italic">
                       {product.name}
                     </h2>
 
-                    <div className="flex items-baseline gap-4 mb-6 bg-slate-50/50 p-5 rounded-[1.5rem] border border-slate-100">
+                    <div className="flex items-baseline gap-4 mb-6 bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-100 dark:border-white/5">
                       <span className="text-4xl font-black text-eas-blue tracking-tighter italic">
                         {product.price?.toLocaleString()}
                         <span className="text-lg ml-2 not-italic opacity-40">{settings?.currency || 'FCFA'}</span>
                       </span>
                       {product.oldPrice && (
-                        <span className="text-lg text-slate-300 line-through font-black">
+                        <span className="text-lg text-slate-300 dark:text-slate-500 line-through font-black">
                           {product.oldPrice.toLocaleString()}
                         </span>
                       )}
+                    </div>
+
+                    {/* Live Urgency Tickers */}
+                    <div className="flex flex-wrap gap-2.5 mb-6">
+                      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 dark:border-blue-500/20 rounded-2xl">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                        <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                          {Math.floor(Math.random() * 4) + 2} {lang === 'fr' ? 'personnes regardent' : 'people viewing'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/10 dark:border-amber-500/20 rounded-2xl">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                          {lang === 'fr' ? 'Demande Élevée' : 'High Demand'}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Premium Condition & Quality Badge Row */}
@@ -423,15 +456,55 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                     )}
 
                     <div className="mb-8 px-2">
-                      <p className="text-slate-500 leading-relaxed font-medium text-sm">
+                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm">
                         {t_smart(product.description) || t('premium_material_desc')}
                       </p>
+                    </div>
+
+                    {/* Local Logistics & Trust Banner */}
+                    <div className="mb-8 p-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-[1.8rem] border border-slate-100 dark:border-white/5 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-7 bg-eas-blue rounded-full"></div>
+                        <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                          {lang === 'fr' ? 'LIVRAISON & SERVICE ABIDJAN' : 'SHIPPING & LOCAL SERVICE'}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-eas-blue/10 text-eas-blue flex items-center justify-center shrink-0">
+                            <MapPin size={16} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                              {lang === 'fr' ? 'Retrait & Livraison' : 'Pickup & Delivery'}
+                            </p>
+                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">
+                              {lang === 'fr' ? 'Retrait Adjamé Mirador ou Livraison Express 24H Abidjan.' : 'Pickup at Adjamé Mirador or 24H Express Delivery.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
+                            <Zap size={16} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                              {lang === 'fr' ? 'Paiement Sécurisé' : 'Secure Payment'}
+                            </p>
+                            <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">
+                              {lang === 'fr' ? 'Paiement à la livraison, Wave, Orange Money ou Moov.' : 'Pay on Delivery, Wave, or Orange Money.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Purchase Actions */}
                     <div className="space-y-4 mt-auto">
                       <div className="flex gap-4">
-                        <div className="bg-white border-2 border-slate-100 rounded-2xl flex items-center p-1 px-2 gap-4 shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 rounded-2xl flex items-center p-1 px-2 gap-4 shadow-sm">
                           <motion.button 
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -555,7 +628,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             disabled={!currentUser}
-                            className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] p-5 sm:p-8 text-sm font-medium focus:ring-4 focus:ring-eas-blue/5 focus:bg-white transition-all outline-none mb-8 min-h-[160px] resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-[2rem] p-5 sm:p-8 text-sm font-medium focus:ring-4 focus:ring-eas-blue/5 focus:bg-white dark:focus:bg-slate-950 transition-all outline-none mb-8 min-h-[160px] resize-none dark:text-white"
                             placeholder={currentUser ? t('share_experience') : "Login to share your thoughts..."}
                           />
                           <motion.button 
@@ -577,23 +650,23 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                               initial={{ opacity: 0, y: 20 }}
                               whileInView={{ opacity: 1, y: 0 }}
                               viewport={{ once: true }}
-                              className="p-6 sm:p-10 bg-slate-50 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all duration-500"
+                              className="p-6 sm:p-10 bg-slate-50 dark:bg-slate-900/40 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-white/5 group hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl transition-all duration-500"
                             >
                               <div className="flex justify-between items-start mb-8">
                                 <div className="flex items-center gap-5">
-                                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center font-black text-eas-blue shadow-lg group-hover:scale-110 transition-transform">
+                                  <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center font-black text-eas-blue shadow-lg group-hover:scale-110 transition-transform">
                                     {rev.user.charAt(0)}
                                   </div>
                                   <div className="flex flex-col">
-                                    <span className="font-black text-sm uppercase tracking-widest text-slate-900">{rev.user}</span>
-                                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{rev.date}</span>
+                                    <span className="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">{rev.user}</span>
+                                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-500 uppercase tracking-widest">{rev.date}</span>
                                   </div>
                                 </div>
                                 <div className="flex text-amber-400 gap-1">
                                   {[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? "currentColor" : "none"} strokeWidth={2.5} />)}
                                 </div>
                               </div>
-                              <p className="text-slate-600 font-medium leading-relaxed italic text-lg pr-8">"{rev.comment}"</p>
+                              <p className="text-slate-600 dark:text-slate-350 font-medium leading-relaxed italic text-lg pr-8">"{rev.comment}"</p>
                             </motion.div>
                           ))}
                         </div>
@@ -666,6 +739,40 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                 </div>
               </div>
 
+              {/* Sticky Mobile Buy Bar */}
+              <AnimatePresence>
+                {showMobileStickyBar && (
+                  <motion.div 
+                    initial={{ y: 100 }}
+                    animate={{ y: 0 }}
+                    exit={{ y: 100 }}
+                    className="fixed bottom-0 left-0 right-0 z-[600] md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-4 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.15)] rounded-t-3xl transition-colors duration-500"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={selectedImage} className="w-10 h-10 object-contain rounded-lg bg-slate-50 dark:bg-slate-800 p-1" />
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-slate-900 dark:text-white truncate max-w-[120px] uppercase tracking-tighter leading-none mb-1">{product.name}</span>
+                        <span className="text-xs font-black text-eas-blue">{product.price?.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={handleAddToCart}
+                        className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-3 rounded-xl shadow-md animate-pulse"
+                      >
+                        <ShoppingCart size={16} />
+                      </button>
+                      <button 
+                        onClick={handleWhatsApp}
+                        className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md shadow-green-500/20"
+                      >
+                        <MessageCircle size={14} fill="currentColor" />
+                        WhatsApp
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </div>
         </>

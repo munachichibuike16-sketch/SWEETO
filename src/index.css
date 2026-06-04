@@ -136,3 +136,21 @@ html {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-blue-500;
 }
+
+/* Animated Gradient utilities */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 200% auto;
+  animation: gradientShift 4s ease infinite;
+}

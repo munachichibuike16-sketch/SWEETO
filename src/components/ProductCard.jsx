@@ -93,8 +93,18 @@ const ProductCard = ({ product, index = 0, onProductClick }) => {
       <motion.div 
         whileHover={{ y: -10 }}
         onClick={handleCardClick}
-        className="group relative bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl rounded-[1.6rem] sm:rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-white/5 hover:border-blue-500/50 dark:hover:border-blue-500/5 transition-all duration-500 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] flex flex-col h-full cursor-pointer w-full"
+        className={`group relative rounded-[1.6rem] sm:rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-white/5 hover:border-blue-500/50 dark:hover:border-blue-500/5 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(59,130,246,0.18)] dark:hover:shadow-[0_20px_40px_rgba(59,130,246,0.35)] flex flex-col h-full cursor-pointer w-full ${
+          (product.is_featured || discountPercent > 20)
+            ? 'bg-transparent'
+            : 'bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl'
+        }`}
       >
+        {/* Animated Gradient Border & Background for Premium / High-discount / Featured Items */}
+        {(product.is_featured || discountPercent > 20) && (
+          <div className="absolute inset-0 p-[1.5px] rounded-[1.6rem] sm:rounded-[2.5rem] bg-gradient-to-r from-eas-blue via-indigo-500 to-eas-accent bg-[length:200%_auto] animate-gradient-shift -z-20">
+            <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[1.55rem] sm:rounded-[2.45rem]"></div>
+          </div>
+        )}
         {/* Badges */}
         <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20 flex flex-col items-start gap-1">
           {discountPercent > 0 && (

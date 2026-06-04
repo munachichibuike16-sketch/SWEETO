@@ -303,6 +303,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
             {/* Unified Icon Pill */}
             <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 rounded-2xl shadow-inner px-1 py-1 gap-1">
               
+              {/* Theme Toggle */}
+              <motion.button 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                onClick={toggleTheme}
+                className="p-2.5 rounded-xl text-slate-400 hover:text-eas-blue hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                title={t('theme')}
+              >
+                {isDarkMode ? <Sun size={19} className="text-amber-400" /> : <Moon size={19} className="text-slate-600" />}
+              </motion.button>
+
               {/* Wishlist */}
               <motion.button 
                 whileHover={{ scale: 1.1 }} 
@@ -517,6 +528,13 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
+            <button 
+              onClick={toggleTheme} 
+              className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl transition-all"
+              title={t('theme')}
+            >
+              {isDarkMode ? <Sun size={20} className="text-amber-400 animate-[spin_8s_linear_infinite]" /> : <Moon size={20} className="text-slate-500" />}
+            </button>
             <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
               <Search size={20} />
             </button>

@@ -38,6 +38,12 @@ export const translations = {
     elite_offer: "Elite Offer", video_promo: "Video Promo", explore_all: "Explore All", view_cart: "View Cart", checkout_now: "Checkout Now",
     // Footer & Misc
     get_directions: "Directions", call_support: "Support", stay_connected: "Stay Connected",
+    about_hub: "About Our Hub",
+    about_desc: "SWEETO-HUB is your local destination for premium electronics. We bridge global technology with local accessibility.",
+    explore_categories: "Explore Categories",
+    location_schedule: "Location & Schedule",
+    physical_store: "Physical Store",
+    opening_hours: "Opening Hours",
     subscribe_desc: "Join our elite circle for early access to premium drops and exclusive hub intel.",
     enter_email: "ENTER YOUR EMAIL", subscriber_join: "JOIN THE HUB", secure_spam_free: "SECURE & SPAM-FREE",
     privacy: "Privacy", terms: "Terms", security: "Security",
@@ -154,6 +160,12 @@ export const translations = {
     elite_offer: "Offre Élite", video_promo: "Promo Vidéo", explore_all: "Tout Explorer", view_cart: "Voir le Panier", checkout_now: "Payer Maintenant",
     // Footer & Misc
     get_directions: "Itinéraire", call_support: "Support", stay_connected: "Restez Connecté",
+    about_hub: "À Propos de Notre Hub",
+    about_desc: "SWEETO-HUB est votre destination locale pour l'électronique premium. Nous relions la technologie mondiale à l'accessibilité locale.",
+    explore_categories: "Explorer les Catégories",
+    location_schedule: "Adresse & Horaires",
+    physical_store: "Boutique Physique",
+    opening_hours: "Heures d'Ouverture",
     subscribe_desc: "Rejoignez notre cercle d'élite pour un accès anticipé aux lancements premium.",
     enter_email: "ENTREZ VOTRE EMAIL", subscriber_join: "REJOIGNEZ LE HUB", secure_spam_free: "SÉCURISÉ ET SANS SPAM",
     privacy: "Confidentialité", terms: "Conditions", security: "Sécurité",
@@ -863,13 +875,31 @@ export const LanguageProvider = ({ children }) => {
     return translations['fr'][key] || translations['en'][key] || key;
   };
 
+  const cleanProductName = (str) => {
+    if (!str) return str;
+    let cleaned = str.replace(/_/g, ' ');
+    cleaned = cleaned.replace(/[_\s-]+$/, '');
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    const lower = cleaned.toLowerCase();
+    if (lower.startsWith('playstation 5 console') || lower.startsWith('playstation 5 edition')) {
+      return lang === 'fr' ? 'PlayStation 5 Édition Standard' : 'PlayStation 5 Standard Edition';
+    }
+    if (lower.startsWith('desk fan')) {
+      return lang === 'fr' ? 'Ventilateur de Bureau' : 'High-Performance Desk Fan';
+    }
+    if (lower.startsWith('jbl tune')) {
+      return cleaned.split(' ').map(w => w.toUpperCase() === 'JBL' ? 'JBL' : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+    return cleaned;
+  };
+
   const t_smart = (str) => {
     if (!str) return str;
     const key = str.toLowerCase().replace(/ /g, '_');
     if (translations[lang] && translations[lang][key]) {
       return translations[lang][key];
     }
-    return str;
+    return cleanProductName(str);
   };
 
   const isRTL = lang === 'ar';
