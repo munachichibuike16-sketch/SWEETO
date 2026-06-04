@@ -24,7 +24,55 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const [isZooming, setIsZooming] = useState(false);
   const scrollRef = React.useRef(null);
   const wrapperRef = React.useRef(null);
-  const [showMobileStickyBar, setShowMobileStickyBar] = useState(false);
+  
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+  const [swipeStartY, setSwipeStartY] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setSwipeStartY(e.touches[0].clientY);
+  };
+  
+  const handleTouchMove = (e) => {
+    if (swipeStartY === null) return;
+    const currentY = e.touches[0].clientY;
+    const diffY = currentY - swipeStartY;
+    if (diffY > 80) { // Dismiss on swiping down 80px
+      onClose();
+      setSwipeStartY(null);
+    }
+  };
+
+  const getImagesList = () => {
+    if (!product) return ['/hero-banner.png'];
+    const list = [];
+    const mainImg = product.image_url || product.image;
+    if (mainImg) list.push(mainImg);
+    if (product.images) {
+      try {
+        const imgs = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+        if (Array.isArray(imgs)) {
+          imgs.forEach(img => {
+            if (img && !list.includes(img)) {
+              list.push(img);
+            }
+          });
+        }
+      } catch (e) {}
+    }
+    if (list.length === 0) list.push('/hero-banner.png');
+    return list;
+  };
+  const imagesList = getImagesList();
+
+  const handleImageScroll = (e) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    const width = e.currentTarget.clientWidth;
+    if (width > 0) {
+      const index = Math.round(scrollLeft / width);
+      setActiveImageIndex(index);
+    }
+  };
 
   const handleScroll = (e) => {
     if (e.currentTarget.scrollTop > 450) {
@@ -54,6 +102,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   // Load reviews on product change — only fetch APPROVED reviews for public display
   const fetchProductReviews = async () => {
     if (!product?.id) return;
+    setIsReviewsLoading(true);
     try {
       // Fetch all reviews for this product then filter for approved ones
       // using both schema styles (status column OR is_approved column)
@@ -83,6 +132,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
       console.error("Error fetching reviews:", e);
       // DO NOT fall back to localStorage — never show unmoderated reviews publicly
       setReviews([]);
+    } finally {
+      setIsReviewsLoading(false);
     }
   };
 
@@ -261,8 +312,15 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               exit={{ scale: 0.9, opacity: 0, y: 40 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-950 border dark:border-white/5 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-6xl relative overflow-hidden flex flex-col transition-colors duration-500"
+              className="bg-white dark:bg-slate-950 border dark:border-white/5 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-6xl relative overflow-hidden flex flex-col transition-colors duration-500 pb-28 md:pb-0"
             >
+              {/* Drag Handle Pill for Mobile */}
+              <div 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                className="md:hidden w-16 h-1.5 bg-slate-200 dark:bg-slate-800/80 rounded-full mx-auto my-4 cursor-grab active:cursor-grabbing shrink-0 z-50 relative"
+                title="Swipe down to close"
+              />
               {/* Dynamic Design Accents */}
               <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-eas-blue/5 rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-eas-accent/5 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none"></div>
@@ -298,67 +356,78 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               {/* Main Container */}
               <div className="p-6 md:p-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-                  
-                  {/* Image Gallery Column */}
+                                {/* Image Gallery Column */}
                   <div className="lg:col-span-7 flex flex-col md:flex-row gap-8">
-                    {/* Vertical Thumbnails */}
-                    <div className="flex md:flex-col gap-3 sm:gap-4 order-2 md:order-1 overflow-x-auto py-1 max-w-full custom-scrollbar">
-                      <motion.div 
-                        whileHover={{ scale: 1.05 }}
-                        onClick={() => setSelectedImage(product.image_url || product.image)}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl p-2 sm:p-3 cursor-pointer bg-slate-50 border-2 transition-all shrink-0 ${selectedImage === (product.image_url || product.image) ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
-                      >
-                        <img src={product.image_url || product.image} className="w-full h-full object-contain" />
-                      </motion.div>
-                      
-                      {product.images && (() => {
-                        try {
-                          const imgs = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
-                          if (Array.isArray(imgs)) {
-                            return imgs.slice(0, 4).map((img, idx) => (
-                              <motion.div 
-                                key={idx} 
-                                whileHover={{ scale: 1.05 }}
-                                onClick={() => setSelectedImage(img)}
-                                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl p-2 sm:p-3 cursor-pointer bg-slate-50 border-2 transition-all shrink-0 ${selectedImage === img ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
-                              >
-                                <img src={img} className="w-full h-full object-contain" />
-                              </motion.div>
-                            ));
-                          }
-                        } catch (e) { return null; }
-                        return null;
-                      })()}
+                    {/* Vertical Thumbnails (hidden on mobile, visible on desktop) */}
+                    <div className="hidden md:flex flex-col gap-3 sm:gap-4 overflow-y-auto py-1 max-w-full custom-scrollbar shrink-0">
+                      {imagesList.map((img, idx) => (
+                        <motion.div 
+                          key={idx} 
+                          whileHover={{ scale: 1.05 }}
+                          onClick={() => setSelectedImage(img)}
+                          className={`w-20 h-20 rounded-3xl p-3 cursor-pointer bg-slate-50 border-2 transition-all shrink-0 ${selectedImage === img ? 'border-eas-blue shadow-lg ring-4 ring-eas-blue/5' : 'border-transparent opacity-60'}`}
+                        >
+                          <img src={img} className="w-full h-full object-contain" />
+                        </motion.div>
+                      ))}
                     </div>
 
-                    {/* Stage Image */}
-                    <div 
-                      onMouseMove={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = ((e.clientX - rect.left) / rect.width) * 100;
-                        const y = ((e.clientY - rect.top) / rect.height) * 100;
-                        setZoomPos({ x, y });
-                      }}
-                      onMouseEnter={() => setIsZooming(true)}
-                      onMouseLeave={() => setIsZooming(false)}
-                      className="flex-1 aspect-square bg-slate-50/50 rounded-3xl sm:rounded-[3rem] md:rounded-[4rem] border border-slate-100/50 relative overflow-hidden flex items-center justify-center cursor-zoom-in order-1 md:order-2 group shadow-inner"
-                    >
-                      <AnimatePresence mode="wait">
-                        <motion.img 
-                          key={selectedImage}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ 
-                            opacity: 1, 
-                            scale: isZooming ? 2.5 : 1,
-                            x: isZooming ? `${(50 - zoomPos.x) * 0.5}%` : 0,
-                            y: isZooming ? `${(50 - zoomPos.y) * 0.5}%` : 0,
-                          }}
-                          exit={{ opacity: 0, scale: 1.1 }}
-                          transition={{ type: 'spring', damping: 30 }}
-                          src={selectedImage} 
-                          className="w-full h-full object-contain p-6 sm:p-8 md:p-12 mix-blend-multiply"
-                        />
-                      </AnimatePresence>
+                    {/* Stage Image Container with Touch Snap Swiping */}
+                    <div className="flex-1 aspect-square bg-slate-50/50 rounded-3xl sm:rounded-[3rem] md:rounded-[4rem] border border-slate-100/50 relative overflow-hidden flex items-center justify-center shadow-inner order-1 md:order-2">
+                      
+                      {/* Mobile Horizontal Snap Swiper */}
+                      <div 
+                        onScroll={handleImageScroll}
+                        className="md:hidden absolute inset-0 overflow-x-auto flex snap-x snap-mandatory scroll-smooth no-scrollbar"
+                      >
+                        {imagesList.map((img, idx) => (
+                          <div key={idx} className="w-full h-full shrink-0 snap-center flex items-center justify-center p-6">
+                            <img src={img} className="w-full h-full object-contain mix-blend-multiply" />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Mobile Pagination Dots */}
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 md:hidden z-10">
+                        {imagesList.map((_, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                              activeImageIndex === idx ? 'bg-blue-600 w-3' : 'bg-slate-400/40'
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Desktop Zoom Stage */}
+                      <div 
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = ((e.clientX - rect.left) / rect.width) * 100;
+                          const y = ((e.clientY - rect.top) / rect.height) * 100;
+                          setZoomPos({ x, y });
+                        }}
+                        onMouseEnter={() => setIsZooming(true)}
+                        onMouseLeave={() => setIsZooming(false)}
+                        className="hidden md:flex w-full h-full items-center justify-center cursor-zoom-in relative"
+                      >
+                        <AnimatePresence mode="wait">
+                          <motion.img 
+                            key={selectedImage}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ 
+                              opacity: 1, 
+                              scale: isZooming ? 2.5 : 1,
+                              x: isZooming ? `${(50 - zoomPos.x) * 0.5}%` : 0,
+                              y: isZooming ? `${(50 - zoomPos.y) * 0.5}%` : 0,
+                            }}
+                            exit={{ opacity: 0, scale: 1.1 }}
+                            transition={{ type: 'spring', damping: 30 }}
+                            src={selectedImage} 
+                            className="w-full h-full object-contain p-8 md:p-12 mix-blend-multiply"
+                          />
+                        </AnimatePresence>
+                      </div>
 
                       {/* Brand Watermark */}
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl sm:text-[120px] font-black text-slate-900/[0.02] pointer-events-none select-none uppercase tracking-tighter">
@@ -366,7 +435,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       </div>
 
                       {product.discount > 0 && (
-                        <div className="absolute top-4 left-4 sm:top-10 sm:left-10 bg-red-600 text-white text-[10px] sm:text-xs font-black px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xl shadow-red-600/30">
+                        <div className="absolute top-4 left-4 sm:top-10 sm:left-10 bg-red-600 text-white text-[10px] sm:text-xs font-black px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xl shadow-red-600/30 z-10">
                           -{product.discount}% EXCLUSIVE
                         </div>
                       )}
@@ -499,10 +568,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Purchase Actions */}
-                    <div className="space-y-4 mt-auto">
+                                 {/* Desktop Purchase Actions (hidden on mobile, visible on desktop) */}
+                    <div className="hidden md:block space-y-4 mt-auto">
                       <div className="flex gap-4">
                         <div className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 rounded-2xl flex items-center p-1 px-2 gap-4 shadow-sm">
                           <motion.button 
@@ -521,7 +588,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             <Plus size={18} strokeWidth={3} />
                           </motion.button>
                         </div>
-
+ 
                         <motion.button 
                           whileHover={{ scale: 1.02, y: -2 }}
                           whileTap={{ scale: 0.98 }}
@@ -533,7 +600,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <span className="relative z-10">{t('add_to_cart')}</span>
                         </motion.button>
                       </div>
-
+ 
                       <div className="grid grid-cols-2 gap-4">
                         <motion.button 
                           onClick={() => {
@@ -559,7 +626,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           WhatsApp
                         </motion.button>
                       </div>
-                    </div>
+                    </div>           </div>
                   </div>
                 </div>
 
@@ -644,31 +711,62 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
 
                         {/* Feed */}
                         <div className="space-y-6">
-                          {reviews.map(rev => (
-                            <motion.div 
-                              key={rev.id} 
-                              initial={{ opacity: 0, y: 20 }}
-                              whileInView={{ opacity: 1, y: 0 }}
-                              viewport={{ once: true }}
-                              className="p-6 sm:p-10 bg-slate-50 dark:bg-slate-900/40 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-white/5 group hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl transition-all duration-500"
-                            >
-                              <div className="flex justify-between items-start mb-8">
-                                <div className="flex items-center gap-5">
-                                  <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center font-black text-eas-blue shadow-lg group-hover:scale-110 transition-transform">
-                                    {rev.user.charAt(0)}
+                          {isReviewsLoading ? (
+                            <div className="space-y-6">
+                              {[...Array(2)].map((_, i) => (
+                                <div key={i} className="p-6 sm:p-10 bg-slate-50 dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-white/5 animate-pulse">
+                                  <div className="flex justify-between items-start mb-8">
+                                    <div className="flex items-center gap-5">
+                                      <div className="w-14 h-14 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+                                      <div className="space-y-2">
+                                        <div className="h-4 bg-slate-200 dark:bg-slate-800 w-24 rounded-md"></div>
+                                        <div className="h-3 bg-slate-200 dark:bg-slate-800 w-16 rounded-md"></div>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      {[...Array(5)].map((_, j) => (
+                                        <div key={j} className="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+                                      ))}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">{rev.user}</span>
-                                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-500 uppercase tracking-widest">{rev.date}</span>
+                                  <div className="space-y-2">
+                                    <div className="h-4 bg-slate-200 dark:bg-slate-800 w-3/4 rounded-md"></div>
+                                    <div className="h-4 bg-slate-200 dark:bg-slate-800 w-1/2 rounded-md"></div>
                                   </div>
                                 </div>
-                                <div className="flex text-amber-400 gap-1">
-                                  {[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? "currentColor" : "none"} strokeWidth={2.5} />)}
+                              ))}
+                            </div>
+                          ) : reviews.length === 0 ? (
+                            <div className="py-12 text-center text-xs font-black text-slate-400 uppercase tracking-widest">
+                              {lang === 'fr' ? 'Aucun avis rédigé pour le moment.' : 'No reviews written yet.'}
+                            </div>
+                          ) : (
+                            reviews.map(rev => (
+                              <motion.div 
+                                key={rev.id} 
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="p-6 sm:p-10 bg-slate-50 dark:bg-slate-900/40 rounded-3xl sm:rounded-[2.5rem] border border-slate-100 dark:border-white/5 group hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl transition-all duration-500"
+                              >
+                                <div className="flex justify-between items-start mb-8">
+                                  <div className="flex items-center gap-5">
+                                    <div className="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center font-black text-eas-blue shadow-lg group-hover:scale-110 transition-transform">
+                                      {rev.user.charAt(0)}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">{rev.user}</span>
+                                      <span className="text-[10px] font-bold text-slate-300 dark:text-slate-500 uppercase tracking-widest">{rev.date}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex text-amber-400 gap-1">
+                                    {[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? "currentColor" : "none"} strokeWidth={2.5} />)}
+                                  </div>
                                 </div>
-                              </div>
-                              <p className="text-slate-600 dark:text-slate-350 font-medium leading-relaxed italic text-lg pr-8">"{rev.comment}"</p>
-                            </motion.div>
-                          ))}
+                                <p className="text-slate-600 dark:text-slate-350 font-medium leading-relaxed italic text-lg pr-8">"{rev.comment}"</p>
+                              </motion.div>
+                            ))
+                          )}
                         </div>
                       </div>
                     </div>
@@ -726,40 +824,65 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                 </div>
               </div>
 
-              {/* Sticky Mobile Buy Bar */}
-              <AnimatePresence>
-                {showMobileStickyBar && (
-                  <motion.div 
-                    initial={{ y: 100 }}
-                    animate={{ y: 0 }}
-                    exit={{ y: 100 }}
-                    className="fixed bottom-0 left-0 right-0 z-[600] md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-4 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.15)] rounded-t-3xl transition-colors duration-500"
+              {/* Mobile Sticky bottom thumb-zone container (Always Docked on Mobile) */}
+              <div className="fixed bottom-0 left-0 right-0 z-[600] md:hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-150 dark:border-white/5 p-4 pb-6 flex flex-col gap-3 shadow-[0_-15px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transition-colors duration-500">
+                <div className="flex gap-3 items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={selectedImage} className="w-10 h-10 object-contain rounded-lg bg-slate-50 dark:bg-slate-900 p-1 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-slate-900 dark:text-white truncate max-w-[110px] uppercase tracking-tighter leading-none mb-1">{product.name}</span>
+                      <span className="text-xs font-black text-eas-blue">{product.price?.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                    </div>
+                  </div>
+
+                  {/* Quantity selector */}
+                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-xl flex items-center p-0.5 px-2 gap-1.5 shadow-sm shrink-0">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900"
+                    >
+                      <Minus size={12} strokeWidth={3} />
+                    </button>
+                    <span className="text-xs font-black text-slate-900 dark:text-white min-w-[1.5ch] text-center">{quantity}</span>
+                    <button 
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900"
+                    >
+                      <Plus size={12} strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[9px] uppercase tracking-[0.2em] rounded-xl flex items-center justify-center gap-1.5 shadow-lg h-11"
                   >
-                    <div className="flex items-center gap-3">
-                      <img src={selectedImage} className="w-10 h-10 object-contain rounded-lg bg-slate-50 dark:bg-slate-800 p-1" />
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-900 dark:text-white truncate max-w-[120px] uppercase tracking-tighter leading-none mb-1">{product.name}</span>
-                        <span className="text-xs font-black text-eas-blue">{product.price?.toLocaleString()} {settings?.currency || 'FCFA'}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={handleAddToCart}
-                        className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-3 rounded-xl shadow-md animate-pulse"
-                      >
-                        <ShoppingCart size={16} />
-                      </button>
-                      <button 
-                        onClick={handleWhatsApp}
-                        className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md shadow-green-500/20"
-                      >
-                        <MessageCircle size={14} fill="currentColor" />
-                        WhatsApp
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <ShoppingCart size={14} />
+                    <span>{t('add_to_cart')}</span>
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      handleAddToCart();
+                      onClose();
+                      navigate('/checkout');
+                    }}
+                    className="flex-1 bg-blue-600 text-white font-black text-[9px] uppercase tracking-[0.2em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    <Zap size={14} fill="currentColor" />
+                    <span>{t('buy_now')}</span>
+                  </button>
+
+                  <button 
+                    onClick={handleWhatsApp}
+                    className="flex-1 bg-[#25D366] text-white font-black text-[9px] uppercase tracking-[0.15em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    <MessageCircle size={14} fill="currentColor" />
+                    <span>WhatsApp</span>
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         </>
