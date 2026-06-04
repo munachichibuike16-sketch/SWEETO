@@ -59,11 +59,11 @@ const VideoCard = ({ ad, linkedProduct, onClick, isPlayingGlobal, onIntersection
         playsInline
         muted={isMuted}
         loop
-        className="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-[8s] ease-out"
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[8s] ease-out"
       />
 
       {/* Ambient shadow gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/25 pointer-events-none" />
 
       {/* Floating Watermark */}
       <div className="absolute top-4 left-4 z-10 bg-black/40 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 pointer-events-none">
@@ -181,20 +181,20 @@ const VideoAdSection = ({ section }) => {
                   muted 
                   playsInline
                   preload="metadata"
-                  className="w-full h-full object-cover opacity-80"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <img 
                   src={selectedAd.imageUrl || selectedAd.mediaUrl} 
                   alt={selectedAd.title} 
-                  className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-[10s]"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[10s]"
                 />
               )}
             </div>
 
             {/* Overlays */}
-            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/25 transition-colors duration-500"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 
             {/* Top Watermark */}
             <div className="absolute top-6 left-6 z-10 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none select-none">
@@ -341,7 +341,7 @@ const VideoAdSection = ({ section }) => {
               />
 
               {/* Ambient Shadow Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-black/40 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
               {/* Top Watermark & Close Controller */}
               <div className="absolute top-6 left-6 right-6 z-10 flex items-center justify-between">

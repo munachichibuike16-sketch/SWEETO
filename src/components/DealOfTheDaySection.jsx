@@ -141,8 +141,8 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
             </AnimatePresence>
 
             {/* Overlays */}
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent"></div>
 
             {/* Content */}
             <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
