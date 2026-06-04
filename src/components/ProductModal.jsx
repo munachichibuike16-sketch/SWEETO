@@ -11,6 +11,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
 import { supabase } from '../lib/supabase';
+import SweetoLogo from './SweetoLogo';
 
 const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductClick }) => {
   const { settings, addToRecent, setSelectedCategory, showToast } = useStore();
@@ -29,6 +30,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [swipeStartY, setSwipeStartY] = useState(null);
   const [activeTab, setActiveTab] = useState('specs');
+  const [showMobileStickyBar, setShowMobileStickyBar] = useState(false);
 
   const handleTouchStart = (e) => {
     setSwipeStartY(e.touches[0].clientY);
@@ -325,8 +327,9 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
 
               {/* Top Left Brand Accent */}
               <div className="absolute top-6 left-6 sm:top-8 sm:left-8 flex items-center gap-2 z-50 pointer-events-none select-none">
+                <SweetoLogo size={20} className="w-5 h-5 shrink-0 animate-pulse" />
                 <span className="text-xs font-black uppercase tracking-[0.3em] text-eas-blue dark:text-cyan-400 italic drop-shadow-sm">
-                  @sweeto
+                  sweeto
                 </span>
               </div>
               {/* Dynamic Design Accents */}
@@ -379,9 +382,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         </motion.div>
                       ))}
                     </div>
-
                     {/* Stage Image Container with Touch Snap Swiping */}
-                    <div className="flex-1 bg-slate-50/50 dark:bg-slate-900/35 rounded-3xl sm:rounded-[3rem] md:rounded-[4rem] border border-slate-100/50 dark:border-white/5 relative overflow-hidden flex items-center justify-center shadow-inner order-1 md:order-2">
+                    <div className="flex-1 relative overflow-hidden order-1 md:order-2 modal-image-container border border-slate-100/50 dark:border-white/5 shadow-inner">
                       
                       {/* Mobile Horizontal Snap Swiper */}
                       <div 
@@ -389,8 +391,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         className="md:hidden absolute inset-0 overflow-x-auto flex snap-x snap-mandatory scroll-smooth no-scrollbar"
                       >
                         {imagesList.map((img, idx) => (
-                          <div key={idx} className="w-full h-full shrink-0 snap-center modal-image-container bg-transparent dark:bg-transparent p-0 rounded-none">
-                            <img src={img} className="mix-blend-multiply dark:mix-blend-normal" />
+                          <div key={idx} className="w-full h-full shrink-0 snap-center flex items-center justify-center p-4">
+                            <img src={img} className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
                           </div>
                         ))}
                       </div>
@@ -417,7 +419,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         }}
                         onMouseEnter={() => setIsZooming(true)}
                         onMouseLeave={() => setIsZooming(false)}
-                        className="hidden md:flex w-full h-full items-center justify-center cursor-zoom-in relative modal-image-container bg-transparent dark:bg-transparent p-0 rounded-none"
+                        className="hidden md:flex w-full h-full items-center justify-center cursor-zoom-in relative"
                       >
                         <AnimatePresence mode="wait">
                           <motion.img 
@@ -491,6 +493,83 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         {lang === 'fr' ? '« En stock à Adjamé Mirador »' : '« In Stock at Adjamé Mirador »'}
                       </span>
+                    </div>
+
+                    {/* Unified Actions Block (Mobile & Desktop) */}
+                    <div className="space-y-4 mb-6">
+                      <div className="flex gap-4">
+                        {/* Quantity Selector */}
+                        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center p-1 px-3 gap-3 shadow-sm shrink-0">
+                          <motion.button 
+                            type="button"
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                          >
+                            <Minus size={16} strokeWidth={3} />
+                          </motion.button>
+                          <span className="text-base font-black text-slate-900 dark:text-white min-w-[1.5ch] text-center">{quantity}</span>
+                          <motion.button 
+                            type="button"
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setQuantity(quantity + 1)}
+                            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                          >
+                            <Plus size={16} strokeWidth={3} />
+                          </motion.button>
+                        </div>
+ 
+                        {/* Add to Cart Button */}
+                        <motion.button 
+                          type="button"
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleAddToCart}
+                          className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl flex items-center justify-center gap-3 h-[52px]"
+                        >
+                          <ShoppingCart size={18} />
+                          <span>{t('add_to_cart')}</span>
+                        </motion.button>
+                      </div>
+ 
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Buy Now Button */}
+                        <motion.button 
+                          type="button"
+                          onClick={() => {
+                            handleAddToCart();
+                            onClose();
+                            navigate('/checkout');
+                          }}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.25em] h-14 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+                        >
+                          <Zap size={16} fill="currentColor" />
+                          <span>{t('buy_now')}</span>
+                        </motion.button>
+                        
+                        {/* WhatsApp Button */}
+                        <motion.button 
+                          type="button"
+                          onClick={handleWhatsApp}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="bg-[#25D366] text-white font-black text-[10px] uppercase tracking-[0.2em] h-14 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+                        >
+                          <MessageCircle size={16} fill="currentColor" />
+                          <span>WhatsApp</span>
+                        </motion.button>
+                      </div>
+ 
+                      {/* Continue Shopping secondary link */}
+                      <button 
+                        type="button"
+                        onClick={onClose}
+                        className="w-full text-center py-2.5 text-[10px] font-black text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase tracking-[0.2em] transition-colors mt-2 cursor-pointer border border-dashed border-slate-100 dark:border-white/5 rounded-xl hover:border-slate-350 dark:hover:border-white/20"
+                      >
+                        {lang === 'fr' ? '← Continuer mes achats' : '← Continue Shopping'}
+                      </button>
                     </div>
 
                     {/* Live Urgency Tickers */}
@@ -584,7 +663,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                               exit={{ height: 0, opacity: 0, marginTop: 0 }}
                               className="overflow-hidden"
                             >
-                              <div className="text-slate-550 dark:text-slate-400 text-xs font-bold leading-relaxed space-y-2 uppercase tracking-wide pt-2">
+                              <div className="text-slate-500 dark:text-slate-400 text-xs font-bold leading-relaxed space-y-2 uppercase tracking-wide pt-2">
                                 <p>📍 {lang === 'fr' ? 'Boutique physique à Adjamé Mirador (Abidjan).' : 'Physical store located at Adjamé Mirador (Abidjan).'}</p>
                                 <p>⚡ {lang === 'fr' ? 'Retrait sur place ou Livraison Express sous 24H.' : 'In-store pickup or 24H Express Delivery.'}</p>
                                 <p>💳 {lang === 'fr' ? 'Paiement sécurisé en espèces, Orange Money ou Wave à la livraison.' : 'Pay on Delivery via Wave, Orange Money, or Cash.'}</p>
@@ -634,73 +713,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           </div>
                         </div>
                       </div>
-                                 {/* Desktop Purchase Actions (hidden on mobile, visible on desktop) */}
-                    <div className="hidden md:block space-y-4 mt-auto">
-                      <div className="flex gap-4">
-                        <div className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-white/5 rounded-2xl flex items-center p-1 px-2 gap-4 shadow-sm">
-                          <motion.button 
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            className="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
-                          >
-                            <Minus size={18} strokeWidth={3} />
-                          </motion.button>
-                          <span className="text-lg font-black text-slate-900 min-w-[2ch] text-center">{quantity}</span>
-                          <motion.button 
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setQuantity(quantity + 1)}
-                            className="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
-                          >
-                            <Plus size={18} strokeWidth={3} />
-                          </motion.button>
-                        </div>
- 
-                        <motion.button 
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleAddToCart}
-                          className="flex-1 bg-slate-900 text-white font-black text-xs uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-slate-900/40 flex items-center justify-center gap-4 group overflow-hidden relative h-[70px]"
-                        >
-                          <div className="absolute inset-0 bg-eas-blue translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                          <ShoppingCart size={20} className="relative z-10" />
-                          <span className="relative z-10">{t('add_to_cart')}</span>
-                        </motion.button>
-                      </div>
- 
-                      <div className="grid grid-cols-2 gap-4">
-                        <motion.button 
-                          onClick={() => {
-                            handleAddToCart();
-                            onClose();
-                            navigate('/checkout');
-                          }}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="bg-eas-accent text-white font-black text-[10px] uppercase tracking-[0.3em] h-16 rounded-2xl shadow-xl shadow-eas-accent/30 flex items-center justify-center gap-3"
-                        >
-                          <Zap size={18} fill="currentColor" />
-                          {t('buy_now')}
-                        </motion.button>
-                        
-                        <motion.button 
-                          onClick={handleWhatsApp}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="bg-[#25D366] text-white font-black text-[10px] uppercase tracking-[0.2em] h-16 rounded-2xl shadow-xl shadow-green-500/30 flex items-center justify-center gap-3"
-                        >
-                          <MessageCircle size={18} fill="currentColor" />
-                          WhatsApp
-                        </motion.button>
-                      </div>
-
-                      {/* Continue Shopping secondary link for desktop */}
-                      <button 
-                        onClick={onClose}
-                        className="w-full text-center py-3 text-[10px] font-black text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase tracking-[0.2em] transition-colors mt-4 cursor-pointer border border-dashed border-slate-100 dark:border-white/5 rounded-xl hover:border-slate-300 dark:hover:border-white/20"
-                      >
-                        {lang === 'fr' ? '← Continuer mes achats' : '← Continue Shopping'}
-                      </button>
-                    </div>           </div>
+                    </div>
                   </div>
                 </div>
 
@@ -898,75 +911,92 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               </div>
 
               {/* Footer Indicator */}
-              <div className="bg-slate-900 py-6 px-12 flex justify-between items-center mt-auto">
+              <div className="bg-slate-900 py-6 px-12 flex justify-between items-center mt-auto gap-4 flex-wrap">
                 <div className="flex items-center gap-3 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
                   {t('verified_authentic')}
                 </div>
-                <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">
-                  Secure local server connection • 192.168.1.100
+                <div className="text-[10px] font-black text-white/20 uppercase tracking-widest flex items-center gap-2">
+                  <SweetoLogo size={14} className="opacity-40 shrink-0" />
+                  <span>Secure local server connection • 192.168.1.100</span>
                 </div>
               </div>
 
-              {/* Mobile Sticky bottom thumb-zone container (Always Docked on Mobile) */}
-              <div className="fixed bottom-0 left-0 right-0 z-[600] md:hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-150 dark:border-white/5 p-4 pb-6 flex flex-col gap-3 shadow-[0_-15px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transition-colors duration-500">
-                <div className="flex gap-3 items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img src={selectedImage} className="w-10 h-10 object-contain rounded-lg bg-slate-50 dark:bg-slate-900 p-1 shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-slate-900 dark:text-white truncate max-w-[110px] uppercase tracking-tighter leading-none mb-1">{product.name}</span>
-                      <span className="text-xs font-black text-eas-blue">{product.price?.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+              {/* Mobile Sticky bottom thumb-zone container */}
+              <AnimatePresence>
+                {showMobileStickyBar && (
+                  <motion.div 
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="fixed bottom-0 left-0 right-0 z-[600] md:hidden bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-150 dark:border-white/5 p-4 pb-6 flex flex-col gap-3 shadow-[0_-15px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transition-colors duration-500"
+                  >
+                    <div className="flex gap-3 items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img src={selectedImage} className="w-10 h-10 object-contain rounded-lg bg-slate-50 dark:bg-slate-900 p-1 shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-slate-900 dark:text-white truncate max-w-[110px] uppercase tracking-tighter leading-none mb-1">{product.name}</span>
+                          <span className="text-xs font-black text-eas-blue">{product.price?.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                        </div>
+                      </div>
+
+                      {/* Quantity selector */}
+                      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-xl flex items-center p-0.5 px-2 gap-1.5 shadow-sm shrink-0">
+                        <button 
+                          type="button"
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          className="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900"
+                        >
+                          <Minus size={12} strokeWidth={3} />
+                        </button>
+                        <span className="text-xs font-black text-slate-900 dark:text-white min-w-[1.5ch] text-center">{quantity}</span>
+                        <button 
+                          type="button"
+                          onClick={() => setQuantity(quantity + 1)}
+                          className="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900"
+                        >
+                          <Plus size={12} strokeWidth={3} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Quantity selector */}
-                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-xl flex items-center p-0.5 px-2 gap-1.5 shadow-sm shrink-0">
-                    <button 
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900"
-                    >
-                      <Minus size={12} strokeWidth={3} />
-                    </button>
-                    <span className="text-xs font-black text-slate-900 dark:text-white min-w-[1.5ch] text-center">{quantity}</span>
-                    <button 
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-900"
-                    >
-                      <Plus size={12} strokeWidth={3} />
-                    </button>
-                  </div>
-                </div>
+                    <div className="flex gap-2">
+                      <button 
+                        type="button"
+                        onClick={handleAddToCart}
+                        className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[9px] uppercase tracking-[0.2em] rounded-xl flex items-center justify-center gap-1.5 shadow-lg h-11"
+                      >
+                        <ShoppingCart size={14} />
+                        <span>{t('add_to_cart')}</span>
+                      </button>
 
-                <div className="flex gap-2">
-                  <button 
-                    onClick={handleAddToCart}
-                    className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[9px] uppercase tracking-[0.2em] rounded-xl flex items-center justify-center gap-1.5 shadow-lg h-11"
-                  >
-                    <ShoppingCart size={14} />
-                    <span>{t('add_to_cart')}</span>
-                  </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          handleAddToCart();
+                          onClose();
+                          navigate('/checkout');
+                        }}
+                        className="flex-1 bg-blue-600 text-white font-black text-[9px] uppercase tracking-[0.2em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                      >
+                        <Zap size={14} fill="currentColor" />
+                        <span>{t('buy_now')}</span>
+                      </button>
 
-                  <button 
-                    onClick={() => {
-                      handleAddToCart();
-                      onClose();
-                      navigate('/checkout');
-                    }}
-                    className="flex-1 bg-blue-600 text-white font-black text-[9px] uppercase tracking-[0.2em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
-                  >
-                    <Zap size={14} fill="currentColor" />
-                    <span>{t('buy_now')}</span>
-                  </button>
+                      <button 
+                        type="button"
+                        onClick={handleWhatsApp}
+                        className="flex-1 bg-[#25D366] text-white font-black text-[9px] uppercase tracking-[0.15em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                      >
+                        <MessageCircle size={14} fill="currentColor" />
+                        <span>WhatsApp</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                  <button 
-                    onClick={handleWhatsApp}
-                    className="flex-1 bg-[#25D366] text-white font-black text-[9px] uppercase tracking-[0.15em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
-                  >
-                    <MessageCircle size={14} fill="currentColor" />
-                    <span>WhatsApp</span>
-                  </button>
-                </div>
-              </div>
             </motion.div>
           </div>
         </>
