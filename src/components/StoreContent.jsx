@@ -213,8 +213,8 @@ const StoreContent = () => {
         }
       `}</style>
 
-      {/* STABLE BRAND BAR: Pinned securely to the top of the viewport so it never moves when scrolling */}
-      <div className="sticky top-0 z-50 w-full bg-[#030712]/90 backdrop-blur-md border-b border-white/5 py-4 px-4 flex items-center justify-between">
+      {/* BRAND SUB-BAR: Positioned below the global header, centered inside the page layout */}
+      <div className="w-full max-w-md mx-auto py-4 px-1 flex items-center justify-between mt-2">
         {/* Back Button: Premium frosted-ice styling with tactile feedback */}
         <button 
           onClick={goBack} 
