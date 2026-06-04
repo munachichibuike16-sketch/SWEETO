@@ -732,7 +732,7 @@ const Storefront = ({ viewMode = 'home' }) => {
   }, [settings?.homepageSections, settings?.hero_enabled, sections]);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 overflow-x-hidden relative">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 relative">
       <Header 
         onMenuClick={() => setIsSidebarOpen(true)} 
         onCartClick={() => setIsCartOpen(true)}

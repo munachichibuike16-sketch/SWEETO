@@ -440,7 +440,7 @@ const NotificationsContent = ({ onProductClick }) => {
   };
 
   return (
-    <div className="relative min-h-screen px-4 pt-0 pb-32 md:px-8 max-w-4xl mx-auto overflow-hidden">
+    <div className="relative min-h-screen px-4 pt-0 pb-32 md:px-8 max-w-4xl mx-auto">
       {/* Background Decorative Accents */}
       <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
