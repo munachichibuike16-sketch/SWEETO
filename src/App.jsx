@@ -21,6 +21,7 @@ import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
 import BackToTop from './components/BackToTop';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -189,6 +190,18 @@ const Storefront = ({ viewMode = 'home' }) => {
   
   const { products: liveProducts, categories, searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
   const { t, t_smart } = useLanguage();
+
+  const getProductCountForCategory = (catName) => {
+    let count = liveProducts?.filter(p => p.category === catName && p.status === 'active').length || 0;
+    const cat = categories.find(c => c.name === catName);
+    if (cat) {
+      const subcats = categories.filter(c => c.parent_id === cat.id);
+      subcats.forEach(sub => {
+        count += liveProducts?.filter(p => p.category === sub.name && p.status === 'active').length || 0;
+      });
+    }
+    return count;
+  };
 
   const [activeSubCategory, setActiveSubCategory] = useState('All');
   const [sortBy, setSortBy] = useState('name_az');
@@ -894,30 +907,38 @@ const Storefront = ({ viewMode = 'home' }) => {
               </div>
             </div>
 
-            <div>
-              <h4 className="font-black text-slate-900 dark:text-white mb-10 uppercase text-[10px] tracking-[0.3em] flex items-center gap-3">
-                <div className="w-6 h-[2px] bg-eas-blue"></div>
-                {t('explore_categories')}
-              </h4>
-              <ul className="space-y-4">
-                {(categories.length > 0 ? categories : [{name: 'Smartphones'}, {name: 'Laptops'}, {name: 'Accessories'}]).slice(0, 6).map(cat => (
-                  <li key={cat.id || cat.name}>
-                    <motion.a 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setSelectedCategory(cat.name);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      whileHover={{ x: 8, color: '#3B82F6' }}
-                      className="text-xs text-slate-400 font-black uppercase tracking-widest transition-all block"
-                    >
-                      {cat.name}
-                    </motion.a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {(() => {
+              const activeCats = (categories.length > 0 ? categories : [{name: 'Smartphones'}, {name: 'Laptops'}, {name: 'Accessories'}])
+                .filter(cat => getProductCountForCategory(cat.name) > 0)
+                .slice(0, 6);
+              if (activeCats.length === 0) return null;
+              return (
+                <div>
+                  <h4 className="font-black text-slate-900 dark:text-white mb-10 uppercase text-[10px] tracking-[0.3em] flex items-center gap-3">
+                    <div className="w-6 h-[2px] bg-eas-blue"></div>
+                    {t('explore_categories')}
+                  </h4>
+                  <ul className="space-y-4">
+                    {activeCats.map(cat => (
+                      <li key={cat.id || cat.name}>
+                        <motion.a 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setSelectedCategory(cat.name);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          whileHover={{ x: 8, color: '#3B82F6' }}
+                          className="text-xs text-slate-400 font-black uppercase tracking-widest transition-all block"
+                        >
+                          {t_smart(cat.name)}
+                        </motion.a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
 
             <div>
               <h4 
@@ -938,8 +959,10 @@ const Storefront = ({ viewMode = 'home' }) => {
                   <div>
                     <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1">{t('physical_store') || 'PHYSICAL STORE'}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
-                      {settings?.loc_address || 'Elite Tech District, Block 12'}<br/>
-                      {settings?.loc_city || 'Douala'}, {settings?.loc_country || 'Cameroon'}
+                      {settings?.loc_address && settings.loc_address !== 'Elite Tech District, Block 12' ? (
+                        settings.loc_address === 'ABIDJAN ADJAME MIRADOR' ? (lang === 'fr' ? 'Situé à Adjamé Mirador, 2ème étage, face à la gare' : 'Located at Adjamé Mirador, 2nd floor, facing the station') : settings.loc_address
+                      ) : (lang === 'fr' ? 'Situé à Adjamé Mirador, 2ème étage, face à la gare' : 'Located at Adjamé Mirador, 2nd floor, facing the station')}<br/>
+                      {settings?.loc_city && settings.loc_city !== 'Douala' ? settings.loc_city : 'Abidjan'}, {settings?.loc_country && settings.loc_country !== 'Cameroon' ? settings.loc_country : 'Côte d’Ivoire'}
                     </p>
                   </div>
                 </button>
@@ -1041,6 +1064,27 @@ const Storefront = ({ viewMode = 'home' }) => {
                       <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">{t('secure_spam_free')}</span>
                    </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Local Payment & Delivery Badges */}
+          <div className="max-w-[1600px] mx-auto mt-16 pt-8 border-t border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col gap-2 items-center md:items-start">
+              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">{lang === 'fr' ? 'Modes de Paiement Acceptés' : 'Accepted Payment Methods'}</span>
+              <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Wave</span>
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">Orange Money</span>
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Moov Money</span>
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20">MTN MoMo</span>
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{lang === 'fr' ? 'Paiement à la Livraison' : 'Cash on Delivery'}</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 items-center md:items-end">
+              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">{lang === 'fr' ? 'Livraison & Retrait' : 'Delivery & Pickup'}</span>
+              <div className="flex gap-2">
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-slate-900/10 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/5">{lang === 'fr' ? 'Retrait Adjamé Mirador' : 'Adjamé Mirador Pickup'}</span>
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-blue-600/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">{lang === 'fr' ? 'Express 24H Abidjan' : '24H Abidjan Express'}</span>
               </div>
             </div>
           </div>
@@ -1197,6 +1241,7 @@ function App() {
       <ConfirmDialog />
       <RealtimeNotification />
       <BackToTop />
+      <FloatingWhatsApp />
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />

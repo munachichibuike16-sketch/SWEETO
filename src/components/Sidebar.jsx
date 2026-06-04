@@ -14,7 +14,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('filter'); // Default to Categories tab like the screenshot
-  const { categories, settings, brands = [], selectedBrand, setSelectedBrand, setSelectedCategory, setSearchQuery } = useStore();
+  const { categories, settings, brands = [], selectedBrand, setSelectedBrand, setSelectedCategory, setSearchQuery, products: storeProducts = [] } = useStore();
   const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [expandedCategories, setExpandedCategories] = useState({});
   const [isLangExpanded, setIsLangExpanded] = useState(false);
@@ -101,20 +101,33 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
     return Box;
   };
 
+  const getProductCountForCategory = (catName) => {
+    const activeProds = products?.length > 0 ? products : storeProducts;
+    let count = activeProds.filter(p => p.category === catName && p.status === 'active').length;
+    const cat = categories.find(c => c.name === catName);
+    if (cat) {
+      const subcats = categories.filter(c => c.parent_id === cat.id);
+      subcats.forEach(sub => {
+        count += activeProds.filter(p => p.category === sub.name && p.status === 'active').length;
+      });
+    }
+    return count;
+  };
+
   // Group categories into parent-child hierarchy
-  const parentCategories = categories.filter(cat => !cat.parent_id);
+  const parentCategories = categories.filter(cat => !cat.parent_id && getProductCountForCategory(cat.name) > 0);
   const getSubcategories = (parentId) => {
-    return categories.filter(cat => cat.parent_id === parentId);
+    return categories.filter(cat => cat.parent_id === parentId && (products?.length > 0 ? products : storeProducts).filter(p => p.category === cat.name && p.status === 'active').length > 0);
   };
 
   // Embedded view for Homepage grid cards ("Shop by Department")
   if (embedded) {
     const displayCategories = categories
-      .filter(cat => !cat.parent_id) // Only show parent departments on storefront grid
+      .filter(cat => !cat.parent_id && getProductCountForCategory(cat.name) > 0) // Only show parent departments on storefront grid with active products
       .map(cat => ({
         ...cat,
         icon: getCategoryIcon(cat.name),
-        count: products?.filter(p => p.category === cat.name).length || 0
+        count: getProductCountForCategory(cat.name)
       }));
 
     return (

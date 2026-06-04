@@ -120,7 +120,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
 
   const handleWhatsApp = () => {
     const phone = settings?.social_whatsapp ? settings.social_whatsapp.replace(/\D/g, '') : '2250500619923';
-    const message = `Hello SWEETO-HUB, I'm interested in the ${product.name} (${product.price} ${settings?.currency || 'FCFA'}). Is it available?`;
+    const message = `Bonjour Sweeto-Hub, je m'intéresse à votre produit : "${product.name}" (${product.price?.toLocaleString()} ${settings?.currency || 'FCFA'}). Est-il disponible ?`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };

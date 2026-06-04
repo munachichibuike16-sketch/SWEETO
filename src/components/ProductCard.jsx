@@ -87,6 +87,7 @@ const ProductCard = ({ product, index = 0, onProductClick }) => {
   };
 
   const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
+  const isHighTicket = product.price > 100000 || /probook|tv|television|playstation|console|laptop|macbook|iphone|elitebook/i.test(product.name);
 
   return (
     <>
@@ -164,6 +165,18 @@ const ProductCard = ({ product, index = 0, onProductClick }) => {
               <ShoppingCart size={20} className="sm:w-6 sm:h-6" />
             </button>
           </div>
+
+          {/* High-Ticket Badges */}
+          {isHighTicket && (
+            <div className="absolute bottom-2.5 left-2.5 z-10 flex flex-col gap-1 pointer-events-none sm:bottom-4 sm:left-4">
+              <span className="px-2 py-0.5 rounded bg-slate-900/80 dark:bg-white/80 text-white dark:text-slate-900 font-black text-[7px] sm:text-[8.5px] uppercase tracking-wider shadow-lg border border-white/10 dark:border-black/5 flex items-center gap-1 backdrop-blur-md">
+                🛡️ Garantie 1 An
+              </span>
+              <span className="px-2 py-0.5 rounded bg-blue-600/80 text-white font-black text-[7px] sm:text-[8.5px] uppercase tracking-wider shadow-lg border border-blue-400/20 flex items-center gap-1 backdrop-blur-md">
+                ⚡ Livraison Rapide
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -198,7 +211,9 @@ const ProductCard = ({ product, index = 0, onProductClick }) => {
                   );
                 })()}
               </div>
-              <span className="text-[8px] sm:text-[9.5px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{product.sold || 0} {t('sold')}</span>
+              {product.sold > 0 && (
+                <span className="text-[8px] sm:text-[9.5px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{product.sold} {t('sold')}</span>
+              )}
             </div>
           </div>
 

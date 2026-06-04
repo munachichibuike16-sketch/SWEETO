@@ -12,7 +12,7 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCart();
   const { settings } = useStore();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, lang } = useLanguage();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -433,6 +433,20 @@ const CheckoutPage = () => {
                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{t('payment_collected_doorstep') || 'Payment collected at doorstep'}</p>
                   </div>
                </div>
+
+               {/* Local Mobile Money Trust Badge Card */}
+                <div className="mt-4 p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-900/60 border border-slate-100/50 dark:border-white/5 flex flex-col">
+                   <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] mb-2">{t('payment_method') || 'Payment Method'}</h4>
+                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4 font-bold">
+                      {lang === 'fr' ? 'Payez à la livraison en espèces ou par transfert mobile :' : 'Pay upon delivery using cash or mobile transfer:'}
+                   </p>
+                   <div className="flex flex-wrap gap-2">
+                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Wave</span>
+                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">Orange Money</span>
+                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Moov Money</span>
+                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20">MTN MoMo</span>
+                   </div>
+                </div>
 
                <motion.button 
                  type="submit"

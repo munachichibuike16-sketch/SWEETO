@@ -101,7 +101,21 @@ export default function TopCategories() {
     return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=300';
   };
 
-  const list = categories.length > 0 ? categories : defaultCategories;
+  const getProductCountForCategory = (catName) => {
+    let count = products?.filter(p => p.category === catName && p.status === 'active').length || 0;
+    const cat = categories.find(c => c.name === catName);
+    if (cat) {
+      const subcats = categories.filter(c => c.parent_id === cat.id);
+      subcats.forEach(sub => {
+        count += products?.filter(p => p.category === sub.name && p.status === 'active').length || 0;
+      });
+    }
+    return count;
+  };
+
+  const list = (categories.length > 0 ? categories : defaultCategories).filter(cat => getProductCountForCategory(cat.name) > 0);
+
+  if (list.length === 0) return null;
 
   const handleSelect = (categoryName) => {
     setSelectedCategory(null);
