@@ -552,13 +552,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button 
-              onClick={toggleTheme} 
-              className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl transition-all"
-              title={t('theme')}
-            >
-              {isDarkMode ? <Sun size={20} className="text-amber-400 animate-[spin_8s_linear_infinite]" /> : <Moon size={20} className="text-slate-500" />}
-            </button>
             <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
               <Search size={20} />
             </button>
@@ -678,6 +671,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           <span className="text-[8px] font-black uppercase tracking-wider">
             {t('saved')}
           </span>
+        </motion.button>
+
+        {/* Thème */}
+        <motion.button 
+          onClick={toggleTheme} 
+          whileTap={{ scale: 0.9 }} 
+          className="flex flex-col items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
+        >
+          {isDarkMode ? (
+            <Sun size={20} strokeWidth={2.5} className="text-amber-500 dark:text-amber-400" />
+          ) : (
+            <Moon size={20} strokeWidth={2.5} className="text-slate-500 dark:text-slate-400" />
+          )}
+          <span className="text-[8px] font-black uppercase tracking-wider">{t('theme')}</span>
         </motion.button>
 
         {/* Profil */}
