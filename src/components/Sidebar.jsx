@@ -201,6 +201,13 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
             onTouchEnd={onTouchEnd}
             className={`fixed top-[var(--header-height,72px)] ${isRTL ? 'right-0' : 'left-0'} h-[calc(100vh-var(--header-height,72px))] w-full max-w-[320px] sm:max-w-[360px] bg-white dark:bg-slate-900 shadow-[20px_0_50px_rgba(0,0,0,0.15)] z-[210] overflow-hidden flex flex-col border-r border-slate-100 dark:border-slate-800/60`}
           >
+            {/* Faint Watermark Background */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0">
+              <span className="text-[5rem] sm:text-[6rem] font-black tracking-[0.2em] text-slate-900/[0.02] dark:text-white/[0.01] uppercase italic -rotate-12">
+                @sweeto
+              </span>
+            </div>
+
             {/* Custom Tab Header (Stretches full width) */}
             <div className="w-full h-14 shrink-0 bg-[#f5f5f5] dark:bg-slate-800 flex items-stretch border-b border-slate-200 dark:border-slate-700 relative z-10">
               <button 

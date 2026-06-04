@@ -173,25 +173,28 @@ const CheckoutPage = () => {
 
       const newOrderId = data?.id;
 
-      // Send WhatsApp
-      const itemsList = cartItems.map(item => `- ${item.name} (${item.quantity})`).join('%0A');
-      const message = `*NEW ORDER RECEIVED (ID: #${newOrderId})* %0A` +
-        `--------------------------%0A` +
-        `*Customer:* ${formData.name}%0A` +
-        `*Phone:* ${formData.phone}%0A` +
-        `*City:* ${formData.city}%0A` +
-        `*Address:* ${formData.address}%0A` +
-        `--------------------------%0A` +
-        `*Items:*%0A${itemsList}%0A` +
-        `--------------------------%0A` +
-        `*Total:* ${grandTotal.toLocaleString()} ${settings?.currency || 'FCFA'}%0A` +
-        `*Payment:* Cash on Delivery%0A` +
-        `--------------------------%0A` +
-        `_Sent from SWEETO Hub Store_`;
+      // Send WhatsApp (French formatted order details)
+      const itemsList = cartItems.map(item => `- ${item.name} (Qté: ${item.quantity})`).join('\n');
+      const currency = settings?.currency || 'FCFA';
+      const rawMessage = `Bonjour Sweeto-Hub, je souhaite valider ma commande :\n` +
+        `${itemsList}\n\n` +
+        `Total : ${grandTotal.toLocaleString()} ${currency}\n` +
+        `Destinataire : ${formData.name}\n` +
+        `Téléphone : ${formData.phone}\n` +
+        `Adresse de Livraison : ${formData.city === 'Abidjan' ? formData.address : `${formData.city}, ${formData.address}`}\n\n` +
+        `ID Commande : #${newOrderId}`;
+      
+      const message = encodeURIComponent(rawMessage);
       
       setWaMessage(message);
       setOrderId(newOrderId);
       clearCart();
+      setIsProcessing(false);
+      setIsSuccess(true);
+
+      // Immediately redirect user to WhatsApp for checkout execution
+      const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
       setIsProcessing(false);
       setIsSuccess(true);
     } catch (err) {
@@ -236,14 +239,17 @@ const CheckoutPage = () => {
                  {t('track_order') || 'Track Order'}
                </button>
              )}
-             {waMessage && (
-               <button 
-                 onClick={() => window.open(`https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${waMessage}`, '_blank')}
-                 className="w-full bg-[#25D366] text-white font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl hover:bg-[#1DA851] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
-               >
-                 {t('notify_customer_wa') || 'Chat on WhatsApp (Optional)'}
-               </button>
-             )}
+              {waMessage && (
+                <button 
+                  onClick={() => window.open(`https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${waMessage}`, '_blank')}
+                  className="w-full bg-[#25D366] text-white font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl hover:bg-[#1DA851] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.42 9.863-9.864.002-2.637-1.023-5.116-2.887-6.98C15.782 1.896 13.313.864 10.68.864 5.244.864.827 5.285.823 10.724c0 1.687.445 3.328 1.29 4.767l-.992 3.62 3.71-.973zm11.365-6.86c-.302-.15-1.786-.882-2.057-.98-.27-.1-.468-.15-.665.15-.198.3-.765.98-.937 1.18-.173.2-.347.225-.65.075-.302-.15-1.276-.47-2.43-1.498-.897-.8-1.503-1.787-1.68-2.087-.177-.3-.02-.46.13-.61.137-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.665-1.6-.91-2.187-.24-.575-.48-.5-.665-.51-.173-.007-.37-.01-.568-.01-.198 0-.52.075-.79.37-.27.3-1.035 1.01-1.035 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.085 3.18 5.05 4.464.707.306 1.258.489 1.69.626.71.226 1.356.194 1.866.118.57-.085 1.786-.73 2.037-1.435.25-.705.25-1.31.175-1.435-.075-.125-.27-.2-.57-.35z"/>
+                  </svg>
+                  {lang === 'fr' ? 'Ouvrir WhatsApp pour finaliser' : 'Open WhatsApp to Finalize'}
+                </button>
+              )}
              <button 
                onClick={() => navigate('/')}
                className={`w-full ${orderId ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-slate-900 hover:bg-slate-100'} font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]`}
@@ -396,6 +402,40 @@ const CheckoutPage = () => {
                   {promoError && <p className="text-red-500 text-[9px] font-bold mt-2 ml-1 uppercase">{promoError}</p>}
                </div>
 
+               {/* Quick Hub Locks (Common Abidjan zones) */}
+               <div className="space-y-3 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-white/5 mb-6">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block">
+                   {lang === 'fr' ? '📍 Saisie Rapide du Quartier (Abidjan)' : '📍 Quick Hub Select (Abidjan)'}
+                 </label>
+                 <div className="flex flex-wrap gap-2">
+                   {['Adjamé Mirador', 'Cocody', 'Marcory', 'Yopougon', 'Riviera'].map((hub) => {
+                     const isSelected = formData.city === 'Abidjan' && formData.address === hub;
+                     return (
+                       <motion.button
+                         key={hub}
+                         type="button"
+                         whileHover={{ scale: 1.05 }}
+                         whileTap={{ scale: 0.95 }}
+                         onClick={() => {
+                           setFormData(prev => ({
+                             ...prev,
+                             city: 'Abidjan',
+                             address: hub
+                           }));
+                         }}
+                         className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+                           isSelected
+                             ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                             : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-700'
+                         }`}
+                       >
+                         {hub}
+                       </motion.button>
+                     );
+                   })}
+                 </div>
+               </div>
+
                <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('city') || 'City'}</label>
@@ -448,22 +488,24 @@ const CheckoutPage = () => {
                    </div>
                 </div>
 
-               <motion.button 
-                 type="submit"
-                 disabled={isProcessing}
-                 whileHover={!isProcessing ? { scale: 1.02 } : {}}
-                 whileTap={!isProcessing ? { scale: 0.98 } : {}}
-                 className="w-full mt-8 bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl shadow-slate-900/20 flex items-center justify-center gap-3 hover:bg-blue-600 transition-all disabled:opacity-50"
-               >
-                 {isProcessing ? (
-                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                 ) : (
-                   <>
-                     {t('confirm_order') || 'Confirm Order'}
-                     <ArrowRight size={16} />
-                   </>
-                 )}
-               </motion.button>
+                <motion.button 
+                  type="submit"
+                  disabled={isProcessing}
+                  whileHover={!isProcessing ? { scale: 1.02 } : {}}
+                  whileTap={!isProcessing ? { scale: 0.98 } : {}}
+                  className="w-full mt-8 bg-[#25D366] text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.25em] text-xs shadow-2xl shadow-[#25D366]/20 flex items-center justify-center gap-3 hover:bg-[#20ba5a] transition-all disabled:opacity-50"
+                >
+                  {isProcessing ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.42 9.863-9.864.002-2.637-1.023-5.116-2.887-6.98C15.782 1.896 13.313.864 10.68.864 5.244.864.827 5.285.823 10.724c0 1.687.445 3.328 1.29 4.767l-.992 3.62 3.71-.973zm11.365-6.86c-.302-.15-1.786-.882-2.057-.98-.27-.1-.468-.15-.665.15-.198.3-.765.98-.937 1.18-.173.2-.347.225-.65.075-.302-.15-1.276-.47-2.43-1.498-.897-.8-1.503-1.787-1.68-2.087-.177-.3-.02-.46.13-.61.137-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.665-1.6-.91-2.187-.24-.575-.48-.5-.665-.51-.173-.007-.37-.01-.568-.01-.198 0-.52.075-.79.37-.27.3-1.035 1.01-1.035 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.085 3.18 5.05 4.464.707.306 1.258.489 1.69.626.71.226 1.356.194 1.866.118.57-.085 1.786-.73 2.037-1.435.25-.705.25-1.31.175-1.435-.075-.125-.27-.2-.57-.35z"/>
+                      </svg>
+                      <span>{lang === 'fr' ? 'Confirmer & Commander via WhatsApp' : 'Confirm & Order via WhatsApp'}</span>
+                    </>
+                  )}
+                </motion.button>
                
                <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest mt-6 flex items-center justify-center gap-2">
                   <ShieldCheck size={12} className="text-emerald-500" />

@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
@@ -52,8 +52,17 @@ const TiktokIcon = ({ size = 20 }) => (
 
 const VisitUs = () => {
   const { settings } = useStore();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
+  const [copyFeedback, setCopyFeedback] = useState('');
+
+  const handleCopyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      const isFr = lang === 'fr' || settings?.loc_country === 'Côte d’Ivoire';
+      setCopyFeedback(`${label} ${isFr ? 'copié !' : 'copied!'}`);
+      setTimeout(() => setCopyFeedback(''), 1500);
+    }).catch(() => {});
+  };
 
   const socialLinks = [
     { icon: FacebookIcon, key: 'social_facebook', label: 'Facebook', bg: 'bg-[#1877F2]' },
@@ -180,8 +189,14 @@ const VisitUs = () => {
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Physical HQ</p>
                 </div>
               </div>
-              <p className="text-base font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
-                {settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon'}
+              <p 
+                onClick={() => handleCopyToClipboard(settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon', lang === 'fr' ? 'Adresse' : 'Address')}
+                className="text-base font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-8 hover:text-blue-500 cursor-pointer transition-colors flex items-center justify-between group/addr"
+              >
+                <span>{settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon'}</span>
+                <span className="text-[9px] opacity-0 group-hover/addr:opacity-100 bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-1 rounded transition-all font-black uppercase shrink-0 ml-2">
+                  {lang === 'fr' ? 'Copier' : 'Copy'}
+                </span>
               </p>
               <div className="flex flex-col gap-3">
                 <a 
@@ -193,13 +208,13 @@ const VisitUs = () => {
                   <Navigation size={18} />
                   Get Precise Directions
                 </a>
-                <a 
-                  href={`tel:${settings?.loc_phone}`}
+                <button 
+                  onClick={() => handleCopyToClipboard(settings?.loc_phone || '+2250500619923', lang === 'fr' ? 'Téléphone' : 'Phone')}
                   className="w-full py-5 border-2 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                 >
                   <Phone size={18} />
-                  Contact Concierge
-                </a>
+                  {lang === 'fr' ? 'Copier le Numéro' : 'Copy Phone Number'}
+                </button>
               </div>
             </div>
 
@@ -299,6 +314,21 @@ const VisitUs = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Floating Clipboard Feedback */}
+      <AnimatePresence>
+        {copyFeedback && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, scale: 0.9, x: '-50%' }}
+            className="fixed bottom-24 left-1/2 bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-900 px-6 py-3 rounded-full text-xs font-black uppercase tracking-wider shadow-2xl z-[999] border border-white/10 dark:border-slate-200/20 flex items-center gap-2"
+          >
+            <span>{copyFeedback}</span>
+            <span className="text-emerald-400">✓</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

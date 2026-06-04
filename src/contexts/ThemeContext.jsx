@@ -20,9 +20,11 @@ export const ThemeProvider = ({ children }) => {
       if (isDarkMode) {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#020617');
       } else {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('theme', 'light');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ffffff');
       }
     } catch (e) {
       console.error(e);

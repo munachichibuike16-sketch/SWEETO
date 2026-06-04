@@ -36,10 +36,17 @@ const CartDrawer = ({ isOpen, onClose }) => {
             animate={{ x: 0 }}
             exit={{ x: isRTL ? '-100%' : '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed top-0 ${isRTL ? 'left-0' : 'right-0'} h-full w-full max-w-lg bg-white/95 backdrop-blur-3xl shadow-[-50px_0_100px_-20px_rgba(0,0,0,0.1)] z-[310] flex flex-col border-l border-white/20`}
+            className={`fixed top-0 ${isRTL ? 'left-0' : 'right-0'} h-full w-full max-w-lg bg-white/95 backdrop-blur-3xl shadow-[-50px_0_100px_-20px_rgba(0,0,0,0.1)] z-[310] flex flex-col border-l border-white/20 overflow-hidden`}
           >
+            {/* Faint Watermark Background */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0">
+              <span className="text-[5rem] sm:text-[7rem] font-black tracking-[0.2em] text-slate-900/[0.02] dark:text-white/[0.01] uppercase italic -rotate-12">
+                @sweeto
+              </span>
+            </div>
+
             {/* Header */}
-            <div className="p-6 sm:p-10 border-b border-slate-50 flex justify-between items-center bg-white/50">
+            <div className="p-6 sm:p-10 border-b border-slate-50 flex justify-between items-center bg-white/50 z-10">
               <div className="flex items-center gap-4">
                 <motion.div 
                   initial={{ scale: 0 }}

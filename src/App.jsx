@@ -22,6 +22,7 @@ import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
 import BackToTop from './components/BackToTop';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+import MobileDock from './components/MobileDock';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -1144,6 +1145,11 @@ const Storefront = ({ viewMode = 'home' }) => {
         allProducts={allProducts}
         onClose={handleProductModalClose}
         onProductClick={handleProductClick}
+      />
+
+      <MobileDock 
+        setIsCartOpen={setIsCartOpen} 
+        setIsSidebarOpen={setIsSidebarOpen} 
       />
     </div>
   );
