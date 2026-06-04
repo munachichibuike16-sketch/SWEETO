@@ -638,7 +638,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      <nav className="fixed bottom-0 left-0 w-full bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-900 z-[100] lg:hidden px-10 py-3.5 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+      <nav className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-900 z-[100] lg:hidden px-10 py-3.5 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
         {/* Accueil */}
         <motion.button 
           onClick={() => {
@@ -649,7 +649,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           }} 
           whileTap={{ scale: 0.9 }} 
           className={`flex flex-col items-center gap-1.5 transition-colors duration-300 ${
-            isHomePage ? 'text-eas-blue' : 'text-slate-500 dark:text-slate-650'
+            isHomePage ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           <Home size={20} strokeWidth={2.5} />
@@ -661,7 +661,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           onClick={() => navigate('/wishlist')} 
           whileTap={{ scale: 0.9 }} 
           className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
-            isWishlistPage ? 'text-eas-blue' : 'text-slate-500 dark:text-slate-650'
+            isWishlistPage ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           <Heart 
@@ -685,7 +685,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           whileTap={{ scale: 0.9 }} 
           onClick={() => navigate(user ? '/auth' : '/login')}
           className={`flex flex-col items-center gap-1.5 transition-colors duration-300 ${
-            isProfilePage ? 'text-eas-blue' : 'text-slate-500 dark:text-slate-650'
+            isProfilePage ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           {user && (user.avatarUrl || user.picture) ? (
