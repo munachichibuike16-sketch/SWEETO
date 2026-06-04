@@ -410,29 +410,44 @@ const NotificationsContent = ({ onProductClick }) => {
                 {notif.product.price.toLocaleString()} {settings?.currency || 'FCFA'}
               </span>
             )}
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleMarkAsRead(notif.id);
-                if (notif.product) {
-                  onProductClick(notif.product);
-                } else if (notif.db_id) {
-                  navigate(`/order-tracking/${notif.db_id}`);
-                } else if (notif.category === 'orders') {
-                  handleWhatsAppOrderTrack(notif);
-                } else {
-                  showToast(lang === 'fr' ? 'Alerte de sécurité validée ✓' : 'Security alert verified ✓', 'success');
-                }
-              }}
-              className={`p-2 rounded-xl transition-all ${
-                notif.isRead
-                  ? 'bg-slate-50 dark:bg-slate-700/50 text-slate-400'
-                  : 'bg-eas-blue text-white shadow-md shadow-eas-blue/15'
-              }`}
-            >
-              <ArrowRight size={14} />
-            </button>
+            <div className="flex gap-2">
+              {!notif.isRead && (
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkAsRead(notif.id);
+                  }}
+                  className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white border border-emerald-500/20 dark:border-emerald-500/30 transition-all cursor-pointer flex items-center justify-center"
+                  title={lang === 'fr' ? 'Marquer comme lu' : 'Mark as read'}
+                >
+                  <CheckCheck size={14} />
+                </button>
+              )}
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMarkAsRead(notif.id);
+                  if (notif.product) {
+                    onProductClick(notif.product);
+                  } else if (notif.db_id) {
+                    navigate(`/order-tracking/${notif.db_id}`);
+                  } else if (notif.category === 'orders') {
+                    handleWhatsAppOrderTrack(notif);
+                  } else {
+                    showToast(lang === 'fr' ? 'Alerte de sécurité validée ✓' : 'Security alert verified ✓', 'success');
+                  }
+                }}
+                className={`p-2 rounded-xl transition-all ${
+                  notif.isRead
+                    ? 'bg-slate-50 dark:bg-slate-700/50 text-slate-400'
+                    : 'bg-eas-blue text-white shadow-md shadow-eas-blue/15'
+                }`}
+              >
+                <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
