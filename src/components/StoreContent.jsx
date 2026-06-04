@@ -35,6 +35,28 @@ const StoreContent = () => {
     }
   }, []);
 
+  // Subscribe to real-time changes in Supabase orders table for live tracking updates
+  useEffect(() => {
+    if (!currentUser || !supabase) return;
+
+    const channel = supabase
+      .channel(`user-orders-realtime-${currentUser.id || 'guest'}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          console.log('Real-time order update received:', payload);
+          fetchUserOrders(currentUser);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser]);
+
+
   const fetchUserOrders = async (user) => {
     try {
       if (!user) return;
