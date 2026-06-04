@@ -15,16 +15,7 @@ const StoreContent = () => {
   const [userOrders, setUserOrders] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   
-  // HP Probook mock active order dismissed state
-  const [dismissedMock, setDismissedMock] = useState(false);
-  const [showTimeline, setShowTimeline] = useState(false);
 
-  // Mock liked items if wishlist is empty
-  const [mockLikes, setMockLikes] = useState([
-    { id: 'liked-jbl', name: 'JBL ANC Earbuds', price: 25000, category: 'AUDIO', desc: 'Premium deep bass earbud collection.', image_url: 'https://placehold.co/150x150/0a1122/ffffff?text=JBL' },
-    { id: 'liked-shades', name: 'Sunglasses Classic', price: 12000, category: 'STYLE', desc: 'UV400 protective polarized lenses.', image_url: 'https://placehold.co/150x150/0a1122/ffffff?text=Shades' }
-  ]);
-  const [dismissedMockLikes, setDismissedMockLikes] = useState({});
 
   // Fetch real-time orders linked to the logged-in user
   useEffect(() => {
@@ -94,30 +85,20 @@ const StoreContent = () => {
 
   // Compute stats
   const realActiveOrders = userOrders.filter(order => order.status !== 'completed' && order.status !== 'cancelled');
-  const activeOrdersCount = realActiveOrders.length > 0 ? realActiveOrders.length : (dismissedMock ? 0 : 1);
+  const activeOrdersCount = realActiveOrders.length;
 
   const realCompletedOrders = userOrders.filter(order => order.status === 'completed');
-  const totalBoughtCount = realCompletedOrders.length > 0 ? realCompletedOrders.length : 2;
+  const totalBoughtCount = realCompletedOrders.length;
 
-  const activeMockLikes = mockLikes.filter(item => !dismissedMockLikes[item.id]);
-  const likedItemsCount = wishlistItems.length > 0 ? wishlistItems.length : activeMockLikes.length;
+  const likedItemsCount = wishlistItems.length;
 
-  const handleUnlike = (itemId, isMock = false) => {
-    if (isMock) {
-      setDismissedMockLikes(prev => ({ ...prev, [itemId]: true }));
-    } else {
-      const item = wishlistItems.find(p => p.id === itemId);
-      if (item) toggleWishlist(item);
-    }
+  const handleUnlike = (itemId) => {
+    const item = wishlistItems.find(p => p.id === itemId);
+    if (item) toggleWishlist(item);
   };
 
-  const handleDismissOrder = (orderId, isMock = false) => {
-    if (isMock) {
-      setDismissedMock(true);
-      setShowTimeline(false);
-    } else {
-      setUserOrders(prev => prev.filter(o => o.id !== orderId));
-    }
+  const handleDismissOrder = (orderId) => {
+    setUserOrders(prev => prev.filter(o => o.id !== orderId));
   };
 
   const orderViaWhatsApp = (itemName, price) => {
@@ -347,109 +328,8 @@ const StoreContent = () => {
               );
             })}
 
-            {/* Mock Active Order Card */}
-            {!dismissedMock && realActiveOrders.length === 0 && (
-              <>
-                <div id="order-card-probook" className="active-order-card p-4 rounded-[20px] flex gap-3 items-center shadow-2xl">
-                  {/* Left Status Pulse */}
-                  <div className="flex items-center justify-center pr-1">
-                    <div className="pulse-dot"></div>
-                  </div>
-
-                  {/* Product Thumbnail with Package Badge */}
-                  <div className="relative w-16 h-16 bg-[#0a1122] border border-white/5 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img className="max-w-[85%] max-h-[85%] object-contain" src="https://placehold.co/100x100/0a1122/ffffff?text=HP" onError={(e) => { e.target.src='https://placehold.co/150x150/111827/ffffff?text=Laptop'; }} alt="HP ProBook" />
-                    <div className="absolute top-1 right-1 bg-amber-500/90 w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[#0a1122]">
-                      <i className="fa-solid fa-box text-[8px] text-[#1a1105]"></i>
-                    </div>
-                  </div>
-
-                  {/* Product Information Text */}
-                  <div className="flex-grow min-w-0 pr-1 text-left">
-                    <h4 className="text-[13px] font-extrabold tracking-wide text-white uppercase truncate flex items-center gap-1.5">
-                      ORDER READY...
-                      <span className="text-[10px] font-normal text-gray-500 normal-case flex items-center gap-1">
-                        <i className="fa-regular fa-clock text-[9px]"></i> 1h ago
-                      </span>
-                    </h4>
-                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                      HP ProBook is ready for pickup at <span className="text-teal-400 font-medium">Adjamé Mirador!</span>
-                    </p>
-                    <button 
-                      onClick={() => setShowTimeline(!showTimeline)} 
-                      className="active-tap text-[10px] font-bold text-teal-400 mt-2 hover:text-teal-300 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-                    >
-                      TRACK ORDER <span className="font-normal">&gt;</span>
-                    </button>
-                  </div>
-
-                  {/* Right Action Layout */}
-                  <div className="flex flex-col items-end justify-between self-stretch flex-shrink-0 min-w-[85px] border-l border-white/5 pl-2">
-                    <span className="text-[12px] font-black text-sky-400 tracking-wide">180,000 F</span>
-                    
-                    <div className="flex flex-col items-end gap-1 mt-auto w-full">
-                      <button 
-                        onClick={() => handleDismissOrder(null, true)} 
-                        className="active-tap text-[9px] font-bold tracking-wider text-gray-500 hover:text-rose-400 transition-colors uppercase flex items-center gap-1 cursor-pointer"
-                      >
-                        DISMISS <i className="fa-solid fa-xmark text-[9px]"></i>
-                      </button>
-                      
-                      <button 
-                        onClick={() => setShowTimeline(!showTimeline)} 
-                        className="active-tap w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-400 text-white flex items-center justify-center shadow-lg transition-all duration-300 shadow-sky-500/10 cursor-pointer"
-                      >
-                        <i className="fa-solid fa-arrow-right text-[11px]"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dynamic Collapsible Tracking Timeline */}
-                {showTimeline && (
-                  <div id="tracking-timeline" className="bg-[#091122]/95 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4 overflow-hidden text-left">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                      <span className="text-[10px] uppercase tracking-widest font-black text-sky-400">Order Reference #SWTO-779</span>
-                      <button onClick={() => setShowTimeline(false)} className="text-xs text-gray-500 hover:text-white cursor-pointer"><i className="fa-solid fa-times"></i></button>
-                    </div>
-                    
-                    <div className="relative pl-6 space-y-6">
-                      <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-teal-500/30"></div>
-                      
-                      <div className="relative">
-                        <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center ring-4 ring-teal-500/20">
-                          <i className="fa-solid fa-check text-[8px] text-white"></i>
-                        </div>
-                        <h5 className="text-xs font-bold text-white">Order Confirmed & Logged</h5>
-                        <p className="text-[10px] text-gray-500 mt-0.5">June 4, 14:30 - Pre-filled securely via @sweeto</p>
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center ring-4 ring-teal-500/20">
-                          <i className="fa-solid fa-check text-[8px] text-white"></i>
-                        </div>
-                        <h5 className="text-xs font-bold text-white">Prepared at SWEETO-HUB Headquarters</h5>
-                        <p className="text-[10px] text-gray-500 mt-0.5">June 4, 15:15 - Packed and quality-sealed</p>
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center ring-4 ring-teal-500/20 animate-pulse">
-                          <i className="fa-solid fa-box text-[8px] text-white"></i>
-                        </div>
-                        <h5 className="text-xs font-bold text-teal-400">Ready for Pick-Up - Adjamé Mirador</h5>
-                        <p className="text-[10px] text-gray-400 mt-0.5">Please show your verified order reference on your phone upon collection.</p>
-                        <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="active-tap inline-flex items-center gap-1.5 bg-sky-500/20 hover:bg-sky-500/30 text-[9px] font-extrabold text-sky-400 border border-sky-500/20 px-3 py-1.5 rounded-lg mt-2 uppercase transition-all">
-                          <i className="fa-solid fa-location-dot"></i> View pickup directions
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
             {/* Empty State for Active Orders */}
-            {dismissedMock && realActiveOrders.length === 0 && (
+            {realActiveOrders.length === 0 && (
               <div id="orders-empty-state" className="text-center py-12 px-6 bg-[#091122]/40 rounded-3xl border border-white/5">
                 <div className="text-gray-600 text-4xl mb-3">
                   <i className="fa-solid fa-box-open"></i>
@@ -505,51 +385,16 @@ const StoreContent = () => {
                 );
               })}
 
-              {/* Mock Bought Item 1: JBL Tune 760 */}
-              <div className="bg-[#091122]/80 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
-                <div className="flex items-center gap-3 text-left">
-                  <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-400 text-lg flex-shrink-0">
+              {/* Empty State for Completed Purchases */}
+              {realCompletedOrders.length === 0 && (
+                <div id="bought-empty-state" className="text-center py-12 px-6 bg-[#091122]/40 rounded-3xl border border-white/5">
+                  <div className="text-gray-600 text-4xl mb-3">
                     <i className="fa-solid fa-circle-check"></i>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">JBL Tune 760 ANC</h4>
-                    <span className="text-[9px] text-gray-500 block mt-0.5">May 28 • Reference #SWTO-710</span>
-                    <span className="text-[9px] text-teal-400 font-semibold uppercase tracking-wider">Delivered & Verified ✓</span>
-                  </div>
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wide">No completed purchases</h4>
+                  <p className="text-[10px] text-gray-500 mt-1">Your order history is empty. Place an order to track it here!</p>
                 </div>
-                <div className="text-right">
-                  <span className="block text-xs font-bold text-gray-300">45,000 F</span>
-                  <button 
-                    onClick={() => orderViaWhatsApp('JBL Tune 760 ANC', '45000')}
-                    className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-sky-500/20 text-sky-400 border border-sky-500/20 px-2 py-1 rounded cursor-pointer"
-                  >
-                    Buy Again
-                  </button>
-                </div>
-              </div>
-
-              {/* Mock Bought Item 2: SSD External Case */}
-              <div className="bg-[#091122]/80 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
-                <div className="flex items-center gap-3 text-left">
-                  <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-400 text-lg flex-shrink-0">
-                    <i className="fa-solid fa-circle-check"></i>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">External Case SSD</h4>
-                    <span className="text-[9px] text-gray-500 block mt-0.5">May 15 • Reference #SWTO-682</span>
-                    <span className="text-[9px] text-teal-400 font-semibold uppercase tracking-wider">Delivered & Verified ✓</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="block text-xs font-bold text-gray-300">8,500 F</span>
-                  <button 
-                    onClick={() => orderViaWhatsApp('External Case SSD', '8500')}
-                    className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-sky-500/20 text-sky-400 border border-sky-500/20 px-2 py-1 rounded cursor-pointer"
-                  >
-                    Buy Again
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -594,34 +439,7 @@ const StoreContent = () => {
                   </div>
                 ))}
 
-                {/* Fallback Mock Items (Only display if wishlist is completely empty) */}
-                {wishlistItems.length === 0 && activeMockLikes.map((item) => (
-                  <div key={item.id} id={item.id} className="bg-[#091122]/95 border border-white/5 p-3 rounded-xl flex flex-col justify-between h-44 relative text-left">
-                    {/* Floating Heart Unlike Trigger */}
-                    <button 
-                      onClick={() => handleUnlike(item.id, true)}
-                      className="absolute top-2.5 right-2.5 text-rose-400 hover:text-gray-400 transition-colors text-xs p-1 cursor-pointer"
-                    >
-                      <i className="fa-solid fa-heart"></i>
-                    </button>
 
-                    <div className="mt-2">
-                      <span className="text-[8px] font-black bg-sky-500/10 text-sky-400 px-1.5 py-0.5 rounded uppercase">{item.category}</span>
-                      <h5 className="text-xs font-bold text-white mt-1">{item.name}</h5>
-                      <p className="text-[9px] text-gray-500 leading-normal mt-1">{item.desc}</p>
-                    </div>
-
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-xs font-extrabold text-sky-400">{item.price.toLocaleString()} F</span>
-                      <button 
-                        onClick={() => orderViaWhatsApp(item.name, item.price)}
-                        className="active-tap w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-[11px] shadow-lg shadow-teal-500/20 cursor-pointer"
-                      >
-                        <i className="fa-brands fa-whatsapp"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
               </div>
             ) : (
               /* Empty State for Liked Grid */
