@@ -172,9 +172,37 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
     }
   };
 
+  const getSpecsChips = () => {
+    if (!product) return [];
+    if (product.tags) {
+      try {
+        const parsed = typeof product.tags === 'string' ? JSON.parse(product.tags) : product.tags;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    const name = (product.name || '').toLowerCase();
+    const cat = (product.category || '').toLowerCase();
+    if (name.includes('tv') || cat.includes('tv')) {
+      return ['Smart TV', '4K UHD', 'HDR10+'];
+    }
+    if (name.includes('tune') || name.includes('pro5') || name.includes('earbud') || name.includes('audio') || name.includes('jbl') || cat.includes('audio') || cat.includes('ecouteur')) {
+      return ['Bluetooth 5.3', 'Active Noise Cancelling', 'Batterie 24H'];
+    }
+    if (name.includes('probook') || name.includes('hp') || name.includes('laptop') || cat.includes('ordinateur') || cat.includes('tech')) {
+      return ['Intel Core i5/i7', '8GB/16GB RAM', 'SSD Haute Vitesse'];
+    }
+    if (name.includes('fan') || name.includes('ventilateur') || name.includes('standing')) {
+      return ['3 Vitesses', 'Hauteur Réglable', 'Silencieux'];
+    }
+    if (name.includes('glass') || name.includes('lunette') || name.includes('sun')) {
+      return ['Protection UV400', 'Verres Polarisés', 'Design Chic'];
+    }
+    return ['Produit Authentique', 'Qualité Supérieure', 'Garantie Sweeto'];
+  };
+
   const handleWhatsApp = () => {
     const phone = settings?.social_whatsapp ? settings.social_whatsapp.replace(/\D/g, '') : '2250500619923';
-    const message = `Bonjour Sweeto-Hub, je m'intéresse à votre produit : "${product.name}" (${product.price?.toLocaleString()} ${settings?.currency || 'FCFA'}). Est-il disponible ?`;
+    const message = `Bonjour SWEETO-HUB, je souhaite commander "${product.name}" au prix de ${product.price?.toLocaleString()} ${settings?.currency || 'FCFA'}.`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
@@ -317,13 +345,18 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               onClick={(e) => e.stopPropagation()}
               className="bg-white dark:bg-slate-950 border dark:border-white/5 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] w-full max-w-6xl relative overflow-hidden flex flex-col transition-colors duration-500 pb-28 md:pb-0"
             >
-              {/* Drag Handle Pill for Mobile */}
+              {/* Drag Handle Pill & Instruction for Mobile */}
               <div 
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
-                className="md:hidden w-16 h-1.5 bg-slate-200 dark:bg-slate-800/80 rounded-full mx-auto my-4 cursor-grab active:cursor-grabbing shrink-0 z-50 relative"
+                className="md:hidden flex flex-col items-center gap-1.5 pt-4 pb-2 cursor-grab active:cursor-grabbing shrink-0 z-50 relative w-full"
                 title="Swipe down to close"
-              />
+              >
+                <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-800/80 rounded-full" />
+                <span className="text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest leading-none">
+                  {lang === 'fr' ? 'Glisser vers le bas pour fermer' : 'Swipe down to close'}
+                </span>
+              </div>
 
               {/* Top Left Brand Accent */}
               <div className="absolute top-6 left-6 sm:top-8 sm:left-8 flex items-center gap-2 z-50 pointer-events-none select-none">
@@ -383,7 +416,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       ))}
                     </div>
                     {/* Stage Image Container with Touch Snap Swiping */}
-                    <div className="flex-1 relative overflow-hidden order-1 md:order-2 modal-image-container border border-slate-100/50 dark:border-white/5 shadow-inner">
+                    <div className="flex-1 relative overflow-hidden order-1 md:order-2 modal-product-image-box border border-slate-100/50 dark:border-white/5 shadow-inner">
                       
                       {/* Mobile Horizontal Snap Swiper */}
                       <div 
@@ -473,26 +506,58 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       </div>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1] mb-4 uppercase italic">
-                      {product.name}
-                    </h2>
-
-                    <div className="flex flex-col gap-2 mb-6">
-                      <div className="flex items-baseline gap-4 bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-100 dark:border-white/5">
-                        <span className="text-4xl font-black text-eas-blue tracking-tighter italic">
-                          {product.price?.toLocaleString()}
-                          <span className="text-lg ml-2 not-italic opacity-40">{settings?.currency || 'FCFA'}</span>
-                        </span>
-                        {product.oldPrice && (
-                          <span className="text-lg text-slate-300 dark:text-slate-500 line-through font-black">
-                            {product.oldPrice.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 ml-2">
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                      <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1] uppercase italic">
+                        {product.name}
+                      </h2>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-500/20 shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        {lang === 'fr' ? '« En stock à Adjamé Mirador »' : '« In Stock at Adjamé Mirador »'}
+                        {lang === 'fr' ? 'En stock' : 'In Stock'}
                       </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2 mb-4">
+                      <div className="flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-100 dark:border-white/5">
+                        <div className="flex items-baseline gap-4">
+                          <span className="text-4xl font-black text-eas-blue dark:text-cyan-400 tracking-tighter italic">
+                            {product.price?.toLocaleString()}
+                            <span className="text-lg ml-2 not-italic opacity-40">{settings?.currency || 'FCFA'}</span>
+                          </span>
+                          {product.oldPrice && (
+                            <span className="text-lg text-slate-300 dark:text-slate-500 line-through font-black">
+                              {product.oldPrice.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        {/* Tap to copy price button */}
+                        <motion.button 
+                          type="button"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${product.price} FCFA`);
+                            showToast(lang === 'fr' ? 'Prix copié ! ✓' : 'Price copied! ✓', 'success');
+                          }}
+                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-400 hover:text-eas-blue dark:hover:text-cyan-400 border border-slate-100 dark:border-white/5 rounded-xl flex items-center justify-center shadow-sm shrink-0"
+                          title={lang === 'fr' ? 'Copier le prix' : 'Copy Price'}
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          </svg>
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Specs Chips */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {getSpecsChips().map((chip, idx) => (
+                        <span 
+                          key={idx} 
+                          className="px-3.5 py-1.5 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-wider rounded-xl border border-slate-100 dark:border-white/5"
+                        >
+                          {chip}
+                        </span>
+                      ))}
                     </div>
 
                     {/* Unified Actions Block (Mobile & Desktop) */}
@@ -555,10 +620,10 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           onClick={handleWhatsApp}
                           whileHover={{ scale: 1.02, y: -2 }}
                           whileTap={{ scale: 0.98 }}
-                          className="bg-[#25D366] text-white font-black text-[10px] uppercase tracking-[0.2em] h-14 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+                          className="bg-[#25D366] text-white font-black text-[10px] uppercase tracking-[0.15em] h-14 rounded-2xl shadow-lg flex items-center justify-center gap-2 animate-pulse"
                         >
                           <MessageCircle size={16} fill="currentColor" />
-                          <span>WhatsApp</span>
+                          <span>Order via WhatsApp ⚡</span>
                         </motion.button>
                       </div>
  
@@ -570,6 +635,14 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       >
                         {lang === 'fr' ? '← Continuer mes achats' : '← Continue Shopping'}
                       </button>
+
+                      {/* Brand digital signature */}
+                      <div className="flex items-center justify-center gap-1.5 pt-2 opacity-30 select-none pointer-events-none">
+                        <SweetoLogo size={12} className="w-3 h-3 dark:invert" />
+                        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 italic">
+                          @sweeto-hub
+                        </span>
+                      </div>
                     </div>
 
                     {/* Live Urgency Tickers */}
@@ -984,14 +1057,14 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         <span>{t('buy_now')}</span>
                       </button>
 
-                      <button 
-                        type="button"
-                        onClick={handleWhatsApp}
-                        className="flex-1 bg-[#25D366] text-white font-black text-[9px] uppercase tracking-[0.15em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5"
-                      >
-                        <MessageCircle size={14} fill="currentColor" />
-                        <span>WhatsApp</span>
-                      </button>
+                  <button 
+                    type="button"
+                    onClick={handleWhatsApp}
+                    className="flex-1 bg-[#25D366] text-white font-black text-[9px] uppercase tracking-[0.15em] h-11 rounded-xl shadow-md flex items-center justify-center gap-1.5 animate-pulse"
+                  >
+                    <MessageCircle size={14} fill="currentColor" />
+                    <span>WhatsApp ⚡</span>
+                  </button>
                     </div>
                   </motion.div>
                 )}
