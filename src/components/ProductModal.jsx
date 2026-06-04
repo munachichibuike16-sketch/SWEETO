@@ -426,7 +426,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       ))}
                     </div>
                     {/* Stage Image Container with Touch Snap Swiping */}
-                    <div className="flex-1 relative overflow-hidden order-1 md:order-2 modal-product-image-box border border-slate-100/50 dark:border-white/5 shadow-inner">
+                    <div className="md:flex-1 relative overflow-hidden order-1 md:order-2 modal-product-image-box border border-slate-100/50 dark:border-white/5 shadow-inner">
                       
                       {/* Mobile Horizontal Snap Swiper */}
                       <div 
