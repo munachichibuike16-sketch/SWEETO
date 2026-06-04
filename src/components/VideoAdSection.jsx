@@ -110,7 +110,7 @@ const VideoCard = ({ ad, linkedProduct, onClick }) => {
   );
 };
 
-const VideoAdSection = () => {
+const VideoAdSection = ({ section }) => {
   const { videoAds, products, settings } = useStore();
   const { t, t_smart, lang } = useLanguage();
   const navigate = useNavigate();
@@ -119,8 +119,114 @@ const VideoAdSection = () => {
   const [isOverlayMuted, setIsOverlayMuted] = useState(false);
   const overlayVideoRef = useRef(null);
 
-  // Filter only active ads
-  const activeAds = videoAds.filter(ad => ad.isActive || ad.is_active === 1 || ad.is_active === true);
+  // If a specific ad is targeted by section configuration
+  if (section && section.category && section.category !== 'All') {
+    const selectedAd = videoAds.find(a => String(a.id) === String(section.category));
+    if (selectedAd) {
+      const linkedProduct = selectedAd?.product_id 
+        ? products.find(p => String(p.id) === String(selectedAd.product_id)) 
+        : (selectedAd?.productId ? products.find(p => String(p.id) === String(selectedAd.productId)) : null);
+
+      const handleWhatsApp = () => {
+        const phone = settings?.social_whatsapp ? settings.social_whatsapp.replace(/\D/g, '') : '2250500619923';
+        let message = `Bonjour Sweeto-Hub, je m'intéresse à votre promo : "${selectedAd.title}".`;
+        if (linkedProduct) {
+          message = `Bonjour Sweeto-Hub, je m'intéresse à votre produit : "${linkedProduct.name}" (${linkedProduct.price?.toLocaleString()} ${settings?.currency || 'FCFA'}). Est-il disponible ?`;
+        }
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+      };
+
+      return (
+        <section className="py-8 px-6 md:px-12 max-w-[1600px] mx-auto relative overflow-hidden">
+          {/* Standing Alone Banner */}
+          <div className="relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden min-h-[380px] sm:min-h-[500px] bg-slate-900 border border-slate-100/5 dark:border-white/5 shadow-2xl group flex flex-col justify-end">
+            
+            {/* Background Media */}
+            <div className="absolute inset-0 w-full h-full">
+              {selectedAd.type === 'video' ? (
+                <video 
+                  src={selectedAd.videoUrl ? `${selectedAd.videoUrl}?v=1` : ''} 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover opacity-80"
+                />
+              ) : (
+                <img 
+                  src={selectedAd.imageUrl || selectedAd.mediaUrl} 
+                  alt={selectedAd.title} 
+                  className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-[10s]"
+                />
+              )}
+            </div>
+
+            {/* Overlays */}
+            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/25 transition-colors duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
+
+            {/* Top Watermark */}
+            <div className="absolute top-6 left-6 z-10 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-eas-blue animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white">@sweeto Ad</span>
+            </div>
+
+            {/* Bottom Content Area */}
+            <div className="relative z-10 p-6 sm:p-12 max-w-2xl text-left space-y-6">
+              <div className="space-y-4">
+                <span className="bg-eas-blue text-white px-3.5 py-1.5 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 self-start shadow-lg shadow-eas-blue/30 w-fit">
+                  <Sparkles size={12} className="fill-white" />
+                  {selectedAd.type === 'video' ? t('video_promo') : 'PROMOTION'}
+                </span>
+                
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white uppercase italic tracking-tighter leading-none drop-shadow">
+                  {selectedAd.title}
+                </h2>
+                
+                {selectedAd.description && (
+                  <p className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider leading-relaxed max-w-lg">
+                    {selectedAd.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                {linkedProduct && (
+                  <div 
+                    onClick={() => navigate(`/product/${linkedProduct.id}`)}
+                    className="bg-white/10 backdrop-blur-xl border border-white/15 p-4 rounded-2xl flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer flex-1 min-w-[240px]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={linkedProduct.image_url || linkedProduct.image} className="w-10 h-10 object-contain rounded-lg bg-slate-900/80 p-1" />
+                      <div className="flex flex-col text-left">
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">{t_smart(linkedProduct.category)}</span>
+                        <span className="text-[10px] font-black text-white uppercase tracking-tighter leading-none">{t_smart(linkedProduct.name)}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black text-eas-blue italic bg-white px-2.5 py-1.5 rounded-xl whitespace-nowrap">{linkedProduct.price?.toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleWhatsApp}
+                  className="bg-[#25D366] hover:bg-[#20ba5a] text-white px-8 py-4.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] shadow-xl shadow-green-500/20 flex items-center justify-center gap-2.5 cursor-pointer transition-all active:scale-95 hover:shadow-green-500/35 self-stretch sm:self-center"
+                >
+                  <MessageCircle size={16} fill="currentColor" />
+                  {selectedAd.ctaText || (lang === 'fr' ? 'Commander via WhatsApp' : 'Order via WhatsApp')}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      );
+    }
+  }
+
+  // Filter only active video ads for the scrolling carousel
+  const activeAds = videoAds.filter(ad => (ad.isActive || ad.is_active === 1 || ad.is_active === true) && ad.type === 'video');
 
   if (activeAds.length === 0) return null;
 
