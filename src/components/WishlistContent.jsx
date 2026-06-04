@@ -11,7 +11,7 @@ const WishlistContent = ({ onProductClick }) => {
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-40 text-center relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center px-4 py-20 md:py-40 text-center relative overflow-hidden">
         {/* Decorative Background Elements */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-eas-blue/5 rounded-full blur-[120px] -z-10" />
         
@@ -27,7 +27,7 @@ const WishlistContent = ({ onProductClick }) => {
           </div>
         </motion.div>
 
-        <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic mb-6 leading-tight">
+        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic mb-6 leading-tight max-w-2xl px-2">
           {t('wishlist_empty') || 'Your Wishlist is Empty'}
         </h2>
         <p className="text-slate-400 max-w-lg mx-auto mb-4 font-black text-sm uppercase tracking-[0.2em] leading-relaxed px-6">
@@ -62,7 +62,7 @@ const WishlistContent = ({ onProductClick }) => {
               <Heart size={32} className="text-white" fill="currentColor" />
             </motion.div>
             <div>
-              <h2 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none">{t('saved_gear') || 'Saved Gear'}</h2>
+              <h2 className="text-3xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none">{t('saved_gear') || 'Saved Gear'}</h2>
               <div className="flex items-center gap-3 mt-4">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em]">
