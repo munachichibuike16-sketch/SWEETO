@@ -4,12 +4,92 @@ import { Bell, ArrowRight, Clock, CheckCheck, Filter, Sparkles, Zap } from 'luci
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import SweetoLogo from './SweetoLogo';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 const NotificationsContent = ({ onProductClick }) => {
+  const navigate = useNavigate();
   const { products, settings, showToast } = useStore();
   const { lang, t } = useLanguage();
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [categoryFilter, setCategoryFilter] = useState('all'); // all, orders, promos, security
+  
+  const [userOrders, setUserOrders] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Base timestamps in localStorage for mock items, initialized on mount so they tick relative to real time
+  const [mockTimestamps] = useState(() => {
+    const saved = localStorage.getItem('notification_base_timestamps');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    const init = {
+      'order-hp-probook': Date.now() - 10 * 60 * 1000,
+      'order-standing-fan': Date.now() - 60 * 60 * 1000,
+      'sec-login': Date.now() - 6 * 60 * 60 * 1000,
+      'sec-hub-updates': Date.now() - 24 * 60 * 60 * 1000,
+    };
+    localStorage.setItem('notification_base_timestamps', JSON.stringify(init));
+    return init;
+  });
+
+  // Fetch real-time orders linked to the logged-in user
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+    if (session) {
+      setCurrentUser(session);
+      fetchUserOrders(session);
+    }
+  }, []);
+
+  const fetchUserOrders = async (user) => {
+    try {
+      if (!user) return;
+      const queries = [];
+      if (user.email) {
+        queries.push(`customer_contact.ilike.%| ${user.email.toLowerCase()} |%`);
+      }
+      if (user.id) {
+        queries.push(`customer_contact.ilike.%| ${user.id}%`);
+      }
+      const phoneVal = user.phoneNumber || user.phone;
+      const cleanPhone = phoneVal ? phoneVal.replace(/\D/g, '') : '';
+      if (cleanPhone && cleanPhone.length >= 8) {
+        queries.push(`customer_contact.ilike.${cleanPhone} |%`);
+        queries.push(`customer_contact.ilike.+${cleanPhone} |%`);
+        queries.push(`customer_contact.ilike.${phoneVal} |%`);
+        queries.push(`customer_phone.eq.${phoneVal}`);
+        queries.push(`customer_phone.eq.${cleanPhone}`);
+      }
+      if (queries.length === 0) return;
+      const orQuery = queries.join(',');
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .or(orQuery)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setUserOrders(data);
+      }
+    } catch (err) {
+      console.error('Error fetching user orders for notifications:', err);
+    }
+  };
+
+  const getRelativeTime = (timestamp) => {
+    if (!timestamp) return '';
+    const diff = Date.now() - new Date(timestamp).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return lang === 'fr' ? "À l'instant" : 'Just now';
+    if (mins < 60) return lang === 'fr' ? `Il y a ${mins} min` : `${mins} min ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return lang === 'fr' ? `Il y a ${hours} heure${hours > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    return lang === 'fr' ? `Il y a ${days} jour${days > 1 ? 's' : ''}` : `${days} day${days > 1 ? 's' : ''} ago`;
+  };
   
   const [readNotifs, setReadNotifs] = useState(() => {
     const saved = localStorage.getItem('read_notifications_timed');
@@ -62,8 +142,70 @@ const NotificationsContent = ({ onProductClick }) => {
     return ['Authentique', 'Garantie'];
   };
 
-  // 🛍️ Order tracker notifications
-  const orderUpdates = [
+  // Map actual user orders to tracker notifications
+  const realOrderUpdates = userOrders.map(order => {
+    let orderItems = [];
+    try {
+      orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+    } catch (e) {}
+
+    const firstItemName = orderItems[0]?.name || '';
+    const product = products.find(p => p.name.toLowerCase().includes(firstItemName.toLowerCase())) || products[0];
+
+    const stage = order.tracking_stage || 'assigned';
+    const status = order.status || 'pending';
+
+    let title = '';
+    let message = '';
+    let icon = '📦';
+
+    if (status === 'completed' || stage === 'delivered') {
+      title = lang === 'fr' ? 'Commande livrée ✓ 📦' : 'Order Delivered ✓ 📦';
+      message = lang === 'fr' 
+        ? `Votre commande #${order.id} a été livrée avec succès !`
+        : `Your order #${order.id} has been successfully delivered!`;
+      icon = '✅';
+    } else if (status === 'shipping' || stage === 'on_the_way' || stage === 'nearby') {
+      title = lang === 'fr' ? 'Livraison Express en cours 🚚' : 'Express Delivery on route 🚚';
+      message = lang === 'fr'
+        ? `Votre commande #${order.id} est en route pour la livraison.`
+        : `Your order #${order.id} is on the way for delivery.`;
+      icon = '🚚';
+    } else if (status === 'confirmed' || stage === 'picked_up' || stage === 'assigned') {
+      title = lang === 'fr' ? 'Commande préparée 🏪' : 'Order Prepared 🏪';
+      message = lang === 'fr'
+        ? `Votre commande #${order.id} est prête/confirmée.`
+        : `Your order #${order.id} has been confirmed & prepared.`;
+      icon = '📦';
+    } else {
+      title = lang === 'fr' ? 'Commande en attente 🕒' : 'Order Pending 🕒';
+      message = lang === 'fr'
+        ? `Votre commande #${order.id} est en attente de validation.`
+        : `Your order #${order.id} is pending validation.`;
+      icon = '🕒';
+    }
+
+    const id = `real-order-${order.id}`;
+
+    return {
+      id,
+      type: 'order_tracker',
+      category: 'orders',
+      title,
+      message,
+      time: getRelativeTime(order.created_at),
+      isRead: isNotificationRead(id),
+      isDeleted: isNotificationDeleted(id),
+      actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
+      accentColor: '#22c55e',
+      icon,
+      product,
+      db_id: order.id
+    };
+  });
+
+  // 🛍️ Order tracker notifications (fallback to mock with dynamic times if no real orders)
+  const orderUpdates = realOrderUpdates.length > 0 ? realOrderUpdates : [
     {
       id: 'order-hp-probook',
       type: 'order_tracker',
@@ -72,7 +214,7 @@ const NotificationsContent = ({ onProductClick }) => {
       message: lang === 'fr' 
         ? 'Votre ordinateur HP ProBook est prêt à Adjamé Mirador !' 
         : 'Your HP ProBook is ready for pickup at Adjamé Mirador!',
-      time: 'Il y a 10 min',
+      time: getRelativeTime(mockTimestamps['order-hp-probook']),
       isRead: isNotificationRead('order-hp-probook'),
       isDeleted: isNotificationDeleted('order-hp-probook'),
       actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
@@ -88,7 +230,7 @@ const NotificationsContent = ({ onProductClick }) => {
       message: lang === 'fr' 
         ? 'Le coursier est en route vers Yopougon avec votre Standing Fan.' 
         : 'The courier is on route to Yopougon with your Standing Fan.',
-      time: 'Il y a 1 heure',
+      time: getRelativeTime(mockTimestamps['order-standing-fan']),
       isRead: isNotificationRead('order-standing-fan'),
       isDeleted: isNotificationDeleted('order-standing-fan'),
       actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
@@ -99,12 +241,14 @@ const NotificationsContent = ({ onProductClick }) => {
   ];
 
   // 🔥 Promos & Stock updates (based on active products)
-  const promosAndStock = products.map(p => {
+  const promosAndStock = products.map((p, index) => {
     const isNew = p.is_new_arrival;
     const isSale = p.original_price > p.price;
     if (!isNew && !isSale) return null;
     
     const id = `promo-${p.id}`;
+    const productTime = p.created_at ? new Date(p.created_at).getTime() : (Date.now() - (isNew ? 3 : 5) * 60 * 60 * 1000 - index * 10 * 60 * 1000);
+
     return {
       id,
       type: isNew ? 'new_arrival' : 'price_drop',
@@ -115,7 +259,7 @@ const NotificationsContent = ({ onProductClick }) => {
       message: isNew 
         ? (lang === 'fr' ? `Le tout nouveau ${p.category} vient d'arriver dans notre boutique.` : `The brand new ${p.category} has arrived in our boutique.`)
         : (lang === 'fr' ? `Grosse économie ! Le prix a baissé de ${Math.round((p.original_price - p.price) / p.original_price * 100)}% sur cet article.` : `Big savings! The price dropped by ${Math.round((p.original_price - p.price) / p.original_price * 100)}% on this item.`),
-      time: isNew ? 'Il y a 3 heures' : 'Il y a 5 heures',
+      time: getRelativeTime(productTime),
       isRead: isNotificationRead(id),
       isDeleted: isNotificationDeleted(id),
       accentColor: isNew ? '#3b82f6' : '#eab308', // Blue or Gold
@@ -134,7 +278,7 @@ const NotificationsContent = ({ onProductClick }) => {
       message: lang === 'fr' 
         ? 'Nouvelle connexion réussie détectée depuis Cocody (Abidjan).' 
         : 'Successful login detected from Cocody (Abidjan).',
-      time: 'Il y a 6 heures',
+      time: getRelativeTime(mockTimestamps['sec-login']),
       isRead: isNotificationRead('sec-login'),
       isDeleted: isNotificationDeleted('sec-login'),
       accentColor: '#64748b', // Gray
@@ -149,7 +293,7 @@ const NotificationsContent = ({ onProductClick }) => {
       message: lang === 'fr' 
         ? 'Les tarifs d\'expédition pour Adjamé Mirador ont été ajustés.' 
         : 'Shipping rates for Adjamé Mirador have been calibrated.',
-      time: 'Il y a 1 jour',
+      time: getRelativeTime(mockTimestamps['sec-hub-updates']),
       isRead: isNotificationRead('sec-hub-updates'),
       isDeleted: isNotificationDeleted('sec-hub-updates'),
       accentColor: '#64748b',
@@ -382,7 +526,14 @@ const NotificationsContent = ({ onProductClick }) => {
                     borderLeftWidth: '4px',
                     borderLeftColor: notif.isRead ? 'transparent' : notif.accentColor
                   }}
-                  onClick={() => handleMarkAsRead(notif.id)}
+                  onClick={() => {
+                    handleMarkAsRead(notif.id);
+                    if (notif.product) {
+                      onProductClick(notif.product);
+                    } else if (notif.db_id) {
+                      navigate(`/order-tracking/${notif.db_id}`);
+                    }
+                  }}
                 >
                   {/* Glowing unread dot indicator */}
                   {!notif.isRead && (
@@ -438,7 +589,11 @@ const NotificationsContent = ({ onProductClick }) => {
                         onClick={(e) => {
                           e.stopPropagation();
                           handleMarkAsRead(notif.id);
-                          handleWhatsAppOrderTrack(notif);
+                          if (notif.db_id) {
+                            navigate(`/order-tracking/${notif.db_id}`);
+                          } else {
+                            handleWhatsAppOrderTrack(notif);
+                          }
                         }}
                         className="inline-block text-[10px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 mt-2.5 hover:underline"
                       >
@@ -461,6 +616,8 @@ const NotificationsContent = ({ onProductClick }) => {
                         handleMarkAsRead(notif.id);
                         if (notif.product) {
                           onProductClick(notif.product);
+                        } else if (notif.db_id) {
+                          navigate(`/order-tracking/${notif.db_id}`);
                         } else if (notif.category === 'orders') {
                           handleWhatsAppOrderTrack(notif);
                         } else {
