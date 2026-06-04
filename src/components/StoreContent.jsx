@@ -210,28 +210,33 @@ const StoreContent = () => {
         }
       `}</style>
 
-      {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="sticky z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 flex items-center justify-between" style={{ top: 'var(--header-height, 96px)' }}>
-        {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
-        <button 
-          onClick={goBack} 
-          className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
-          aria-label="Retour"
-        >
-          <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
-        </button>
+      {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
+      <div className="fixed z-30 left-0 right-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 md:px-8 shadow-sm dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
+        <div className="max-w-4xl mx-auto flex items-center justify-between w-full">
+          {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
+          <button 
+            onClick={goBack} 
+            className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
+            aria-label="Retour"
+          >
+            <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
+          </button>
 
-        {/* Store Hub Button with custom pill border (verbatim from image_3143c1.png) */}
-        <button className="active-tap border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3.5 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)] transition-all duration-300 hover:border-sky-400">
-          <svg className="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-          </svg>
-          <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">STORE HUB</span>
-        </button>
+          {/* Store Hub Button with custom pill border (verbatim from image_3143c1.png) */}
+          <button className="active-tap border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3.5 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)] transition-all duration-300 hover:border-sky-400">
+            <svg className="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">STORE HUB</span>
+          </button>
 
-        {/* Symmetric spacer to ensure the center "STORE HUB" logo is perfectly aligned */}
-        <div className="w-10 h-10 flex-shrink-0"></div>
+          {/* Symmetric spacer to ensure the center "STORE HUB" logo is perfectly aligned */}
+          <div className="w-10 h-10 flex-shrink-0"></div>
+        </div>
       </div>
+
+      {/* Spacer to push content down below the fixed sub-header */}
+      <div className="h-[72px]"></div>
 
       <header className="w-full pt-4 px-4 flex flex-col items-center">
         {/* Clickable Customer Stats Grid from image_3147e4.png */}
