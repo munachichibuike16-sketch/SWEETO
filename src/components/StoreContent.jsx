@@ -210,8 +210,8 @@ const StoreContent = () => {
         }
       `}</style>
 
-      {/* BRAND SUB-BAR: Centered inside the page layout, scrolls naturally with the page (static) */}
-      <div className="w-full max-w-md mx-auto py-4 px-1 flex items-center justify-between mt-2">
+      {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
+      <div className="sticky top-[var(--header-height,96px)] z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 flex items-center justify-between">
         {/* Back Button: Premium frosted-ice styling with tactile feedback */}
         <button 
           onClick={goBack} 
