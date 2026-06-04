@@ -1,38 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, ArrowRight, Clock, CheckCheck, Filter, Sparkles, Zap, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useNavigate } from 'react-router-dom';
+import { useWishlist } from '../contexts/WishlistContext';
 import { supabase } from '../lib/supabase';
 
 const StoreContent = () => {
   const navigate = useNavigate();
-  const { products, settings, showToast } = useStore();
+  const { settings, products } = useStore();
   const { lang, t } = useLanguage();
-  const [filter, setFilter] = useState('all'); // all, unread, read
-  const [categoryFilter, setCategoryFilter] = useState('all'); // all, orders, promos, security
-  
+  const { wishlistItems, toggleWishlist } = useWishlist();
+
+  const [activeView, setActiveView] = useState('active-orders');
   const [userOrders, setUserOrders] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // HP Probook mock active order dismissed state
+  const [dismissedMock, setDismissedMock] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
-  // Base timestamps in localStorage for mock items, initialized on mount so they tick relative to real time
-  const [mockTimestamps] = useState(() => {
-    const saved = localStorage.getItem('notification_base_timestamps');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
-    const init = {
-      'order-hp-probook': Date.now() - 10 * 60 * 1000,
-      'order-standing-fan': Date.now() - 60 * 60 * 1000,
-      'sec-login': Date.now() - 6 * 60 * 60 * 1000,
-      'sec-hub-updates': Date.now() - 24 * 60 * 60 * 1000,
-    };
-    localStorage.setItem('notification_base_timestamps', JSON.stringify(init));
-    return init;
-  });
+  // Mock liked items if wishlist is empty
+  const [mockLikes, setMockLikes] = useState([
+    { id: 'liked-jbl', name: 'JBL ANC Earbuds', price: 25000, category: 'AUDIO', desc: 'Premium deep bass earbud collection.', image_url: 'https://placehold.co/150x150/0a1122/ffffff?text=JBL' },
+    { id: 'liked-shades', name: 'Sunglasses Classic', price: 12000, category: 'STYLE', desc: 'UV400 protective polarized lenses.', image_url: 'https://placehold.co/150x150/0a1122/ffffff?text=Shades' }
+  ]);
+  const [dismissedMockLikes, setDismissedMockLikes] = useState({});
 
   // Fetch real-time orders linked to the logged-in user
   useEffect(() => {
@@ -74,534 +66,562 @@ const StoreContent = () => {
         setUserOrders(data);
       }
     } catch (err) {
-      console.error('Error fetching user orders for notifications:', err);
+      console.error('Error fetching user orders for Store Hub:', err);
     }
   };
 
-  const getRelativeTime = (timestamp) => {
-    if (!timestamp) return '';
-    const diff = Date.now() - new Date(timestamp).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return lang === 'fr' ? "À l'instant" : 'Just now';
-    if (mins < 60) return lang === 'fr' ? `Il y a ${mins} min` : `${mins} min ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return lang === 'fr' ? `Il y a ${hours} heure${hours > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    const days = Math.floor(hours / 24);
-    return lang === 'fr' ? `Il y a ${days} jour${days > 1 ? 's' : ''}` : `${days} day${days > 1 ? 's' : ''} ago`;
-  };
-  
-  const [readNotifs, setReadNotifs] = useState(() => {
-    const saved = localStorage.getItem('read_notifications_timed');
-    return saved ? JSON.parse(saved) : {};
-  });
+  // Compute stats
+  const realActiveOrders = userOrders.filter(order => order.status !== 'completed' && order.status !== 'cancelled');
+  const activeOrdersCount = realActiveOrders.length > 0 ? realActiveOrders.length : (dismissedMock ? 0 : 1);
 
-  const [deletedNotifs, setDeletedNotifs] = useState(() => {
-    const saved = localStorage.getItem('deleted_notifications');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const realCompletedOrders = userOrders.filter(order => order.status === 'completed');
+  const totalBoughtCount = realCompletedOrders.length > 0 ? realCompletedOrders.length : 2;
 
-  // Tick every 10 seconds to force-refresh the list for vanishing notifications
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTick(t => t + 1);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
+  const activeMockLikes = mockLikes.filter(item => !dismissedMockLikes[item.id]);
+  const likedItemsCount = wishlistItems.length > 0 ? wishlistItems.length : activeMockLikes.length;
 
-  const isNotificationRead = (id) => {
-    return !!readNotifs[id];
-  };
-
-  const isNotificationDeleted = (id) => {
-    return !!deletedNotifs[id];
-  };
-
-  // Helper to dynamically get spec chips for products
-  const getProductSpecs = (product) => {
-    if (!product) return [];
-    if (product.tags) {
-      try {
-        const parsed = typeof product.tags === 'string' ? JSON.parse(product.tags) : product.tags;
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed.slice(0, 2);
-      } catch (e) {}
-    }
-    const name = (product.name || '').toLowerCase();
-    const cat = (product.category || '').toLowerCase();
-    
-    if (name.includes('tv') || cat.includes('tv')) {
-      return ['Smart TV', '4K UHD'];
-    }
-    if (name.includes('tune') || name.includes('pro5') || name.includes('earbud') || name.includes('audio') || name.includes('jbl') || cat.includes('audio')) {
-      return ['Bluetooth 5.3', 'ANC'];
-    }
-    if (name.includes('probook') || name.includes('laptop') || cat.includes('tech')) {
-      return ['Intel i5/i7', 'SSD'];
-    }
-    return ['Authentique', 'Garantie'];
-  };
-
-  // Map actual user orders to tracker notifications
-  const realOrderUpdates = userOrders.map(order => {
-    let orderItems = [];
-    try {
-      orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
-    } catch (e) {}
-
-    const firstItemName = orderItems[0]?.name || '';
-    const product = products.find(p => p.name.toLowerCase().includes(firstItemName.toLowerCase())) || products[0];
-
-    const stage = order.tracking_stage || 'assigned';
-    const status = order.status || 'pending';
-
-    let title = '';
-    let message = '';
-    let icon = '📦';
-
-    if (status === 'completed' || stage === 'delivered') {
-      title = lang === 'fr' ? 'Commande livrée ✓ 📦' : 'Order Delivered ✓ 📦';
-      message = lang === 'fr' 
-        ? `Votre commande #${order.id} a été livrée avec succès !`
-        : `Your order #${order.id} has been successfully delivered!`;
-      icon = '✅';
-    } else if (status === 'shipping' || stage === 'on_the_way' || stage === 'nearby') {
-      title = lang === 'fr' ? 'Livraison Express en cours 🚚' : 'Express Delivery on route 🚚';
-      message = lang === 'fr'
-        ? `Votre commande #${order.id} est en route pour la livraison.`
-        : `Your order #${order.id} is on the way for delivery.`;
-      icon = '🚚';
-    } else if (status === 'confirmed' || stage === 'picked_up' || stage === 'assigned') {
-      title = lang === 'fr' ? 'Commande préparée 🏪' : 'Order Prepared 🏪';
-      message = lang === 'fr'
-        ? `Votre commande #${order.id} est prête/confirmée.`
-        : `Your order #${order.id} has been confirmed & prepared.`;
-      icon = '📦';
+  const handleUnlike = (itemId, isMock = false) => {
+    if (isMock) {
+      setDismissedMockLikes(prev => ({ ...prev, [itemId]: true }));
     } else {
-      title = lang === 'fr' ? 'Commande en attente 🕒' : 'Order Pending 🕒';
-      message = lang === 'fr'
-        ? `Votre commande #${order.id} est en attente de validation.`
-        : `Your order #${order.id} is pending validation.`;
-      icon = '🕒';
-    }
-
-    const id = `real-order-${order.id}`;
-
-    return {
-      id,
-      type: 'order_tracker',
-      category: 'orders',
-      title,
-      message,
-      time: getRelativeTime(order.created_at),
-      isRead: isNotificationRead(id),
-      isDeleted: isNotificationDeleted(id),
-      actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
-      accentColor: '#22c55e',
-      icon,
-      product,
-      db_id: order.id
-    };
-  });
-
-  // 🛍️ Order tracker notifications (fallback to mock with dynamic times if no real orders)
-  const orderUpdates = realOrderUpdates.length > 0 ? realOrderUpdates : [
-    {
-      id: 'order-hp-probook',
-      type: 'order_tracker',
-      category: 'orders',
-      title: lang === 'fr' ? 'Commande prête pour retrait 🏪' : 'Order ready for pickup 🏪',
-      message: lang === 'fr' 
-        ? 'Votre ordinateur HP ProBook est prêt à Adjamé Mirador !' 
-        : 'Your HP ProBook is ready for pickup at Adjamé Mirador!',
-      time: getRelativeTime(mockTimestamps['order-hp-probook']),
-      isRead: isNotificationRead('order-hp-probook'),
-      isDeleted: isNotificationDeleted('order-hp-probook'),
-      actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
-      accentColor: '#22c55e', // Green
-      icon: '📦',
-      product: products.find(p => p.name.toLowerCase().includes('probook')) || products[0]
-    },
-    {
-      id: 'order-standing-fan',
-      type: 'order_tracker',
-      category: 'orders',
-      title: lang === 'fr' ? 'Livraison Express en cours 🚚' : 'Express Delivery on route 🚚',
-      message: lang === 'fr' 
-        ? 'Le coursier est en route vers Yopougon avec votre Standing Fan.' 
-        : 'The courier is on route to Yopougon with your Standing Fan.',
-      time: getRelativeTime(mockTimestamps['order-standing-fan']),
-      isRead: isNotificationRead('order-standing-fan'),
-      isDeleted: isNotificationDeleted('order-standing-fan'),
-      actionLabel: lang === 'fr' ? 'Suivre ma commande >' : 'Track Order >',
-      accentColor: '#22c55e',
-      icon: '🚚',
-      product: products.find(p => p.name.toLowerCase().includes('fan') || p.name.toLowerCase().includes('ventilateur')) || products[1]
-    }
-  ];
-
-  // 🔥 Promos & Stock updates (based on active products)
-  const promosAndStock = products.map((p, index) => {
-    const isNew = p.is_new_arrival;
-    const isSale = p.original_price > p.price;
-    if (!isNew && !isSale) return null;
-    
-    const id = `promo-${p.id}`;
-    const productTime = p.created_at ? new Date(p.created_at).getTime() : (Date.now() - (isNew ? 3 : 5) * 60 * 60 * 1000 - index * 10 * 60 * 1000);
-
-    return {
-      id,
-      type: isNew ? 'new_arrival' : 'price_drop',
-      category: 'promos',
-      title: isNew 
-        ? (lang === 'fr' ? `Nouveauté : ${p.name} ⚡` : `New Arrival: ${p.name} ⚡`)
-        : (lang === 'fr' ? `Baisse de Prix : ${p.name} 🎉` : `Price Drop: ${p.name} 🎉`),
-      message: isNew 
-        ? (lang === 'fr' ? `Le tout nouveau ${p.category} vient d'arriver dans notre boutique.` : `The brand new ${p.category} has arrived in our boutique.`)
-        : (lang === 'fr' ? `Grosse économie ! Le prix a baissé de ${Math.round((p.original_price - p.price) / p.original_price * 100)}% sur cet article.` : `Big savings! The price dropped by ${Math.round((p.original_price - p.price) / p.original_price * 100)}% on this item.`),
-      time: getRelativeTime(productTime),
-      isRead: isNotificationRead(id),
-      isDeleted: isNotificationDeleted(id),
-      accentColor: isNew ? '#3b82f6' : '#eab308', // Blue or Gold
-      icon: isNew ? '⚡' : '🎉',
-      product: p
-    };
-  }).filter(Boolean);
-
-  // Combine and filter notifications
-  const allNotifications = [...orderUpdates, ...promosAndStock]
-    .filter(n => !n.isDeleted)
-    .filter(n => {
-      const readAt = readNotifs[n.id];
-      if (readAt) {
-        // Vanish read alerts after 10 minutes
-        const tenMinutes = 10 * 60 * 1000;
-        if (Date.now() - readAt > tenMinutes) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-  // Category Filtering
-  const categorizedNotifs = allNotifications.filter(n => {
-    if (categoryFilter === 'all') return true;
-    return n.category === categoryFilter;
-  });
-
-  // Read/Unread Filtering
-  const filteredNotifs = categorizedNotifs.filter(n => {
-    if (filter === 'unread') return !n.isRead;
-    if (filter === 'read') return n.isRead;
-    return true;
-  });
-
-  const handleMarkAsRead = (id) => {
-    if (!readNotifs[id]) {
-      const updated = { ...readNotifs, [id]: Date.now() };
-      setReadNotifs(updated);
-      localStorage.setItem('read_notifications_timed', JSON.stringify(updated));
-      
-      const legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
-      if (!legacy.includes(id)) {
-        legacy.push(id);
-        localStorage.setItem('read_notifications', JSON.stringify(legacy));
-      }
+      const item = wishlistItems.find(p => p.id === itemId);
+      if (item) toggleWishlist(item);
     }
   };
 
-  const handleMarkAllRead = () => {
-    const updated = { ...readNotifs };
-    const legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
-    const now = Date.now();
-    filteredNotifs.forEach(n => {
-      if (!updated[n.id]) {
-        updated[n.id] = now;
-      }
-      if (!legacy.includes(n.id)) {
-        legacy.push(n.id);
-      }
-    });
-    setReadNotifs(updated);
-    localStorage.setItem('read_notifications_timed', JSON.stringify(updated));
-    localStorage.setItem('read_notifications', JSON.stringify(legacy));
-    showToast(lang === 'fr' ? 'Toutes lues ✓' : 'All marked read ✓', 'success');
+  const handleDismissOrder = (orderId, isMock = false) => {
+    if (isMock) {
+      setDismissedMock(true);
+      setShowTimeline(false);
+    } else {
+      setUserOrders(prev => prev.filter(o => o.id !== orderId));
+    }
   };
 
-  const handleDelete = (id) => {
-    const updated = { ...deletedNotifs, [id]: true };
-    setDeletedNotifs(updated);
-    localStorage.setItem('deleted_notifications', JSON.stringify(updated));
-    showToast(lang === 'fr' ? 'Notification supprimée 🗑️' : 'Notification dismissed 🗑️', 'info');
+  const orderViaWhatsApp = (itemName, price) => {
+    const phoneNumber = settings?.contactPhone?.replace(/\D/g, '') || "2250500619923";
+    const formattedMessage = encodeURIComponent(
+      `Bonjour SWEETO-HUB ! 👋\n\nJe souhaite commander cet article depuis mon espace client :\n` +
+      `📦 Produit : ${itemName}\n` +
+      `💰 Prix : ${parseInt(price).toLocaleString()} FCFA\n\n` +
+      `Merci de me confirmer la disponibilité pour retrait à Adjamé Mirador ! ⚡`
+    );
+    window.open(`https://api.whatsapp.com/send?phone=${phoneNumber}&text=${formattedMessage}`, '_blank');
   };
 
-  const handleClearHistory = () => {
-    const updated = { ...deletedNotifs };
-    filteredNotifs.forEach(n => {
-      updated[n.id] = true;
-    });
-    setDeletedNotifs(updated);
-    localStorage.setItem('deleted_notifications', JSON.stringify(updated));
-    showToast(lang === 'fr' ? 'Historique effacé 🗑️' : 'Inbox history cleared 🗑️', 'success');
-  };
-
-  const handleWhatsAppOrderTrack = (notif) => {
-    const phone = settings?.social_whatsapp ? settings.social_whatsapp.replace(/\D/g, '') : '2250500619923';
-    const productName = notif.product ? notif.product.name : 'ma commande';
-    const message = `Bonjour SWEETO-HUB, je souhaite suivre l'état de ma commande concernant "${productName}".`;
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  const goBack = () => {
+    navigate(-1);
   };
 
   return (
-    <div className="relative min-h-screen px-4 py-6 md:py-8 max-w-4xl mx-auto overflow-x-clip pb-32">
-      {/* Background Decorative Accents */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full" />
+    <div className="min-h-screen bg-[#030712] text-[#f3f4f6] pb-24 selection:bg-sky-600 selection:text-white relative">
+      <style>{`
+        body {
+            background-color: #030712 !important;
+        }
 
-      {/* Sticky Header Section */}
-      <div className="sticky top-[var(--header-height,80px)] z-50 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-4 mb-6 w-full flex flex-col items-center gap-4">
-        {/* Styled Top Centered Pill Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-3 bg-slate-950/10 dark:bg-slate-900/10 border border-blue-500/30 px-8 py-4 rounded-full shadow-lg select-none"
+        .glass-pill {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .stat-card:active {
+            transform: scale(0.95);
+        }
+
+        .stat-card-active-orders:hover, .stat-card-active-orders.active {
+            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(56, 189, 248, 0.04);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
+        }
+
+        .stat-card-total-bought:hover, .stat-card-total-bought.active {
+            border-color: rgba(45, 212, 191, 0.3);
+            background: rgba(45, 212, 191, 0.04);
+            box-shadow: 0 0 20px rgba(45, 212, 191, 0.12);
+        }
+
+        .stat-card-liked-items:hover, .stat-card-liked-items.active {
+            border-color: rgba(251, 113, 133, 0.3);
+            background: rgba(251, 113, 133, 0.04);
+            box-shadow: 0 0 20px rgba(251, 113, 133, 0.12);
+        }
+
+        .active-order-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(8, 13, 28, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .active-order-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #2dd4bf 0%, #14b8a6 100%);
+            border-top-left-radius: 18px;
+            border-bottom-left-radius: 18px;
+            box-shadow: 2px 0 12px rgba(45, 212, 191, 0.4);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #38bdf8;
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 6px #38bdf8; }
+            50% { transform: scale(1.25); opacity: 0.6; box-shadow: 0 0 14px #38bdf8; }
+        }
+      `}</style>
+
+      {/* STABLE BRAND BAR: Pinned securely to the top of the viewport so it never moves when scrolling */}
+      <div className="sticky top-0 z-50 w-full bg-[#030712]/90 backdrop-blur-md border-b border-white/5 py-4 px-4 flex items-center justify-between">
+        {/* Back Button: Premium frosted-ice styling with tactile feedback */}
+        <button 
+          onClick={goBack} 
+          className="active-tap w-10 h-10 rounded-full border border-sky-500/15 bg-sky-950/20 flex items-center justify-center text-sky-400 hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all duration-300 flex-shrink-0 cursor-pointer"
+          aria-label="Retour"
         >
-          <ShoppingBag size={20} className="text-blue-500 dark:text-blue-400 stroke-[2.5]" />
-          <span className="text-xs font-black uppercase tracking-[0.25em] text-blue-500 dark:text-blue-400">
-            {lang === 'fr' ? 'ESPACE BOUTIQUE' : 'STORE HUB'}
-          </span>
-        </motion.div>
+          <i className="fa-solid fa-chevron-left text-sm"></i>
+        </button>
 
-        {/* Category grouping tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 bg-slate-100/50 dark:bg-slate-900/40 p-2 rounded-2xl border border-slate-200/40 dark:border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
-          {[
-            { id: 'all', label: lang === 'fr' ? '🌐 Tout' : '🌐 All', count: allNotifications.length },
-            { id: 'orders', label: lang === 'fr' ? '🛍️ Commandes' : '🛍️ Orders', count: allNotifications.filter(n => n.category === 'orders').length },
-            { id: 'promos', label: lang === 'fr' ? '🔥 Promos' : '🔥 Promos', count: allNotifications.filter(n => n.category === 'promos').length }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setCategoryFilter(tab.id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
-                categoryFilter === tab.id 
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md' 
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 bg-white/50 dark:bg-slate-800/30 border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50'
-              }`}
-            >
-              <span>{tab.label}</span>
-              {tab.count > 0 && (
-                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${
-                  categoryFilter === tab.id 
-                    ? 'bg-white/20 text-white dark:bg-slate-950/20 dark:text-slate-950' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Store Hub Button with custom pill border (verbatim from image_3143c1.png) */}
+        <button className="active-tap border border-sky-500/20 bg-sky-950/10 px-8 py-3.5 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)] transition-all duration-300 hover:border-sky-400">
+          <svg className="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-400">STORE HUB</span>
+        </button>
+
+        {/* Symmetric spacer to ensure the center "STORE HUB" logo is perfectly aligned */}
+        <div className="w-10 h-10 flex-shrink-0"></div>
       </div>
 
-      {/* Swipeable Notifications Feed */}
-      <div className="space-y-4">
-        <AnimatePresence mode="popLayout">
-          {filteredNotifs.length > 0 ? (
-            filteredNotifs.map((notif, index) => (
-              <div key={notif.id} className="relative overflow-hidden rounded-3xl group">
-                
-                {/* Swipe Action Background Indicator */}
-                <div className="absolute inset-0 bg-red-500 rounded-3xl flex items-center justify-end px-6 text-white font-black text-xs uppercase tracking-widest pointer-events-none z-0">
-                  <div className="flex items-center gap-2">
-                    <span>{lang === 'fr' ? 'Fermer' : 'Dismiss'}</span>
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+      <header className="w-full pt-4 px-4 flex flex-col items-center">
+        {/* Clickable Customer Stats Grid from image_3147e4.png */}
+        <div className="w-full max-w-md grid grid-cols-3 gap-3 mt-4 px-1">
+          {/* Card 1: Active Orders */}
+          <div 
+            id="btn-stat-orders" 
+            onClick={() => setActiveView('active-orders')} 
+            className={`stat-card stat-card-active-orders p-4 text-center ${activeView === 'active-orders' ? 'active' : ''}`}
+          >
+            <span className="block text-2xl font-extrabold text-sky-400">{activeOrdersCount}</span>
+            <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold block mt-1">Active Orders</span>
+          </div>
+
+          {/* Card 2: Total Bought */}
+          <div 
+            id="btn-stat-bought" 
+            onClick={() => setActiveView('total-bought')} 
+            className={`stat-card stat-card-total-bought p-4 text-center ${activeView === 'total-bought' ? 'active' : ''}`}
+          >
+            <span className="block text-2xl font-extrabold text-teal-400">{totalBoughtCount}</span>
+            <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold block mt-1">Total Bought</span>
+          </div>
+
+          {/* Card 3: Liked Items */}
+          <div 
+            id="btn-stat-likes" 
+            onClick={() => setActiveView('liked-items')} 
+            className={`stat-card stat-card-liked-items p-4 text-center ${activeView === 'liked-items' ? 'active' : ''}`}
+          >
+            <span className="block text-2xl font-extrabold text-rose-400">{likedItemsCount}</span>
+            <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold block mt-1">Liked Items</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-md mx-auto px-4 mt-6">
+
+        {/* ================= VIEW 1: ACTIVE ORDERS PAGE ================= */}
+        {activeView === 'active-orders' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center px-1 mb-2">
+              <h3 className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-400 text-left">Active Order Trackers</h3>
+              <span className="text-[10px] text-gray-500 uppercase font-bold bg-white/5 px-2.5 py-1 rounded-full">Live Tracker</span>
+            </div>
+
+            {/* Real active orders from database */}
+            {realActiveOrders.map((order) => {
+              let items = [];
+              try {
+                items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+              } catch (e) {}
+              const mainItemName = items[0]?.name || 'Produit';
+
+              return (
+                <div key={order.id} className="active-order-card p-4 rounded-[20px] flex gap-3 items-center shadow-2xl">
+                  {/* Left Status Pulse */}
+                  <div className="flex items-center justify-center pr-1">
+                    <div className="pulse-dot"></div>
+                  </div>
+
+                  {/* Thumbnail / Package */}
+                  <div className="relative w-16 h-16 bg-[#0a1122] border border-white/5 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="text-white text-2xl">📦</div>
+                    <div className="absolute top-1 right-1 bg-amber-500/90 w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[#0a1122]">
+                      <i className="fa-solid fa-box text-[8px] text-[#1a1105]"></i>
+                    </div>
+                  </div>
+
+                  {/* Order Information */}
+                  <div className="flex-grow min-w-0 pr-1 text-left">
+                    <h4 className="text-[13px] font-extrabold tracking-wide text-white uppercase truncate flex items-center gap-1.5">
+                      {order.status === 'shipping' ? 'EN ROUTE...' : 'EN PRÉPARATION...'}
+                      <span className="text-[10px] font-normal text-gray-500 normal-case flex items-center gap-1">
+                        <i className="fa-regular fa-clock text-[9px]"></i> {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                      {mainItemName} est en cours de traitement pour <span className="text-teal-400 font-medium">{order.city}</span>!
+                    </p>
+                    <button 
+                      onClick={() => navigate(`/order-tracking/${order.id}`)}
+                      className="active-tap text-[10px] font-bold text-teal-400 mt-2 hover:text-teal-300 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                    >
+                      TRACK ORDER <span className="font-normal">&gt;</span>
+                    </button>
+                  </div>
+
+                  {/* Right Action layout */}
+                  <div className="flex flex-col items-end justify-between self-stretch flex-shrink-0 min-w-[85px] border-l border-white/5 pl-2">
+                    <span className="text-[12px] font-black text-sky-400 tracking-wide">{order.total_amount?.toLocaleString() || order.total?.toLocaleString()} F</span>
+                    
+                    <div className="flex flex-col items-end gap-1 mt-auto w-full">
+                      <button 
+                        onClick={() => handleDismissOrder(order.id, false)}
+                        className="active-tap text-[9px] font-bold tracking-wider text-gray-500 hover:text-rose-400 transition-colors uppercase flex items-center gap-1 cursor-pointer"
+                      >
+                        DISMISS <i className="fa-solid fa-xmark text-[9px]"></i>
+                      </button>
+                      
+                      <button 
+                        onClick={() => navigate(`/order-tracking/${order.id}`)}
+                        className="active-tap w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-400 text-white flex items-center justify-center shadow-lg transition-all duration-300 shadow-sky-500/10 cursor-pointer"
+                      >
+                        <i className="fa-solid fa-arrow-right text-[11px]"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Mock Active Order Card */}
+            {!dismissedMock && realActiveOrders.length === 0 && (
+              <>
+                <div id="order-card-probook" className="active-order-card p-4 rounded-[20px] flex gap-3 items-center shadow-2xl">
+                  {/* Left Status Pulse */}
+                  <div className="flex items-center justify-center pr-1">
+                    <div className="pulse-dot"></div>
+                  </div>
+
+                  {/* Product Thumbnail with Package Badge */}
+                  <div className="relative w-16 h-16 bg-[#0a1122] border border-white/5 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <img className="max-w-[85%] max-h-[85%] object-contain" src="https://placehold.co/100x100/0a1122/ffffff?text=HP" onError={(e) => { e.target.src='https://placehold.co/150x150/111827/ffffff?text=Laptop'; }} alt="HP ProBook" />
+                    <div className="absolute top-1 right-1 bg-amber-500/90 w-4.5 h-4.5 rounded-full flex items-center justify-center border border-[#0a1122]">
+                      <i className="fa-solid fa-box text-[8px] text-[#1a1105]"></i>
+                    </div>
+                  </div>
+
+                  {/* Product Information Text */}
+                  <div className="flex-grow min-w-0 pr-1 text-left">
+                    <h4 className="text-[13px] font-extrabold tracking-wide text-white uppercase truncate flex items-center gap-1.5">
+                      ORDER READY...
+                      <span className="text-[10px] font-normal text-gray-500 normal-case flex items-center gap-1">
+                        <i className="fa-regular fa-clock text-[9px]"></i> 1h ago
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                      HP ProBook is ready for pickup at <span className="text-teal-400 font-medium">Adjamé Mirador!</span>
+                    </p>
+                    <button 
+                      onClick={() => setShowTimeline(!showTimeline)} 
+                      className="active-tap text-[10px] font-bold text-teal-400 mt-2 hover:text-teal-300 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                    >
+                      TRACK ORDER <span className="font-normal">&gt;</span>
+                    </button>
+                  </div>
+
+                  {/* Right Action Layout */}
+                  <div className="flex flex-col items-end justify-between self-stretch flex-shrink-0 min-w-[85px] border-l border-white/5 pl-2">
+                    <span className="text-[12px] font-black text-sky-400 tracking-wide">180,000 F</span>
+                    
+                    <div className="flex flex-col items-end gap-1 mt-auto w-full">
+                      <button 
+                        onClick={() => handleDismissOrder(null, true)} 
+                        className="active-tap text-[9px] font-bold tracking-wider text-gray-500 hover:text-rose-400 transition-colors uppercase flex items-center gap-1 cursor-pointer"
+                      >
+                        DISMISS <i className="fa-solid fa-xmark text-[9px]"></i>
+                      </button>
+                      
+                      <button 
+                        onClick={() => setShowTimeline(!showTimeline)} 
+                        className="active-tap w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-400 text-white flex items-center justify-center shadow-lg transition-all duration-300 shadow-sky-500/10 cursor-pointer"
+                      >
+                        <i className="fa-solid fa-arrow-right text-[11px]"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Main Notification Card Item with drag gesture */}
-                <motion.div
-                  layout
-                  drag="x"
-                  dragDirectionLock
-                  dragConstraints={{ left: -140, right: 0 }}
-                  dragElastic={{ left: 0.15, right: 0 }}
-                  onDragEnd={(e, info) => {
-                    if (info.offset.x < -80) {
-                      handleDelete(notif.id);
-                    }
-                  }}
-                  className={`relative z-10 flex items-center gap-4 p-5 rounded-3xl border transition-all duration-300 cursor-pointer select-none bg-white dark:bg-slate-800 ${
-                    notif.isRead 
-                      ? 'border-slate-100 dark:border-slate-700/50 opacity-80' 
-                      : 'border-eas-blue/20 shadow-xl shadow-eas-blue/5'
-                  } ${
-                    !notif.isRead ? 'bg-blue-500/[0.04] dark:bg-blue-500/[0.02]' : ''
-                  }`}
-                  style={{
-                    borderLeftWidth: '4px',
-                    borderLeftColor: notif.isRead ? 'transparent' : notif.accentColor
-                  }}
-                  onClick={() => {
-                    handleMarkAsRead(notif.id);
-                    if (notif.product) {
-                      navigate(`/product/${notif.product.id}`);
-                    } else if (notif.db_id) {
-                      navigate(`/order-tracking/${notif.db_id}`);
-                    }
-                  }}
-                >
-                  {/* Glowing unread dot indicator */}
-                  {!notif.isRead && (
-                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex h-2 w-2 z-20">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                {/* Dynamic Collapsible Tracking Timeline */}
+                {showTimeline && (
+                  <div id="tracking-timeline" className="bg-[#091122]/95 border border-white/5 rounded-2xl p-5 shadow-2xl space-y-4 overflow-hidden text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="text-[10px] uppercase tracking-widest font-black text-sky-400">Order Reference #SWTO-779</span>
+                      <button onClick={() => setShowTimeline(false)} className="text-xs text-gray-500 hover:text-white cursor-pointer"><i className="fa-solid fa-times"></i></button>
                     </div>
-                  )}
+                    
+                    <div className="relative pl-6 space-y-6">
+                      <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-teal-500/30"></div>
+                      
+                      <div className="relative">
+                        <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center ring-4 ring-teal-500/20">
+                          <i className="fa-solid fa-check text-[8px] text-white"></i>
+                        </div>
+                        <h5 className="text-xs font-bold text-white">Order Confirmed & Logged</h5>
+                        <p className="text-[10px] text-gray-500 mt-0.5">June 4, 14:30 - Pre-filled securely via @sweeto</p>
+                      </div>
 
-                  {/* Thumbnail / Product image float */}
-                  {notif.product ? (
-                    <div className="relative w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden flex-shrink-0 shadow-inner border border-slate-100 dark:border-slate-700/50 p-1 flex items-center justify-center">
-                      <img src={notif.product.image_url} alt="" className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute top-0.5 right-0.5 w-5 h-5 rounded-md text-[10px] bg-slate-950/65 flex items-center justify-center text-white select-none">
-                        {notif.icon}
+                      <div className="relative">
+                        <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center ring-4 ring-teal-500/20">
+                          <i className="fa-solid fa-check text-[8px] text-white"></i>
+                        </div>
+                        <h5 className="text-xs font-bold text-white">Prepared at SWEETO-HUB Headquarters</h5>
+                        <p className="text-[10px] text-gray-500 mt-0.5">June 4, 15:15 - Packed and quality-sealed</p>
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center ring-4 ring-teal-500/20 animate-pulse">
+                          <i className="fa-solid fa-box text-[8px] text-white"></i>
+                        </div>
+                        <h5 className="text-xs font-bold text-teal-400">Ready for Pick-Up - Adjamé Mirador</h5>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Please show your verified order reference on your phone upon collection.</p>
+                        <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="active-tap inline-flex items-center gap-1.5 bg-sky-500/20 hover:bg-sky-500/30 text-[9px] font-extrabold text-sky-400 border border-sky-500/20 px-3 py-1.5 rounded-lg mt-2 uppercase transition-all">
+                          <i className="fa-solid fa-location-dot"></i> View pickup directions
+                        </a>
                       </div>
                     </div>
-                  ) : (
-                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-inner border border-slate-100 dark:border-slate-700/50 select-none">
-                      {notif.icon}
-                    </div>
-                  )}
+                  </div>
+                )}
+              </>
+            )}
 
-                  {/* Content Stack */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className={`font-black truncate text-sm uppercase tracking-tight ${notif.isRead ? 'text-slate-650 dark:text-slate-350' : 'text-slate-900 dark:text-white'}`}>
-                        {notif.title}
-                      </h3>
-                      <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap ml-2 flex items-center gap-1">
-                        <Clock size={10} />
-                        {notif.time}
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-normal pr-4">
-                      {notif.message}
-                    </p>
+            {/* Empty State for Active Orders */}
+            {dismissedMock && realActiveOrders.length === 0 && (
+              <div id="orders-empty-state" className="text-center py-12 px-6 bg-[#091122]/40 rounded-3xl border border-white/5">
+                <div className="text-gray-600 text-4xl mb-3">
+                  <i className="fa-solid fa-box-open"></i>
+                </div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wide">No active trackers</h4>
+                <p className="text-[10px] text-gray-500 mt-1">No pending orders are in progress. Browse our Store Hub to order premium tech!</p>
+              </div>
+            )}
+          </div>
+        )}
 
-                    {/* Specifications Chips Tagging inside Promos */}
-                    {notif.category === 'promos' && notif.product && (
-                      <div className="flex gap-1 mt-2">
-                        {getProductSpecs(notif.product).map((spec, i) => (
-                          <span key={i} className="text-[8px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-900 text-slate-450 dark:text-slate-550 px-2 py-0.5 rounded">
-                            {spec}
-                          </span>
-                        ))}
+        {/* ================= VIEW 2: TOTAL BOUGHT PAGE ================= */}
+        {activeView === 'total-bought' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center px-1 mb-2">
+              <h3 className="text-xs uppercase tracking-[0.2em] font-extrabold text-teal-400 text-left">Completed Purchases</h3>
+              <span className="text-[10px] text-gray-500 uppercase font-bold bg-white/5 px-2.5 py-1 rounded-full">Archive Logs</span>
+            </div>
+
+            <div className="space-y-3">
+              {/* Real completed orders from database */}
+              {realCompletedOrders.map(order => {
+                let items = [];
+                try {
+                  items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+                } catch (e) {}
+                const mainItemName = items[0]?.name || 'Produit';
+
+                return (
+                  <div key={order.id} className="bg-[#091122]/80 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
+                    <div className="flex items-center gap-3 text-left">
+                      <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-400 text-lg flex-shrink-0">
+                        <i className="fa-solid fa-circle-check"></i>
                       </div>
-                    )}
-
-                    {/* Direct interactive order link inside Tracker card */}
-                    {notif.actionLabel && (
-                      <span 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkAsRead(notif.id);
-                          if (notif.db_id) {
-                            navigate(`/order-tracking/${notif.db_id}`);
-                          } else {
-                            handleWhatsAppOrderTrack(notif);
-                          }
-                        }}
-                        className="inline-block text-[10px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 mt-2.5 hover:underline"
+                      <div>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wide">{mainItemName}</h4>
+                        <span className="text-[9px] text-gray-500 block mt-0.5">
+                          {new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} • Reference #SWTO-{order.id}
+                        </span>
+                        <span className="text-[9px] text-teal-400 font-semibold uppercase tracking-wider">Delivered & Verified ✓</span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="block text-xs font-bold text-gray-300">{order.total_amount?.toLocaleString() || order.total?.toLocaleString()} F</span>
+                      <button 
+                        onClick={() => orderViaWhatsApp(mainItemName, order.total_amount || order.total)}
+                        className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-sky-500/20 text-sky-400 border border-sky-500/20 px-2 py-1 rounded cursor-pointer"
                       >
-                        {notif.actionLabel}
-                      </span>
-                    )}
+                        Buy Again
+                      </button>
+                    </div>
                   </div>
+                );
+              })}
 
-                  {/* Price Tagging / Jump button */}
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    {notif.product && (
-                      <span className={`text-xs font-black ${notif.category === 'promos' ? 'text-amber-500' : 'text-eas-blue'}`}>
-                        {notif.product.price.toLocaleString()} {settings?.currency || 'FCFA'}
-                      </span>
-                    )}
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMarkAsRead(notif.id);
-                        if (notif.product) {
-                          navigate(`/product/${notif.product.id}`);
-                        } else if (notif.db_id) {
-                          navigate(`/order-tracking/${notif.db_id}`);
-                        } else if (notif.category === 'orders') {
-                          handleWhatsAppOrderTrack(notif);
-                        } else {
-                          showToast(lang === 'fr' ? 'Alerte de sécurité validée ✓' : 'Security alert verified ✓', 'success');
-                        }
-                      }}
-                      className={`p-2 rounded-xl transition-all ${
-                        notif.isRead
-                          ? 'bg-slate-50 dark:bg-slate-700/50 text-slate-400'
-                          : 'bg-eas-blue text-white shadow-md shadow-eas-blue/15'
-                      }`}
-                    >
-                      <ArrowRight size={14} />
-                    </button>
+              {/* Mock Bought Item 1: JBL Tune 760 */}
+              <div className="bg-[#091122]/80 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-400 text-lg flex-shrink-0">
+                    <i className="fa-solid fa-circle-check"></i>
                   </div>
-                </motion.div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">JBL Tune 760 ANC</h4>
+                    <span className="text-[9px] text-gray-500 block mt-0.5">May 28 • Reference #SWTO-710</span>
+                    <span className="text-[9px] text-teal-400 font-semibold uppercase tracking-wider">Delivered & Verified ✓</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="block text-xs font-bold text-gray-300">45,000 F</span>
+                  <button 
+                    onClick={() => orderViaWhatsApp('JBL Tune 760 ANC', '45000')}
+                    className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-sky-500/20 text-sky-400 border border-sky-500/20 px-2 py-1 rounded cursor-pointer"
+                  >
+                    Buy Again
+                  </button>
+                </div>
               </div>
-            ))
-          ) : (
-            /* Watermarked Empty state */
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-24 bg-slate-50/50 dark:bg-slate-900/20 rounded-[2.5rem] border border-dashed border-slate-150 dark:border-slate-800 flex flex-col items-center justify-center p-8"
-            >
-              <div className="w-16 h-16 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 shadow-md mb-6 animate-bounce">
-                <Bell size={28} />
-              </div>
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase italic tracking-tighter mb-2">
-                {lang === 'fr' ? 'Boîte de réception vide' : 'All caught up!'}
-              </h3>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic max-w-xs leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
-                « Elite Local Commerce • Managed by @sweeto »
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
-      {/* Stats/Footer */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-12 p-8 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-800 dark:from-eas-blue dark:to-blue-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-white/10"
-      >
-        <div className="text-center md:text-left">
-          <p className="text-blue-400 dark:text-blue-200 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Live Ecosystem</p>
-          <h4 className="text-2xl font-black italic uppercase leading-none">Real-time alerts active</h4>
-          <p className="text-slate-400 dark:text-blue-100/60 text-xs mt-2">We monitor stock and prices 24/7 for you.</p>
-        </div>
-        <div className="flex items-center gap-4">
-           <div className="flex -space-x-3">
-            {products.slice(0, 3).map((p, i) => (
-              <img key={i} src={p.image_url} alt="" className="w-12 h-12 rounded-2xl border-2 border-white dark:border-slate-900 object-cover shadow-lg" />
-            ))}
-            <div className="w-12 h-12 rounded-2xl border-2 border-white dark:border-slate-900 bg-white/10 backdrop-blur-md flex items-center justify-center text-[10px] font-black">
-              +{products.length}
+              {/* Mock Bought Item 2: SSD External Case */}
+              <div className="bg-[#091122]/80 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-400 text-lg flex-shrink-0">
+                    <i className="fa-solid fa-circle-check"></i>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wide">External Case SSD</h4>
+                    <span className="text-[9px] text-gray-500 block mt-0.5">May 15 • Reference #SWTO-682</span>
+                    <span className="text-[9px] text-teal-400 font-semibold uppercase tracking-wider">Delivered & Verified ✓</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="block text-xs font-bold text-gray-300">8,500 F</span>
+                  <button 
+                    onClick={() => orderViaWhatsApp('External Case SSD', '8500')}
+                    className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-sky-500/20 text-sky-400 border border-sky-500/20 px-2 py-1 rounded cursor-pointer"
+                  >
+                    Buy Again
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="h-12 w-[1px] bg-white/10 hidden md:block" />
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-emerald-400">● 100% Secure</span>
-            <span className="text-[10px] text-white/50">Encrypted Updates</span>
+        )}
+
+        {/* ================= VIEW 3: LIKED ITEMS PAGE ================= */}
+        {activeView === 'liked-items' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center px-1 mb-2">
+              <h3 className="text-xs uppercase tracking-[0.2em] font-extrabold text-rose-400 text-left">Liked & Saved Products</h3>
+              <span className="text-[10px] text-gray-500 uppercase font-bold bg-white/5 px-2.5 py-1 rounded-full">Favorites</span>
+            </div>
+
+            {/* Liked / Saved Interactive Grid */}
+            {likedItemsCount > 0 ? (
+              <div id="liked-items-grid" className="grid grid-cols-2 gap-3">
+                {/* Real items from WishlistContext */}
+                {wishlistItems.map((item) => (
+                  <div key={item.id} className="bg-[#091122]/95 border border-white/5 p-3 rounded-xl flex flex-col justify-between h-44 relative text-left">
+                    {/* Floating Heart Unlike Trigger */}
+                    <button 
+                      onClick={() => handleUnlike(item.id, false)}
+                      className="absolute top-2.5 right-2.5 text-rose-400 hover:text-gray-400 transition-colors text-xs p-1 cursor-pointer"
+                    >
+                      <i className="fa-solid fa-heart"></i>
+                    </button>
+
+                    <div className="mt-2">
+                      <span className="text-[8px] font-black bg-sky-500/10 text-sky-400 px-1.5 py-0.5 rounded uppercase">{item.category || 'TECH'}</span>
+                      <h5 className="text-xs font-bold text-white mt-1 line-clamp-1">{item.name}</h5>
+                      <p className="text-[9px] text-gray-500 leading-normal mt-1 line-clamp-2">Authentic local product from SWEETO-HUB.</p>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs font-extrabold text-sky-400">{item.price?.toLocaleString()} F</span>
+                      <button 
+                        onClick={() => orderViaWhatsApp(item.name, item.price)}
+                        className="active-tap w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-[11px] shadow-lg shadow-teal-500/20 cursor-pointer"
+                      >
+                        <i className="fa-brands fa-whatsapp"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Fallback Mock Items (Only display if wishlist is completely empty) */}
+                {wishlistItems.length === 0 && activeMockLikes.map((item) => (
+                  <div key={item.id} id={item.id} className="bg-[#091122]/95 border border-white/5 p-3 rounded-xl flex flex-col justify-between h-44 relative text-left">
+                    {/* Floating Heart Unlike Trigger */}
+                    <button 
+                      onClick={() => handleUnlike(item.id, true)}
+                      className="absolute top-2.5 right-2.5 text-rose-400 hover:text-gray-400 transition-colors text-xs p-1 cursor-pointer"
+                    >
+                      <i className="fa-solid fa-heart"></i>
+                    </button>
+
+                    <div className="mt-2">
+                      <span className="text-[8px] font-black bg-sky-500/10 text-sky-400 px-1.5 py-0.5 rounded uppercase">{item.category}</span>
+                      <h5 className="text-xs font-bold text-white mt-1">{item.name}</h5>
+                      <p className="text-[9px] text-gray-500 leading-normal mt-1">{item.desc}</p>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs font-extrabold text-sky-400">{item.price.toLocaleString()} F</span>
+                      <button 
+                        onClick={() => orderViaWhatsApp(item.name, item.price)}
+                        className="active-tap w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-[11px] shadow-lg shadow-teal-500/20 cursor-pointer"
+                      >
+                        <i className="fa-brands fa-whatsapp"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Empty State for Liked Grid */
+              <div id="liked-empty-state" className="text-center py-12 px-6 bg-[#091122]/40 rounded-3xl border border-white/5">
+                <div className="text-gray-600 text-4xl mb-3">
+                  <i className="fa-regular fa-heart"></i>
+                </div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wide">No saved items found</h4>
+                <p className="text-[10px] text-gray-500 mt-1">Explore our product catalog and tap the heart icon to start saving tech!</p>
+              </div>
+            )}
           </div>
-        </div>
-      </motion.div>
+        )}
+
+      </main>
+
+      {/* Global App Signature Watermark Footer */}
+      <footer className="text-center mt-12 py-4">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-700 font-extrabold">
+          Elite Local Commerce • Managed by @sweeto
+        </p>
+      </footer>
     </div>
   );
 };

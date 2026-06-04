@@ -830,6 +830,12 @@ const AuthPage = ({ initialTab = 'login' }) => {
   if (sessionUser) {
     return (
       <div className="auth-body dark:bg-slate-950 transition-colors duration-500">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-850 transition-all z-20 cursor-pointer shadow-sm"
+        >
+          <ArrowLeft size={20} />
+        </button>
         <span className="candy-decoration">⚡</span>
         <span className="candy-decoration">💻</span>
         <span className="candy-decoration">✨</span>
@@ -1266,6 +1272,12 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
       {/* Right side: Auth Card Column */}
       <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30 dark:bg-slate-950 transition-colors duration-500">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-850 transition-all z-20 cursor-pointer shadow-sm"
+        >
+          <ArrowLeft size={20} />
+        </button>
         {/* Floating tech background decorations for mobile view */}
         <span className="candy-decoration lg:hidden">⚡</span>
         <span className="candy-decoration lg:hidden">💻</span>
@@ -1336,14 +1348,14 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       <div className="error-message">{errors.loginPassword}</div>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <label className="checkbox-container">
+                      <label className="remember-me">
                         <input 
                           type="checkbox" 
                           checked={loginData.rememberMe}
                           onChange={(e) => setLoginData({...loginData, rememberMe: e.target.checked})}
                         />
-                        <span className="checkbox-checkmark"></span>
-                        <span className="checkbox-label text-xs font-bold text-slate-655 dark:text-slate-400">{t('remember_me') || 'Remember Me'}</span>
+                        <span className="custom-checkbox">✓</span>
+                        <span className="checkbox-label text-xs font-bold text-slate-600 dark:text-slate-400">{t('remember_me') || 'Remember Me'}</span>
                       </label>
                     </div>
                     <button type="submit" className={`btn-submit ${loading ? 'loading' : ''}`} disabled={loading}>

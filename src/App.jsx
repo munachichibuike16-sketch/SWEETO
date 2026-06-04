@@ -733,10 +733,12 @@ const Storefront = ({ viewMode = 'home' }) => {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 overflow-x-hidden relative">
-      <Header 
-        onMenuClick={() => setIsSidebarOpen(true)} 
-        onCartClick={() => setIsCartOpen(true)}
-      />
+      {viewMode !== 'products' && (
+        <Header 
+          onMenuClick={() => setIsSidebarOpen(true)} 
+          onCartClick={() => setIsCartOpen(true)}
+        />
+      )}
 
       <motion.div 
         animate={{ 
@@ -745,7 +747,9 @@ const Storefront = ({ viewMode = 'home' }) => {
           borderRadius: isProductModalOpen ? '40px' : '0px'
         }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col origin-center pt-24 transition-colors duration-300"
+        className={`min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col origin-center transition-colors duration-300 ${
+          viewMode === 'products' ? 'pt-0' : 'pt-24'
+        }`}
       >
         
         <main className="flex-1 pb-20">
