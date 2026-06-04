@@ -492,6 +492,13 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           -{product.discount}% EXCLUSIVE
                         </div>
                       )}
+
+                      {/* LIVRAISON RAPIDE Badge */}
+                      <div className="absolute bottom-4 left-4 sm:bottom-10 sm:left-10 z-10 pointer-events-none">
+                        <span className="px-2.5 py-1 rounded bg-blue-600 text-white font-black text-[9px] sm:text-[11px] uppercase tracking-wider shadow-lg border border-blue-400/20 flex items-center gap-1.5 backdrop-blur-md">
+                          ⚡ LIVRAISON RAPIDE
+                        </span>
+                      </div>
                     </div>
                   </div>
 

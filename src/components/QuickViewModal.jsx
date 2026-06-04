@@ -86,6 +86,13 @@ const QuickViewModal = ({ product, isOpen, onClose, onViewDetails }) => {
                 className="w-full h-full object-contain relative z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-transform duration-700 group-hover:scale-105"
               />
 
+              {/* LIVRAISON RAPIDE Badge */}
+              <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                <span className="px-2.5 py-1 rounded bg-blue-600 text-white font-black text-[9px] uppercase tracking-wider shadow-lg border border-blue-400/20 flex items-center gap-1.5 backdrop-blur-md">
+                  ⚡ LIVRAISON RAPIDE
+                </span>
+              </div>
+
               {/* View Indicators */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20 bg-black/10 backdrop-blur-md p-2 rounded-2xl border border-white/10">
                 {[product.image_url, ...(product.gallery || [])].filter(Boolean).map((img, idx) => (
