@@ -267,42 +267,8 @@ const StoreContent = () => {
     };
   }).filter(Boolean);
 
-  // ⚙️ Account Security alerts
-  const securityUpdates = [
-    {
-      id: 'sec-login',
-      type: 'security',
-      category: 'security',
-      title: lang === 'fr' ? 'Connexion établie 🔐' : 'Secure Login Established 🔐',
-      message: lang === 'fr' 
-        ? 'Nouvelle connexion réussie détectée depuis Cocody (Abidjan).' 
-        : 'Successful login detected from Cocody (Abidjan).',
-      time: getRelativeTime(mockTimestamps['sec-login']),
-      isRead: isNotificationRead('sec-login'),
-      isDeleted: isNotificationDeleted('sec-login'),
-      accentColor: '#64748b', // Gray
-      icon: '👤',
-      product: null
-    },
-    {
-      id: 'sec-hub-updates',
-      type: 'security',
-      category: 'security',
-      title: lang === 'fr' ? 'Hub de livraison mis à jour 🔐' : 'Delivery Hub Configured 🔐',
-      message: lang === 'fr' 
-        ? 'Les tarifs d\'expédition pour Adjamé Mirador ont été ajustés.' 
-        : 'Shipping rates for Adjamé Mirador have been calibrated.',
-      time: getRelativeTime(mockTimestamps['sec-hub-updates']),
-      isRead: isNotificationRead('sec-hub-updates'),
-      isDeleted: isNotificationDeleted('sec-hub-updates'),
-      accentColor: '#64748b',
-      icon: '🔐',
-      product: null
-    }
-  ];
-
   // Combine and filter notifications
-  const allNotifications = [...orderUpdates, ...promosAndStock, ...securityUpdates]
+  const allNotifications = [...orderUpdates, ...promosAndStock]
     .filter(n => !n.isDeleted)
     .filter(n => {
       const readAt = readNotifs[n.id];
@@ -387,12 +353,12 @@ const StoreContent = () => {
   };
 
   return (
-    <div className="relative min-h-screen px-4 py-6 md:py-8 max-w-4xl mx-auto overflow-hidden pb-32">
+    <div className="relative min-h-screen px-4 py-6 md:py-8 max-w-4xl mx-auto overflow-x-clip pb-32">
       {/* Background Decorative Accents */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full" />
 
       {/* Sticky Header Section */}
-      <div className="sticky top-[80px] z-50 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-4 mb-6 w-full flex flex-col items-center gap-4">
+      <div className="sticky top-[var(--header-height,80px)] z-50 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md pt-2 pb-4 mb-6 w-full flex flex-col items-center gap-4">
         {/* Styled Top Centered Pill Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -411,8 +377,7 @@ const StoreContent = () => {
           {[
             { id: 'all', label: lang === 'fr' ? '🌐 Tout' : '🌐 All', count: allNotifications.length },
             { id: 'orders', label: lang === 'fr' ? '🛍️ Commandes' : '🛍️ Orders', count: allNotifications.filter(n => n.category === 'orders').length },
-            { id: 'promos', label: lang === 'fr' ? '🔥 Promos' : '🔥 Promos', count: allNotifications.filter(n => n.category === 'promos').length },
-            { id: 'security', label: lang === 'fr' ? '⚙️ Sécurité' : '⚙️ Security', count: allNotifications.filter(n => n.category === 'security').length }
+            { id: 'promos', label: lang === 'fr' ? '🔥 Promos' : '🔥 Promos', count: allNotifications.filter(n => n.category === 'promos').length }
           ].map((tab) => (
             <button
               key={tab.id}
