@@ -677,14 +677,10 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   {/* Related Products Section */}
                   <section className="border-t border-slate-100 dark:border-slate-900 pt-24 pb-12">
                     <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-10 mb-16 px-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-eas-blue rounded-[20px] flex items-center justify-center shadow-xl shadow-eas-blue/20 shrink-0">
-                          <Zap size={22} className="text-white fill-current md:w-7 md:h-7" />
-                        </div>
-                        <div>
-                          <h3 className="text-[10px] font-black text-eas-blue uppercase tracking-[0.4em] mb-1.5 leading-none">{t('related')}</h3>
-                          <h2 className="text-xl sm:text-2xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-tight">{t('you_might_also_like')}</h2>
-                        </div>
+                      <div>
+                        <h2 className="text-lg sm:text-xl md:text-2xl font-black text-eas-blue uppercase tracking-[0.4em] leading-none">
+                          {t('related')}
+                        </h2>
                       </div>
 
 
