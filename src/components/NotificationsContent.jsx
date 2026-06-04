@@ -503,10 +503,15 @@ const NotificationsContent = ({ onProductClick }) => {
         </div>
 
         {/* Right Action Button */}
-        {unreadCount > 0 && (
+        {filteredNotifs.length > 0 && (
           <button
             onClick={handleMarkAllRead}
-            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors bg-transparent border-none cursor-pointer select-none"
+            disabled={unreadCount === 0}
+            className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors bg-transparent border-none select-none ${
+              unreadCount === 0
+                ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50'
+                : 'text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 cursor-pointer'
+            }`}
           >
             <CheckSquare className="w-4 h-4" />
             <span>{lang === 'fr' ? 'TOUT MARQUER COMME LU' : 'MARK ALL AS READ'}</span>
