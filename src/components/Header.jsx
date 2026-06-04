@@ -673,7 +673,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           </span>
         </motion.button>
 
-        {/* Activité */}
+        {/* Notifications */}
         <motion.button 
           onClick={() => navigate('/notifications')} 
           whileTap={{ scale: 0.9 }} 
@@ -685,7 +685,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           {products.filter(p => p.is_new_arrival).length > 0 && location.pathname !== '/notifications' && (
             <span className="absolute top-0 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
           )}
-          <span className="text-[8px] font-black uppercase tracking-wider">{t('activity')}</span>
+          <span className="text-[8px] font-black uppercase tracking-wider">{t('notifications')}</span>
         </motion.button>
 
         {/* Thème */}
