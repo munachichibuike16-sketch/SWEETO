@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../contexts/StoreContext';
 import { Play, Volume2, VolumeX, MessageCircle, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const VideoCard = ({ ad, linkedProduct, onClick }) => {
+const VideoCard = ({ ad, linkedProduct, onClick, isPlayingGlobal, onIntersectionChange }) => {
   const videoRef = useRef(null);
   const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayingLocal, setIsPlayingLocal] = useState(false);
   const { t, t_smart } = useLanguage();
   const { settings } = useStore();
 
@@ -19,14 +19,7 @@ const VideoCard = ({ ad, linkedProduct, onClick }) => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            video.play()
-              .then(() => setIsPlaying(true))
-              .catch(() => setIsPlaying(false));
-          } else {
-            video.pause();
-            setIsPlaying(false);
-          }
+          onIntersectionChange(ad.id, entry.isIntersecting);
         });
       },
       { threshold: 0.6 }
@@ -36,7 +29,21 @@ const VideoCard = ({ ad, linkedProduct, onClick }) => {
     return () => {
       if (video) observer.unobserve(video);
     };
-  }, [ad.videoUrl]);
+  }, [ad.videoUrl, ad.id, onIntersectionChange]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlayingGlobal) {
+      video.play()
+        .then(() => setIsPlayingLocal(true))
+        .catch(() => setIsPlayingLocal(false));
+    } else {
+      video.pause();
+      setIsPlayingLocal(false);
+    }
+  }, [isPlayingGlobal]);
 
   return (
     <div 
@@ -99,7 +106,7 @@ const VideoCard = ({ ad, linkedProduct, onClick }) => {
       )}
 
       {/* Play Overlay Indicator */}
-      {!isPlaying && (
+      {!isPlayingLocal && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white scale-90 group-hover:scale-100 transition-transform">
             <Play size={16} fill="currentColor" className="translate-x-0.5" />
@@ -118,6 +125,28 @@ const VideoAdSection = ({ section }) => {
   const [activeOverlayAd, setActiveOverlayAd] = useState(null);
   const [isOverlayMuted, setIsOverlayMuted] = useState(false);
   const overlayVideoRef = useRef(null);
+
+  // Track intersecting state of each video ad card
+  const [intersectingAds, setIntersectingAds] = useState({});
+  const [activePlayingId, setActivePlayingId] = useState(null);
+
+  const handleIntersectionChange = useCallback((adId, isIntersecting) => {
+    setIntersectingAds(prev => {
+      if (prev[adId] === isIntersecting) return prev;
+      return { ...prev, [adId]: isIntersecting };
+    });
+  }, []);
+
+  // Compute which active video ad should play. 
+  // We want to play the first one that is intersecting.
+  useEffect(() => {
+    const visibleIds = Object.keys(intersectingAds).filter(id => intersectingAds[id]);
+    if (visibleIds.length > 0) {
+      setActivePlayingId(Number(visibleIds[0]));
+    } else {
+      setActivePlayingId(null);
+    }
+  }, [intersectingAds]);
 
   // If a specific ad is targeted by section configuration
   if (section && section.category && section.category !== 'All') {
@@ -282,6 +311,8 @@ const VideoAdSection = ({ section }) => {
                 ad={ad} 
                 linkedProduct={linkedProduct} 
                 onClick={handleCardClick} 
+                isPlayingGlobal={activePlayingId === ad.id}
+                onIntersectionChange={handleIntersectionChange}
               />
             );
           })}
