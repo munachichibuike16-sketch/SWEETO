@@ -27,6 +27,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isWishlistPage = location.pathname === '/wishlist';
+  const isHomePage = location.pathname === '/' || location.pathname === '';
+  const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
   const notifRef = useRef(null);
   const langRef = useRef(null);
   const headerRef = useRef(null);
@@ -636,7 +638,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      <nav className="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800 z-[100] lg:hidden px-8 py-4 flex justify-between items-center shadow-[0_-15px_40px_rgba(0,0,0,0.08)]">
+      <nav className="fixed bottom-0 left-0 w-full bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-900 z-[100] lg:hidden px-10 py-3.5 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        {/* Accueil */}
         <motion.button 
           onClick={() => {
             setSearchQuery('');
@@ -644,49 +647,57 @@ const Header = ({ onMenuClick, onCartClick }) => {
             setSelectedBrand(null);
             navigate('/');
           }} 
-          whileTap={{ scale: 0.8 }} 
-          className="flex flex-col items-center gap-1.5 text-eas-blue"
-        >
-          <Home size={22} strokeWidth={3} />
-          <span className="text-[9px] font-black uppercase tracking-widest">{t('home')}</span>
-        </motion.button>
-        <motion.button 
-          onClick={() => navigate('/wishlist')} 
-          whileTap={{ scale: 0.8 }} 
-          className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
-            isWishlistPage ? 'text-red-500' : 'text-slate-300 dark:text-slate-500'
+          whileTap={{ scale: 0.9 }} 
+          className={`flex flex-col items-center gap-1.5 transition-colors duration-300 ${
+            isHomePage ? 'text-eas-blue' : 'text-slate-500 dark:text-slate-650'
           }`}
         >
-          <div className={`p-2 rounded-xl transition-all ${isWishlistPage ? 'bg-red-50 dark:bg-red-900/20 shadow-inner' : ''}`}>
-            <Heart 
-              size={22} 
-              strokeWidth={3} 
-              className={wishlistItems.length > 0 || isWishlistPage ? "text-red-500" : ""} 
-              fill={wishlistItems.length > 0 || isWishlistPage ? "currentColor" : "none"} 
-            />
-          </div>
+          <Home size={20} strokeWidth={2.5} />
+          <span className="text-[8px] font-black uppercase tracking-wider">{t('home')}</span>
+        </motion.button>
+
+        {/* Enregistré */}
+        <motion.button 
+          onClick={() => navigate('/wishlist')} 
+          whileTap={{ scale: 0.9 }} 
+          className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
+            isWishlistPage ? 'text-eas-blue' : 'text-slate-500 dark:text-slate-650'
+          }`}
+        >
+          <Heart 
+            size={20} 
+            strokeWidth={2.5} 
+            fill={isWishlistPage ? "currentColor" : "none"} 
+            className="transition-all"
+          />
           {wishlistItems.length > 0 && !isWishlistPage && (
-            <span className="absolute top-1 right-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-black border-2 border-white dark:border-slate-950">
+            <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black">
               {wishlistItems.length}
             </span>
           )}
-          <span className={`text-[9px] font-black uppercase tracking-widest ${isWishlistPage ? 'text-red-600 dark:text-red-400' : ''}`}>
+          <span className="text-[8px] font-black uppercase tracking-wider">
             {t('saved')}
           </span>
         </motion.button>
+
+        {/* Profil */}
         <motion.button 
-          whileTap={{ scale: 0.8 }} 
+          whileTap={{ scale: 0.9 }} 
           onClick={() => navigate(user ? '/auth' : '/login')}
-          className="flex flex-col items-center gap-1.5 text-slate-300 dark:text-slate-500"
+          className={`flex flex-col items-center gap-1.5 transition-colors duration-300 ${
+            isProfilePage ? 'text-eas-blue' : 'text-slate-500 dark:text-slate-650'
+          }`}
         >
-          {user ? (
-            <div className="w-6 h-6 bg-eas-blue text-white rounded-lg flex items-center justify-center font-black text-[10px]">
-              {user.name?.charAt(0).toUpperCase()}
-            </div>
+          {user && (user.avatarUrl || user.picture) ? (
+            <img 
+              src={user.avatarUrl || user.picture} 
+              alt="" 
+              className={`w-5 h-5 rounded-full object-cover border ${isProfilePage ? 'border-eas-blue' : 'border-transparent'}`} 
+            />
           ) : (
-            <User size={22} strokeWidth={3} />
+            <User size={20} strokeWidth={2.5} />
           )}
-          <span className="text-[9px] font-black uppercase tracking-widest">{user ? t('me') : t('profile')}</span>
+          <span className="text-[8px] font-black uppercase tracking-wider">{user ? t('me') : t('profile')}</span>
         </motion.button>
       </nav>
     </>
