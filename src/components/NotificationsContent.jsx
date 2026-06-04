@@ -445,13 +445,25 @@ const NotificationsContent = ({ onProductClick }) => {
       <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
-      {/* BRAND SUB-BAR */}
-      <div className="w-full bg-transparent py-4 px-2 flex items-center justify-center mb-8 mt-2">
+      {/* BRAND SUB-BAR: Sticky/Fixed top, remains stationary below the global web header when scrolling */}
+      <div className="sticky top-[var(--header-height,96px)] z-30 w-full bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 -mt-8 -mx-4 md:-mx-8 px-4 md:px-8 flex items-center justify-between mb-8">
+        {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
+        <button 
+          onClick={goBack} 
+          className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
+          aria-label="Retour"
+        >
+          <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
+        </button>
+
         {/* Center Pill Badge */}
         <div className="border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)]">
           <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400 animate-pulse" />
           <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">NOTIFICATIONS</span>
         </div>
+
+        {/* Symmetric Spacer */}
+        <div className="w-10 h-10 flex-shrink-0"></div>
       </div>
 
       {/* Sub-bar: Read Status Filters and Mark All Read */}
