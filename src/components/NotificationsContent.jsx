@@ -393,23 +393,41 @@ const NotificationsContent = ({ onProductClick }) => {
       <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
-      {/* Global Management Header */}
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 px-6 py-2 rounded-full mb-6 shadow-sm"
-          >
-            <Bell size={18} className="text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">NOTIFICATIONS_CENTER</span>
-          </motion.div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none">
-            Your <span className="text-eas-blue underline decoration-amber-500/30">Activity</span>
-          </h1>
+      {/* Category Tabs & Actions Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 mt-2">
+        {/* Category grouping tabs */}
+        <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-2xl border border-slate-100 dark:border-white/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
+          {[
+            { id: 'all', label: lang === 'fr' ? '🌐 Tout' : '🌐 All', count: allNotifications.length },
+            { id: 'orders', label: lang === 'fr' ? '🛍️ Commandes' : '🛍️ Orders', count: allNotifications.filter(n => n.category === 'orders').length },
+            { id: 'promos', label: lang === 'fr' ? '🔥 Promos' : '🔥 Promos', count: allNotifications.filter(n => n.category === 'promos').length },
+            { id: 'security', label: lang === 'fr' ? '⚙️ Sécurité' : '⚙️ Security', count: allNotifications.filter(n => n.category === 'security').length }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setCategoryFilter(tab.id)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
+                categoryFilter === tab.id 
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md' 
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 bg-white/50 dark:bg-slate-800/30 border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {tab.count > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${
+                  categoryFilter === tab.id 
+                    ? 'bg-white/20 text-white dark:bg-slate-950/20 dark:text-slate-950' 
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Global actions */}
+        <div className="flex items-center gap-3 shrink-0 sm:self-auto self-end">
           {filteredNotifs.some(n => !n.isRead) && (
             <button 
               onClick={handleMarkAllRead}
@@ -432,37 +450,6 @@ const NotificationsContent = ({ onProductClick }) => {
             </button>
           )}
         </div>
-      </div>
-
-      {/* Category grouping tabs */}
-      <div className="flex flex-wrap items-center gap-2 mb-4 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-2xl border border-slate-100 dark:border-white/5 w-full md:w-auto">
-        {[
-          { id: 'all', label: lang === 'fr' ? '🌐 Tout' : '🌐 All', count: allNotifications.length },
-          { id: 'orders', label: lang === 'fr' ? '🛍️ Commandes' : '🛍️ Orders', count: allNotifications.filter(n => n.category === 'orders').length },
-          { id: 'promos', label: lang === 'fr' ? '🔥 Promos' : '🔥 Promos', count: allNotifications.filter(n => n.category === 'promos').length },
-          { id: 'security', label: lang === 'fr' ? '⚙️ Sécurité' : '⚙️ Security', count: allNotifications.filter(n => n.category === 'security').length }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setCategoryFilter(tab.id)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 ${
-              categoryFilter === tab.id 
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md' 
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 bg-white/50 dark:bg-slate-800/30 border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50'
-            }`}
-          >
-            <span>{tab.label}</span>
-            {tab.count > 0 && (
-              <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${
-                categoryFilter === tab.id 
-                  ? 'bg-white/20 text-white dark:bg-slate-950/20 dark:text-slate-950' 
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-              }`}>
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
       </div>
 
       {/* Read Status Filters */}
