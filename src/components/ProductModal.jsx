@@ -686,16 +686,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <h2 className="text-xl sm:text-2xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-tight">{t('you_might_also_like')}</h2>
                         </div>
                       </div>
-                      
-                      <div className="hidden md:block w-px h-12 bg-slate-200 dark:bg-slate-800 shrink-0"></div>
-                      
-                      <div className="flex flex-col items-start gap-2">
-                        <span className="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">{t('curated_for_you')}</span>
-                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-full border border-slate-100 dark:border-slate-800 w-fit">
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                          <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest italic">Live Inventory</span>
-                        </div>
-                      </div>
+
 
                       <button 
                         onClick={() => {
