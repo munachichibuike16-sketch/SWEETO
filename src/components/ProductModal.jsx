@@ -706,7 +706,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 px-4 justify-items-center">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-8 md:gap-12 px-4 justify-items-center">
                       {relatedProductsList.map((prod, i) => (
                         <ProductCard 
                           key={prod.id || i} 
