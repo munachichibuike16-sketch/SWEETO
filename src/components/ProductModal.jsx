@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   X, ShoppingCart, Zap, Star, Minus, Plus, MessageCircle, 
-  Share2, Heart, Eye, ArrowRight, Sparkles, Award
+  Share2, Heart, Eye, ArrowRight, Sparkles, Award, MapPin
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -16,7 +16,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const { settings, addToRecent, setSelectedCategory, showToast } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { t, t_smart } = useLanguage();
+  const { lang, t, t_smart } = useLanguage();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
