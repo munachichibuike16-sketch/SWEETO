@@ -39,10 +39,22 @@ const StoreContent = () => {
           <ShoppingBag size={36} className="stroke-[2]" />
         </motion.div>
 
-        {/* Title */}
-        <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none mb-3">
-          {lang === 'fr' ? 'Boutique' : 'Store'}
-        </h2>
+        {/* Redefined Store Header Block */}
+        <div className="mb-6 flex flex-col items-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-500/10 text-eas-blue dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 px-5 py-2 rounded-full mb-4 shadow-sm"
+          >
+            <ShoppingBag size={14} className="text-eas-blue animate-pulse" />
+            <span className="text-[9px] font-black uppercase tracking-[0.2em]">{lang === 'fr' ? 'ESPACE BOUTIQUE' : 'STORE HUB'}</span>
+          </motion.div>
+          
+          <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none">
+            MY <span className="text-eas-blue underline decoration-amber-500/30">{lang === 'fr' ? 'BOUTIQUE' : 'STORE'}</span>
+          </h1>
+        </div>
 
         {/* Status Line */}
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
