@@ -17,6 +17,7 @@ import SalesManagement from './SalesManagement';
 import StockManagement from './StockManagement';
 import ReviewManagement from './ReviewManagement';
 import ReceiptManagement from './ReceiptManagement';
+import AnalysisManagement from './AnalysisManagement';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import SweetoLogo from '../components/SweetoLogo';
@@ -30,6 +31,7 @@ const Dashboard = () => {
   const getSubtextForTab = (tab) => {
     switch (tab) {
       case 'Overview': return 'Track your store\'s vital performance metrics';
+      case 'Analysis': return 'Analyze store traffic, visitor demographics, and device signatures';
       case 'Sales': return 'Monitor revenue, payment methods, and sales analytics';
       case 'Orders': return 'Track, edit, and dispatch customer orders';
       case 'Receipts': return 'Manage transactions and print invoices';
@@ -412,7 +414,7 @@ const Dashboard = () => {
   };
 
   const navItems = [
-    { name: 'Overview', icon: Icons.LayoutDashboard }, { name: 'Sales', icon: Icons.TrendingUp },
+    { name: 'Overview', icon: Icons.LayoutDashboard }, { name: 'Analysis', icon: Icons.Globe }, { name: 'Sales', icon: Icons.TrendingUp },
     { name: 'Orders', icon: Icons.ShoppingCart }, { name: 'Receipts', icon: Icons.FileText },
     { name: 'Products', icon: Icons.Package }, { name: 'Stock', icon: Icons.Database },
     { name: 'Categories', icon: Icons.FolderOpen }, { name: 'Brands', icon: Icons.Award },
@@ -630,6 +632,7 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+          {activeTab === 'Analysis' && <div className="max-w-7xl mx-auto"><AnalysisManagement /></div>}
           {activeTab === 'Products' && <div className="max-w-7xl mx-auto"><ProductsManagement /></div>}
           {activeTab === 'Categories' && <div className="max-w-7xl mx-auto"><CategoryManagement /></div>}
           {activeTab === 'Orders' && <div className="max-w-7xl mx-auto"><OrdersManagement preselectedOrderId={targetOrderId} /></div>}
