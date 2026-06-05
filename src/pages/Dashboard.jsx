@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase';
 import SweetoLogo from '../components/SweetoLogo';
 import { useNavigate } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
+import { apiFetch } from '../utils/api';
 
 const OrderFeedItem = ({ order, onStatusUpdate, currencySymbol }) => {
   const [dragDir, setDragDir] = useState(null); // 'left' | 'right' | null
