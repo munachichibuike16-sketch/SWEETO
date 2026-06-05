@@ -24,9 +24,93 @@ import SweetoLogo from '../components/SweetoLogo';
 import { useNavigate } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
 
+const OrderFeedItem = ({ order, onStatusUpdate, currencySymbol }) => {
+  const [dragDir, setDragDir] = useState(null); // 'left' | 'right' | null
+  
+  const handleDrag = (event, info) => {
+    if (info.offset.x > 50) {
+      setDragDir('right');
+    } else if (info.offset.x < -50) {
+      setDragDir('left');
+    } else {
+      setDragDir(null);
+    }
+  };
+
+  const handleDragEnd = (event, info) => {
+    if (info.offset.x > 150) {
+      onStatusUpdate(order.id, 'completed');
+    } else if (info.offset.x < -150) {
+      onStatusUpdate(order.id, 'cancelled');
+    }
+    setDragDir(null);
+  };
+
+  const statusColors = {
+    completed: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+    cancelled: 'text-red-500 bg-red-500/10 border-red-500/20',
+    pending: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+    processing: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+    shipped: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20'
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-100/50 dark:bg-slate-950/20 h-20 animate-fade-in">
+      
+      {/* Background action panels */}
+      <div className="absolute inset-0 flex justify-between items-center px-6 pointer-events-none z-0">
+        <div className={`flex items-center gap-2 text-emerald-500 transition-opacity duration-200 ${dragDir === 'right' ? 'opacity-100' : 'opacity-0'}`}>
+          <Icons.CheckCircle size={20} />
+          <span className="text-[10px] font-black uppercase tracking-wider">Ship / Complete</span>
+        </div>
+        <div className={`flex items-center gap-2 text-red-500 transition-opacity duration-200 ${dragDir === 'left' ? 'opacity-100' : 'opacity-0'}`}>
+          <span className="text-[10px] font-black uppercase tracking-wider">Cancel Order</span>
+          <Icons.Trash2 size={20} />
+        </div>
+      </div>
+
+      {/* Main card body that is dragged */}
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -160, right: 160 }}
+        dragElastic={0.4}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        className="absolute inset-0 z-10 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-4 cursor-grab active:cursor-grabbing select-none"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">SWT-{order.id}</span>
+            <span className={`text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded-full border leading-none ${statusColors[order.status] || 'text-slate-400'}`}>
+              {order.status}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+            {order.customer_name || 'Anonymous Customer'}
+          </p>
+          <span className="text-[8px] text-slate-400 dark:text-slate-500 font-medium mt-0.5 block">
+            {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'Just now'}
+          </span>
+        </div>
+
+        <div className="text-right shrink-0">
+          <p className="text-sm font-black text-slate-900 dark:text-white">
+            {currencySymbol === '$' || currencySymbol === '€' || currencySymbol === '£' || currencySymbol === '₹' ? currencySymbol : ''}
+            {Number(order.total_amount || order.total || 0).toLocaleString()}
+            {currencySymbol !== '$' && currencySymbol !== '€' && currencySymbol !== '£' && currencySymbol !== '₹' ? ` ${currencySymbol}` : ''}
+          </p>
+          <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mt-0.5">
+            {order.payment_method || 'Online'}
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { settings, orders = [], products = [], showToast, requestConfirm, refreshData } = useStore();
+  const { settings, orders = [], products = [], showToast, requestConfirm, refreshData, categories = [] } = useStore();
 
   const getSubtextForTab = (tab) => {
     switch (tab) {
@@ -136,6 +220,146 @@ const Dashboard = () => {
 
   const [trafficCount, setTrafficCount] = React.useState(0);
   const [trafficChange, setTrafficChange] = React.useState('+0.0%');
+
+  // Mobile UI States
+  const [isActionsHubOpen, setIsActionsHubOpen] = React.useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
+  const [isQuickSearchOpen, setIsQuickSearchOpen] = React.useState(false);
+  const [isScanOpen, setIsScanOpen] = React.useState(false);
+  const [scanLoading, setScanLoading] = React.useState(false);
+  const [scanResult, setScanResult] = React.useState(null);
+  const [quickSearchQuery, setQuickSearchQuery] = React.useState('');
+  const [activeMetricIndex, setActiveMetricIndex] = React.useState(0);
+  const carouselRef = React.useRef(null);
+  
+  const [quickProductForm, setQuickProductForm] = React.useState({
+    name: '',
+    price: '',
+    stock: '10',
+    categoryId: '',
+    image_url: ''
+  });
+  const [isQuickProductSubmitting, setIsQuickProductSubmitting] = React.useState(false);
+
+  const handleCarouselScroll = () => {
+    if (!carouselRef.current) return;
+    const scrollLeft = carouselRef.current.scrollLeft;
+    const width = carouselRef.current.offsetWidth;
+    const index = Math.round(scrollLeft / width);
+    setActiveMetricIndex(index);
+  };
+
+  const handleQuickAction = (actionId) => {
+    if (actionId === 'scan') {
+      setIsScanOpen(true);
+      setScanResult(null);
+      setScanLoading(true);
+      
+      // Simulate barcode scanning line animation
+      setTimeout(() => {
+        setScanLoading(false);
+        // Play scanner beep
+        try {
+          const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/911/911-preview.mp3');
+          beep.play().catch(() => {});
+        } catch (e) {}
+        
+        // Select a random product
+        if (products.length > 0) {
+          const randomProduct = products[Math.floor(Math.random() * products.length)];
+          setScanResult({ type: 'product', data: randomProduct });
+        } else {
+          setScanResult({ type: 'dummy', name: 'SWT-SCAN-MOCK', price: 99.99 });
+        }
+      }, 2500);
+    } else if (actionId === 'add_product') {
+      setIsQuickAddOpen(true);
+    } else if (actionId === 'search') {
+      setIsQuickSearchOpen(true);
+      setQuickSearchQuery('');
+    }
+  };
+
+  const handleQuickAddSubmit = async (e) => {
+    e.preventDefault();
+    if (!quickProductForm.name || !quickProductForm.price || !quickProductForm.categoryId) {
+      showToast('Name, Price, and Category are required.', 'error');
+      return;
+    }
+    const cat = categories.find(c => c.id?.toString() === quickProductForm.categoryId?.toString());
+    setIsQuickProductSubmitting(true);
+    try {
+      const generatedSlug = quickProductForm.name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') + '-' + Math.floor(Math.random() * 100000);
+
+      const payload = {
+        name: quickProductForm.name,
+        slug: generatedSlug,
+        description: 'Uploaded via Quick Actions Hub',
+        price: parseFloat(quickProductForm.price) || 0,
+        original_price: null,
+        cost_price: null,
+        stock_quantity: parseInt(quickProductForm.stock) || 10,
+        is_active: 1,
+        is_featured: 0,
+        is_deal: 0,
+        image_url: quickProductForm.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400',
+        images: '[]',
+        category: cat?.name || '',
+        brand: '',
+        condition: 'new',
+        placements: '[]',
+        colors: '[]',
+        related_products: '[]'
+      };
+
+      const { data: existingProds } = await supabase.from('products').select('id');
+      const maxId = existingProds && existingProds.length > 0 ? Math.max(...existingProds.map(p => p.id)) : 0;
+      payload.id = maxId + 1;
+
+      const { error } = await supabase.from('products').insert([payload]);
+      if (error) throw error;
+
+      showToast('Product added successfully!', 'success');
+      refreshData();
+      setIsQuickAddOpen(false);
+      setQuickProductForm({ name: '', price: '', stock: '10', categoryId: '', image_url: '' });
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to add product: ' + err.message, 'error');
+    } finally {
+      setIsQuickProductSubmitting(false);
+    }
+  };
+
+  const handleSwipeStatusUpdate = async (orderId, newStatus) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+      if (!error) {
+        showToast(`Order SWT-${orderId} marked as ${newStatus}!`, newStatus === 'completed' ? 'success' : 'warning');
+        
+        try {
+          const beep = new Audio(newStatus === 'completed' 
+            ? 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'
+            : 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
+          );
+          beep.play().catch(() => {});
+        } catch (e) {}
+
+        refreshData();
+      } else {
+        throw error;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update order: ' + err.message, 'error');
+    }
+  };
 
   // Persistence of notification logs
   React.useEffect(() => {
@@ -503,10 +727,11 @@ const Dashboard = () => {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300"
+              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 lg:hidden"
             >
               <Icons.Menu size={20} />
             </button>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 lg:hidden font-black text-xs">A</div>
             <div className="min-w-0">
               <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight truncate">{activeTab}</h2>
               <p className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide mt-0.5 sm:mt-1.5 leading-relaxed truncate max-w-[140px] xs:max-w-none">
@@ -515,6 +740,9 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={() => { setIsQuickSearchOpen(true); setQuickSearchQuery(''); }} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer lg:hidden">
+              <Icons.Search size={20} />
+            </button>
             <button onClick={() => setIsAdminDark(!isAdminDark)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer">
               {isAdminDark ? <Icons.Sun size={20} className="text-amber-500" /> : <Icons.Moon size={20} className="text-indigo-600" />}
             </button>
@@ -600,35 +828,86 @@ const Dashboard = () => {
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-24 md:pb-12 z-10 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-32 lg:pb-12 z-10 scrollbar-hide">
           {activeTab === 'Overview' && (
             <div className="max-w-7xl mx-auto space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {stats.map((stat, i) => (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    transition={{ delay: i * 0.1 }} 
-                    key={i} 
-                    className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500"
-                  >
-                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`}></div>
-                    <div className="flex justify-between items-start mb-6 relative z-10">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
-                        <stat.icon className="text-white" size={24} />
+              {/* Metrics Section (Grid on Desktop, Swipeable Carousel on Mobile) */}
+              <div className="relative">
+                <div 
+                  ref={carouselRef}
+                  onScroll={handleCarouselScroll}
+                  className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 pb-4 sm:pb-0"
+                >
+                  {stats.map((stat, i) => (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      transition={{ delay: i * 0.1 }} 
+                      key={i} 
+                      className="min-w-[280px] xs:min-w-[300px] flex-shrink-0 snap-start snap-always sm:min-w-0 sm:flex-shrink bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500"
+                    >
+                      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`}></div>
+                      <div className="flex justify-between items-start mb-6 relative z-10">
+                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
+                          <stat.icon className="text-white" size={24} />
+                        </div>
+                        <span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full tracking-wider">
+                          <Icons.TrendingUp size={14} />{stat.change}
+                        </span>
                       </div>
-                      <span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full tracking-wider">
-                        <Icons.TrendingUp size={14} />{stat.change}
-                      </span>
-                    </div>
-                    <div className="relative z-10 min-w-0">
-                      <h3 className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-2 truncate">{stat.title}</h3>
-                      <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tighter truncate" title={stat.value}>
-                        {stat.value}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="relative z-10 min-w-0">
+                        <h3 className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-2 truncate">{stat.title}</h3>
+                        <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tighter truncate" title={stat.value}>
+                          {stat.value}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                
+                {/* Dots indicator for mobile carousel */}
+                <div className="flex justify-center gap-1.5 sm:hidden mt-2">
+                  {stats.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        activeMetricIndex === idx ? 'w-4 bg-blue-500' : 'w-1.5 bg-slate-300 dark:bg-slate-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* ─── LIVE ACTIVITY (RECENT ORDERS FEED) ─── */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                      <Icons.Activity size={16} className="text-blue-500 animate-pulse" /> Live Order Feed
+                    </h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1 sm:hidden">
+                      Swipe Left to Cancel • Right to Ship
+                    </p>
+                  </div>
+                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest hidden sm:inline">Recent Activity Log</span>
+                </div>
+                
+                {orders.length === 0 ? (
+                  <div className="bg-white/50 dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 text-center text-slate-400 text-xs font-bold">
+                    No orders placed yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {orders.slice(0, 5).map((order) => (
+                      <OrderFeedItem
+                        key={order.id}
+                        order={order}
+                        onStatusUpdate={handleSwipeStatusUpdate}
+                        currencySymbol={currencySymbol}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -648,8 +927,452 @@ const Dashboard = () => {
           {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
           {activeTab === 'Reviews' && <div className="max-w-7xl mx-auto"><ReviewManagement /></div>}
           {activeTab === 'Receipts' && <div className="max-w-7xl mx-auto"><ReceiptManagement /></div>}
+          {activeTab === 'Notifications' && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">System Alerts</h3>
+                  <p className="text-slate-500 text-xs mt-0.5">Real-time alerts for orders and inventory thresholds</p>
+                </div>
+                {notifications.some(n => !n.readAt) && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Clear All Alerts
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {notifications.length === 0 ? (
+                  <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-12 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
+                    <div className="w-14 h-14 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 shadow-inner"><Icons.Inbox size={24} /></div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-widest">No Alerts Active</h4>
+                      <p className="text-[10px] text-slate-500 mt-1">Everything is running smoothly on the server</p>
+                    </div>
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => {
+                        handleMarkAsRead(n.id);
+                        if (n.type === 'order') {
+                          handleNotificationClick(n.orderId);
+                        } else if (n.type === 'stock') {
+                          setActiveTab('Stock');
+                        }
+                      }}
+                      className={`p-4 rounded-3xl border transition-all duration-300 cursor-pointer flex gap-4 ${
+                        n.readAt
+                          ? 'bg-slate-50/50 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900 opacity-60'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-500/25 shadow-sm'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                        n.type === 'order' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
+                      }`}>
+                        {n.type === 'order' ? <Icons.ShoppingCart size={18} /> : <Icons.AlertTriangle size={18} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className={`text-xs font-black uppercase tracking-wide truncate ${n.readAt ? 'text-slate-500' : 'text-slate-905 dark:text-white'}`}>
+                          {n.title}
+                        </h5>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
+                          {n.desc}
+                        </p>
+                        <span className="text-[8px] text-slate-400 dark:text-slate-600 block mt-2 font-bold uppercase tracking-widest">
+                          Received: {n.time}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
+
+      {/* ─── STICKY GLASSMORPHIC BOTTOM NAV BAR ─── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-4 pb-4 pt-2 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent pointer-events-none">
+        <div className="w-full max-w-lg mx-auto h-16 bg-white/85 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/55 rounded-2xl shadow-[0_-10px_35px_rgba(0,0,0,0.12)] flex items-center justify-around px-2 pointer-events-auto">
+          {[
+            { id: 'Overview', label: 'Home', icon: Icons.LayoutDashboard },
+            { id: 'Orders', label: 'Orders', icon: Icons.ShoppingCart },
+            { id: 'Products', label: 'Products', icon: Icons.Package },
+            { id: 'Notifications', label: 'Alerts', icon: Icons.Bell }
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            const TabIcon = tab.icon;
+            const hasAlert = tab.id === 'Notifications' && notifications.some(n => !n.readAt);
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all ${
+                  isActive ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-slate-400 dark:text-slate-500'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeBottomTab"
+                    className="absolute inset-0 bg-blue-500/10 rounded-xl"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <div className="relative z-10 flex flex-col items-center justify-center">
+                  <TabIcon size={20} className={isActive ? 'scale-110' : ''} />
+                  {hasAlert && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
+                  )}
+                  <span className="text-[8px] font-black mt-1 uppercase tracking-widest leading-none">{tab.label}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── QUICK ACTIONS FLOATING HUB (FAB) ─── */}
+      <div className="fixed bottom-24 right-6 z-50 lg:hidden">
+        <AnimatePresence>
+          {isActionsHubOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsActionsHubOpen(false)}
+                className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40"
+              />
+              
+              {/* Wheel/Menu options */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                className="absolute bottom-16 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-2xl z-50 w-52 space-y-2.5"
+              >
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2 mb-1 pl-1">Quick Actions</p>
+                {[
+                  { id: 'scan', label: 'Quick Scan', icon: Icons.QrCode, desc: 'Camera barcode scanner', color: 'text-emerald-500 bg-emerald-500/10' },
+                  { id: 'add_product', label: 'Add Product', icon: Icons.PlusCircle, desc: 'Quick upload stock', color: 'text-blue-500 bg-blue-500/10' },
+                  { id: 'search', label: 'Global Search', icon: Icons.Search, desc: 'Find orders/inventory', color: 'text-purple-500 bg-purple-500/10' }
+                ].map(action => (
+                  <button
+                    key={action.id}
+                    onClick={() => {
+                      setIsActionsHubOpen(false);
+                      handleQuickAction(action.id);
+                    }}
+                    className="w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all text-left group"
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${action.color} group-hover:scale-105 transition-transform`}>
+                      <action.icon size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white leading-none mb-0.5">{action.label}</h4>
+                      <p className="text-[8px] text-slate-400 dark:text-slate-500 font-bold truncate leading-none">{action.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Main Trigger Button */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsActionsHubOpen(!isActionsHubOpen)}
+          className={`w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all duration-300 ${
+            isActionsHubOpen ? 'rotate-45' : ''
+          }`}
+        >
+          <Icons.Plus size={24} className="stroke-[3]" />
+        </motion.button>
+      </div>
+
+      {/* ─── QUICK ADD PRODUCT MODAL ─── */}
+      <AnimatePresence>
+        {isQuickAddOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="absolute inset-0 cursor-pointer" onClick={() => setIsQuickAddOpen(false)} />
+            <motion.div
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full z-10 space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Icons.PlusCircle className="text-blue-500" size={14} /> Quick Add Product
+                </span>
+                <button onClick={() => setIsQuickAddOpen(false)} className="text-slate-400 hover:text-slate-600"><Icons.X size={16} /></button>
+              </div>
+
+              <form onSubmit={handleQuickAddSubmit} className="space-y-4">
+                <div>
+                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">Product Name</label>
+                  <input
+                    required
+                    type="text"
+                    value={quickProductForm.name}
+                    onChange={e => setQuickProductForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 font-bold"
+                    placeholder="e.g. Sweeto Premium Mug"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">Price</label>
+                    <input
+                      required
+                      type="number"
+                      value={quickProductForm.price}
+                      onChange={e => setQuickProductForm(prev => ({ ...prev, price: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 font-bold"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">Stock</label>
+                    <input
+                      required
+                      type="number"
+                      value={quickProductForm.stock}
+                      onChange={e => setQuickProductForm(prev => ({ ...prev, stock: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 font-bold"
+                      placeholder="10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">Category</label>
+                  <select
+                    required
+                    value={quickProductForm.categoryId}
+                    onChange={e => setQuickProductForm(prev => ({ ...prev, categoryId: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 font-bold"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-1">Image URL (Optional)</label>
+                  <input
+                    type="text"
+                    value={quickProductForm.image_url}
+                    onChange={e => setQuickProductForm(prev => ({ ...prev, image_url: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 font-bold"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isQuickProductSubmitting}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-1.5"
+                >
+                  {isQuickProductSubmitting ? (
+                    <Icons.Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Icons.CheckCircle size={14} /> Push Live
+                    </>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── QUICK SEARCH DIALOG ─── */}
+      <AnimatePresence>
+        {isQuickSearchOpen && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm pt-20">
+            <div className="absolute inset-0 cursor-pointer" onClick={() => setIsQuickSearchOpen(false)} />
+            <motion.div
+              initial={{ scale: 0.95, y: -20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: -20, opacity: 0 }}
+              className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl max-w-md w-full z-10 space-y-4 animate-fade-in"
+            >
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3">
+                <Icons.Search className="text-slate-400" size={18} />
+                <input
+                  autoFocus
+                  type="text"
+                  value={quickSearchQuery}
+                  onChange={e => setQuickSearchQuery(e.target.value)}
+                  placeholder="Search orders, products, categories..."
+                  className="w-full bg-transparent text-xs font-bold outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                />
+                {quickSearchQuery && (
+                  <button onClick={() => setQuickSearchQuery('')} className="text-slate-400 hover:text-slate-600"><Icons.X size={14} /></button>
+                )}
+              </div>
+
+              {/* Search Results */}
+              <div className="max-h-64 overflow-y-auto space-y-2.5 custom-scrollbar">
+                {quickSearchQuery.trim() === '' ? (
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-center py-4">Type to start searching...</p>
+                ) : (() => {
+                  const query = quickSearchQuery.toLowerCase().trim();
+                  const matchedOrders = orders.filter(o => 
+                    o.id.toString().includes(query) || 
+                    (o.customer_name || '').toLowerCase().includes(query)
+                  );
+                  const matchedProducts = products.filter(p => 
+                    p.name.toLowerCase().includes(query) || 
+                    (p.category || '').toLowerCase().includes(query)
+                  );
+                  
+                  if (matchedOrders.length === 0 && matchedProducts.length === 0) {
+                    return <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-center py-4">No matches found</p>;
+                  }
+
+                  return (
+                    <>
+                      {matchedOrders.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 pl-1">Orders ({matchedOrders.length})</p>
+                          {matchedOrders.slice(0, 3).map(o => (
+                            <div
+                              key={o.id}
+                              onClick={() => {
+                                setIsQuickSearchOpen(false);
+                                handleNotificationClick(o.id);
+                              }}
+                              className="p-3 bg-slate-50 dark:bg-slate-950 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer flex justify-between items-center transition-all"
+                            >
+                              <div>
+                                <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase leading-none mb-1">SWT-{o.id}</h5>
+                                <p className="text-[9px] text-slate-400 font-bold truncate leading-none">{o.customer_name}</p>
+                              </div>
+                              <span className="text-[9px] font-black uppercase text-blue-500">View</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {matchedProducts.length > 0 && (
+                        <div className="space-y-1.5 pt-2">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 pl-1">Products ({matchedProducts.length})</p>
+                          {matchedProducts.slice(0, 3).map(p => (
+                            <div
+                              key={p.id}
+                              onClick={() => {
+                                setIsQuickSearchOpen(false);
+                                setActiveTab('Products');
+                              }}
+                              className="p-3 bg-slate-50 dark:bg-slate-950 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer flex justify-between items-center transition-all"
+                            >
+                              <div className="flex items-center gap-3">
+                                {p.image_url && <img src={p.image_url} className="w-8 h-8 rounded-lg object-cover bg-slate-100" alt="" />}
+                                <div>
+                                  <h5 className="text-xs font-black text-slate-900 dark:text-white leading-none mb-1 truncate max-w-[150px]">{p.name}</h5>
+                                  <p className="text-[9px] text-slate-400 font-bold truncate leading-none">{p.category}</p>
+                                </div>
+                              </div>
+                              <span className="text-[9px] font-black uppercase text-blue-500">Edit</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── QUICK SCAN MOCK SCANNER ─── */}
+      <AnimatePresence>
+        {isScanOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full z-10 text-white space-y-6 overflow-hidden"
+            >
+              {/* Scan grid and laser overlay */}
+              <div className="relative w-full aspect-square bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex items-center justify-center">
+                {scanLoading ? (
+                  <>
+                    {/* Scanning grid */}
+                    <div className="absolute inset-0 bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+                    
+                    {/* Pulsing Scan box */}
+                    <div className="w-2/3 h-2/3 border-2 border-dashed border-emerald-500/50 rounded-2xl animate-pulse flex items-center justify-center">
+                      <Icons.Scan size={40} className="text-emerald-500/20" />
+                    </div>
+
+                    {/* Red Laser beam */}
+                    <motion.div
+                      animate={{ y: [-150, 150, -150] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                      className="absolute left-0 right-0 h-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] z-10"
+                    />
+
+                    {/* Camera feedback hint */}
+                    <p className="absolute bottom-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Align Barcode within Frame</p>
+                  </>
+                ) : scanResult ? (
+                  <div className="p-4 text-center space-y-4 w-full">
+                    <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+                      <Icons.CheckCircle size={32} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400">Scan Match Found!</h4>
+                      <p className="text-sm font-black mt-2 text-white truncate">{scanResult.data?.name || scanResult.name}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Category: {scanResult.data?.category || 'General'} • Price: {currencySymbol}{scanResult.data?.price || scanResult.price}
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-2 font-bold font-mono">Serial Code: SWT-{(scanResult.data?.id || 4827) * 29482}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">Failed to initiate camera feed.</p>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsScanOpen(false)}
+                  className="flex-1 py-3 bg-slate-800 text-slate-200 hover:bg-slate-700 font-black text-xs uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Close
+                </button>
+                {scanResult && scanResult.type === 'product' && (
+                  <button
+                    onClick={() => {
+                      setIsScanOpen(false);
+                      setActiveTab('Products');
+                    }}
+                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1"
+                  >
+                    <Icons.Edit size={14} /> Edit Stock
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
