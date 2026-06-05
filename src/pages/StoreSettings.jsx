@@ -199,8 +199,8 @@ const StoreSettings = () => {
 
 
 
-  const inputStyle = "w-full px-7 py-5 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50 rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 transition-all font-black text-slate-900 dark:text-white text-xs placeholder:text-slate-300 dark:placeholder:text-slate-600";
-
+  const inputStyle = "w-full px-5 sm:px-7 py-3.5 sm:py-5 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50 rounded-2xl sm:rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 transition-all font-black text-slate-900 dark:text-white text-xs placeholder:text-slate-300 dark:placeholder:text-slate-600";
+ 
   return (
     <div className="min-h-screen relative overflow-hidden pb-32">
       {/* ─── DYNAMIC BACKGROUND Blobs ─── */}
@@ -224,52 +224,53 @@ const StoreSettings = () => {
           className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[150px] rounded-full"
         />
       </div>
-
-      <div className="max-w-6xl mx-auto px-6 relative z-10 space-y-10">
+ 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-6 sm:space-y-10">
         
         {/* ─── PREMIUM HEADER BAR ─── */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-8 p-10 rounded-[3rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-3xl border border-white/40 dark:border-slate-800/40 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)]"
+          className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-3xl border border-white/40 dark:border-slate-800/40 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)]"
         >
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse"></div>
-              <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[1.8rem] flex items-center justify-center text-white shadow-2xl shadow-blue-500/30 transform -rotate-3">
-                <Store size={32} />
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl sm:rounded-[1.8rem] flex items-center justify-center text-white shadow-2xl shadow-blue-500/30 transform -rotate-3 shrink-0">
+                <Store size={24} className="sm:hidden" />
+                <Store size={32} className="hidden sm:block" />
               </div>
             </div>
             <div>
-               <div className="flex items-center gap-2 mb-1">
-                  <Sparkles size={12} className="text-blue-500" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Engineered for Control</span>
+               <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                  <Sparkles size={10} className="text-blue-500" />
+                  <span className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] sm:tracking-[0.4em]">Engineered for Control</span>
                </div>
-               <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-none">
+               <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-none">
                  Store <span className="text-blue-600">DNA</span>
                </h1>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <AnimatePresence>
               {isDirty && (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="hidden lg:flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full"
                 >
                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                  <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Unsaved Modifications</span>
+                  <span className="text-[8px] sm:text-[9px] font-black text-amber-600 uppercase tracking-widest">Unsaved Modifications</span>
                 </motion.div>
               )}
             </AnimatePresence>
-
+ 
             <button
               onClick={handleSave}
               disabled={isLoading || !isDirty}
-              className={`relative group overflow-hidden flex items-center gap-4 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] transition-all shadow-2xl ${
+              className={`relative group overflow-hidden flex items-center gap-3 sm:gap-4 px-6 sm:px-10 py-3.5 sm:py-5 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] transition-all shadow-2xl ${
                 isDirty 
                 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-slate-900/20 hover:scale-105 active:scale-95' 
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed shadow-none'
@@ -277,33 +278,33 @@ const StoreSettings = () => {
             >
               <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               {isLoading ? (
-                <div className="relative z-10 w-5 h-5 border-2 border-white/30 border-t-white dark:border-slate-900/30 dark:border-t-slate-900 rounded-full animate-spin" />
+                <div className="relative z-10 w-4 h-4 border-2 border-white/30 border-t-white dark:border-slate-900/30 dark:border-t-slate-900 rounded-full animate-spin" />
               ) : showSuccess ? (
-                <div className="relative z-10 flex items-center gap-2">
-                  <CheckCircle2 size={18} />
+                <div className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                  <CheckCircle2 size={16} />
                   <span>Verified & Saved</span>
                 </div>
               ) : (
-                <div className="relative z-10 flex items-center gap-2">
-                  <Save size={18} className="group-hover:rotate-12 transition-transform" />
+                <div className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                  <Save size={16} className="group-hover:rotate-12 transition-transform" />
                   <span className="group-hover:translate-x-1 transition-transform">Deploy Updates</span>
                 </div>
               )}
             </button>
           </div>
         </motion.div>
-
+ 
         {/* ─── MAIN SETTINGS GRID ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
           
           {/* Left Column: Branding & Content */}
-          <div className="lg:col-span-7 space-y-10">
+          <div className="lg:col-span-7 space-y-6 sm:space-y-10">
             
             {/* Store Identity Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="group/card bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl transition-all hover:shadow-2xl hover:shadow-blue-500/5"
+              className="group/card bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl transition-all hover:shadow-2xl hover:shadow-blue-500/5"
             >
               <SectionHeader 
                 icon={Shield} 
@@ -312,7 +313,7 @@ const StoreSettings = () => {
                 subtitle="Primary Branding & Vision"
               />
               
-              <div className="grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 gap-6 sm:gap-8">
                 <InputWrapper label="Master Shop Title" icon={Store}>
                   <input 
                     type="text"
@@ -434,7 +435,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
             >
               <SectionHeader 
                 icon={FileText} 
@@ -443,12 +444,12 @@ const StoreSettings = () => {
                 subtitle="Policy Management & Enforcement"
               />
               
-              <div className="flex gap-3 mb-8 p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-[1.8rem] border border-slate-100/50 dark:border-slate-700/50">
+              <div className="flex gap-2 sm:gap-3 mb-8 p-1 sm:p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl sm:rounded-[1.8rem] border border-slate-100/50 dark:border-slate-700/50">
                 {['privacy', 'terms', 'security'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveLegalTab(tab)}
-                    className={`flex-1 py-4 rounded-[1.3rem] text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${
+                    className={`flex-1 py-2.5 sm:py-4 rounded-xl sm:rounded-[1.3rem] text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.25em] transition-all duration-500 ${
                       activeLegalTab === tab 
                       ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xl shadow-blue-500/5' 
                       : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
@@ -476,13 +477,13 @@ const StoreSettings = () => {
           </div>
 
           {/* Right Column: Visuals & Infrastructure */}
-          <div className="lg:col-span-5 space-y-10">
+          <div className="lg:col-span-5 space-y-6 sm:space-y-10">
             
             {/* Visual Infrastructure Card */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
             >
               <SectionHeader 
                 icon={ImageIcon} 
@@ -520,14 +521,14 @@ const StoreSettings = () => {
                 </InputWrapper>
               </div>
             </motion.div>
-
-            {/* Strategic Footer Card */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
-            >
+ 
+              {/* Strategic Footer Card */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              >
               <SectionHeader 
                 icon={Layout} 
                 title="Global Footer" 
@@ -545,7 +546,7 @@ const StoreSettings = () => {
                   />
                 </InputWrapper>
                 
-                <div className="p-8 bg-slate-50/50 dark:bg-slate-800/20 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 space-y-6">
+                <div className="p-5 sm:p-8 bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl sm:rounded-[2rem] border border-slate-100 dark:border-slate-800/50 space-y-4 sm:space-y-6">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100 dark:border-slate-800 pb-4">Static Policy URL Routing</p>
                   {['privacy', 'terms', 'security'].map(field => (
                     <div key={field} className="flex items-center gap-4 group/path">
@@ -565,13 +566,13 @@ const StoreSettings = () => {
                 </div>
               </div>
             </motion.div>
-
+ 
             {/* Logistics & Contact Card */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
             >
               <SectionHeader 
                 icon={MapPin} 
@@ -583,37 +584,37 @@ const StoreSettings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="md:col-span-1">
                     <InputWrapper label="Street Address" icon={MapPin}>
-                      <input type="text" name="loc_address" value={formData.loc_address} onChange={handleInputChange} className={`${inputStyle} py-5 px-6`} />
+                      <input type="text" name="loc_address" value={formData.loc_address} onChange={handleInputChange} className={`${inputStyle} py-3.5 sm:py-5 px-4 sm:px-6`} />
                     </InputWrapper>
                   </div>
                   <InputWrapper label="City">
-                    <input type="text" name="loc_city" value={formData.loc_city} onChange={handleInputChange} className={`${inputStyle} py-5 px-6`} />
+                    <input type="text" name="loc_city" value={formData.loc_city} onChange={handleInputChange} className={`${inputStyle} py-3.5 sm:py-5 px-4 sm:px-6`} />
                   </InputWrapper>
                   <InputWrapper label="Country">
-                    <input type="text" name="loc_country" value={formData.loc_country} onChange={handleInputChange} className={`${inputStyle} py-5 px-6`} />
+                    <input type="text" name="loc_country" value={formData.loc_country} onChange={handleInputChange} className={`${inputStyle} py-3.5 sm:py-5 px-4 sm:px-6`} />
                   </InputWrapper>
                 </div>
-
-                <div className="p-6 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-[2rem] border border-emerald-100/50 dark:border-emerald-500/10 space-y-4">
+ 
+                <div className="p-4 sm:p-6 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-2xl sm:rounded-[2rem] border border-emerald-100/50 dark:border-emerald-500/10 space-y-4">
                    <div className="grid grid-cols-2 gap-4">
                     <InputWrapper label="Weekday" icon={Clock}>
-                      <input type="text" name="loc_hours_weekday" value={formData.loc_hours_weekday} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-4 px-6`} />
+                      <input type="text" name="loc_hours_weekday" value={formData.loc_hours_weekday} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-3 sm:py-4 px-4 sm:px-6`} />
                     </InputWrapper>
                     <InputWrapper label="Saturday">
-                      <input type="text" name="loc_hours_sat" value={formData.loc_hours_sat} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-4 px-6`} />
+                      <input type="text" name="loc_hours_sat" value={formData.loc_hours_sat} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-3 sm:py-4 px-4 sm:px-6`} />
                     </InputWrapper>
                   </div>
                   <InputWrapper label="Sunday / Holiday Status" icon={Clock}>
-                    <input type="text" name="loc_hours_sun" value={formData.loc_hours_sun} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-4 px-6`} />
+                    <input type="text" name="loc_hours_sun" value={formData.loc_hours_sun} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-3 sm:py-4 px-4 sm:px-6`} />
                   </InputWrapper>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <InputWrapper label="Operations Phone" icon={Phone}>
-                    <input type="tel" name="loc_phone" value={formData.loc_phone} onChange={handleInputChange} className={`${inputStyle} py-4 px-6`} />
+                    <input type="tel" name="loc_phone" value={formData.loc_phone} onChange={handleInputChange} className={`${inputStyle} py-3 sm:py-4 px-4 sm:px-6`} />
                   </InputWrapper>
                   <InputWrapper label="Support Descriptor" icon={Zap}>
-                    <input type="text" name="loc_service_status" value={formData.loc_service_status} onChange={handleInputChange} className={`${inputStyle} py-4 px-6`} />
+                    <input type="text" name="loc_service_status" value={formData.loc_service_status} onChange={handleInputChange} className={`${inputStyle} py-3 sm:py-4 px-4 sm:px-6`} />
                   </InputWrapper>
                 </div>
               </div>
@@ -624,7 +625,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
             >
               <SectionHeader 
                 icon={Shield} 
@@ -657,7 +658,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-10 rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
             >
               <SectionHeader 
                 icon={Zap} 
@@ -687,7 +688,7 @@ const StoreSettings = () => {
                       showToast('Network error triggering notification: ' + err.message, 'error');
                     }
                   }}
-                  className="w-full py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl active:scale-95 transition-all shadow-xl shadow-orange-500/10 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 sm:py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl active:scale-95 transition-all shadow-xl shadow-orange-500/10 flex items-center justify-center gap-2"
                 >
                   <Zap size={16} /> Broadcast Test Push
                 </button>
