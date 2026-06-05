@@ -213,6 +213,20 @@ export const StoreProvider = ({ children }) => {
       return;
     }
 
+    // Helper: persist a notification to localStorage for the Notifications page
+    const persistNotification = (notif) => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('product_notifications') || '[]');
+        // Prevent duplicates by checking id
+        if (!stored.find(n => n.id === notif.id)) {
+          stored.unshift(notif);
+          // Keep max 50 notifications
+          if (stored.length > 50) stored.length = 50;
+          localStorage.setItem('product_notifications', JSON.stringify(stored));
+        }
+      } catch (e) { console.warn('Failed to persist notification:', e); }
+    };
+
     // Detect new arrivals
     const newProducts = products.filter(p => !prevMap.has(p.id));
     if (newProducts.length > 0) {
@@ -226,6 +240,24 @@ export const StoreProvider = ({ children }) => {
       
       fireNativeNotification(title, body, `/#/product/${first.id}`);
       triggerInAppNotification(first);
+
+      // Persist each new product as an in-app notification
+      newProducts.forEach(p => {
+        persistNotification({
+          id: `new-product-${p.id}`,
+          type: 'new_arrival',
+          category: 'promos',
+          title: `🆕 New Arrival: ${p.name}`,
+          message: `Check out the new ${p.category || 'product'} now available in store!`,
+          productId: p.id,
+          image_url: p.image_url,
+          price: p.price,
+          productName: p.name,
+          productCategory: p.category,
+          timestamp: new Date().toISOString(),
+          accentColor: '#f59e0b'
+        });
+      });
     }
 
     // Detect price drops
@@ -246,6 +278,27 @@ export const StoreProvider = ({ children }) => {
       
       fireNativeNotification(title, body, `/#/product/${first.id}`);
       triggerInAppNotification(first);
+
+      // Persist each price drop as an in-app notification
+      priceDrops.forEach(p => {
+        const prev = prevMap.get(p.id);
+        const pct = prev ? Math.round(((prev.price - p.price) / prev.price) * 100) : 0;
+        persistNotification({
+          id: `price-drop-${p.id}-${Date.now()}`,
+          type: 'price_drop',
+          category: 'promos',
+          title: `🔥 Price Drop: ${p.name}`,
+          message: `Now ${pct}% off! Was ${Number(prev?.price || 0).toLocaleString()}, now ${Number(p.price).toLocaleString()}.`,
+          productId: p.id,
+          image_url: p.image_url,
+          price: p.price,
+          originalPrice: prev?.price,
+          productName: p.name,
+          productCategory: p.category,
+          timestamp: new Date().toISOString(),
+          accentColor: '#ef4444'
+        });
+      });
     }
 
     // Update the snapshot

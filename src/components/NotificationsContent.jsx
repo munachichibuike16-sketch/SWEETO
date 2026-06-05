@@ -191,8 +191,39 @@ const NotificationsContent = ({ onProductClick }) => {
   // 🛍️ Order tracker notifications (only real orders)
   const orderUpdates = realOrderUpdates;
 
-  // 🔥 Promos & Stock updates (currently empty to avoid mock notifications)
-  const promosAndStock = [];
+  // 🔥 Promos & Stock updates — read from localStorage (persisted by StoreContext)
+  const promosAndStock = (() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('product_notifications') || '[]');
+      return stored.map(n => {
+        const product = products.find(p => p.id === n.productId) || null;
+        const id = n.id;
+        return {
+          id,
+          type: n.type || 'promo',
+          category: 'promos',
+          title: n.title,
+          message: n.message,
+          time: getRelativeTime(n.timestamp),
+          isRead: isNotificationRead(id),
+          isDeleted: isNotificationDeleted(id),
+          actionLabel: lang === 'fr' ? 'Voir le produit >' : 'View Product >',
+          accentColor: n.accentColor || '#f59e0b',
+          icon: n.type === 'price_drop' ? '🔥' : '🆕',
+          product: product || (n.image_url ? { 
+            id: n.productId, 
+            name: n.productName || '', 
+            image_url: n.image_url, 
+            price: n.price || 0,
+            category: n.productCategory || ''
+          } : null),
+        };
+      });
+    } catch (e) {
+      console.warn('Failed to read product notifications:', e);
+      return [];
+    }
+  })();
 
   // ⚙️ Account Security alerts (currently empty to avoid mock alerts)
   const securityUpdates = [];
@@ -390,7 +421,9 @@ const NotificationsContent = ({ onProductClick }) => {
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMarkAsRead(notif.id);
-                  if (notif.db_id) {
+                  if (notif.product && notif.category === 'promos') {
+                    onProductClick(notif.product);
+                  } else if (notif.db_id) {
                     navigate(`/order-tracking/${notif.db_id}`);
                   } else {
                     handleWhatsAppOrderTrack(notif);
