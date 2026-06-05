@@ -13,7 +13,7 @@ import SweetoLogo from './SweetoLogo';
 const Header = ({ onMenuClick, onCartClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
-  const { products, setSearchQuery, setSelectedCategory, setSelectedBrand, settings } = useStore();
+  const { products, searchQuery, setSearchQuery, setSelectedCategory, setSelectedBrand, settings } = useStore();
   const { isDarkMode, toggleTheme } = useTheme();
   const { lang, changeLanguage, t, isRTL } = useLanguage();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
