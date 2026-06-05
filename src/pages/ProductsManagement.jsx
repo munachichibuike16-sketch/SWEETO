@@ -5,6 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
+import { apiFetch } from '../utils/api';
 
 const EMPTY = { 
   name:'', price:'', originalPrice:'', categoryId:'', brandId:'', description:'', image_url:'', additional_images:[], status:'active', 
@@ -162,7 +163,24 @@ export default function ProductsManagement() {
 
       if (result.error) throw result.error;
 
-      // Local SQLite fallback removed to prevent Vercel 404 errors. Supabase is the source of truth.
+      // Trigger push notification for new products (not updates)
+      if (!editingProduct) {
+        try {
+          await apiFetch('/api/push/notify-new-product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: form.name,
+              category: categories.find(c => c.id?.toString() === form.categoryId?.toString())?.name || '',
+              image_url: form.image_url || '',
+              productId: payload.id || ''
+            })
+          });
+          console.log('✅ Push notification sent for new product:', form.name);
+        } catch (pushErr) {
+          console.warn('⚠️ Push notification failed (non-critical):', pushErr);
+        }
+      }
 
       setSuccess(editingProduct?'Product updated!':'Product added!');
       refreshData();

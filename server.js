@@ -734,6 +734,26 @@ app.post('/api/push/test', (req, res) => {
   }
 });
 
+// Trigger push notification for a new product (called by admin frontend after Supabase save)
+app.post('/api/push/notify-new-product', authenticateAdmin, (req, res) => {
+  try {
+    const { name, category, image_url, productId } = req.body;
+    if (!name) return res.status(400).json({ error: 'Product name is required' });
+
+    sendBackgroundPushNotification(
+      `🆕 New Arrival: ${name}`,
+      `Check out the new ${category || 'product'} now available!`,
+      `/#/product/${productId || ''}`,
+      image_url || null,
+      'customer'
+    );
+    res.json({ success: true, message: 'New product push notification sent.' });
+  } catch (err) {
+    console.error('Error sending new-product push:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/push/stats', authenticateAdmin, (req, res) => {
   try {
     const total = db.prepare('SELECT COUNT(*) as count FROM push_subscriptions').get().count;
