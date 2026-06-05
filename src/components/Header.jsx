@@ -302,7 +302,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   className="hidden md:block bg-eas-blue p-2 md:p-2.5 rounded-xl shadow-xl shadow-eas-blue/30 overflow-hidden"
                 >
-                  <img src={settings.shopLogo} alt="Logo" className="w-5 h-5 object-contain invert brightness-0" />
+                  <img src={settings.shopLogo} alt="Logo" className="w-5 h-5 object-contain" />
                 </motion.div>
               ) : (
                 <motion.div
