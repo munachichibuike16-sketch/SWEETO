@@ -241,6 +241,21 @@ const Dashboard = () => {
   });
   const [isQuickProductSubmitting, setIsQuickProductSubmitting] = React.useState(false);
 
+  React.useEffect(() => {
+    const handleOpenQuickAdd = (e) => {
+      setQuickProductForm({
+        name: e.detail?.name || '',
+        price: '',
+        stock: '10',
+        categoryId: '',
+        image_url: ''
+      });
+      setIsQuickAddOpen(true);
+    };
+    window.addEventListener('open-quick-add-product', handleOpenQuickAdd);
+    return () => window.removeEventListener('open-quick-add-product', handleOpenQuickAdd);
+  }, []);
+
   const handleCarouselScroll = () => {
     if (!carouselRef.current) return;
     const scrollLeft = carouselRef.current.scrollLeft;

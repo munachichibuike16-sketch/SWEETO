@@ -228,6 +228,21 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS successful_searches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    keyword TEXT UNIQUE NOT NULL,
+    search_count INTEGER DEFAULT 1,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS failed_searches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    keyword TEXT UNIQUE NOT NULL,
+    search_count INTEGER DEFAULT 1,
+    bounce_count INTEGER DEFAULT 0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS agents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -709,6 +724,74 @@ app.post('/api/push/test', (req, res) => {
     res.json({ success: true, message: 'Test push notification triggered.' });
   } catch (err) {
     console.error('Error sending test push:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Analytics & Event Tracking API
+app.post('/api/analytics/search', (req, res) => {
+  const { keyword, success } = req.body;
+  if (!keyword) return res.status(400).json({ error: 'Keyword is required' });
+  const cleaned = keyword.trim().toLowerCase();
+  try {
+    if (success) {
+      db.prepare(`
+        INSERT INTO successful_searches (keyword, search_count)
+        VALUES (?, 1)
+        ON CONFLICT(keyword) DO UPDATE SET search_count = search_count + 1, updated_at = CURRENT_TIMESTAMP
+      `).run(cleaned);
+    } else {
+      db.prepare(`
+        INSERT INTO failed_searches (keyword, search_count, bounce_count)
+        VALUES (?, 1, 0)
+        ON CONFLICT(keyword) DO UPDATE SET search_count = search_count + 1, updated_at = CURRENT_TIMESTAMP
+      `).run(cleaned);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/analytics/bounce', (req, res) => {
+  const { keyword } = req.body;
+  if (!keyword) return res.status(400).json({ error: 'Keyword is required' });
+  const cleaned = keyword.trim().toLowerCase();
+  try {
+    db.prepare(`
+      UPDATE failed_searches
+      SET bounce_count = bounce_count + 1, updated_at = CURRENT_TIMESTAMP
+      WHERE keyword = ?
+    `).run(cleaned);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/successful-searches', (req, res) => {
+  try {
+    const list = db.prepare('SELECT * FROM successful_searches ORDER BY search_count DESC LIMIT 10').all();
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/failed-searches', (req, res) => {
+  try {
+    const list = db.prepare('SELECT * FROM failed_searches ORDER BY search_count DESC LIMIT 10').all();
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/visitor-logs', (req, res) => {
+  try {
+    const list = db.prepare('SELECT * FROM visitor_log ORDER BY created_at DESC LIMIT 100').all();
+    res.json(list);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

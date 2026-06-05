@@ -136,7 +136,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
       p.category?.toLowerCase().includes(query.toLowerCase())
     ).length;
     
-    // Log search to Supabase (fire and forget)
+    // Log search to Supabase visitor_log (general traffic tracking)
     Promise.resolve(
       supabase.from('visitor_log').insert([{
         page_path: `/search?q=${encodeURIComponent(query)}`,
@@ -144,7 +144,111 @@ const Header = ({ onMenuClick, onCartClick }) => {
         country: window.localStorage.getItem('user_country') || 'Unknown'
       }])
     ).catch(() => {});
+
+    // Detailed Search Tracker logic (Missing vs Found)
+    if (count > 0) {
+      // Clear failed search bounce tracking
+      sessionStorage.removeItem('last_failed_search');
+      sessionStorage.removeItem('has_interacted_after_fail');
+
+      // Log success
+      Promise.resolve(
+        supabase.rpc('increment_search_popularity', { search_term: query })
+      ).catch(() => {
+        // SQLite fallback
+        apiFetch('/api/analytics/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: query, success: true })
+        }).catch(() => {});
+      });
+    } else {
+      // Track as failed search
+      sessionStorage.setItem('last_failed_search', query);
+      sessionStorage.setItem('has_interacted_after_fail', 'false');
+
+      Promise.resolve(
+        supabase.rpc('increment_failed_search', { search_term: query })
+      ).catch(() => {
+        // SQLite fallback
+        apiFetch('/api/analytics/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: query, success: false })
+        }).catch(() => {});
+      });
+    }
   };
+
+  // Analytics bounce tracking effects
+  useEffect(() => {
+    const handleNavigationAway = () => {
+      const failedSearch = sessionStorage.getItem('last_failed_search');
+      if (failedSearch) {
+        // If they navigate away from the home search page or search input changes, set interacted to true
+        const isSearchPageActive = location.pathname === '/' && inputValue;
+        if (!isSearchPageActive) {
+          sessionStorage.setItem('has_interacted_after_fail', 'true');
+        }
+      }
+    };
+
+    handleNavigationAway();
+  }, [location.pathname, searchQuery]);
+
+  useEffect(() => {
+    const logBounceEvent = () => {
+      const failedSearch = sessionStorage.getItem('last_failed_search');
+      const interacted = sessionStorage.getItem('has_interacted_after_fail') === 'true';
+      if (failedSearch && !interacted) {
+        sessionStorage.removeItem('last_failed_search');
+        
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        if (supabaseUrl && supabaseAnonKey) {
+          fetch(`${supabaseUrl}/rest/v1/rpc/increment_failed_search_bounce`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`
+            },
+            body: JSON.stringify({ search_term: failedSearch }),
+            keepalive: true
+          }).catch(() => {});
+        }
+        
+        // Also fallback to local SQLite
+        fetch(`${window.location.origin}/api/analytics/bounce`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: failedSearch }),
+          keepalive: true
+        }).catch(() => {});
+      }
+    };
+
+    // Also set interacted = true if they click anywhere on the page
+    const handleDocumentClick = (e) => {
+      const failedSearch = sessionStorage.getItem('last_failed_search');
+      if (failedSearch) {
+        const clickedInput = e.target.closest('input') || e.target.closest('form') || e.target.closest('button');
+        if (!clickedInput) {
+          sessionStorage.setItem('has_interacted_after_fail', 'true');
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', logBounceEvent);
+    window.addEventListener('pagehide', logBounceEvent);
+    document.addEventListener('click', handleDocumentClick);
+
+    return () => {
+      window.removeEventListener('beforeunload', logBounceEvent);
+      window.removeEventListener('pagehide', logBounceEvent);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [inputValue]);
 
   const handleSearchTrigger = (e) => {
     if (e) e.preventDefault();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
@@ -1154,6 +1154,40 @@ const Storefront = ({ viewMode = 'home' }) => {
   );
 };
 
+const RouteTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const pagePath = location.pathname + location.search;
+
+    // Ignore dashboard / admin pages to keep logs focused on customers
+    if (pagePath.includes('/dashboard') || pagePath.includes('/admin')) return;
+
+    // Determine event type based on URL path
+    let eventType = 'page_view';
+    if (pagePath === '/' || pagePath === '') {
+      eventType = 'visit storefront';
+    } else if (pagePath.startsWith('/product/')) {
+      eventType = 'product viewed';
+    } else if (pagePath.startsWith('/search') || pagePath.includes('q=')) {
+      eventType = 'product searched';
+    }
+
+    const country = window.localStorage.getItem('user_country') || 'Unknown';
+
+    // Log view count to Supabase visitor_log
+    Promise.resolve(
+      supabase.from('visitor_log').insert([{ 
+        page_path: pagePath,
+        event_type: eventType,
+        country: country
+      }])
+    ).catch(() => {});
+  }, [location.pathname, location.search]);
+
+  return null;
+};
+
 function App() {
   const { loading } = useStore();
 
@@ -1211,7 +1245,9 @@ function App() {
   useEffect(() => {
     // Detect country first
     const detectCountry = async () => {
-      let country = 'PH'; // Default fallback
+      let country = window.localStorage.getItem('user_country');
+      if (country) return; // Already detected
+      
       try {
         const res = await fetch('https://ipwho.is/');
         if (res.ok) {
@@ -1225,16 +1261,7 @@ function App() {
         const codes = ['PH', 'CI', 'PK', 'KE', 'CR', 'ZM', 'GH', 'US'];
         country = codes[Math.floor(Math.random() * codes.length)];
       }
-      window.localStorage.setItem('user_country', country);
-
-      // Track visit storefront event
-      Promise.resolve(
-        supabase.from('visitor_log').insert([{ 
-          page_path: getCurrentPath(),
-          event_type: 'visit storefront',
-          country: country
-        }])
-      ).catch(() => {});
+      window.localStorage.setItem('user_country', country || 'PH');
     };
 
     detectCountry();
@@ -1250,6 +1277,7 @@ function App() {
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
+        <RouteTracker />
         <Routes>
           <Route path="/" element={<Storefront viewMode="home" />} />
           <Route path="/product/:productId" element={<Storefront viewMode="home" />} />
