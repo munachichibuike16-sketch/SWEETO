@@ -47,7 +47,7 @@ const ReceiptManagement = () => {
         </div>
         
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
           <input 
             type="text" 
             placeholder="Search Receipt ID or Customer..." 

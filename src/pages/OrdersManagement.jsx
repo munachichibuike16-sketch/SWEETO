@@ -385,7 +385,7 @@ export default function OrdersManagement({ preselectedOrderId }) {
         <div className="w-full md:w-1/3 border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col h-[600px]">
           <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               <input 
                 type="text" 
                 placeholder="Search orders..." 

@@ -457,7 +457,7 @@ export default function TransportManagement() {
               <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                 <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/30 dark:bg-slate-950/30">
                   <div className="relative flex-1 max-w-sm">
-                    <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                     <input 
                       type="text" 
                       placeholder="Filter zones..." 
@@ -521,7 +521,7 @@ export default function TransportManagement() {
             {/* Filter */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 flex flex-wrap gap-4 items-center justify-between shadow-sm">
               <div className="relative flex-1 max-w-sm">
-                <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                 <input 
                   type="text" 
                   placeholder="Search applications by name or phone..." 
@@ -646,7 +646,7 @@ export default function TransportManagement() {
             {/* Filter */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 flex flex-wrap gap-4 items-center justify-between shadow-sm">
               <div className="relative flex-1 max-w-sm">
-                <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                 <input 
                   type="text" 
                   placeholder="Search couriers..." 
