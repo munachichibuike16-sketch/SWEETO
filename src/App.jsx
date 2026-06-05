@@ -1246,7 +1246,7 @@ function App() {
       <ConfirmDialog />
       <RealtimeNotification />
       <BackToTop />
-      <FloatingWhatsApp />
+      {!getCurrentPath().includes('/dashboard') && <FloatingWhatsApp />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />

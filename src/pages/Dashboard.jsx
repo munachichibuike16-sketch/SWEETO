@@ -27,6 +27,28 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { settings, orders = [], products = [], showToast, requestConfirm, refreshData } = useStore();
 
+  const getSubtextForTab = (tab) => {
+    switch (tab) {
+      case 'Overview': return 'Track your store\'s vital performance metrics';
+      case 'Sales': return 'Monitor revenue, payment methods, and sales analytics';
+      case 'Orders': return 'Track, edit, and dispatch customer orders';
+      case 'Receipts': return 'Manage transactions and print invoices';
+      case 'Products': return 'Add, update, and manage your inventory';
+      case 'Stock': return 'Monitor stock counts and low-inventory alerts';
+      case 'Categories': return 'Organize products into structured classifications';
+      case 'Brands': return 'Manage product brands and partnerships';
+      case 'Customers': return 'View CRM profiles, loyalty records, and audit logs';
+      case 'Reviews': return 'Moderate and reply to customer product feedback';
+      case 'Logistics': return 'Configure shipping zones and delivery agents';
+      case 'Sections': return 'Customize frontpage banner layouts and sections';
+      case 'Hero': return 'Design storefront homepage slides and promotions';
+      case 'Ads': return 'Configure promotional video and graphic ads';
+      case 'Socials': return 'Manage social links and external channels';
+      case 'Settings': return 'Configure your store settings and shop preferences';
+      default: return 'Manage your store\'s performance';
+    }
+  };
+
   const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
   const [checkingAuth, setCheckingAuth] = React.useState(true);
 
@@ -472,12 +494,25 @@ const Dashboard = () => {
           </div>
         </div>
       </motion.aside>
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative min-w-0">
         <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-400/5 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-400/5 rounded-full blur-[120px] pointer-events-none"></div>
-        <header className="h-24 px-8 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl z-30 shrink-0">
-          <div className="flex items-center gap-6"><button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300"><Icons.Menu size={20} /></button><div><h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{activeTab}</h2><p className="text-xs text-slate-500 font-medium tracking-wide">Manage your store's performance</p></div></div>
-          <div className="flex items-center gap-4">
+        <header className="h-24 px-4 sm:px-8 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl z-30 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300"
+            >
+              <Icons.Menu size={20} />
+            </button>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight truncate">{activeTab}</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide mt-0.5 sm:mt-1.5 leading-relaxed truncate max-w-[140px] xs:max-w-none">
+                {getSubtextForTab(activeTab)}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4">
             <button onClick={() => setIsAdminDark(!isAdminDark)} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer">
               {isAdminDark ? <Icons.Sun size={20} className="text-amber-500" /> : <Icons.Moon size={20} className="text-indigo-600" />}
             </button>
@@ -563,8 +598,38 @@ const Dashboard = () => {
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-8 z-10 scrollbar-hide">
-          {activeTab === 'Overview' && <div className="max-w-7xl mx-auto space-y-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{stats.map((stat, i) => (<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={i} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500"><div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`}></div><div className="flex justify-between items-start mb-6 relative z-10"><div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}><stat.icon className="text-white" size={24} /></div><span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full tracking-wider"><Icons.TrendingUp size={14} />{stat.change}</span></div><div className="relative z-10"><h3 className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">{stat.title}</h3><p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.value}</p></div></motion.div>))}</div></div>}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-24 md:pb-12 z-10 scrollbar-hide">
+          {activeTab === 'Overview' && (
+            <div className="max-w-7xl mx-auto space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {stats.map((stat, i) => (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    transition={{ delay: i * 0.1 }} 
+                    key={i} 
+                    className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500"
+                  >
+                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`}></div>
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg`}>
+                        <stat.icon className="text-white" size={24} />
+                      </div>
+                      <span className="flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full tracking-wider">
+                        <Icons.TrendingUp size={14} />{stat.change}
+                      </span>
+                    </div>
+                    <div className="relative z-10 min-w-0">
+                      <h3 className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-2 truncate">{stat.title}</h3>
+                      <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tighter truncate" title={stat.value}>
+                        {stat.value}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
           {activeTab === 'Products' && <div className="max-w-7xl mx-auto"><ProductsManagement /></div>}
           {activeTab === 'Categories' && <div className="max-w-7xl mx-auto"><CategoryManagement /></div>}
           {activeTab === 'Orders' && <div className="max-w-7xl mx-auto"><OrdersManagement preselectedOrderId={targetOrderId} /></div>}
