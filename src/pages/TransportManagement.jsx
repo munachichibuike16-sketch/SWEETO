@@ -820,19 +820,21 @@ export default function TransportManagement() {
       {/* Modal: Supabase SQL Setup instructions */}
       <AnimatePresence>
         {showSqlModal && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/50"
+          >
+            <div 
               onClick={() => setShowSqlModal(false)}
-              className="fixed inset-0 bg-black z-[1200]"
+              className="absolute inset-0 cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-auto md:left-1/2 md:-translate-x-1/2 bg-white dark:bg-slate-900 max-w-2xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-[1210] flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
+              className="relative bg-white dark:bg-slate-900 max-w-2xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-10 flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
             >
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 shrink-0">
                 <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-md flex items-center gap-2">
@@ -875,7 +877,7 @@ export default function TransportManagement() {
                 Dismiss
               </button>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

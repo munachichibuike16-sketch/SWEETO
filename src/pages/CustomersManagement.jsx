@@ -511,19 +511,21 @@ export default function CustomersManagement() {
       {/* Modal: Activity & Details Drawer */}
       <AnimatePresence>
         {selectedAccount && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-end md:items-center justify-center p-4 bg-black/50"
+          >
+            <div 
               onClick={() => setSelectedAccount(null)}
-              className="fixed inset-0 bg-black z-[1000]"
+              className="absolute inset-0 cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-x-4 bottom-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 bg-white dark:bg-slate-900 max-w-xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-[1010] max-h-[85vh] overflow-y-auto custom-scrollbar flex flex-col"
+              className="relative bg-white dark:bg-slate-900 max-w-xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-10 max-h-[85vh] overflow-y-auto custom-scrollbar flex flex-col"
             >
               {/* Modal Header */}
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 shrink-0">
@@ -633,26 +635,28 @@ export default function CustomersManagement() {
                 </div>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Modal: Delete Confirmation Popup */}
       <AnimatePresence>
         {confirmDeleteEmail && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50"
+          >
+            <div 
               onClick={() => setConfirmDeleteEmail(null)}
-              className="fixed inset-0 bg-black z-[1100]"
+              className="absolute inset-0 cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-auto md:left-1/2 md:-translate-x-1/2 bg-white dark:bg-slate-900 max-w-sm w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 text-center shadow-2xl z-[1110]"
+              className="relative bg-white dark:bg-slate-900 max-w-sm w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 text-center shadow-2xl z-10"
             >
               <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-6">
                 <Trash2 size={28} />
@@ -665,7 +669,7 @@ export default function CustomersManagement() {
               <div className="flex gap-4">
                 <button 
                   onClick={() => setConfirmDeleteEmail(null)}
-                  className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-655 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                  className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -677,26 +681,28 @@ export default function CustomersManagement() {
                 </button>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Modal: Supabase SQL Setup instructions */}
       <AnimatePresence>
         {showSqlModal && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/50"
+          >
+            <div 
               onClick={() => setShowSqlModal(false)}
-              className="fixed inset-0 bg-black z-[1200]"
+              className="absolute inset-0 cursor-pointer"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-auto md:left-1/2 md:-translate-x-1/2 bg-white dark:bg-slate-900 max-w-2xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-[1210] flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
+              className="relative bg-white dark:bg-slate-900 max-w-2xl w-full border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-2xl z-10 flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
             >
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 shrink-0">
                 <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-md flex items-center gap-2">
@@ -732,7 +738,7 @@ export default function CustomersManagement() {
                 Dismiss
               </button>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
