@@ -80,6 +80,136 @@ const InputWrapper = ({ label, children, icon: Icon }) => (
   </div>
 );
 
+/* ─── PUSH NOTIFICATION MANAGEMENT PANEL ─── */
+const PushNotificationPanel = ({ showToast }) => {
+  const [pushStats, setPushStats] = useState({ total: 0, admins: 0, customers: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  
+  const permissionStatus = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+  const permissionColor = {
+    granted: 'bg-emerald-500',
+    denied: 'bg-red-500',
+    default: 'bg-amber-500',
+    unsupported: 'bg-slate-500'
+  };
+  const permissionLabel = {
+    granted: 'Enabled',
+    denied: 'Blocked',
+    default: 'Not Yet Asked',
+    unsupported: 'Not Supported'
+  };
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await apiFetch('/api/push/stats');
+        if (res.ok) {
+          const data = await res.json();
+          setPushStats(data);
+        }
+      } catch (err) {
+        console.warn('Could not fetch push stats:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const handleTestPush = async () => {
+    setIsSending(true);
+    try {
+      const res = await apiFetch('/api/push/test', { method: 'POST' });
+      if (res.ok) {
+        showToast('Test notification broadcast sent!');
+      } else {
+        showToast('Failed to trigger test notification.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error: ' + err.message, 'error');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleRequestPermission = async () => {
+    if (typeof Notification === 'undefined') return;
+    try {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        showToast('Notification permission granted! Reload to subscribe.');
+        window.location.reload();
+      } else {
+        showToast('Permission was ' + result, 'warning');
+      }
+    } catch (err) {
+      showToast('Error requesting permission: ' + err.message, 'error');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Permission Status */}
+      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 rounded-2xl">
+        <div className="flex items-center gap-3">
+          <div className={`w-3 h-3 rounded-full ${permissionColor[permissionStatus]} ${permissionStatus === 'granted' ? 'animate-pulse' : ''}`}></div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Browser Permission</p>
+            <p className="text-xs font-black text-slate-700 dark:text-white uppercase tracking-wide">{permissionLabel[permissionStatus]}</p>
+          </div>
+        </div>
+        {permissionStatus === 'default' && (
+          <button 
+            onClick={handleRequestPermission}
+            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-black uppercase tracking-widest rounded-xl active:scale-95 transition-all"
+          >
+            Enable
+          </button>
+        )}
+      </div>
+
+      {/* Subscriber Stats Grid */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="text-center p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 rounded-2xl">
+          <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{loadingStats ? '—' : pushStats.total}</p>
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Total</p>
+        </div>
+        <div className="text-center p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 rounded-2xl">
+          <p className="text-xl sm:text-2xl font-black text-cyan-500">{loadingStats ? '—' : pushStats.admins}</p>
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Admins</p>
+        </div>
+        <div className="text-center p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 rounded-2xl">
+          <p className="text-xl sm:text-2xl font-black text-purple-500">{loadingStats ? '—' : pushStats.customers}</p>
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">Customers</p>
+        </div>
+      </div>
+
+      {/* Info Box */}
+      <div className="p-5 bg-orange-500/5 dark:bg-orange-500/5 rounded-2xl border border-orange-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
+        <p className="font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
+          <Info size={12} /> How It Works
+        </p>
+        <ul className="space-y-1.5 text-[11px]">
+          <li>• <strong>Admin notifications:</strong> New orders, low stock alerts — sent only to admin devices.</li>
+          <li>• <strong>Customer notifications:</strong> New products, price drops, order status updates.</li>
+          <li>• <strong>Mobile tip:</strong> "Add to Home Screen" on your phone for the best push experience.</li>
+        </ul>
+      </div>
+
+      {/* Test Broadcast Button */}
+      <button
+        type="button"
+        onClick={handleTestPush}
+        disabled={isSending}
+        className={`w-full py-3.5 sm:py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl active:scale-95 transition-all shadow-xl shadow-orange-500/10 flex items-center justify-center gap-2 ${isSending ? 'opacity-60 cursor-not-allowed' : ''}`}
+      >
+        <Zap size={16} className={isSending ? 'animate-spin' : ''} /> {isSending ? 'Sending...' : 'Broadcast Test Push'}
+      </button>
+    </div>
+  );
+};
+
 const StoreSettings = () => {
   const { settings, refreshData, showToast } = useStore();
   const [formData, setFormData] = useState({
@@ -702,7 +832,7 @@ const StoreSettings = () => {
               </div>
             </motion.div>
 
-            {/* Push Diagnostics Card */}
+            {/* Push Notifications Management Card */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -713,35 +843,9 @@ const StoreSettings = () => {
                 icon={Zap} 
                 title="Push Notifications" 
                 color="orange" 
-                subtitle="Diagnostic & Broadcast Tools"
+                subtitle="Mobile Alerts & Broadcast"
               />
-              <div className="space-y-6">
-                <div className="p-6 bg-orange-500/5 dark:bg-orange-500/5 rounded-2xl border border-orange-500/10 dark:border-orange-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
-                  <p className="font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
-                    <Info size={12} /> Diagnostic Assistant
-                  </p>
-                  Click the button below to broadcast a test push notification to all devices registered to this local server. Make sure you have granted notification permissions on your device.
-                </div>
-
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const res = await apiFetch('push/test', { method: 'POST' });
-                      if (res.ok) {
-                        showToast('Test notification triggered successfully!');
-                      } else {
-                        showToast('Failed to trigger test notification.', 'error');
-                      }
-                    } catch (err) {
-                      showToast('Network error triggering notification: ' + err.message, 'error');
-                    }
-                  }}
-                  className="w-full py-3.5 sm:py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl active:scale-95 transition-all shadow-xl shadow-orange-500/10 flex items-center justify-center gap-2"
-                >
-                  <Zap size={16} /> Broadcast Test Push
-                </button>
-              </div>
+              <PushNotificationPanel showToast={showToast} />
             </motion.div>
           </div>
         </div>

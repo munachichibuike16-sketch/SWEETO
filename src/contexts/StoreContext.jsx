@@ -132,7 +132,8 @@ export const StoreProvider = ({ children }) => {
                   keys: {
                     p256dh: rawSub.keys?.p256dh || null,
                     auth: rawSub.keys?.auth || null
-                  }
+                  },
+                  role: 'customer'
                 })
               };
               await apiFetch('/api/push/subscribe', subOptions);

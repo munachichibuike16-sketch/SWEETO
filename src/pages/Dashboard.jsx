@@ -459,6 +459,73 @@ const Dashboard = () => {
     }
   }, [isAdminAuthenticated]);
 
+  // Register Service Worker and subscribe admin to Web Push for closed-tab notifications
+  React.useEffect(() => {
+    if (!isAdminAuthenticated) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    const subscribeAdminPush = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('✅ Admin Service Worker registered.');
+
+        // Listen for route messages from Service Worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'ROUTE_TO') {
+            window.location.hash = event.data.url.replace(/^\/?#?/, '#');
+          }
+        });
+
+        if (Notification.permission !== 'granted') return;
+
+        // Fetch VAPID public key from backend
+        const keyRes = await apiFetch('/api/push/public-key');
+        if (!keyRes.ok) return;
+        const { publicKey } = await keyRes.json();
+        if (!publicKey) return;
+
+        // Convert base64 VAPID key to Uint8Array
+        const padding = '='.repeat((4 - publicKey.length % 4) % 4);
+        const base64 = (publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const applicationServerKey = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          applicationServerKey[i] = rawData.charCodeAt(i);
+        }
+
+        // Subscribe device to push service
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+
+        console.log('✅ Admin subscribed to Web Push:', subscription);
+
+        // Register with backend as 'admin' role
+        const rawSub = subscription.toJSON();
+        await apiFetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: rawSub.keys?.p256dh || null,
+              auth: rawSub.keys?.auth || null
+            },
+            role: 'admin'
+          })
+        });
+        console.log('✅ Admin push subscription registered with server.');
+      } catch (err) {
+        console.warn('⚠️ Admin push subscription failed:', err);
+      }
+    };
+
+    // Delay slightly to not block initial render
+    const timer = setTimeout(subscribeAdminPush, 2000);
+    return () => clearTimeout(timer);
+  }, [isAdminAuthenticated]);
+
   // Unified State Comparison Snapshot Watcher
   // Triggered whenever orders/products lists update (realtime or polling)
   const prevOrdersRef = React.useRef(null);

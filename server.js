@@ -360,6 +360,7 @@ db.exec(`
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN country TEXT DEFAULT "Unknown"'); } catch (e) {}
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN event_type TEXT DEFAULT "page_view"'); } catch (e) {}
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN device_id TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE push_subscriptions ADD COLUMN role TEXT DEFAULT "customer"'); } catch (e) {}
 
 // Seed visitor logs if empty or small to show realistic analytics
 try {
@@ -565,10 +566,15 @@ try {
 }
 
 // Helper: Send Web Push Notification to all active background subscribers
-async function sendBackgroundPushNotification(title, body, url, image = null) {
+async function sendBackgroundPushNotification(title, body, url, image = null, targetRole = null) {
   try {
-    const subscriptions = db.prepare('SELECT * FROM push_subscriptions').all();
-    console.log(`📡 Sending background push notifications to ${subscriptions.length} subscribers...`);
+    let subscriptions;
+    if (targetRole) {
+      subscriptions = db.prepare('SELECT * FROM push_subscriptions WHERE role = ?').all(targetRole);
+    } else {
+      subscriptions = db.prepare('SELECT * FROM push_subscriptions').all();
+    }
+    console.log(`📡 Sending background push to ${subscriptions.length} subscribers${targetRole ? ` (role: ${targetRole})` : ''}...`);
     
     const payload = JSON.stringify({ title, body, url, image });
     
@@ -697,16 +703,16 @@ app.get('/api/push/public-key', (req, res) => {
 });
 
 app.post('/api/push/subscribe', (req, res) => {
-  const { endpoint, keys } = req.body;
+  const { endpoint, keys, role } = req.body;
   if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
     return res.status(400).json({ error: 'Subscription missing required fields.' });
   }
   
   try {
     db.prepare(`
-      INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth)
-      VALUES (?, ?, ?)
-    `).run(endpoint, keys.p256dh, keys.auth);
+      INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth, role)
+      VALUES (?, ?, ?, ?)
+    `).run(endpoint, keys.p256dh, keys.auth, role || 'customer');
     res.json({ success: true, message: 'Push subscription saved successfully.' });
   } catch (err) {
     console.error('Error saving push subscription:', err);
@@ -724,6 +730,17 @@ app.post('/api/push/test', (req, res) => {
     res.json({ success: true, message: 'Test push notification triggered.' });
   } catch (err) {
     console.error('Error sending test push:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/push/stats', authenticateAdmin, (req, res) => {
+  try {
+    const total = db.prepare('SELECT COUNT(*) as count FROM push_subscriptions').get().count;
+    const admins = db.prepare("SELECT COUNT(*) as count FROM push_subscriptions WHERE role = 'admin'").get().count;
+    const customers = db.prepare("SELECT COUNT(*) as count FROM push_subscriptions WHERE role = 'customer'").get().count;
+    res.json({ total, admins, customers });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -993,6 +1010,15 @@ app.post('/api/orders', (req, res) => {
       total, total_items || 1, status || 'completed'
     );
     res.json({ id: info.lastInsertRowid, success: true });
+
+    // Trigger admin push notification for new order
+    sendBackgroundPushNotification(
+      '🛍️ New Order Received!',
+      `Order SWT-${info.lastInsertRowid} from ${customer_name || 'Customer'} — ${Number(total || 0).toLocaleString()} FCFA`,
+      '/#/dashboard',
+      null,
+      'admin'
+    );
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1225,12 +1251,13 @@ app.post('/api/products', authenticateAdmin, upload.single('image'), (req, res) 
     console.log('Product added successfully:', info);
     res.json({ id: info.lastInsertRowid, success: true });
 
-    // Trigger dynamic closed-tab background push notifications
+    // Trigger dynamic closed-tab background push notifications to customers
     sendBackgroundPushNotification(
       `🆕 New Arrival: ${name}`,
       `Check out the new ${category || 'product'} now available!`,
       `/#/product/${info.lastInsertRowid}`,
-      final_image_url
+      final_image_url,
+      'customer'
     );
   } catch (err) { 
     console.error('Error adding product:', err);
@@ -1313,6 +1340,18 @@ app.put('/api/products/:id', authenticateAdmin, upload.single('image'), (req, re
         `Now ${dropPercent}% off! Down to ${Number(price).toLocaleString()} FCFA from ${Number(prevPrice).toLocaleString()} FCFA.`,
         `/#/product/${id}`,
         final_image_url || oldProduct.image_url
+      );
+    }
+
+    // Trigger admin push notification on low stock
+    const lowStockThreshold = 5;
+    if (stock !== undefined && Number(stock) <= lowStockThreshold && oldProduct && Number(oldProduct.stock) > lowStockThreshold) {
+      sendBackgroundPushNotification(
+        `⚠️ Low Stock: ${name}`,
+        `Only ${Number(stock)} units remaining! Restock soon.`,
+        '/#/dashboard',
+        null,
+        'admin'
       );
     }
   } catch (err) { 
@@ -1398,6 +1437,18 @@ app.patch('/api/orders/:id/status', authenticateAdmin, (req, res) => {
     
     if (result.changes === 0) return res.status(404).json({ error: 'Order not found' });
     res.json({ success: true });
+
+    // Push notification to customers when order status changes
+    if (status || tracking_stage) {
+      const statusLabel = status || tracking_stage || 'updated';
+      sendBackgroundPushNotification(
+        `📦 Order SWT-${id} Update`,
+        `Your order status has been updated to: ${statusLabel.toUpperCase()}`,
+        `/#/track/${id}`,
+        null,
+        'customer'
+      );
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
