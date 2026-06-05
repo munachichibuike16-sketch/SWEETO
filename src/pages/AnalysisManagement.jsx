@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, Users, Eye, ShoppingBag, Percent, 
   Smartphone, Monitor, Globe, Clock, ArrowRight,
@@ -49,6 +50,7 @@ export default function AnalysisManagement() {
   const { settings } = useStore();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   
   // Interactive filters
@@ -69,9 +71,15 @@ export default function AnalysisManagement() {
 
   const currencySymbol = settings?.currency === 'USD' ? '$' : (settings?.currency === 'EUR' ? '€' : (settings?.currency === 'GBP' ? '£' : (settings?.currency === 'INR' ? '₹' : (settings?.currency || 'FCFA'))));
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (silent = false) => {
     try {
-      setLoading(true);
+      if (silent) {
+        // Silent update, no loading indicator
+      } else if (!data) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
       
       // 1. Fetch visitor logs
       const { data: logs, error: logsErr } = await supabase
@@ -225,6 +233,7 @@ export default function AnalysisManagement() {
       setError(err.message || 'An error occurred while fetching analysis.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -241,10 +250,10 @@ export default function AnalysisManagement() {
     // Real-time listener for visitor logs and orders to auto-update analytics
     const channel = supabase.channel('analysis-realtime-listener')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'visitor_log' }, () => {
-        fetchAnalytics();
+        fetchAnalytics(true);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchAnalytics();
+        fetchAnalytics(true);
       })
       .subscribe();
 
@@ -395,10 +404,10 @@ export default function AnalysisManagement() {
         {/* Global Controls */}
         <div className="flex flex-wrap items-center gap-3">
           <button 
-            onClick={fetchAnalytics}
+            onClick={() => fetchAnalytics()}
             className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:text-blue-500 dark:hover:border-blue-500 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-all text-slate-700 dark:text-slate-300"
           >
-            <RefreshCw size={14} className="stroke-[2.5]" />
+            <RefreshCw size={14} className={`stroke-[2.5] ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
           <button 
@@ -539,46 +548,53 @@ export default function AnalysisManagement() {
               </tr>
             </thead>
             <tbody>
-              {filteredCountries.map((c, idx) => {
-                const flag = flagMap[c.country] || flagMap[c.country.split(' ').join('')] || '🌐';
-                const lastActiveFormatted = c.last_active 
-                  ? new Date(c.last_active).toISOString().replace('T', ' ').substring(0, 19)
-                  : 'N/A';
-                  
-                const getEventBadge = (evt) => {
-                  const cleaned = evt.toLowerCase();
-                  if (cleaned.includes('sale')) return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
-                  if (cleaned.includes('dashboard')) return 'bg-violet-500/10 text-violet-500 border border-violet-500/20';
-                  if (cleaned.includes('stock')) return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
-                  return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
-                };
+              <AnimatePresence initial={false}>
+                {filteredCountries.map((c, idx) => {
+                  const flag = flagMap[c.country] || flagMap[c.country.split(' ').join('')] || '🌐';
+                  const lastActiveFormatted = c.last_active 
+                    ? new Date(c.last_active).toISOString().replace('T', ' ').substring(0, 19)
+                    : 'N/A';
+                    
+                  const getEventBadge = (evt) => {
+                    const cleaned = evt.toLowerCase();
+                    if (cleaned.includes('sale')) return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+                    if (cleaned.includes('dashboard')) return 'bg-violet-500/10 text-violet-500 border border-violet-500/20';
+                    if (cleaned.includes('stock')) return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
+                    return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+                  };
 
-                const isSelected = clickedCountry === c.country;
+                  const isSelected = clickedCountry === c.country;
 
-                return (
-                  <tr 
-                    key={idx} 
-                    onClick={() => setClickedCountry(isSelected ? null : c.country)}
-                    className={`border-b border-slate-50 dark:border-slate-850/30 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-950/40 cursor-pointer select-none transition-all ${
-                      isSelected ? 'bg-blue-500/5 border-l-4 border-l-blue-500 pl-2' : ''
-                    }`}
-                  >
-                    <td className="py-5 pl-4 text-slate-400">{idx + 1}</td>
-                    <td className="py-5 flex items-center gap-2.5 font-black">
-                      <span className="text-lg leading-none">{flag}</span>
-                      <span className="tracking-wide text-slate-900 dark:text-slate-100">{countryNameMap[c.country] || c.country}</span>
-                    </td>
-                    <td className="py-5 text-slate-700 dark:text-slate-300 font-black">{c.events.toLocaleString()}</td>
-                    <td className="py-5 text-slate-500 dark:text-slate-400">{c.unique_devices}</td>
-                    <td className="py-5 font-mono text-[11px] text-slate-400">{lastActiveFormatted}</td>
-                    <td className="py-5 pr-4">
-                      <span className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider ${getEventBadge(c.top_event)}`}>
-                        {c.top_event}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <motion.tr 
+                      key={c.country}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      layout
+                      onClick={() => setClickedCountry(isSelected ? null : c.country)}
+                      className={`border-b border-slate-50 dark:border-slate-850/30 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-950/40 cursor-pointer select-none transition-all ${
+                        isSelected ? 'bg-blue-500/5 border-l-4 border-l-blue-500 pl-2' : ''
+                      }`}
+                    >
+                      <td className="py-5 pl-4 text-slate-400">{idx + 1}</td>
+                      <td className="py-5 flex items-center gap-2.5 font-black">
+                        <span className="text-lg leading-none">{flag}</span>
+                        <span className="tracking-wide text-slate-900 dark:text-slate-100">{countryNameMap[c.country] || c.country}</span>
+                      </td>
+                      <td className="py-5 text-slate-700 dark:text-slate-300 font-black">{c.events.toLocaleString()}</td>
+                      <td className="py-5 text-slate-500 dark:text-slate-400">{c.unique_devices}</td>
+                      <td className="py-5 font-mono text-[11px] text-slate-400">{lastActiveFormatted}</td>
+                      <td className="py-5 pr-4">
+                        <span className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider ${getEventBadge(c.top_event)}`}>
+                          {c.top_event}
+                        </span>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
@@ -790,42 +806,57 @@ export default function AnalysisManagement() {
             </div>
             
             <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
-              {filteredFeed.length === 0 ? (
-                <div className="py-12 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  No active storefront events for this region match the scope.
-                </div>
-              ) : filteredFeed.map((l, idx) => {
-                const time = new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                const flag = flagMap[l.country] || '🌐';
-                
-                // Color badges for feed items
-                const getFeedItemBadge = (type) => {
-                  const cleaned = type.toLowerCase();
-                  if (cleaned.includes('click')) return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
-                  if (cleaned.includes('viewed')) return 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20';
-                  if (cleaned.includes('searched')) return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
-                  if (cleaned.includes('sale')) return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
-                  return 'bg-slate-500/10 text-slate-500 border border-slate-500/20';
-                };
+              <AnimatePresence initial={false}>
+                {filteredFeed.length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="py-12 text-center text-xs font-bold text-slate-400 uppercase tracking-widest"
+                  >
+                    No active storefront events for this region match the scope.
+                  </motion.div>
+                ) : filteredFeed.map((l) => {
+                  const time = new Date(l.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                  const flag = flagMap[l.country] || '🌐';
+                  
+                  // Color badges for feed items
+                  const getFeedItemBadge = (type) => {
+                    const cleaned = type.toLowerCase();
+                    if (cleaned.includes('click')) return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+                    if (cleaned.includes('viewed')) return 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20';
+                    if (cleaned.includes('searched')) return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
+                    if (cleaned.includes('sale')) return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+                    return 'bg-slate-500/10 text-slate-500 border border-slate-500/20';
+                  };
 
-                return (
-                  <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200/20 dark:border-slate-800/20 space-y-2.5 relative overflow-hidden group">
-                    <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="flex items-center gap-1.5 font-black text-slate-800 dark:text-slate-200">
-                        <span>{flag}</span>
-                        <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded-md font-mono">{l.ip === '::1' || l.ip === '127.0.0.1' ? 'LOCAL_NODE' : l.ip}</span>
-                      </span>
-                      <span className="text-slate-400">{time}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono text-slate-500 dark:text-slate-400 truncate max-w-[150px]">{l.page_path}</span>
-                      <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${getFeedItemBadge(l.event_type)}`}>
-                        {l.event_type}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                  return (
+                    <motion.div 
+                      key={l.id || l.created_at}
+                      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      layout
+                      className="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200/20 dark:border-slate-800/20 space-y-2.5 relative overflow-hidden group"
+                    >
+                      <div className="flex justify-between items-center text-[10px] font-bold">
+                        <span className="flex items-center gap-1.5 font-black text-slate-800 dark:text-slate-200">
+                          <span>{flag}</span>
+                          <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded-md font-mono">{l.ip === '::1' || l.ip === '127.0.0.1' ? 'LOCAL_NODE' : l.ip}</span>
+                        </span>
+                        <span className="text-slate-400">{time}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono text-slate-500 dark:text-slate-400 truncate max-w-[150px]">{l.page_path}</span>
+                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${getFeedItemBadge(l.event_type)}`}>
+                          {l.event_type}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
           </div>
 
