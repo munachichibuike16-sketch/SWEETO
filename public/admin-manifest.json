@@ -1,0 +1,31 @@
+{
+  "name": "SWEETO ADMIN",
+  "short_name": "SWT ADMIN",
+  "description": "SWEETO Hub Control Center & Shop Management",
+  "start_url": "/#/dashboard",
+  "display": "standalone",
+  "background_color": "#05020C",
+  "theme_color": "#150E28",
+  "orientation": "any",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/admin-favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/admin-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/admin-icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

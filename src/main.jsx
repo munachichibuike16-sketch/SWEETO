@@ -23,6 +23,65 @@
   }
 })();
 
+// Dynamic PWA Manifest & Favicon Switcher (Storefront vs Admin Dashboard)
+function updatePWAManifestAndIcons() {
+  const hash = window.location.hash || '';
+  const isAdminRoute = hash.includes('/dashboard') || hash.includes('/admin');
+
+  // 1. Update manifest link
+  let manifestLink = document.querySelector('link[rel="manifest"]');
+  if (!manifestLink) {
+    manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    document.head.appendChild(manifestLink);
+  }
+  const targetManifest = isAdminRoute ? '/admin-manifest.json' : '/manifest.json';
+  if (manifestLink.getAttribute('href') !== targetManifest) {
+    manifestLink.setAttribute('href', targetManifest);
+  }
+
+  // 2. Update favicon link
+  let faviconLink = document.querySelector('link[rel="icon"]');
+  if (!faviconLink) {
+    faviconLink = document.createElement('link');
+    faviconLink.rel = 'icon';
+    document.head.appendChild(faviconLink);
+  }
+  const targetFavicon = isAdminRoute ? '/admin-favicon.svg' : '/favicon.svg';
+  if (faviconLink.getAttribute('href') !== targetFavicon) {
+    faviconLink.setAttribute('href', targetFavicon);
+  }
+
+  // 3. Update apple touch icon link
+  let appleIconLink = document.querySelector('link[rel="apple-touch-icon"]');
+  if (!appleIconLink) {
+    appleIconLink = document.createElement('link');
+    appleIconLink.rel = 'apple-touch-icon';
+    document.head.appendChild(appleIconLink);
+  }
+  const targetAppleIcon = isAdminRoute ? '/admin-apple-touch-icon.png' : '/apple-touch-icon.png';
+  if (appleIconLink.getAttribute('href') !== targetAppleIcon) {
+    appleIconLink.setAttribute('href', targetAppleIcon);
+  }
+
+  // 4. Update title/theme-color meta tags
+  let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', isAdminRoute ? '#150E28' : '#020617');
+  }
+  
+  let appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+  if (appleTitleMeta) {
+    appleTitleMeta.setAttribute('content', isAdminRoute ? 'SWEETO ADMIN' : 'SWEETO');
+  }
+}
+
+// Run immediately on page load
+updatePWAManifestAndIcons();
+
+// Listen for subsequent hash navigation changes
+window.addEventListener('hashchange', updatePWAManifestAndIcons);
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
