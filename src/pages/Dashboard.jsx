@@ -809,7 +809,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-3 sm:gap-6">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300 lg:hidden"
+              className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-sm text-slate-600 dark:text-slate-300"
             >
               <Icons.Menu size={20} />
             </button>
