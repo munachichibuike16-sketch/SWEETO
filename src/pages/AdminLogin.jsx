@@ -185,7 +185,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
         </form>
 
         <div className="pt-4 border-t border-slate-900 flex justify-between items-center text-[8px] font-black text-slate-600 uppercase tracking-widest">
-          <span>Terminal V1.9.4</span>
+          <span>Terminal V2.0.1</span>
           <span className="flex items-center gap-1">
             <Lock size={8} /> Secure Socket Link
           </span>

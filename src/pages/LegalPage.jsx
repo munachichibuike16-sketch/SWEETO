@@ -177,7 +177,7 @@ const LegalPage = ({ type = 'privacy' }) => {
                         <FileText size={18} />
                      </div>
                      <div>
-                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">Document Version 2.0</p>
+                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">Document Version 2.0.1</p>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Released {new Date().toLocaleDateString()}</p>
                      </div>
                   </div>

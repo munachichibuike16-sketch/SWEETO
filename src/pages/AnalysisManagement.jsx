@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase';
 
 const flagMap = {
   'PH': '🇵🇭',
+  'FI': '🇫🇮',
   'CI': '🇨🇮',
   'Ivory Coast': '🇨🇮',
   'PK': '🇵🇰',
@@ -24,6 +25,24 @@ const flagMap = {
   'DE': '🇩🇪',
   'JP': '🇯🇵',
   'CN': '🇨🇳'
+};
+
+const countryNameMap = {
+  'PH': 'Philippines',
+  'FI': 'Finland',
+  'PK': 'Pakistan',
+  'CR': 'Costa Rica',
+  'CI': 'Ivory Coast',
+  'US': 'United States',
+  'FR': 'France',
+  'CA': 'Canada',
+  'GB': 'United Kingdom',
+  'DE': 'Germany',
+  'JP': 'Japan',
+  'CN': 'China',
+  'KE': 'Kenya',
+  'ZM': 'Zambia',
+  'GH': 'Ghana'
 };
 
 export default function AnalysisManagement() {
@@ -218,6 +237,20 @@ export default function AnalysisManagement() {
     const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     setDateFrom(sevenDaysAgo);
     setDateTo(formattedToday);
+
+    // Real-time listener for visitor logs and orders to auto-update analytics
+    const channel = supabase.channel('analysis-realtime-listener')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'visitor_log' }, () => {
+        fetchAnalytics();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchAnalytics();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleDatePresetClick = (preset) => {
@@ -312,7 +345,7 @@ export default function AnalysisManagement() {
 
   // Filter countries list by search & dropdown
   const filteredCountries = countriesBreakdown.filter(c => {
-    const countryName = (c.country || '').toLowerCase();
+    const countryName = (countryNameMap[c.country] || c.country || '').toLowerCase();
     const topEvent = (c.top_event || '').toLowerCase();
     const query = searchQuery.toLowerCase();
     
@@ -466,7 +499,7 @@ export default function AnalysisManagement() {
             <Check size={18} className="stroke-[3]" />
             <div>
               <span className="uppercase font-black tracking-widest">Active Filters:</span>
-              {clickedCountry && <span className="ml-2 bg-white/20 px-3 py-1.5 rounded-xl">Country: {flagMap[clickedCountry] || '🌐'} {clickedCountry}</span>}
+              {clickedCountry && <span className="ml-2 bg-white/20 px-3 py-1.5 rounded-xl">Country: {flagMap[clickedCountry] || '🌐'} {countryNameMap[clickedCountry] || clickedCountry}</span>}
               {clickedEventType && <span className="ml-2 bg-white/20 px-3 py-1.5 rounded-xl">Event: {clickedEventType}</span>}
             </div>
           </div>
@@ -533,7 +566,7 @@ export default function AnalysisManagement() {
                     <td className="py-5 pl-4 text-slate-400">{idx + 1}</td>
                     <td className="py-5 flex items-center gap-2.5 font-black">
                       <span className="text-lg leading-none">{flag}</span>
-                      <span className="tracking-wide text-slate-900 dark:text-slate-100">{c.country}</span>
+                      <span className="tracking-wide text-slate-900 dark:text-slate-100">{countryNameMap[c.country] || c.country}</span>
                     </td>
                     <td className="py-5 text-slate-700 dark:text-slate-300 font-black">{c.events.toLocaleString()}</td>
                     <td className="py-5 text-slate-500 dark:text-slate-400">{c.unique_devices}</td>
