@@ -28,28 +28,51 @@ import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../utils/api';
 
-const SectionHeader = ({ icon: Icon, title, color, subtitle }) => (
-  <div className="flex flex-col mb-8">
-    <div className="flex items-center gap-4 mb-2">
-      <div className={`w-12 h-12 rounded-2xl bg-${color}-500/10 text-${color}-500 flex items-center justify-center shadow-lg shadow-${color}-500/5 border border-${color}-500/20`}>
-        <Icon size={22} />
+const SectionHeader = ({ icon: Icon, title, color, subtitle }) => {
+  const accentClasses = {
+    blue: 'dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/25 dark:shadow-cyan-500/5',
+    indigo: 'dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/25 dark:shadow-indigo-500/5',
+    purple: 'dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/25 dark:shadow-purple-500/5',
+    rose: 'dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/25 dark:shadow-rose-500/5',
+    emerald: 'dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/25 dark:shadow-emerald-500/5',
+    orange: 'dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/25 dark:shadow-orange-500/5',
+  };
+  
+  const lineAccents = {
+    blue: 'dark:from-cyan-500',
+    indigo: 'dark:from-indigo-500',
+    purple: 'dark:from-purple-500',
+    rose: 'dark:from-rose-500',
+    emerald: 'dark:from-emerald-500',
+    orange: 'dark:from-orange-500',
+  };
+
+  const currentAccent = accentClasses[color] || 'dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20';
+  const currentLine = lineAccents[color] || 'dark:from-cyan-500';
+
+  return (
+    <div className="flex flex-col mb-8">
+      <div className="flex items-center gap-4 mb-2">
+        <div className={`w-12 h-12 rounded-2xl bg-${color}-500/10 text-${color}-500 flex items-center justify-center shadow-lg shadow-${color}-500/5 border border-${color}-500/20 ${currentAccent}`}>
+          <Icon size={22} />
+        </div>
+        <div className="flex flex-col">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.25em]">{title}</h3>
+          {subtitle && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{subtitle}</p>}
+        </div>
       </div>
-      <div className="flex flex-col">
-        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.25em]">{title}</h3>
-        {subtitle && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{subtitle}</p>}
-      </div>
+      <div className={`w-20 h-1 bg-gradient-to-r from-${color}-500 ${currentLine} to-transparent rounded-full ml-16 opacity-30`}></div>
     </div>
-    <div className={`w-20 h-1 bg-gradient-to-r from-${color}-500 to-transparent rounded-full ml-16 opacity-30`}></div>
-  </div>
-);
+  );
+};
 
 const InputWrapper = ({ label, children, icon: Icon }) => (
   <div className="space-y-2 group/field">
     <div className="flex items-center justify-between px-1">
-      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] group-focus-within/field:text-blue-500 transition-colors">
+      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] group-focus-within/field:text-blue-500 dark:group-focus-within/field:text-cyan-400 transition-colors">
         {label}
       </label>
-      {Icon && <Icon size={12} className="text-slate-300 group-focus-within/field:text-blue-400 transition-colors" />}
+      {Icon && <Icon size={12} className="text-slate-300 dark:text-slate-650 group-focus-within/field:text-blue-400 dark:group-focus-within/field:text-cyan-300 transition-colors" />}
     </div>
     <div className="relative overflow-hidden rounded-[1.5rem] transition-all">
       {children}
@@ -199,10 +222,36 @@ const StoreSettings = () => {
 
 
 
-  const inputStyle = "w-full px-5 sm:px-7 py-3.5 sm:py-5 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-700/50 rounded-2xl sm:rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 transition-all font-black text-slate-900 dark:text-white text-xs placeholder:text-slate-300 dark:placeholder:text-slate-600";
+  const inputStyle = "w-full px-5 sm:px-7 py-3.5 sm:py-5 bg-slate-50/50 dark:bg-slate-950/60 border border-slate-100 dark:border-white/10 rounded-2xl sm:rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-cyan-500/20 focus:border-blue-500 dark:focus:border-cyan-400/50 focus:bg-white dark:focus:bg-slate-950/80 transition-all duration-300 font-black text-slate-900 dark:text-white text-xs placeholder:text-slate-300 dark:placeholder:text-slate-600";
  
   return (
-    <div className="min-h-screen relative overflow-hidden pb-32">
+    <div className="min-h-screen relative overflow-hidden pb-32 selection:bg-cyan-500/30">
+      {/* ─── SUCCESS WIPE & FLOATING CAPSULE ─── */}
+      <AnimatePresence>
+        {showSuccess && (
+          <>
+            {/* Top Screen Icy Blue Wipe Line */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: '0%' }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 z-[9999] shadow-[0_4px_25px_rgba(6,182,212,0.6)]"
+            />
+            
+            {/* Frozen Toast capsule */}
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200 dark:border-cyan-500/30 rounded-2xl shadow-[0_10px_30px_rgba(6,182,212,0.15)] flex items-center gap-3 text-slate-900 dark:text-cyan-400 font-black text-[10px] uppercase tracking-widest"
+            >
+              <Sparkles size={14} className="text-blue-500 dark:text-cyan-400 animate-pulse" />
+              <span>Settings Locked & Synchronized</span>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
       {/* ─── DYNAMIC BACKGROUND Blobs ─── */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div 
@@ -304,7 +353,7 @@ const StoreSettings = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="group/card bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl transition-all hover:shadow-2xl hover:shadow-blue-500/5"
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-cyan-500/5 before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-cyan-400/40 before:to-transparent"
             >
               <SectionHeader 
                 icon={Shield} 
@@ -360,7 +409,7 @@ const StoreSettings = () => {
                       </motion.div>
                       <button 
                         onClick={() => logoInputRef.current.click()} 
-                        className="flex-1 h-24 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[2rem] text-slate-400 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all flex flex-col items-center justify-center gap-1 group/upload"
+                        className="flex-1 h-24 border-2 border-dashed border-slate-100 dark:border-white/10 rounded-[2rem] text-slate-400 hover:text-blue-500 dark:hover:text-cyan-400 hover:border-blue-500/50 dark:hover:border-cyan-500/35 hover:bg-blue-500/5 dark:hover:bg-cyan-500/5 transition-all flex flex-col items-center justify-center gap-1 group/upload animate-[pulse_3s_infinite]"
                       >
                         <Plus size={20} className="group-hover/upload:rotate-90 transition-transform duration-300" />
                         <span className="text-[9px] font-black uppercase tracking-widest">Update Logo</span>
@@ -435,7 +484,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-indigo-400/40 before:to-transparent"
             >
               <SectionHeader 
                 icon={FileText} 
@@ -444,14 +493,14 @@ const StoreSettings = () => {
                 subtitle="Policy Management & Enforcement"
               />
               
-              <div className="flex gap-2 sm:gap-3 mb-8 p-1 sm:p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl sm:rounded-[1.8rem] border border-slate-100/50 dark:border-slate-700/50">
+              <div className="flex gap-2 sm:gap-3 mb-8 p-1 sm:p-1.5 bg-slate-100/50 dark:bg-slate-950/40 rounded-2xl sm:rounded-[1.8rem] border border-slate-100/50 dark:border-white/5">
                 {['privacy', 'terms', 'security'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveLegalTab(tab)}
                     className={`flex-1 py-2.5 sm:py-4 rounded-xl sm:rounded-[1.3rem] text-[8px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.25em] transition-all duration-500 ${
                       activeLegalTab === tab 
-                      ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xl shadow-blue-500/5' 
+                      ? 'bg-white dark:bg-slate-900/80 text-blue-600 dark:text-cyan-400 shadow-xl shadow-blue-500/5 dark:shadow-cyan-500/10 border border-transparent dark:border-cyan-500/20' 
                       : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                     }`}
                   >
@@ -483,7 +532,7 @@ const StoreSettings = () => {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-purple-400/40 before:to-transparent"
             >
               <SectionHeader 
                 icon={ImageIcon} 
@@ -493,7 +542,7 @@ const StoreSettings = () => {
               />
               
               <div className="space-y-8">
-                <div className="relative w-full h-48 bg-slate-100/50 dark:bg-slate-800/50 rounded-[2.5rem] overflow-hidden group/banner border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+                <div className="relative w-full h-48 bg-slate-100/50 dark:bg-slate-950/60 rounded-[2.5rem] overflow-hidden group/banner border border-slate-200/50 dark:border-white/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] shadow-inner">
                   {formData.shopBanner ? (
                     <img src={formData.shopBanner} alt="Banner" className="w-full h-full object-cover transition-transform duration-1000 group-hover/banner:scale-110" />
                   ) : (
@@ -527,7 +576,7 @@ const StoreSettings = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+                className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-rose-500/5 before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-rose-400/40 before:to-transparent"
               >
               <SectionHeader 
                 icon={Layout} 
@@ -546,8 +595,8 @@ const StoreSettings = () => {
                   />
                 </InputWrapper>
                 
-                <div className="p-5 sm:p-8 bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl sm:rounded-[2rem] border border-slate-100 dark:border-slate-800/50 space-y-4 sm:space-y-6">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100 dark:border-slate-800 pb-4">Static Policy URL Routing</p>
+                <div className="p-5 sm:p-8 bg-slate-50/50 dark:bg-slate-950/40 rounded-2xl sm:rounded-[2rem] border border-slate-100 dark:border-white/10 space-y-4 sm:space-y-6">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100 dark:border-white/10 pb-4">Static Policy URL Routing</p>
                   {['privacy', 'terms', 'security'].map(field => (
                     <div key={field} className="flex items-center gap-4 group/path">
                       <div className="w-20 text-[10px] font-black text-slate-400 uppercase tracking-widest group-focus-within/path:text-rose-500 transition-colors">{field}</div>
@@ -558,7 +607,7 @@ const StoreSettings = () => {
                           name={`footer_link_${field}`}
                           value={formData[`footer_link_${field}`]}
                           onChange={handleInputChange}
-                          className="w-full pl-10 pr-6 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl outline-none font-black text-[10px] focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all"
+                          className="w-full pl-10 pr-6 py-3 bg-white dark:bg-slate-950/60 border border-slate-100 dark:border-white/10 rounded-xl outline-none font-black text-[10px] focus:ring-4 focus:ring-rose-500/10 dark:focus:ring-rose-500/20 focus:border-rose-500 dark:focus:border-rose-400/50 transition-all"
                         />
                       </div>
                     </div>
@@ -572,7 +621,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-emerald-500/5 before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-emerald-400/40 before:to-transparent"
             >
               <SectionHeader 
                 icon={MapPin} 
@@ -595,7 +644,7 @@ const StoreSettings = () => {
                   </InputWrapper>
                 </div>
  
-                <div className="p-4 sm:p-6 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-2xl sm:rounded-[2rem] border border-emerald-100/50 dark:border-emerald-500/10 space-y-4">
+                <div className="p-4 sm:p-6 bg-emerald-50/50 dark:bg-emerald-950/40 rounded-2xl sm:rounded-[2rem] border border-emerald-100/50 dark:border-white/10 space-y-4">
                    <div className="grid grid-cols-2 gap-4">
                     <InputWrapper label="Weekday" icon={Clock}>
                       <input type="text" name="loc_hours_weekday" value={formData.loc_hours_weekday} onChange={handleInputChange} className={`${inputStyle} bg-white dark:bg-slate-900 py-3 sm:py-4 px-4 sm:px-6`} />
@@ -625,7 +674,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-blue-500/5 before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-blue-400/40 before:to-transparent"
             >
               <SectionHeader 
                 icon={Shield} 
@@ -644,8 +693,8 @@ const StoreSettings = () => {
                     placeholder="Enter passcode (default: admin123)"
                   />
                 </InputWrapper>
-                <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
-                  <p className="font-bold text-blue-500 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
+                <div className="p-6 bg-blue-500/5 dark:bg-cyan-500/5 rounded-2xl border border-blue-500/10 dark:border-cyan-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
+                  <p className="font-bold text-blue-500 dark:text-cyan-400 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
                     <Info size={12} /> Security Notice
                   </p>
                   This key decrypts the admin dashboard. Changing this key will immediately require re-entry of the new key across active devices.
@@ -658,7 +707,7 @@ const StoreSettings = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-white/50 dark:border-slate-800/50 shadow-xl"
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-orange-500/5 before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-orange-400/40 before:to-transparent"
             >
               <SectionHeader 
                 icon={Zap} 
@@ -667,8 +716,8 @@ const StoreSettings = () => {
                 subtitle="Diagnostic & Broadcast Tools"
               />
               <div className="space-y-6">
-                <div className="p-6 bg-orange-500/5 rounded-2xl border border-orange-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
-                  <p className="font-bold text-orange-500 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
+                <div className="p-6 bg-orange-500/5 dark:bg-orange-500/5 rounded-2xl border border-orange-500/10 dark:border-orange-500/10 text-slate-500 dark:text-slate-400 font-medium text-xs leading-relaxed">
+                  <p className="font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest text-[9px] mb-2 flex items-center gap-1.5">
                     <Info size={12} /> Diagnostic Assistant
                   </p>
                   Click the button below to broadcast a test push notification to all devices registered to this local server. Make sure you have granted notification permissions on your device.
