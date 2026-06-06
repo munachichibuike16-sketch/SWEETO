@@ -579,7 +579,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 >
                   <Bell size={20} />
                   {products.filter(p => p.is_new_arrival).length > 0 && !isNotifOpen && (
-                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-red-500/30 animate-pulse">
+                      {products.filter(p => p.is_new_arrival).length}
+                    </span>
                   )}
                 </motion.button>
 
@@ -661,7 +663,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
             >
               <Bell size={20} />
               {products.filter(p => p.is_new_arrival).length > 0 && (
-                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-red-500/30 animate-pulse">
+                  {products.filter(p => p.is_new_arrival).length}
+                </span>
               )}
             </button>
             <div 
