@@ -191,22 +191,51 @@ const NotificationsContent = ({ onProductClick }) => {
   // 🛍️ Order tracker notifications (only real orders)
   const orderUpdates = realOrderUpdates;
 
-  // 🔥 Promos & Stock updates — read from localStorage (persisted by StoreContext)
+  // 🔥 Promos & Stock updates — merge database new arrivals + localStorage notifications
   const promosAndStock = (() => {
+    const notifs = [];
+    const seenIds = new Set();
+
+    // Source 1: Products flagged as new arrivals in the database (same source as Header dropdown)
+    const newArrivalProducts = products.filter(p => p.is_new_arrival);
+    newArrivalProducts.forEach(p => {
+      const id = `new-product-${p.id}`;
+      if (seenIds.has(id)) return;
+      seenIds.add(id);
+      notifs.push({
+        id,
+        type: 'new_arrival',
+        category: 'promos',
+        title: `🆕 ${lang === 'fr' ? 'Nouveau' : 'New Arrival'}: ${p.name}`,
+        message: lang === 'fr' 
+          ? `Découvrez ${p.category || 'ce produit'} maintenant disponible en boutique !`
+          : `Check out the new ${p.category || 'product'} now available in store!`,
+        time: getRelativeTime(p.created_at),
+        isRead: isNotificationRead(id),
+        isDeleted: isNotificationDeleted(id),
+        actionLabel: lang === 'fr' ? 'Voir le produit >' : 'View Product >',
+        accentColor: '#f59e0b',
+        icon: '🆕',
+        product: p,
+      });
+    });
+
+    // Source 2: localStorage persisted notifications (price drops + real-time detections)
     try {
       const stored = JSON.parse(localStorage.getItem('product_notifications') || '[]');
-      return stored.map(n => {
+      stored.forEach(n => {
+        if (seenIds.has(n.id)) return;
+        seenIds.add(n.id);
         const product = products.find(p => p.id === n.productId) || null;
-        const id = n.id;
-        return {
-          id,
+        notifs.push({
+          id: n.id,
           type: n.type || 'promo',
           category: 'promos',
           title: n.title,
           message: n.message,
           time: getRelativeTime(n.timestamp),
-          isRead: isNotificationRead(id),
-          isDeleted: isNotificationDeleted(id),
+          isRead: isNotificationRead(n.id),
+          isDeleted: isNotificationDeleted(n.id),
           actionLabel: lang === 'fr' ? 'Voir le produit >' : 'View Product >',
           accentColor: n.accentColor || '#f59e0b',
           icon: n.type === 'price_drop' ? '🔥' : '🆕',
@@ -217,12 +246,13 @@ const NotificationsContent = ({ onProductClick }) => {
             price: n.price || 0,
             category: n.productCategory || ''
           } : null),
-        };
+        });
       });
     } catch (e) {
       console.warn('Failed to read product notifications:', e);
-      return [];
     }
+
+    return notifs;
   })();
 
   // ⚙️ Account Security alerts (currently empty to avoid mock alerts)
