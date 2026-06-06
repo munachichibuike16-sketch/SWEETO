@@ -87,6 +87,18 @@ const Header = ({ onMenuClick, onCartClick }) => {
     return () => window.removeEventListener('storage', checkSession);
   }, []);
 
+  // Compute unread notification count (new arrivals not yet read)
+  const unreadNotifCount = (() => {
+    try {
+      const readNotifs = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+      const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
+      return products.filter(p => p.is_new_arrival).filter(p => {
+        const id = `new-product-${p.id}`;
+        return !readNotifs.includes(id) && !readTimed[id];
+      }).length;
+    } catch (e) { return products.filter(p => p.is_new_arrival).length; }
+  })();
+
   // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -578,9 +590,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors relative"
                 >
                   <Bell size={20} />
-                  {products.filter(p => p.is_new_arrival).length > 0 && !isNotifOpen && (
+                  {unreadNotifCount > 0 && !isNotifOpen && (
                     <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-red-500/30 animate-pulse">
-                      {products.filter(p => p.is_new_arrival).length}
+                      {unreadNotifCount}
                     </span>
                   )}
                 </motion.button>
@@ -662,9 +674,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
               title={t('notifications')}
             >
               <Bell size={20} />
-              {products.filter(p => p.is_new_arrival).length > 0 && (
+              {unreadNotifCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-red-500/30 animate-pulse">
-                  {products.filter(p => p.is_new_arrival).length}
+                  {unreadNotifCount}
                 </span>
               )}
             </button>
