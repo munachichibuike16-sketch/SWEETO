@@ -166,16 +166,16 @@ export default function ProductsManagement() {
       // Trigger push notification for new products (not updates)
       if (!editingProduct) {
         try {
-          await apiFetch('/api/push/notify-new-product', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: form.name,
-              category: categories.find(c => c.id?.toString() === form.categoryId?.toString())?.name || '',
-              image_url: form.image_url || '',
-              productId: payload.id || ''
-            })
+          const { error: pushErr } = await supabase.functions.invoke('send-web-push', {
+            body: {
+              title: `🆕 New Arrival: ${form.name}`,
+              body: `Check out the new ${categories.find(c => c.id?.toString() === form.categoryId?.toString())?.name || 'product'} now available!`,
+              url: `/#/product/${payload.id || ''}`,
+              image: form.image_url || null,
+              targetRole: 'customer'
+            }
           });
+          if (pushErr) throw pushErr;
           console.log('✅ Push notification sent for new product:', form.name);
         } catch (pushErr) {
           console.warn('⚠️ Push notification failed (non-critical):', pushErr);

@@ -105,10 +105,15 @@ export const StoreProvider = ({ children }) => {
           // Check for push subscription permission
           if (Notification.permission === 'granted') {
             try {
-              // 1. Fetch public VAPID key from the backend Express server
-              const keyRes = await apiFetch('/api/push/public-key');
-              if (!keyRes.ok) throw new Error('VAPID key fetch failed');
-              const { publicKey } = await keyRes.json();
+              // 1. Fetch public VAPID key from Supabase settings table
+              const { data: settingData, error: settingErr } = await supabase
+                .from('settings')
+                .select('value')
+                .eq('key', 'vapid_public_key')
+                .single();
+              
+              if (settingErr) throw settingErr;
+              const publicKey = settingData?.value;
               
               if (!publicKey) return;
               
@@ -122,22 +127,19 @@ export const StoreProvider = ({ children }) => {
 
               console.log('✅ Successfully subscribed to closed-tab Web Push API:', subscription);
 
-              // 3. Post subscription keys to our Node.js/SQLite server
+              // 3. Post subscription keys directly to Supabase push_subscriptions table
               const rawSub = subscription.toJSON();
-              const subOptions = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+              const { error: subErr } = await supabase
+                .from('push_subscriptions')
+                .upsert({
                   endpoint: subscription.endpoint,
-                  keys: {
-                    p256dh: rawSub.keys?.p256dh || null,
-                    auth: rawSub.keys?.auth || null
-                  },
+                  p256dh: rawSub.keys?.p256dh || '',
+                  auth: rawSub.keys?.auth || '',
                   role: 'customer'
-                })
-              };
-              await apiFetch('/api/push/subscribe', subOptions);
-              console.log('✅ Registered Web Push subscription with SQLite database.');
+                }, { onConflict: 'endpoint' });
+
+              if (subErr) throw subErr;
+              console.log('✅ Registered Web Push subscription with Supabase database.');
             } catch (err) {
               console.warn('⚠️ Web Push subscription failed:', err);
             }

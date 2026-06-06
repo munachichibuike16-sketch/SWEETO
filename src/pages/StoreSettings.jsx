@@ -103,11 +103,29 @@ const PushNotificationPanel = ({ showToast }) => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await apiFetch('/api/push/stats');
-        if (res.ok) {
-          const data = await res.json();
-          setPushStats(data);
+        const { count: total, error: errTotal } = await supabase
+          .from('push_subscriptions')
+          .select('*', { count: 'exact', head: true });
+
+        const { count: admins, error: errAdmins } = await supabase
+          .from('push_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'admin');
+
+        const { count: customers, error: errCustomers } = await supabase
+          .from('push_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'customer');
+
+        if (errTotal || errAdmins || errCustomers) {
+          throw errTotal || errAdmins || errCustomers;
         }
+
+        setPushStats({
+          total: total || 0,
+          admins: admins || 0,
+          customers: customers || 0
+        });
       } catch (err) {
         console.warn('Could not fetch push stats:', err);
       } finally {
@@ -120,11 +138,18 @@ const PushNotificationPanel = ({ showToast }) => {
   const handleTestPush = async () => {
     setIsSending(true);
     try {
-      const res = await apiFetch('/api/push/test', { method: 'POST' });
-      if (res.ok) {
+      const { data, error } = await supabase.functions.invoke('send-web-push', {
+        body: {
+          title: '🔔 SWEETO HUB - Test Push Notification',
+          body: 'Awesome! If you are seeing this, push notifications are working perfectly on your mobile device.',
+          url: '/#/',
+          targetRole: 'all' // Test send to all roles (both admins and customers)
+        }
+      });
+      if (!error) {
         showToast('Test notification broadcast sent!');
       } else {
-        showToast('Failed to trigger test notification.', 'error');
+        showToast('Failed to trigger test notification: ' + (error.message || error), 'error');
       }
     } catch (err) {
       showToast('Network error: ' + err.message, 'error');

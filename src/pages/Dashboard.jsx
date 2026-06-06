@@ -479,10 +479,15 @@ const Dashboard = () => {
 
         if (Notification.permission !== 'granted') return;
 
-        // Fetch VAPID public key from backend
-        const keyRes = await apiFetch('/api/push/public-key');
-        if (!keyRes.ok) return;
-        const { publicKey } = await keyRes.json();
+        // Fetch VAPID public key from Supabase settings
+        const { data: settingData, error: settingErr } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'vapid_public_key')
+          .single();
+
+        if (settingErr) throw settingErr;
+        const publicKey = settingData?.value;
         if (!publicKey) return;
 
         // Convert base64 VAPID key to Uint8Array
@@ -502,21 +507,19 @@ const Dashboard = () => {
 
         console.log('✅ Admin subscribed to Web Push:', subscription);
 
-        // Register with backend as 'admin' role
+        // Register with Supabase directly as 'admin' role
         const rawSub = subscription.toJSON();
-        await apiFetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const { error: subErr } = await supabase
+          .from('push_subscriptions')
+          .upsert({
             endpoint: subscription.endpoint,
-            keys: {
-              p256dh: rawSub.keys?.p256dh || null,
-              auth: rawSub.keys?.auth || null
-            },
+            p256dh: rawSub.keys?.p256dh || '',
+            auth: rawSub.keys?.auth || '',
             role: 'admin'
-          })
-        });
-        console.log('✅ Admin push subscription registered with server.');
+          }, { onConflict: 'endpoint' });
+
+        if (subErr) throw subErr;
+        console.log('✅ Admin push subscription registered with Supabase.');
       } catch (err) {
         console.warn('⚠️ Admin push subscription failed:', err);
       }
