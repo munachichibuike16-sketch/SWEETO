@@ -301,6 +301,15 @@ db.exec(`
     auth TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS promo_codes (
+    code TEXT PRIMARY KEY,
+    discount_percent INTEGER NOT NULL,
+    is_used INTEGER DEFAULT 0,
+    used_by TEXT,
+    used_at TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 console.log('Tables created.');
 
@@ -522,6 +531,28 @@ try {
   }
 } catch (err) {
   console.error('Failed to seed default delivery agents:', err);
+}
+
+// Seed default promo codes
+try {
+  const promoCount = db.prepare('SELECT COUNT(*) as count FROM promo_codes').get().count;
+  if (promoCount === 0) {
+    console.log('🎟️ Seeding default single-use promo codes...');
+    const defaultPromos = [
+      { code: 'WELCOME10', discount: 10 },
+      { code: 'SWEETO15', discount: 15 },
+      { code: 'SWEETO20', discount: 20 },
+      { code: 'SPECIAL25', discount: 25 },
+      { code: 'VIP50', discount: 50 }
+    ];
+    const insertPromo = db.prepare('INSERT INTO promo_codes (code, discount_percent) VALUES (?, ?)');
+    defaultPromos.forEach(p => {
+      insertPromo.run(p.code, p.discount);
+    });
+    console.log('🎟️ Seeding default promo codes completed.');
+  }
+} catch (err) {
+  console.error('Failed to seed default promo codes:', err);
 }
 
 // Sync ADMIN_EMAIL environment variable to database settings if provided
@@ -828,6 +859,35 @@ app.get('/api/analytics/visitor-logs', (req, res) => {
   try {
     const list = db.prepare('SELECT * FROM visitor_log ORDER BY created_at DESC LIMIT 100').all();
     res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/promos/:code', (req, res) => {
+  const { code } = req.params;
+  try {
+    const promo = db.prepare('SELECT * FROM promo_codes WHERE UPPER(code) = ?').get(code.toUpperCase());
+    if (promo) {
+      res.json(promo);
+    } else {
+      res.status(404).json({ error: 'Promo code not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/promos/:code/redeem', (req, res) => {
+  const { code } = req.params;
+  const { phone } = req.body;
+  try {
+    const result = db.prepare('UPDATE promo_codes SET is_used = 1, used_by = ?, used_at = CURRENT_TIMESTAMP WHERE UPPER(code) = ? AND is_used = 0').run(phone || null, code.toUpperCase());
+    if (result.changes > 0) {
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'Promo code already used or invalid' });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

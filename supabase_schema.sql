@@ -6,6 +6,7 @@
 SET session_replication_role = 'replica';
 
 -- Drop existing tables if they exist
+DROP TABLE IF EXISTS promo_codes CASCADE;
 DROP TABLE IF EXISTS shipping_zones CASCADE;
 DROP TABLE IF EXISTS video_ads CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
@@ -198,3 +199,22 @@ INSERT INTO settings (key, value) VALUES
 ('policy_privacy', ''),
 ('policy_terms', '')
 ON CONFLICT (key) DO NOTHING;
+
+-- 12. Promo Codes Table
+CREATE TABLE promo_codes (
+  code VARCHAR(100) PRIMARY KEY,
+  discount_percent INTEGER NOT NULL DEFAULT 10,
+  is_used INTEGER DEFAULT 0, -- 0 = false, 1 = true
+  used_by VARCHAR(100),
+  used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed default promo codes
+INSERT INTO promo_codes (code, discount_percent) VALUES 
+('WELCOME10', 10),
+('SWEETO15', 15),
+('SWEETO20', 20),
+('SPECIAL25', 25),
+('VIP50', 50)
+ON CONFLICT (code) DO NOTHING;

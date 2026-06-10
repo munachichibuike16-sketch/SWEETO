@@ -195,6 +195,42 @@ ALTER TABLE public.orders
   ADD COLUMN IF NOT EXISTS agent_lat NUMERIC(9, 6),
   ADD COLUMN IF NOT EXISTS agent_lng NUMERIC(9, 6);
 
+-- ---------------------------------------------------------------
+-- PROMO CODES TABLE: Stores discount promo codes
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.promo_codes (
+  code VARCHAR(100) PRIMARY KEY,
+  discount_percent INTEGER NOT NULL DEFAULT 10,
+  is_used INTEGER DEFAULT 0, -- 0 = false, 1 = true
+  used_by VARCHAR(100),
+  used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable RLS
+ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Allow public select on promo_codes" ON public.promo_codes;
+DROP POLICY IF EXISTS "Allow public insert on promo_codes" ON public.promo_codes;
+DROP POLICY IF EXISTS "Allow public update on promo_codes" ON public.promo_codes;
+
+-- Create policies
+CREATE POLICY "Allow public select on promo_codes" ON public.promo_codes
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public update on promo_codes" ON public.promo_codes
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+-- Seed default promo codes
+INSERT INTO public.promo_codes (code, discount_percent) VALUES 
+('WELCOME10', 10),
+('SWEETO15', 15),
+('SWEETO20', 20),
+('SPECIAL25', 25),
+('VIP50', 50)
+ON CONFLICT (code) DO NOTHING;
+
 -- Confirm migration success
 SELECT 'Migration complete' AS status;
 

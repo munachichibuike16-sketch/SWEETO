@@ -7,6 +7,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
+import { apiFetch } from '../utils/api';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -35,8 +36,6 @@ const CheckoutPage = () => {
       });
     }
   }, []);
-  const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
-  const [isReturning, setIsReturning] = useState(false);
   const [promoInput, setPromoInput] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
@@ -54,7 +53,7 @@ const CheckoutPage = () => {
   const tax = 0;
   const hasUnsetPrice = cartItems.some(item => !item.price || Number(item.price) === 0);
   const shipping = hasUnsetPrice ? 0 : shippingFee;
-  const grandTotal = subtotal + shipping - loyaltyDiscount - promoDiscount;
+  const grandTotal = subtotal + shipping - promoDiscount;
 
   const ADMIN_WHATSAPP_NUMBER = settings?.contactPhone?.replace(/\D/g, '') || "2250500619923";
 
@@ -62,27 +61,7 @@ const CheckoutPage = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Check for returning customer via Supabase
-  useEffect(() => {
-    if (formData.phone.length >= 8) {
-      const checkLoyalty = async () => {
-        try {
-          const { data: orders } = await supabase
-            .from('orders')
-            .select('id, customer_contact')
-            .ilike('customer_contact', `%${formData.phone}%`);
-          if (orders && orders.length > 0) {
-            setIsReturning(true);
-            setLoyaltyDiscount(cartTotal * 0.10);
-          } else {
-            setIsReturning(false);
-            setLoyaltyDiscount(0);
-          }
-        } catch (e) { console.error(e); }
-      };
-      checkLoyalty();
-    }
-  }, [formData.phone, cartTotal]);
+
 
   useEffect(() => {
     const fetchShipping = async () => {
@@ -109,24 +88,50 @@ const CheckoutPage = () => {
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const applyPromo = async () => {
-    if (promoInput.toUpperCase() === 'SWEETO10') {
-      try {
-        const { data: orders } = await supabase
-          .from('orders')
-          .select('id, customer_contact, promo_code')
-          .ilike('customer_contact', `%${formData.phone}%`)
-          .eq('promo_code', 'SWEETO10');
-        const alreadyUsed = orders && orders.length > 0;
-        if (alreadyUsed) {
-          setPromoError('You have already used this promo code.');
-        } else {
-          setPromoDiscount(cartTotal * 0.10);
-          setPromoApplied(true);
-          setPromoError('');
+    const codeUpper = promoInput.toUpperCase().trim();
+    if (!codeUpper) return;
+    
+    setPromoError('');
+    try {
+      let promoData = null;
+      
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('promo_codes')
+          .select('*')
+          .eq('code', codeUpper)
+          .single();
+        if (!error && data) {
+          promoData = data;
         }
-      } catch (e) { setPromoError('Validation failed. Try again.'); }
-    } else {
-      setPromoError('Invalid promo code.');
+      } else {
+        // Local fallback
+        const res = await apiFetch(`/promos/${encodeURIComponent(codeUpper)}`);
+        if (res.ok) {
+          promoData = await res.json();
+        }
+      }
+      
+      if (!promoData) {
+        setPromoError('Code promo invalide / Invalid promo code.');
+        return;
+      }
+      
+      // Check if code has already been used
+      const isUsed = Number(promoData.is_used) === 1 || promoData.is_used === true || promoData.is_used === 'true';
+      if (isUsed) {
+        setPromoError('Ce code a déjà été utilisé / This code has already been used.');
+        return;
+      }
+      
+      // Apply discount
+      const pct = Number(promoData.discount_percent) || 10;
+      setPromoDiscount(cartTotal * (pct / 100));
+      setPromoApplied(true);
+      setPromoError('');
+    } catch (e) {
+      console.error(e);
+      setPromoError('Erreur de validation / Validation error.');
     }
   };
 
@@ -163,15 +168,49 @@ const CheckoutPage = () => {
         destination_lng: destLng
       };
 
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([orderPayload])
-        .select()
-        .single();
+      let newOrderId = null;
 
-      if (error) throw error;
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('orders')
+          .insert([orderPayload])
+          .select()
+          .single();
+        if (error) throw error;
+        newOrderId = data?.id;
+      } else {
+        // Fallback to local Express/SQLite server
+        const response = await apiFetch('/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload)
+        });
+        if (!response.ok) throw new Error('Local database placement failed');
+        const resData = await response.json();
+        newOrderId = resData.id;
+      }
 
-      const newOrderId = data?.id;
+      // Mark promo code as used if applied
+      if (promoApplied) {
+        const codeUpper = promoInput.toUpperCase().trim();
+        if (supabase) {
+          await supabase
+            .from('promo_codes')
+            .update({ 
+              is_used: 1, 
+              used_by: `${formData.name} (${formData.phone})`, 
+              used_at: new Date().toISOString() 
+            })
+            .eq('code', codeUpper);
+        } else {
+          // Local fallback
+          await apiFetch(`/promos/${encodeURIComponent(codeUpper)}/redeem`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: `${formData.name} (${formData.phone})` })
+          }).catch(() => {});
+        }
+      }
 
       // Send WhatsApp (French formatted order details)
       const itemsList = cartItems.map(item => `- ${item.name} (Qté: ${item.quantity})`).join('\n');
@@ -308,16 +347,7 @@ const CheckoutPage = () => {
                  <span className={shipping === 0 ? "text-emerald-400" : ""}>{shipping === 0 ? (t('free') || 'FREE') : shipping.toLocaleString()}</span>
               </div>
               
-              {loyaltyDiscount > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex justify-between text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20"
-                >
-                   <span className="flex items-center gap-2"><Award size={14} /> {t('loyalty_discount') || 'Loyalty Discount'} (10%)</span>
-                   <span>-{loyaltyDiscount.toLocaleString()} {settings?.currency || 'FCFA'}</span>
-                </motion.div>
-              )}
+
 
               {promoApplied && (
                 <motion.div 
@@ -325,7 +355,7 @@ const CheckoutPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className="flex justify-between text-blue-400 text-[10px] font-black uppercase tracking-widest bg-blue-500/10 p-3 rounded-xl border border-blue-500/20"
                 >
-                   <span className="flex items-center gap-2"><Award size={14} /> Promo: SWEETO10</span>
+                   <span className="flex items-center gap-2"><Award size={14} /> Promo: {promoInput.toUpperCase()}</span>
                    <span>-{promoDiscount.toLocaleString()} {settings?.currency || 'FCFA'}</span>
                 </motion.div>
               )}
@@ -346,21 +376,7 @@ const CheckoutPage = () => {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">{t('where_send_package') || 'Where should we send your package?'}</p>
             </div>
 
-            {isReturning && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8 p-4 bg-emerald-50 rounded-[1.5rem] border border-emerald-100 flex items-center gap-4 shadow-sm"
-              >
-                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shrink-0">
-                  <UserCheck size={20} />
-                </div>
-                <div>
-                  <p className="text-emerald-900 font-black text-[11px] uppercase tracking-wider">Welcome Back VIP!</p>
-                  <p className="text-emerald-600 text-[9px] font-bold uppercase tracking-widest">We recognized your phone number. A 10% discount has been applied!</p>
-                </div>
-              </motion.div>
-            )}
+
 
             <form onSubmit={handleCheckout} className="space-y-6">
                <div className="space-y-2">
