@@ -78,14 +78,6 @@ const CheckoutPage = () => {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        const acc = Math.round(position.coords.accuracy);
-        
-        // Temporary debug alert
-        alert(lang === 'fr' 
-          ? `GPS: ${lat}, ${lng} (Précision: ${acc}m)` 
-          : `GPS: ${lat}, ${lng} (Accuracy: ${acc}m)`
-        );
-
         setCustomCoords({ lat, lng });
         setGpsSuccess(true);
         setGpsLoading(false);
