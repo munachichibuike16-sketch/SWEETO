@@ -9,6 +9,20 @@ import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
 import { apiFetch } from '../utils/api';
 
+const cityAreas = {
+  'Abidjan': ['Cocody', 'Marcory', 'Yopougon', 'Riviera', 'Adjamé Mirador', 'Plateau', 'Treichville', 'Koumassi', 'Angré', 'Abobo'],
+  'Yamoussoukro': ['Centre-ville', 'Assabou', '220 Logements', 'Morofé', 'Dioulabou', 'Kokrenou'],
+  'Bouaké': ['Centre-ville', 'Air France', 'N\'Gattakro', 'Kennedy', 'Dar-Es-Salam', 'Nimbo', 'Broukro'],
+  'San Pédro': ['Cité', 'Bardot', 'Seweke', 'Balmer', 'Nanhon'],
+  'Daloa': ['Tazibouo', 'Orly', 'Kennedy', 'Labia'],
+  'Korhogo': ['Koko', 'Petit Paris', 'Soba', 'Tchelekaha'],
+  'Man': ['Gbépleu', 'Grand Gbapleu', 'Belleville', 'Dompleu'],
+  'Gagnoa': ['Babré', 'Gbaroko', 'Garahio', 'Dioulabou'],
+  'Grand-Bassam': ['Quartier France', 'Moossou', 'Impérial', 'Nsa'],
+  'Assinie': ['Assinie-Mafia', 'Terminal', 'Km 11', 'Assouindé'],
+  'Abengourou': ['Agnikro', 'Dioulakro', 'Plateau', 'Lobikro']
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -416,49 +430,17 @@ const CheckoutPage = () => {
                     </button>
                   </div>
                   {promoError && <p className="text-red-500 text-[9px] font-bold mt-2 ml-1 uppercase">{promoError}</p>}
-               </div>
+                </div>
 
-               {/* Quick Hub Locks (Common Abidjan zones & Cities of Ivory Coast) */}
+                {/* Quick Hub Locks (Dynamic City & Area selection) */}
                 <div className="space-y-4 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-white/5 mb-6">
+                  {/* City Select Row */}
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">
-                      {lang === 'fr' ? '📍 Quartiers d\'Abidjan (Saisie Rapide)' : '📍 Abidjan Neighborhoods (Quick Select)'}
+                      {lang === 'fr' ? '🌍 Choisir une Ville' : '🌍 Select a City'}
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {['Adjamé Mirador', 'Cocody', 'Marcory', 'Yopougon', 'Riviera', 'Plateau', 'Treichville', 'Koumassi', 'Angré', 'Abobo'].map((hub) => {
-                        const isSelected = formData.city === 'Abidjan' && formData.address === hub;
-                        return (
-                          <motion.button
-                            key={hub}
-                            type="button"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                              setFormData(prev => ({
-                                ...prev,
-                                city: 'Abidjan',
-                                address: hub
-                              }));
-                            }}
-                            className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                              isSelected
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-700'
-                            }`}
-                          >
-                            {hub}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 dark:border-white/5">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">
-                      {lang === 'fr' ? '🌍 Autres Villes de Côte d\'Ivoire' : '🌍 Other Ivory Coast Cities'}
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {['Yamoussoukro', 'Bouaké', 'San Pédro', 'Daloa', 'Korhogo', 'Man', 'Gagnoa', 'Grand-Bassam', 'Assinie', 'Abengourou'].map((city) => {
+                      {['Abidjan', 'Yamoussoukro', 'Bouaké', 'San Pédro', 'Daloa', 'Korhogo', 'Man', 'Gagnoa', 'Grand-Bassam', 'Assinie', 'Abengourou'].map((city) => {
                         const isSelected = formData.city === city;
                         return (
                           <motion.button
@@ -470,7 +452,7 @@ const CheckoutPage = () => {
                               setFormData(prev => ({
                                 ...prev,
                                 city: city,
-                                address: ''
+                                address: '' // Reset address when changing city
                               }));
                             }}
                             className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
@@ -485,6 +467,45 @@ const CheckoutPage = () => {
                       })}
                     </div>
                   </div>
+
+                  {/* Dynamic Area Select Row */}
+                  {cityAreas[formData.city] && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="pt-3 border-t border-slate-100 dark:border-white/5"
+                    >
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">
+                        {lang === 'fr' ? `📍 Quartiers / Secteurs de ${formData.city}` : `📍 Neighborhoods / Sectors of ${formData.city}`}
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {cityAreas[formData.city].map((area) => {
+                          const isSelected = formData.address === area;
+                          return (
+                            <motion.button
+                              key={area}
+                              type="button"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  address: area
+                                }));
+                              }}
+                              className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                                isSelected
+                                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                                  : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-700'
+                              }`}
+                            >
+                              {area}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
