@@ -50,29 +50,29 @@ const WishlistContent = ({ onProductClick }) => {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-12">
-      <div className="relative mb-20">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-slate-100 dark:border-slate-900">
-          <div className="flex items-center gap-6">
+    <div className="max-w-[1400px] mx-auto px-3 sm:px-6 md:px-12 py-6 sm:py-12 overflow-hidden">
+      <div className="relative mb-10 sm:mb-20">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 pb-6 sm:pb-10 border-b border-slate-100 dark:border-slate-900">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="p-6 bg-gradient-to-br from-red-600 to-rose-500 shadow-2xl shadow-red-500/20 rounded-[30px]"
+              className="p-3 sm:p-6 bg-gradient-to-br from-red-600 to-rose-500 shadow-2xl shadow-red-500/20 rounded-2xl sm:rounded-[30px] shrink-0"
             >
-              <Heart size={32} className="text-white" fill="currentColor" />
+              <Heart size={24} className="text-white sm:w-8 sm:h-8" fill="currentColor" />
             </motion.div>
-            <div>
-              <h2 className="text-3xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none">{t('saved_gear') || 'Saved Gear'}</h2>
-              <div className="flex items-center gap-3 mt-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em]">
+            <div className="min-w-0">
+              <h2 className="text-2xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none truncate">{t('saved_gear') || 'Saved Gear'}</h2>
+              <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em] sm:tracking-[0.4em] truncate">
                   {wishlistItems.length} {wishlistItems.length === 1 ? t('item') || 'Item' : t('items') || 'Items'} {t('ready_checkout') || 'Curated'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-4">
              <div className="h-12 w-[1px] bg-slate-100 dark:bg-slate-900 hidden md:block" />
              <div className="flex flex-col items-end">
                 <span className="text-[9px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest mb-1">{t('curation_status') || 'Curation Status'}</span>
@@ -85,7 +85,7 @@ const WishlistContent = ({ onProductClick }) => {
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-red-500/5 rounded-full blur-3xl -z-10" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16 justify-items-center">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-x-8 sm:gap-y-16">
         {wishlistItems.map((product, idx) => (
           <ProductCard 
             key={`${product.id}-${idx}`} 

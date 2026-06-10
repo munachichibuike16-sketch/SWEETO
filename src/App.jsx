@@ -22,6 +22,7 @@ import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
 import BackToTop from './components/BackToTop';
+import SwipeGestures from './components/SwipeGestures';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
@@ -1273,6 +1274,7 @@ function App() {
       <ConfirmDialog />
       <RealtimeNotification />
       <BackToTop />
+      <SwipeGestures />
       {!getCurrentPath().includes('/dashboard') && <FloatingWhatsApp />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
