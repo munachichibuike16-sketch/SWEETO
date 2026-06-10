@@ -617,11 +617,11 @@ const Storefront = ({ viewMode = 'home' }) => {
     };
 
     return (
-      <div className="sticky top-[84px] z-[90] bg-white/80 dark:bg-slate-950/80 backdrop-blur-3xl border-b border-slate-100 dark:border-slate-800 py-6 mb-12">
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex flex-col gap-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-8">
-            {/* Left: Back Button */}
-            <div className="flex items-center justify-start">
+      <div className="sticky top-[var(--header-height,96px)] z-[90] bg-white/80 dark:bg-slate-950/80 backdrop-blur-3xl border-b border-slate-100 dark:border-slate-800 py-3 md:py-6 mb-6 md:mb-12">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex flex-col gap-4 md:gap-8">
+          <div className="flex flex-col md:grid md:grid-cols-3 items-start md:items-center gap-4 md:gap-8">
+            {/* Left: Back Button & Mobile Sort */}
+            <div className="flex items-center justify-between w-full md:justify-start">
                <button 
                 onClick={() => {
                   setSearchQuery('');
@@ -634,15 +634,29 @@ const Storefront = ({ viewMode = 'home' }) => {
                 <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
                 <span className="text-[10px] uppercase tracking-widest font-black">{t('back') || 'Back'}</span>
               </button>
+
+              {/* Mobile Sort By (visible on mobile only) */}
+              <div className="flex md:hidden items-center gap-2">
+                <select 
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1.5 text-[9px] font-black text-slate-600 dark:text-slate-400 outline-none uppercase tracking-wider"
+                >
+                   <option value="name_az">{t('name_az') || 'A-Z'}</option>
+                   <option value="price_low_high">{t('price_low_high') || 'Price: Low'}</option>
+                   <option value="price_high_low">{t('price_high_low') || 'Price: High'}</option>
+                   <option value="latest_arrivals">{t('latest_arrivals') || 'Latest'}</option>
+                </select>
+              </div>
             </div>
             
             {/* Center: Title */}
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-start md:justify-center gap-3 md:gap-4 w-full">
               {getIcon()}
-              <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic drop-shadow-sm">{getTitle()}</h1>
+              <h1 className="text-xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic drop-shadow-sm">{getTitle()}</h1>
             </div>
 
-            {/* Right: Sort By */}
+            {/* Right: Sort By (Desktop only) */}
             <div className="hidden md:flex items-center justify-end gap-5">
               <span className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">{t('sort_by') || 'Sort'}</span>
               <select 
@@ -659,17 +673,17 @@ const Storefront = ({ viewMode = 'home' }) => {
           </div>
 
           {/* Refinement Pills */}
-          <div className="flex flex-col md:flex-row items-center gap-6 pt-4 border-t border-slate-50 dark:border-slate-900">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 pt-3 md:pt-4 border-t border-slate-50 dark:border-slate-900 w-full">
             <div className="flex items-center gap-3 shrink-0">
                <div className="w-1.5 h-1.5 rounded-full bg-eas-blue animate-pulse"></div>
                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">{t('refine_selection') || 'Refine Selection'}</span>
             </div>
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex overflow-x-auto md:flex-wrap gap-2.5 w-full no-scrollbar pb-1 -mx-6 px-6 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
               {filterList.map(item => (
                 <button
                   key={item}
                   onClick={() => setActiveSubCategory(item)}
-                  className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border ${
+                  className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 ${
                     activeSubCategory === item
                       ? 'bg-red-600 text-white border-red-600 shadow-xl shadow-red-600/30 scale-105'
                       : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-200'
@@ -1177,13 +1191,15 @@ const RouteTracker = () => {
     const country = window.localStorage.getItem('user_country') || 'Unknown';
 
     // Log view count to Supabase visitor_log
-    Promise.resolve(
-      supabase.from('visitor_log').insert([{ 
-        page_path: pagePath,
-        event_type: eventType,
-        country: country
-      }])
-    ).catch(() => {});
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('visitor_log').insert([{ 
+          page_path: pagePath,
+          event_type: eventType,
+          country: country
+        }])
+      ).catch(() => {});
+    }
   }, [location.pathname, location.search]);
 
   return null;

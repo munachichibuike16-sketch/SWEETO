@@ -117,6 +117,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
     if (!product?.id) return;
     setIsReviewsLoading(true);
     try {
+      if (!supabase) throw new Error("Supabase not configured");
       // Fetch all reviews for this product then filter for approved ones
       // using both schema styles (status column OR is_approved column)
       const { data, error } = await supabase
@@ -143,7 +144,14 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
       setReviews(formatted);
     } catch (e) {
       console.error("Error fetching reviews:", e);
-      // DO NOT fall back to localStorage — never show unmoderated reviews publicly
+      // Fallback to local reviews if any
+      try {
+        const local = localStorage.getItem(`reviews_${product.id}`);
+        if (local) {
+          setReviews(JSON.parse(local));
+          return;
+        }
+      } catch (err) {}
       setReviews([]);
     } finally {
       setIsReviewsLoading(false);
@@ -238,6 +246,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
     };
 
     try {
+      if (!supabase) throw new Error("Supabase client not initialized");
       const { error } = await supabase.from('reviews').insert([payload]);
       if (error) throw error;
       

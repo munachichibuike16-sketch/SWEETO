@@ -11,13 +11,15 @@ import QuickViewModal from './QuickViewModal';
 import { supabase } from '../lib/supabase';
 
 const trackVisit = (page_path, event_type) => {
-  Promise.resolve(
-    supabase.from('visitor_log').insert([{
-      page_path,
-      event_type,
-      country: window.localStorage.getItem('user_country') || 'Unknown'
-    }])
-  ).then(() => {}).catch(() => {});
+  if (supabase) {
+    Promise.resolve(
+      supabase.from('visitor_log').insert([{
+        page_path,
+        event_type,
+        country: window.localStorage.getItem('user_country') || 'Unknown'
+      }])
+    ).then(() => {}).catch(() => {});
+  }
 };
 
 const ProductCard = ({ product, index = 0, onProductClick }) => {

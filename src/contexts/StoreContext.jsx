@@ -309,7 +309,14 @@ export const StoreProvider = ({ children }) => {
 
   const fetchStoreData = async (isBackground = false) => {
     try {
-      if (!isBackground) setLoading(true);
+      const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
+
+      if (!isBackground && products.length === 0) setLoading(true);
+      
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+
       const [
         { data: catData },
         { data: prodData },
@@ -326,7 +333,7 @@ export const StoreProvider = ({ children }) => {
         supabase.from('video_ads').select('*'),
         supabase.from('sections').select('*'),
         supabase.from('brands').select('*'),
-        supabase.from('orders').select('*'),
+        isAdminPage ? supabase.from('orders').select('*') : Promise.resolve({ data: [] }),
         supabase.from('reviews').select('*').eq('is_approved', 1)
       ]);
 
@@ -335,7 +342,13 @@ export const StoreProvider = ({ children }) => {
           ...c,
           image_url: c.image_url || c.icon || ''
         }));
-        setCategories(prev => JSON.stringify(prev) !== JSON.stringify(formattedCats) ? formattedCats : prev);
+        setCategories(prev => {
+          const isDifferent = JSON.stringify(prev) !== JSON.stringify(formattedCats);
+          if (isDifferent) {
+            localStorage.setItem('sweeto_cache_categories', JSON.stringify(formattedCats));
+          }
+          return isDifferent ? formattedCats : prev;
+        });
       }
       
       if (prodData) {
@@ -372,7 +385,13 @@ export const StoreProvider = ({ children }) => {
             reviews: productReviews
           };
         });
-        setProducts(prev => JSON.stringify(prev) !== JSON.stringify(formattedProducts) ? formattedProducts : prev);
+        setProducts(prev => {
+          const isDifferent = JSON.stringify(prev) !== JSON.stringify(formattedProducts);
+          if (isDifferent) {
+            localStorage.setItem('sweeto_cache_products', JSON.stringify(formattedProducts));
+          }
+          return isDifferent ? formattedProducts : prev;
+        });
       }
       
       if (settingsData) {
@@ -384,7 +403,13 @@ export const StoreProvider = ({ children }) => {
             settingsObj[s.key] = s.value;
           }
         });
-        setSettings(prev => JSON.stringify(prev) !== JSON.stringify(settingsObj) ? settingsObj : prev);
+        setSettings(prev => {
+          const isDifferent = JSON.stringify(prev) !== JSON.stringify(settingsObj);
+          if (isDifferent) {
+            localStorage.setItem('sweeto_cache_settings', JSON.stringify(settingsObj));
+          }
+          return isDifferent ? settingsObj : prev;
+        });
       }
       
       if (adsData) {
@@ -430,7 +455,13 @@ export const StoreProvider = ({ children }) => {
             clicks: ad.clicks || 0
           };
         });
-        setVideoAds(prev => JSON.stringify(prev) !== JSON.stringify(formattedAds) ? formattedAds : prev);
+        setVideoAds(prev => {
+          const isDifferent = JSON.stringify(prev) !== JSON.stringify(formattedAds);
+          if (isDifferent) {
+            localStorage.setItem('sweeto_cache_video_ads', JSON.stringify(formattedAds));
+          }
+          return isDifferent ? formattedAds : prev;
+        });
       }
 
       if (sectionsData) {
@@ -453,7 +484,13 @@ export const StoreProvider = ({ children }) => {
         }));
         // Sort by position just in case
         formattedSections.sort((a, b) => (a.position || 0) - (b.position || 0));
-        setSections(prev => JSON.stringify(prev) !== JSON.stringify(formattedSections) ? formattedSections : prev);
+        setSections(prev => {
+          const isDifferent = JSON.stringify(prev) !== JSON.stringify(formattedSections);
+          if (isDifferent) {
+            localStorage.setItem('sweeto_cache_sections', JSON.stringify(formattedSections));
+          }
+          return isDifferent ? formattedSections : prev;
+        });
       }
 
       if (brandsData) {
@@ -461,7 +498,13 @@ export const StoreProvider = ({ children }) => {
           ...b,
           logo_url: b.logo_url || b.logo || ''
         }));
-        setBrands(prev => JSON.stringify(prev) !== JSON.stringify(formattedBrands) ? formattedBrands : prev);
+        setBrands(prev => {
+          const isDifferent = JSON.stringify(prev) !== JSON.stringify(formattedBrands);
+          if (isDifferent) {
+            localStorage.setItem('sweeto_cache_brands', JSON.stringify(formattedBrands));
+          }
+          return isDifferent ? formattedBrands : prev;
+        });
       }
       if (ordersData) setOrders(prev => JSON.stringify(prev) !== JSON.stringify(ordersData) ? ordersData : prev);
 
@@ -477,6 +520,8 @@ export const StoreProvider = ({ children }) => {
             if (!res.ok) throw new Error(`HTTP error ${res.status}`);
             return res.json();
           };
+
+          const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
 
           const [
             catData,
@@ -494,7 +539,7 @@ export const StoreProvider = ({ children }) => {
             localFetch('/api/video-ads').catch(() => []),
             localFetch('/api/sections').catch(() => []),
             localFetch('/api/brands').catch(() => []),
-            localFetch('/api/orders').catch(() => []),
+            isAdminPage ? localFetch('/api/orders').catch(() => []) : Promise.resolve([]),
             localFetch('/api/reviews').catch(() => [])
           ]);
 
@@ -504,6 +549,7 @@ export const StoreProvider = ({ children }) => {
               image_url: c.image_url || c.icon || ''
             }));
             setCategories(formattedCats);
+            localStorage.setItem('sweeto_cache_categories', JSON.stringify(formattedCats));
           }
           
           if (prodData) {
@@ -540,10 +586,12 @@ export const StoreProvider = ({ children }) => {
               };
             });
             setProducts(formattedProducts);
+            localStorage.setItem('sweeto_cache_products', JSON.stringify(formattedProducts));
           }
           
           if (settingsData) {
             setSettings(settingsData);
+            localStorage.setItem('sweeto_cache_settings', JSON.stringify(settingsData));
           }
           
           if (adsData) {
@@ -585,6 +633,7 @@ export const StoreProvider = ({ children }) => {
               };
             });
             setVideoAds(formattedAds);
+            localStorage.setItem('sweeto_cache_video_ads', JSON.stringify(formattedAds));
           }
 
           if (sectionsData) {
@@ -607,6 +656,7 @@ export const StoreProvider = ({ children }) => {
             }));
             formattedSections.sort((a, b) => (a.position || 0) - (b.position || 0));
             setSections(formattedSections);
+            localStorage.setItem('sweeto_cache_sections', JSON.stringify(formattedSections));
           }
 
           if (brandsData) {
@@ -615,6 +665,7 @@ export const StoreProvider = ({ children }) => {
               logo_url: b.logo_url || b.logo || ''
             }));
             setBrands(formattedBrands);
+            localStorage.setItem('sweeto_cache_brands', JSON.stringify(formattedBrands));
           }
           if (ordersData) setOrders(ordersData);
 
@@ -631,6 +682,30 @@ export const StoreProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Load initial cached data from localStorage for instant display
+    try {
+      const cachedProducts = localStorage.getItem('sweeto_cache_products');
+      const cachedCategories = localStorage.getItem('sweeto_cache_categories');
+      const cachedSettings = localStorage.getItem('sweeto_cache_settings');
+      const cachedAds = localStorage.getItem('sweeto_cache_video_ads');
+      const cachedSections = localStorage.getItem('sweeto_cache_sections');
+      const cachedBrands = localStorage.getItem('sweeto_cache_brands');
+
+      if (cachedProducts && cachedCategories) {
+        setProducts(JSON.parse(cachedProducts));
+        setCategories(JSON.parse(cachedCategories));
+        if (cachedSettings) setSettings(JSON.parse(cachedSettings));
+        if (cachedAds) setVideoAds(JSON.parse(cachedAds));
+        if (cachedSections) setSections(JSON.parse(cachedSections));
+        if (cachedBrands) setBrands(JSON.parse(cachedBrands));
+        
+        // Disable blocking loading screen immediately since we have cached data
+        setLoading(false);
+      }
+    } catch (e) {
+      console.warn('Failed to load store cache:', e);
+    }
+
     fetchStoreData();
     // Only poll when NOT on the admin/dashboard pages to prevent input focus loss
     const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');

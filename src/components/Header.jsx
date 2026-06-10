@@ -149,13 +149,15 @@ const Header = ({ onMenuClick, onCartClick }) => {
     ).length;
     
     // Log search to Supabase visitor_log (general traffic tracking)
-    Promise.resolve(
-      supabase.from('visitor_log').insert([{
-        page_path: `/search?q=${encodeURIComponent(query)}`,
-        event_type: 'product searched',
-        country: window.localStorage.getItem('user_country') || 'Unknown'
-      }])
-    ).catch(() => {});
+    if (supabase) {
+      Promise.resolve(
+        supabase.from('visitor_log').insert([{
+          page_path: `/search?q=${encodeURIComponent(query)}`,
+          event_type: 'product searched',
+          country: window.localStorage.getItem('user_country') || 'Unknown'
+        }])
+      ).catch(() => {});
+    }
 
     // Detailed Search Tracker logic (Missing vs Found)
     if (count > 0) {
@@ -164,31 +166,49 @@ const Header = ({ onMenuClick, onCartClick }) => {
       sessionStorage.removeItem('has_interacted_after_fail');
 
       // Log success
-      Promise.resolve(
-        supabase.rpc('increment_search_popularity', { search_term: query })
-      ).catch(() => {
-        // SQLite fallback
+      if (supabase) {
+        Promise.resolve(
+          supabase.rpc('increment_search_popularity', { search_term: query })
+        ).catch(() => {
+          // SQLite fallback
+          apiFetch('/api/analytics/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ keyword: query, success: true })
+          }).catch(() => {});
+        });
+      } else {
+        // SQLite fallback directly
         apiFetch('/api/analytics/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ keyword: query, success: true })
         }).catch(() => {});
-      });
+      }
     } else {
       // Track as failed search
       sessionStorage.setItem('last_failed_search', query);
       sessionStorage.setItem('has_interacted_after_fail', 'false');
 
-      Promise.resolve(
-        supabase.rpc('increment_failed_search', { search_term: query })
-      ).catch(() => {
-        // SQLite fallback
+      if (supabase) {
+        Promise.resolve(
+          supabase.rpc('increment_failed_search', { search_term: query })
+        ).catch(() => {
+          // SQLite fallback
+          apiFetch('/api/analytics/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ keyword: query, success: false })
+          }).catch(() => {});
+        });
+      } else {
+        // SQLite fallback directly
         apiFetch('/api/analytics/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ keyword: query, success: false })
         }).catch(() => {});
-      });
+      }
     }
   };
 
