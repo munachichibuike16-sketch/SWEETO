@@ -84,12 +84,6 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                   key={product.id} 
                   className="min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)] snap-start relative"
                 >
-                  <div className="absolute top-2.5 left-2.5 sm:top-5 sm:left-5 z-20 pointer-events-none">
-                    <div className="bg-[#0056b3] text-white shadow-lg flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-sm">
-                      <Zap size={10} strokeWidth={3} className="fill-white sm:w-3.5 sm:h-3.5" />
-                      <span className="text-[8px] sm:text-[11px] font-black uppercase tracking-wider">{t('elite_offer')}</span>
-                    </div>
-                  </div>
                   <ProductCard 
                     product={product} 
                     index={idx} 
@@ -105,7 +99,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
         <div className="lg:col-span-2 bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative">
           <MiniSectionHeader 
             title={t('video_promo')} 
-            subtitle={t('elite_offer') || "Live Tech Demo"} 
+            subtitle={t('exclusive_tech_deals') || "Live Tech Demo"} 
             style="bold"
             onViewAll={() => navigate('/deals')}
           />

@@ -91,12 +91,6 @@ const DealOfTheDay = ({ title, isFirst, showVideoPromo, videoAdId }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {visible.map(product => (
               <div key={product.id} className="relative">
-                <div className="absolute top-5 left-5 z-30 pointer-events-none">
-                  <div className="bg-[#0056b3] text-white shadow-lg flex items-center gap-1.5 px-2.5 py-1 rounded-sm">
-                    <Zap size={14} strokeWidth={3} className="fill-white" />
-                    <span className="text-[11px] font-black uppercase tracking-wider">ELITE_OFFER</span>
-                  </div>
-                </div>
                 <ProductCard product={product} />
               </div>
             ))}
