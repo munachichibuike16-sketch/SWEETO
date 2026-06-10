@@ -80,13 +80,54 @@ const CheckoutPage = () => {
         setCustomCoords({ lat, lng });
         setGpsSuccess(true);
         setGpsLoading(false);
-        
-        if (!formData.address) {
-          setFormData(prev => ({
-            ...prev,
-            address: lang === 'fr' ? 'Ma position GPS' : 'My GPS Position'
-          }));
-        }
+
+        // Fetch reverse geocoding from OpenStreetMap Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+          headers: {
+            'Accept-Language': lang === 'fr' ? 'fr' : 'en',
+            'User-Agent': 'Sweeto-Hub-Web-App'
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.address) {
+            const addr = data.address;
+            
+            // Extract road / street
+            const roadVal = addr.road || addr.pedestrian || addr.cycleway || addr.footway || '';
+            
+            // Extract suburb / neighborhood
+            const suburbVal = addr.suburb || addr.neighbourhood || addr.quarter || addr.subdivision || '';
+            
+            // Extract landmark details
+            const landmarkVal = addr.amenity || addr.tourism || addr.shop || addr.building || addr.railway || addr.highway || addr.historic || '';
+            
+            // Extract city
+            const rawCity = addr.city || addr.town || addr.village || addr.county || 'Abidjan';
+            
+            // Try to match selected city with our dropdown options (case-insensitive)
+            const matchedCity = ['Abidjan', 'Yamoussoukro', 'Bouaké', 'San Pédro', 'Daloa', 'Korhogo', 'Man', 'Gagnoa', 'Grand-Bassam', 'Assinie', 'Abengourou'].find(
+              c => c.toLowerCase() === rawCity.toLowerCase()
+            ) || 'Abidjan';
+
+            setFormData(prev => ({
+              ...prev,
+              city: matchedCity,
+              address: suburbVal || prev.address || (lang === 'fr' ? 'Ma position GPS' : 'My GPS Position'),
+              street: roadVal || prev.street,
+              landmark: landmarkVal ? `${landmarkVal} (${data.display_name.split(',')[0]})` : (data.display_name ? data.display_name.split(',').slice(0, 2).join(', ') : prev.landmark)
+            }));
+          }
+        })
+        .catch(err => {
+          console.warn('Reverse geocoding error:', err);
+          if (!formData.address) {
+            setFormData(prev => ({
+              ...prev,
+              address: lang === 'fr' ? 'Ma position GPS' : 'My GPS Position'
+            }));
+          }
+        });
       },
       (error) => {
         console.warn('Geolocation error:', error);
@@ -597,41 +638,41 @@ const CheckoutPage = () => {
                      </div>
                   </div>             
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>
-                   <div className="relative">
-                     <input required name="address" value={formData.address} onChange={handleInputChange} placeholder="Cocody, Block 4" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all" />
-                     <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
-                   </div>
-                   
-                   <button
-                     type="button"
-                     onClick={fetchGPSLocation}
-                     disabled={gpsLoading}
-                     className="mt-2 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 ml-2 transition-all active:scale-95 disabled:opacity-60"
-                   >
-                     {gpsLoading ? (
-                       <Loader2 size={12} className="animate-spin" />
-                     ) : gpsSuccess ? (
-                       <CheckCircle2 size={12} className="text-emerald-500" />
-                     ) : (
-                       <MapPin size={12} />
-                     )}
-                     {gpsLoading
-                       ? (lang === 'fr' ? 'Localisation en cours...' : 'Getting Location...')
-                       : gpsSuccess
-                       ? (lang === 'fr' ? 'Position GPS Enregistrée ✓' : 'GPS Location Saved ✓')
-                       : (lang === 'fr' ? 'Utiliser ma position GPS actuelle' : 'Use my current GPS position')}
-                   </button>
-                 </div>
-               </div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>
+                    <div className="relative">
+                      <input required name="address" value={formData.address} onChange={handleInputChange} placeholder="Cocody, Block 4" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all" />
+                      <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Detailed delivery location details */}
                 <div className="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-white/5 space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                      {lang === 'fr' ? '📍 Précisions pour le Livreur (Optionnel)' : '📍 Delivery Details for Rider (Optional)'}
-                    </span>
-                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+                     <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                       {lang === 'fr' ? '📍 Précisions pour le Livreur (Optionnel)' : '📍 Delivery Details for Rider (Optional)'}
+                     </span>
+                     
+                     <button
+                       type="button"
+                       onClick={fetchGPSLocation}
+                       disabled={gpsLoading}
+                       className="px-4 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-60 border border-blue-600/20 shrink-0 self-start sm:self-auto"
+                     >
+                       {gpsLoading ? (
+                         <Loader2 size={12} className="animate-spin" />
+                       ) : gpsSuccess ? (
+                         <CheckCircle2 size={12} className="text-emerald-500" />
+                       ) : (
+                         <MapPin size={12} />
+                       )}
+                       {gpsLoading
+                         ? (lang === 'fr' ? 'Localisation...' : 'Locating...')
+                         : gpsSuccess
+                         ? (lang === 'fr' ? 'Auto-rempli ✓' : 'Auto-filled ✓')
+                         : (lang === 'fr' ? 'Remplir via mon GPS' : 'Auto-fill using GPS')}
+                     </button>
+                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
