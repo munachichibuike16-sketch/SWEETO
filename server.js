@@ -864,6 +864,47 @@ app.get('/api/analytics/visitor-logs', (req, res) => {
   }
 });
 
+app.get('/api/promos', (req, res) => {
+  try {
+    const promos = db.prepare('SELECT * FROM promo_codes ORDER BY created_at DESC').all();
+    res.json(promos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/promos', (req, res) => {
+  const { code, discount_percent } = req.body;
+  if (!code || !discount_percent) {
+    return res.status(400).json({ error: 'Promo code and discount percent are required' });
+  }
+  try {
+    const codeUpper = code.toUpperCase().trim();
+    const exists = db.prepare('SELECT 1 FROM promo_codes WHERE UPPER(code) = ?').get(codeUpper);
+    if (exists) {
+      return res.status(400).json({ error: 'Promo code already exists' });
+    }
+    db.prepare('INSERT INTO promo_codes (code, discount_percent) VALUES (?, ?)').run(codeUpper, discount_percent);
+    res.status(201).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/promos/:code', (req, res) => {
+  const { code } = req.params;
+  try {
+    const result = db.prepare('DELETE FROM promo_codes WHERE UPPER(code) = ?').run(code.toUpperCase());
+    if (result.changes > 0) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: 'Promo code not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/promos/:code', (req, res) => {
   const { code } = req.params;
   try {

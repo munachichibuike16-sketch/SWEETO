@@ -18,6 +18,7 @@ import StockManagement from './StockManagement';
 import ReviewManagement from './ReviewManagement';
 import ReceiptManagement from './ReceiptManagement';
 import AnalysisManagement from './AnalysisManagement';
+import PromoCode from './PromoCode';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import SweetoLogo from '../components/SweetoLogo';
@@ -132,6 +133,7 @@ const Dashboard = () => {
       case 'Ads': return 'Configure promotional video and graphic ads';
       case 'Socials': return 'Manage social links and external channels';
       case 'Settings': return 'Configure your store settings and shop preferences';
+      case 'Promos': return 'Manage your promotional codes and discounts';
       default: return 'Manage your store\'s performance';
     }
   };
@@ -731,7 +733,7 @@ const Dashboard = () => {
     { name: 'Customers', icon: Icons.Users }, { name: 'Reviews', icon: Icons.Star },
     { name: 'Logistics', icon: Icons.Truck }, { name: 'Sections', icon: Icons.Layers },
     { name: 'Hero', icon: Icons.Monitor }, { name: 'Ads', icon: Icons.Film },
-    { name: 'Socials', icon: Icons.Share2 }, { name: 'Settings', icon: Icons.Settings },
+    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Settings', icon: Icons.Settings },
   ];
 
   const stats = [
@@ -1009,6 +1011,7 @@ const Dashboard = () => {
           {activeTab === 'Ads' && <div className="max-w-7xl mx-auto"><VideoAds /></div>}
           {activeTab === 'Socials' && <div className="max-w-7xl mx-auto"><SocialsManagement /></div>}
           {activeTab === 'Settings' && <div className="max-w-7xl mx-auto"><StoreSettings /></div>}
+          {activeTab === 'Promos' && <div className="max-w-7xl mx-auto"><PromoCode /></div>}
           {activeTab === 'Sales' && <div className="max-w-7xl mx-auto"><SalesManagement /></div>}
           {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
           {activeTab === 'Reviews' && <div className="max-w-7xl mx-auto"><ReviewManagement /></div>}
