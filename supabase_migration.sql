@@ -214,13 +214,20 @@ ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public select on promo_codes" ON public.promo_codes;
 DROP POLICY IF EXISTS "Allow public insert on promo_codes" ON public.promo_codes;
 DROP POLICY IF EXISTS "Allow public update on promo_codes" ON public.promo_codes;
+DROP POLICY IF EXISTS "Allow public delete on promo_codes" ON public.promo_codes;
 
 -- Create policies
 CREATE POLICY "Allow public select on promo_codes" ON public.promo_codes
   FOR SELECT USING (true);
 
+CREATE POLICY "Allow public insert on promo_codes" ON public.promo_codes
+  FOR INSERT WITH CHECK (true);
+
 CREATE POLICY "Allow public update on promo_codes" ON public.promo_codes
   FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public delete on promo_codes" ON public.promo_codes
+  FOR DELETE USING (true);
 
 -- Seed default promo codes
 INSERT INTO public.promo_codes (code, discount_percent) VALUES 
