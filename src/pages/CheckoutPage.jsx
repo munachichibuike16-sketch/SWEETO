@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -34,7 +34,7 @@ const CheckoutPage = () => {
   const [orderId, setOrderId] = useState(null);
   const [waMessage, setWaMessage] = useState('');
   const [formData, setFormData] = useState({
-    name: '', phone: '', city: 'Abidjan', address: ''
+    name: '', phone: '', city: 'Abidjan', address: '', street: '', junction: '', landmark: ''
   });
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -46,7 +46,10 @@ const CheckoutPage = () => {
         name: session.name || '',
         phone: session.phoneNumber || session.phone || '',
         city: session.city || 'Abidjan',
-        address: session.address || ''
+        address: session.address || '',
+        street: session.street || '',
+        junction: session.junction || '',
+        landmark: session.landmark || ''
       });
     }
   }, []);
@@ -204,9 +207,17 @@ const CheckoutPage = () => {
       const destLng = customCoords ? customCoords.lng : (selectedZone ? selectedZone.lng : -3.9788);
 
       const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+      
+      const fullAddress = [
+        formData.address,
+        formData.street ? `${lang === 'fr' ? 'Rue' : 'Street'}: ${formData.street}` : '',
+        formData.junction ? `${lang === 'fr' ? 'Carrefour' : 'Junction'}: ${formData.junction}` : '',
+        formData.landmark ? `${lang === 'fr' ? 'Repère' : 'Landmark'}: ${formData.landmark}` : ''
+      ].filter(Boolean).join(' | ');
+
       const contactInfo = [
         formData.phone,
-        formData.address || '',
+        fullAddress || '',
         session?.email || '',
         session?.id || ''
       ].join(' | ');
@@ -222,7 +233,7 @@ const CheckoutPage = () => {
         status: 'pending',
         promo_code: promoApplied ? promoInput.toUpperCase() : null,
         city: formData.city,
-        address: formData.address,
+        address: fullAddress,
         destination_lat: destLat,
         destination_lng: destLng
       };
@@ -274,12 +285,18 @@ const CheckoutPage = () => {
       // Send WhatsApp (French formatted order details)
       const itemsList = cartItems.map(item => `- ${item.name} (Qté: ${item.quantity})`).join('\n');
       const currency = settings?.currency || 'FCFA';
+
+      let addressDetails = `${formData.city}, ${formData.address}`;
+      if (formData.street) addressDetails += `\nRue : ${formData.street}`;
+      if (formData.junction) addressDetails += `\nCarrefour : ${formData.junction}`;
+      if (formData.landmark) addressDetails += `\nRepère : ${formData.landmark}`;
+
       const rawMessage = `Bonjour Sweeto-Hub, je souhaite valider ma commande :\n` +
         `${itemsList}\n\n` +
         `Total : ${grandTotal.toLocaleString()} ${currency}\n` +
         `Destinataire : ${formData.name}\n` +
         `Téléphone : ${formData.phone}\n` +
-        `Adresse de Livraison : ${formData.city === 'Abidjan' ? formData.address : `${formData.city}, ${formData.address}`}\n\n` +
+        `Adresse de Livraison : ${addressDetails}\n\n` +
         `ID Commande : #${newOrderId}`;
       
       const message = encodeURIComponent(rawMessage);
@@ -607,6 +624,65 @@ const CheckoutPage = () => {
                    </button>
                  </div>
                </div>
+
+                {/* Detailed delivery location details */}
+                <div className="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-white/5 space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      {lang === 'fr' ? '📍 Précisions pour le Livreur (Optionnel)' : '📍 Delivery Details for Rider (Optional)'}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                        {lang === 'fr' ? 'Rue / Avenue' : 'Street / Avenue'}
+                      </label>
+                      <div className="relative">
+                        <input 
+                          name="street" 
+                          value={formData.street} 
+                          onChange={handleInputChange} 
+                          placeholder={lang === 'fr' ? 'Ex: Rue L12, Boulevard Latrille' : 'e.g. Rue L12, Latrille Blvd'} 
+                          className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 pl-12 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-all" 
+                        />
+                        <Map className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                        {lang === 'fr' ? 'Carrefour / Rond-point' : 'Junction / Roundabout'}
+                      </label>
+                      <div className="relative">
+                        <input 
+                          name="junction" 
+                          value={formData.junction} 
+                          onChange={handleInputChange} 
+                          placeholder={lang === 'fr' ? 'Ex: Carrefour Samaké' : 'e.g. Samake Junction'} 
+                          className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 pl-12 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-all" 
+                        />
+                        <Compass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                      {lang === 'fr' ? 'Point de repère / Détails maison' : 'Landmark / Building Description'}
+                    </label>
+                    <div className="relative">
+                      <input 
+                        name="landmark" 
+                        value={formData.landmark} 
+                        onChange={handleInputChange} 
+                        placeholder={lang === 'fr' ? 'Ex: En face de la pharmacie, portail beige' : 'e.g. Opposite the pharmacy, beige gate'} 
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 pl-12 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-all" 
+                      />
+                      <Home className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                    </div>
+                  </div>
+                </div>
 
                <div className="mt-10 p-6 rounded-[2rem] bg-blue-50 border border-blue-100 flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
