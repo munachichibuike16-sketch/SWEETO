@@ -4,7 +4,7 @@ import { Plus, Trash2, X, Loader2, CheckCircle2, AlertCircle, Search, Ticket, Ar
 import { supabase } from '../lib/supabase';
 import { apiFetch, isLocalHost } from '../utils/api';
 
-const EMPTY = { code: '', discount_percent: 10 };
+const EMPTY = { code: '', discount_percent: 5, code_type: 'first_time' };
 const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
 const lbl = 'flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1';
 
@@ -106,7 +106,7 @@ export default function PromoCode() {
       // 1. Insert in Supabase
       const { error: sbErr } = await supabase
         .from('promo_codes')
-        .insert([{ code: codeVal, discount_percent: pct }]);
+        .insert([{ code: codeVal, discount_percent: pct, code_type: form.code_type }]);
       if (sbErr) throw sbErr;
 
       // 2. Insert in SQLite
@@ -116,7 +116,7 @@ export default function PromoCode() {
           const res = await apiFetch('promos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: codeVal, discount_percent: pct })
+            body: JSON.stringify({ code: codeVal, discount_percent: pct, code_type: form.code_type })
           });
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
@@ -269,7 +269,18 @@ export default function PromoCode() {
                   return (
                     <tr key={p.code} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors group">
                       <td className="py-5 px-8 font-black text-slate-900 dark:text-white tracking-wide uppercase text-sm">
-                        {p.code}
+                        <div className="flex flex-col gap-1 items-start">
+                          <span>{p.code}</span>
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md leading-none ${
+                            p.code_type === 'first_time'
+                              ? 'text-emerald-500 bg-emerald-500/10 border border-emerald-500/20'
+                              : p.code_type === 'vip'
+                              ? 'text-amber-500 bg-amber-500/10 border border-amber-500/20'
+                              : 'text-slate-400 bg-slate-400/10 border border-slate-400/20'
+                          }`}>
+                            {p.code_type === 'first_time' ? 'First-Time' : p.code_type === 'vip' ? 'VIP' : 'Custom'}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-5 px-6 font-bold text-slate-900 dark:text-white">
                         <span className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black">
@@ -290,7 +301,7 @@ export default function PromoCode() {
                       <td className="py-5 px-6 text-xs font-medium text-slate-500 dark:text-slate-400">
                         {isRedeemed ? (
                           <div className="space-y-0.5">
-                            <p className="font-bold text-slate-800 dark:text-slate-200">User Phone: {p.used_by || 'Anonymous'}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-200">User: {p.used_by || 'Anonymous'}</p>
                             <p className="text-[10px] text-slate-400">Redeemed: {formatDate(p.used_at)}</p>
                           </div>
                         ) : (
@@ -340,7 +351,7 @@ export default function PromoCode() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={backToList} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:scale-105 active:scale-95 transition-all text-slate-600 dark:text-slate-300 shadow-sm"><ArrowLeft size={18}/></button>
+        <button onClick={backToList} className="p-3 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl hover:scale-105 active:scale-95 transition-all text-slate-600 dark:text-slate-300 shadow-sm"><ArrowLeft size={18}/></button>
         <div>
           <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Add New Promo Code</h2>
           <p className="text-slate-500 text-sm font-medium">Create a single-use promo code with customizable discounts</p>
@@ -363,9 +374,47 @@ export default function PromoCode() {
           </div>
 
           <div>
+            <label className={lbl}>Promo Code Type / Label *</label>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { id: 'first_time', label: 'First-Time (5%)' },
+                { id: 'vip', label: 'VIP (10%)' },
+                { id: 'custom', label: 'Custom %' }
+              ].map(type => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => {
+                    const defaultPct = type.id === 'first_time' ? 5 : type.id === 'vip' ? 10 : 15;
+                    setForm(p => ({ ...p, code_type: type.id, discount_percent: defaultPct }));
+                  }}
+                  className={`py-4 px-2 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all border ${
+                    form.code_type === type.id
+                      ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20'
+                      : 'bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className={lbl}>Discount Percentage *</label>
-            <input type="number" min="1" max="100" value={form.discount_percent} onChange={e => setForm(p => ({ ...p, discount_percent: e.target.value }))} placeholder="e.g. 10, 20, 50" className={inp}/>
-            <p className="text-[10px] text-slate-400 mt-2 ml-1">Provide an integer percentage value between 1 and 100.</p>
+            <input 
+              type="number" 
+              min="1" 
+              max="100" 
+              value={form.discount_percent} 
+              disabled={form.code_type !== 'custom'} 
+              onChange={e => setForm(p => ({ ...p, discount_percent: e.target.value }))} 
+              placeholder="e.g. 10, 20, 50" 
+              className={`${inp} ${form.code_type !== 'custom' ? 'opacity-60 cursor-not-allowed bg-slate-100/50 dark:bg-slate-950/20' : ''}`}
+            />
+            <p className="text-[10px] text-slate-400 mt-2 ml-1">
+              {form.code_type === 'custom' ? 'Provide an integer percentage value between 1 and 100.' : 'Discount percentage is locked for this type.'}
+            </p>
           </div>
 
           <div className="pt-4 flex flex-col gap-4">

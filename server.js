@@ -308,6 +308,7 @@ db.exec(`
     is_used INTEGER DEFAULT 0,
     used_by TEXT,
     used_at TEXT,
+    code_type TEXT DEFAULT 'custom',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
@@ -315,6 +316,7 @@ console.log('Tables created.');
 
 // Migrations
 console.log('Running migrations...');
+try { db.exec('ALTER TABLE promo_codes ADD COLUMN code_type TEXT DEFAULT \'custom\''); } catch (e) {}
 try { db.exec('ALTER TABLE products ADD COLUMN brand_id INTEGER'); } catch (e) {}
 try { db.exec('ALTER TABLE orders ADD COLUMN customer_contact TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE orders ADD COLUMN items TEXT'); } catch(e) {}
@@ -874,7 +876,7 @@ app.get('/api/promos', (req, res) => {
 });
 
 app.post('/api/promos', (req, res) => {
-  const { code, discount_percent } = req.body;
+  const { code, discount_percent, code_type } = req.body;
   if (!code || !discount_percent) {
     return res.status(400).json({ error: 'Promo code and discount percent are required' });
   }
@@ -884,7 +886,8 @@ app.post('/api/promos', (req, res) => {
     if (exists) {
       return res.status(400).json({ error: 'Promo code already exists' });
     }
-    db.prepare('INSERT INTO promo_codes (code, discount_percent) VALUES (?, ?)').run(codeUpper, discount_percent);
+    const typeVal = code_type || 'custom';
+    db.prepare('INSERT INTO promo_codes (code, discount_percent, code_type) VALUES (?, ?, ?)').run(codeUpper, discount_percent, typeVal);
     res.status(201).json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
