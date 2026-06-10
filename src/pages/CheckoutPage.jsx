@@ -10,7 +10,7 @@ import { playSound } from '../utils/sound';
 import { apiFetch } from '../utils/api';
 
 const cityAreas = {
-  'Abidjan': ['Cocody', 'Marcory', 'Yopougon', 'Riviera', 'Adjamé Mirador', 'Plateau', 'Treichville', 'Koumassi', 'Angré', 'Abobo'],
+  'Abidjan': ['Cocody', 'Marcory', 'Yopougon', 'Riviera', 'Adjamé', 'Plateau', 'Treichville', 'Koumassi', 'Angré', 'Abobo'],
   'Yamoussoukro': ['Centre-ville', 'Assabou', '220 Logements', 'Morofé', 'Dioulabou', 'Kokrenou'],
   'Bouaké': ['Centre-ville', 'Air France', 'N\'Gattakro', 'Kennedy', 'Dar-Es-Salam', 'Nimbo', 'Broukro'],
   'San Pédro': ['Cité', 'Bardot', 'Seweke', 'Balmer', 'Nanhon'],
