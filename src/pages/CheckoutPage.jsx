@@ -52,6 +52,7 @@ const CheckoutPage = () => {
         landmark: session.landmark || ''
       });
     }
+    fetchGPSLocation();
   }, []);
   const [promoInput, setPromoInput] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
