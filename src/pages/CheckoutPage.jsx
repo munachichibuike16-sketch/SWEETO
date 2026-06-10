@@ -418,59 +418,101 @@ const CheckoutPage = () => {
                   {promoError && <p className="text-red-500 text-[9px] font-bold mt-2 ml-1 uppercase">{promoError}</p>}
                </div>
 
-               {/* Quick Hub Locks (Common Abidjan zones) */}
-               <div className="space-y-3 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-white/5 mb-6">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block">
-                   {lang === 'fr' ? '📍 Saisie Rapide du Quartier (Abidjan)' : '📍 Quick Hub Select (Abidjan)'}
-                 </label>
-                 <div className="flex flex-wrap gap-2">
-                   {['Adjamé Mirador', 'Cocody', 'Marcory', 'Yopougon', 'Riviera'].map((hub) => {
-                     const isSelected = formData.city === 'Abidjan' && formData.address === hub;
-                     return (
-                       <motion.button
-                         key={hub}
-                         type="button"
-                         whileHover={{ scale: 1.05 }}
-                         whileTap={{ scale: 0.95 }}
-                         onClick={() => {
-                           setFormData(prev => ({
-                             ...prev,
-                             city: 'Abidjan',
-                             address: hub
-                           }));
-                         }}
-                         className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
-                           isSelected
-                             ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                             : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-700'
-                         }`}
-                       >
-                         {hub}
-                       </motion.button>
-                     );
-                   })}
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('city') || 'City'}</label>
-                    <div className="relative">
-                      <select name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer pl-12">
-                        {shippingZones.length === 0 ? (
-                          <>
-                            <option value="Abidjan">Abidjan</option>
-                            <option value="Yamoussoukro">Yamoussoukro</option>
-                            <option value="Bouaké">Bouaké</option>
-                            <option value="San Pédro">San Pédro</option>
-                          </>
-                        ) : shippingZones.map(z => (
-                          <option key={z.id} value={z.name}>{z.name}</option>
-                        ))}
-                      </select>
-                      <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+               {/* Quick Hub Locks (Common Abidjan zones & Cities of Ivory Coast) */}
+                <div className="space-y-4 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-white/5 mb-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">
+                      {lang === 'fr' ? '📍 Quartiers d\'Abidjan (Saisie Rapide)' : '📍 Abidjan Neighborhoods (Quick Select)'}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Adjamé Mirador', 'Cocody', 'Marcory', 'Yopougon', 'Riviera', 'Plateau', 'Treichville', 'Koumassi', 'Angré', 'Abobo'].map((hub) => {
+                        const isSelected = formData.city === 'Abidjan' && formData.address === hub;
+                        return (
+                          <motion.button
+                            key={hub}
+                            type="button"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                city: 'Abidjan',
+                                address: hub
+                              }));
+                            }}
+                            className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                              isSelected
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            {hub}
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
+
+                  <div className="pt-3 border-t border-slate-100 dark:border-white/5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">
+                      {lang === 'fr' ? '🌍 Autres Villes de Côte d\'Ivoire' : '🌍 Other Ivory Coast Cities'}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['Yamoussoukro', 'Bouaké', 'San Pédro', 'Daloa', 'Korhogo', 'Man', 'Gagnoa', 'Grand-Bassam', 'Assinie', 'Abengourou'].map((city) => {
+                        const isSelected = formData.city === city;
+                        return (
+                          <motion.button
+                            key={city}
+                            type="button"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                city: city,
+                                address: ''
+                              }));
+                            }}
+                            className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                              isSelected
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            {city}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('city') || 'City'}</label>
+                     <div className="relative">
+                       <select name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer pl-12">
+                         {shippingZones.length === 0 ? (
+                           <>
+                             <option value="Abidjan">Abidjan</option>
+                             <option value="Yamoussoukro">Yamoussoukro</option>
+                             <option value="Bouaké">Bouaké</option>
+                             <option value="San Pédro">San Pédro</option>
+                             <option value="Daloa">Daloa</option>
+                             <option value="Korhogo">Korhogo</option>
+                             <option value="Man">Man</option>
+                             <option value="Gagnoa">Gagnoa</option>
+                             <option value="Grand-Bassam">Grand-Bassam</option>
+                             <option value="Assinie">Assinie</option>
+                             <option value="Abengourou">Abengourou</option>
+                           </>
+                         ) : shippingZones.map(z => (
+                           <option key={z.id} value={z.name}>{z.name}</option>
+                         ))}
+                       </select>
+                       <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                     </div>
+                  </div>             
                  <div className="space-y-2">
                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>
                    <div className="relative">
