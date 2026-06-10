@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -56,6 +56,51 @@ const CheckoutPage = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [shippingZones, setShippingZones] = useState([]);
   const [shippingFee, setShippingFee] = useState(2500);
+
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsSuccess, setGpsSuccess] = useState(false);
+  const [customCoords, setCustomCoords] = useState(null);
+
+  const fetchGPSLocation = () => {
+    if (!navigator.geolocation) {
+      alert(lang === 'fr' ? "La géolocalisation n'est pas supportée par votre navigateur." : "Geolocation is not supported by this browser.");
+      return;
+    }
+
+    setGpsLoading(true);
+    setGpsSuccess(false);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCustomCoords({ lat, lng });
+        setGpsSuccess(true);
+        setGpsLoading(false);
+        
+        if (!formData.address) {
+          setFormData(prev => ({
+            ...prev,
+            address: lang === 'fr' ? 'Ma position GPS' : 'My GPS Position'
+          }));
+        }
+      },
+      (error) => {
+        console.warn('Geolocation error:', error);
+        setGpsLoading(false);
+        let msg = lang === 'fr' ? "Impossible de récupérer votre position." : "Unable to retrieve your location.";
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = lang === 'fr' ? "Accès à la localisation refusé." : "Location access denied.";
+        }
+        alert(msg);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
 
   useEffect(() => {
     if (isSuccess) {
@@ -155,8 +200,8 @@ const CheckoutPage = () => {
     
     try {
       const selectedZone = shippingZones.find(z => z.name === formData.city);
-      const destLat = selectedZone ? selectedZone.lat : 5.3484; // Fallback to Cocody center
-      const destLng = selectedZone ? selectedZone.lng : -3.9788;
+      const destLat = customCoords ? customCoords.lat : (selectedZone ? selectedZone.lat : 5.3484);
+      const destLng = customCoords ? customCoords.lng : (selectedZone ? selectedZone.lng : -3.9788);
 
       const session = JSON.parse(localStorage.getItem('sweetohub_session'));
       const contactInfo = [
@@ -540,6 +585,26 @@ const CheckoutPage = () => {
                      <input required name="address" value={formData.address} onChange={handleInputChange} placeholder="Cocody, Block 4" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all" />
                      <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
                    </div>
+                   
+                   <button
+                     type="button"
+                     onClick={fetchGPSLocation}
+                     disabled={gpsLoading}
+                     className="mt-2 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 ml-2 transition-all active:scale-95 disabled:opacity-60"
+                   >
+                     {gpsLoading ? (
+                       <Loader2 size={12} className="animate-spin" />
+                     ) : gpsSuccess ? (
+                       <CheckCircle2 size={12} className="text-emerald-500" />
+                     ) : (
+                       <MapPin size={12} />
+                     )}
+                     {gpsLoading
+                       ? (lang === 'fr' ? 'Localisation en cours...' : 'Getting Location...')
+                       : gpsSuccess
+                       ? (lang === 'fr' ? 'Position GPS Enregistrée ✓' : 'GPS Location Saved ✓')
+                       : (lang === 'fr' ? 'Utiliser ma position GPS actuelle' : 'Use my current GPS position')}
+                   </button>
                  </div>
                </div>
 
