@@ -308,7 +308,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/95 dark:bg-[#020617]/95 backdrop-blur-3xl shadow-md border-b border-slate-100 dark:border-white/5 transition-all duration-500">
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/75 dark:bg-[#060b19]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-cyan-500/15 transition-all duration-500">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2 md:gap-6">
           
           {/* Menu & Logo Section */}
@@ -766,7 +766,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      <nav className="fixed bottom-0 left-0 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-900 z-[100] lg:hidden px-6 sm:px-10 py-3.5 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)] transition-colors duration-500">
+      <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#060b19]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
         {/* Accueil */}
         <motion.button 
           onClick={() => {
@@ -775,35 +775,74 @@ const Header = ({ onMenuClick, onCartClick }) => {
             setSelectedBrand(null);
             navigate('/');
           }} 
-          whileTap={{ scale: 0.9 }} 
-          className={`flex flex-col items-center gap-1.5 transition-colors duration-300 ${
-            isHomePage ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+          whileTap={{ scale: 0.92 }} 
+          className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
+            isHomePage ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
-          <Home size={20} strokeWidth={2.5} />
-          <span className="text-[8px] font-black uppercase tracking-wider">{t('home')}</span>
+          {isHomePage && (
+            <motion.div 
+              layoutId="activeTabGlow"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          {isHomePage && (
+            <motion.div 
+              layoutId="activeTabLine"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          <motion.div
+            animate={{ scale: isHomePage ? 1.12 : 1, y: isHomePage ? -1 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
+            <Home size={20} strokeWidth={2.5} />
+          </motion.div>
+          <span className="text-[8.5px] font-black uppercase tracking-widest">{t('home')}</span>
         </motion.button>
 
         {/* Enregistré */}
         <motion.button 
           onClick={() => navigate('/wishlist')} 
-          whileTap={{ scale: 0.9 }} 
-          className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
-            isWishlistPage ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+          whileTap={{ scale: 0.92 }} 
+          className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
+            isWishlistPage ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
-          <Heart 
-            size={20} 
-            strokeWidth={2.5} 
-            fill={isWishlistPage ? "currentColor" : "none"} 
-            className="transition-all"
-          />
-          {wishlistItems.length > 0 && !isWishlistPage && (
-            <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black">
-              {wishlistItems.length}
-            </span>
+          {isWishlistPage && (
+            <motion.div 
+              layoutId="activeTabGlow"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
           )}
-          <span className="text-[8px] font-black uppercase tracking-wider">
+          {isWishlistPage && (
+            <motion.div 
+              layoutId="activeTabLine"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          <motion.div
+            animate={{ scale: isWishlistPage ? 1.12 : 1, y: isWishlistPage ? -1 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="relative"
+          >
+            <Heart 
+              size={20} 
+              strokeWidth={2.5} 
+              fill={isWishlistPage ? "currentColor" : "none"} 
+              className="transition-all"
+            />
+            {wishlistItems.length > 0 && !isWishlistPage && (
+              <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-red-500/20">
+                {wishlistItems.length}
+              </span>
+            )}
+          </motion.div>
+          <span className="text-[8.5px] font-black uppercase tracking-widest">
             {t('saved')}
           </span>
         </motion.button>
@@ -816,47 +855,90 @@ const Header = ({ onMenuClick, onCartClick }) => {
             setSelectedBrand(null);
             navigate('/products');
           }} 
-          whileTap={{ scale: 0.9 }} 
-          className={`flex flex-col items-center gap-1.5 relative transition-colors duration-300 ${
-            location.pathname === '/products' ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+          whileTap={{ scale: 0.92 }} 
+          className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
+            location.pathname === '/products' ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
-          <ShoppingBag size={20} strokeWidth={2.5} className="transition-all" />
-          <span className="text-[8px] font-black uppercase tracking-wider">{t('store_tab')}</span>
+          {location.pathname === '/products' && (
+            <motion.div 
+              layoutId="activeTabGlow"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          {location.pathname === '/products' && (
+            <motion.div 
+              layoutId="activeTabLine"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          <motion.div
+            animate={{ scale: location.pathname === '/products' ? 1.12 : 1, y: location.pathname === '/products' ? -1 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
+            <ShoppingBag size={20} strokeWidth={2.5} className="transition-all" />
+          </motion.div>
+          <span className="text-[8.5px] font-black uppercase tracking-widest">{t('store_tab')}</span>
         </motion.button>
 
         {/* Thème */}
         <motion.button 
           onClick={toggleTheme} 
-          whileTap={{ scale: 0.9 }} 
-          className="flex flex-col items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
+          whileTap={{ scale: 0.92 }} 
+          className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
         >
-          {isDarkMode ? (
-            <Sun size={20} strokeWidth={2.5} className="text-amber-500 dark:text-amber-400" />
-          ) : (
-            <Moon size={20} strokeWidth={2.5} className="text-slate-500 dark:text-slate-400" />
-          )}
-          <span className="text-[8px] font-black uppercase tracking-wider">{t('theme')}</span>
+          <motion.div
+            whileTap={{ rotate: 180 }}
+            transition={{ duration: 0.4 }}
+          >
+            {isDarkMode ? (
+              <Sun size={20} strokeWidth={2.5} className="text-amber-500 dark:text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+            ) : (
+              <Moon size={20} strokeWidth={2.5} className="text-slate-500 dark:text-slate-400" />
+            )}
+          </motion.div>
+          <span className="text-[8.5px] font-black uppercase tracking-widest">{t('theme')}</span>
         </motion.button>
 
         {/* Profil */}
         <motion.button 
-          whileTap={{ scale: 0.9 }} 
+          whileTap={{ scale: 0.92 }} 
           onClick={() => navigate(user ? '/auth' : '/login')}
-          className={`flex flex-col items-center gap-1.5 transition-colors duration-300 ${
-            isProfilePage ? 'text-eas-blue' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+          className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
+            isProfilePage ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
-          {user && (user.avatarUrl || user.picture) ? (
-            <img 
-              src={user.avatarUrl || user.picture} 
-              alt="" 
-              className={`w-5 h-5 rounded-full object-cover border ${isProfilePage ? 'border-eas-blue' : 'border-transparent'}`} 
+          {isProfilePage && (
+            <motion.div 
+              layoutId="activeTabGlow"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
-          ) : (
-            <User size={20} strokeWidth={2.5} />
           )}
-          <span className="text-[8px] font-black uppercase tracking-wider">{user ? t('me') : t('profile')}</span>
+          {isProfilePage && (
+            <motion.div 
+              layoutId="activeTabLine"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+          )}
+          <motion.div
+            animate={{ scale: isProfilePage ? 1.12 : 1, y: isProfilePage ? -1 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
+            {user && (user.avatarUrl || user.picture) ? (
+              <img 
+                src={user.avatarUrl || user.picture} 
+                alt="" 
+                className={`w-5.5 h-5.5 rounded-full object-cover border-2 ${isProfilePage ? 'border-eas-blue dark:border-cyan-400' : 'border-transparent'}`} 
+              />
+            ) : (
+              <User size={20} strokeWidth={2.5} />
+            )}
+          </motion.div>
+          <span className="text-[8.5px] font-black uppercase tracking-widest">{user ? t('me') : t('profile')}</span>
         </motion.button>
       </nav>
     </>

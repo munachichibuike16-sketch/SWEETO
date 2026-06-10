@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Fira+Code:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -7,7 +8,8 @@
   --color-eas-dark: #001a33;
   --color-eas-light: #f0f7ff;
   --color-eas-accent: #00c3ff;
-  --font-sans: 'Inter', 'Poppins', sans-serif;
+  --font-sans: 'Outfit', 'Plus Jakarta Sans', 'Inter', 'Poppins', sans-serif;
+  --font-mono: 'Fira Code', monospace;
 }
 
 :root {
@@ -23,8 +25,8 @@
 
 @layer base {
   body {
-    @apply antialiased text-slate-900 dark:text-slate-100 bg-white dark:bg-[#020617] transition-colors duration-500;
-    font-family: 'Poppins', sans-serif;
+    @apply antialiased text-slate-900 dark:text-slate-100 bg-white dark:bg-[#060b19] transition-colors duration-500;
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
     font-feature-settings: "cv02", "cv05", "cv11";
   }
 
@@ -204,9 +206,14 @@ body {
   -webkit-backdrop-filter: blur(6px) !important;
 }
 
-/* Ensure Inter/Plus Jakarta Sans is used for headings, bold elements, and currency displays */
-h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold, .font-black, .font-extrabold, .currency-text, .currency-display, [class*="currency-"] {
-  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+/* Ensure Outfit/Plus Jakarta Sans is used for headings, bold elements, and custom titles */
+h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold, .font-black, .font-extrabold {
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Ensure monospaced Fira Code is used for pricing and currency displays */
+.font-mono, .price-mono, .currency-text, .currency-display, [class*="currency-"] {
+  font-family: 'Fira Code', monospace !important;
 }
 
 /* Prevent Touch Delay, Text Selection, and Blue Tap Flash on Interactive Elements */

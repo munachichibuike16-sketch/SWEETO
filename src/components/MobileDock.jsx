@@ -30,7 +30,7 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[90%] max-w-sm h-16 bg-white/85 dark:bg-slate-950/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center justify-between px-6 overflow-hidden select-none">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[90%] max-w-sm h-16 bg-white/75 dark:bg-[#060b19]/75 backdrop-blur-xl border border-slate-200/50 dark:border-cyan-500/15 rounded-3xl shadow-[0_20px_50px_rgba(0,240,255,0.05)] flex items-center justify-between px-6 overflow-hidden select-none">
       {/* Faint Watermark Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
         <span className="text-[2.2rem] font-black tracking-[0.2em] text-slate-900/5 dark:text-white/3 uppercase italic">

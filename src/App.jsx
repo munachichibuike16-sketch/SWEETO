@@ -88,7 +88,7 @@ const Toast = () => {
         initial={{ y: -50, opacity: 0, scale: 0.9 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: -50, opacity: 0, scale: 0.9 }}
-        className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] px-8 py-4 rounded-3xl flex items-center gap-4 pointer-events-auto"
+        className="bg-white/90 dark:bg-[#060b19]/90 backdrop-blur-3xl border border-slate-100 dark:border-cyan-500/15 shadow-[0_20px_50px_rgba(0,240,255,0.05)] px-8 py-4 rounded-3xl flex items-center gap-4 pointer-events-auto"
       >
         {icons[toast.type] || icons.success}
         <p className="font-black text-xs uppercase tracking-widest text-slate-900 whitespace-nowrap">
@@ -917,7 +917,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                     <motion.a 
                       key={i} href={link} target="_blank" rel="noopener noreferrer"
                       whileHover={{ scale: 1.1, backgroundColor: '#3B82F6', color: '#fff' }}
-                      className="w-10 h-10 bg-white dark:bg-[#020617] rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 transition-all shadow-sm border border-slate-100 dark:border-white/5"
+                      className="w-10 h-10 bg-white dark:bg-[#060b19] rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 transition-all shadow-sm border border-slate-100 dark:border-cyan-500/15"
                     >
                       <social.icon size={18} />
                     </motion.a>

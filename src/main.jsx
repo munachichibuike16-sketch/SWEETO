@@ -67,7 +67,7 @@ function updatePWAManifestAndIcons() {
   // 4. Update title/theme-color meta tags
   let themeColorMeta = document.querySelector('meta[name="theme-color"]');
   if (themeColorMeta) {
-    themeColorMeta.setAttribute('content', isAdminRoute ? '#150E28' : '#020617');
+    themeColorMeta.setAttribute('content', isAdminRoute ? '#150E28' : '#060b19');
   }
   
   let appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');

@@ -35,7 +35,7 @@ export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/he
           alt="banner"
         />
         {/* Dynamic Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#020617] via-[#020617]/80 to-blue-500/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#060b19] via-[#060b19]/80 to-blue-500/20"></div>
       </div>
 
       <div className="relative z-10 px-3 md:px-16 w-full flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
@@ -70,7 +70,7 @@ export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/he
           onViewAllClick ? (
             <button
               onClick={onViewAllClick}
-              className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-white/5 shadow-md px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-3xl flex items-center gap-2 pointer-events-auto cursor-pointer text-[10px] md:text-sm font-bold"
+              className="bg-white/90 dark:bg-[#060b19]/90 backdrop-blur-3xl border border-slate-100 dark:border-cyan-500/15 shadow-md px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-3xl flex items-center gap-2 pointer-events-auto cursor-pointer text-[10px] md:text-sm font-bold"
             >
               <span className="relative z-10">{t('view_all') || 'View All'}</span>
               <ArrowRight size={14} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />
@@ -78,7 +78,7 @@ export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/he
           ) : (
             <Link
               to={viewAllLink}
-              className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-white/5 shadow-md px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-3xl flex items-center gap-2 pointer-events-auto text-[10px] md:text-sm font-bold"
+              className="bg-white/90 dark:bg-[#060b19]/90 backdrop-blur-3xl border border-slate-100 dark:border-cyan-500/15 shadow-md px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-3xl flex items-center gap-2 pointer-events-auto text-[10px] md:text-sm font-bold"
             >
               <span className="relative z-10">{t('view_all') || 'View All'}</span>
               <ArrowRight size={14} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />
@@ -152,12 +152,12 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
 
   // Styles for the "simple bold and beautify" variants - optimized for mobile padding
   const styles = {
-    bold: "bg-white dark:bg-[#020617] border-l-[8px] md:border-l-[12px] border-slate-900 dark:border-blue-500 py-3.5 px-3 md:py-12 md:px-14 rounded-r-xl md:rounded-r-[3rem] shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)]",
-    minimal: "bg-transparent border-b-2 border-slate-200 dark:border-white/5 py-2 md:py-10 px-1",
+    bold: "bg-white dark:bg-[#060b19] border-l-[8px] md:border-l-[12px] border-slate-900 dark:border-blue-500 py-3.5 px-3 md:py-12 md:px-14 rounded-r-xl md:rounded-r-[3rem] shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)]",
+    minimal: "bg-transparent border-b-2 border-slate-200 dark:border-cyan-500/15 py-2 md:py-10 px-1",
     accent: "bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-2xl shadow-blue-500/20",
-    neon: "bg-[#020617] border border-emerald-500/40 text-emerald-400 py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-[0_20px_50px_rgba(16,185,129,0.15)] relative overflow-hidden",
+    neon: "bg-[#060b19] border border-emerald-500/40 text-emerald-400 py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-[0_20px_50px_rgba(16,185,129,0.15)] relative overflow-hidden",
     outlined: "border-2 md:border-4 border-slate-900 dark:border-white py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem]",
-    glass: "backdrop-blur-3xl bg-white/40 dark:bg-[#020617]/40 border border-white/20 dark:border-white/5 py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-2xl shadow-black/5"
+    glass: "backdrop-blur-3xl bg-white/40 dark:bg-[#060b19]/40 border border-white/20 dark:border-cyan-500/15 py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-2xl shadow-black/5"
   };
 
   const currentClass = styles[style] || styles.bold;
@@ -266,11 +266,11 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
 
 export const MiniSectionHeader = ({ title, subtitle, style = 'bold', sideLabel = 'A', onViewAll }) => {
   const styles = {
-    gradient: "bg-gradient-to-tr from-[#020617] via-[#020617]/90 to-blue-500/20 text-white border border-white/10",
+    gradient: "bg-gradient-to-tr from-[#060b19] via-[#060b19]/90 to-blue-500/20 text-white border border-cyan-500/15",
     bold: "bg-white dark:bg-slate-900 border-l-[6px] md:border-l-8 border-slate-900 dark:border-blue-500 text-slate-900 dark:text-white",
     minimal: "bg-transparent border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white",
     accent: "bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-500/10",
-    neon: "bg-[#020617] border border-emerald-500/30 text-emerald-400 shadow-[0_10px_30px_rgba(16,185,129,0.05)]",
+    neon: "bg-[#060b19] border border-emerald-500/30 text-emerald-400 shadow-[0_10px_30px_rgba(16,185,129,0.05)]",
     outlined: "border-2 border-slate-900 dark:border-slate-700 text-slate-900 dark:text-white",
     glass: "backdrop-blur-xl bg-white/20 dark:bg-slate-900/40 border border-white/20 dark:border-slate-800/50 text-slate-900 dark:text-white"
   };

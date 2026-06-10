@@ -134,21 +134,19 @@ export default function TopCategories() {
   };
 
   return (
-    <section className="max-w-[1600px] mx-auto px-4 md:px-8 pt-0 pb-0 relative overflow-hidden">
+    <section className="max-w-[1600px] mx-auto px-4 md:px-8 pt-0 pb-0 relative overflow-hidden select-none">
       {/* Centered Premium Header */}
       <div className="flex flex-col items-center justify-center mb-8 relative">
         {/* Soft Background Neon Backglow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-32 bg-eas-blue/10 dark:bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
 
         {/* Futuristic Bold Centered Title */}
-        <h2 className="text-xl md:text-3xl font-black uppercase tracking-[0.25em] text-center italic relative">
-          <span className="bg-gradient-to-r from-eas-blue via-indigo-600 to-eas-blue dark:from-white dark:via-cyan-400 dark:to-white bg-clip-text text-transparent drop-shadow-[0_2px_15px_rgba(59,130,246,0.25)]">
-            {t('our_top_categories') || 'Our Top Categories'}
-          </span>
+        <h2 className="text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-center relative text-slate-900 dark:text-white">
+          {t('our_top_categories') || 'Our Top Categories'}
         </h2>
 
         {/* Subtitle with centered decorative line */}
-        <div className="flex items-center gap-4 mt-4 w-full max-w-2xl px-4">
+        <div className="flex items-center gap-4 mt-3 w-full max-w-2xl px-4">
           <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-slate-200/80 dark:via-slate-800/80 to-transparent" />
           <p className="text-[8px] md:text-xs text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-widest text-center whitespace-normal md:whitespace-nowrap">
             {t('explore_curated') || 'Explore curated products by premium departments'}
@@ -162,7 +160,7 @@ export default function TopCategories() {
         {/* Left Floating Scroll Button - Translucent circle suitable for Android touch & desktop hover */}
         <button 
           onClick={() => scroll('left')}
-          className="absolute -left-1.5 sm:left-4 top-[38%] -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
+          className="absolute -left-1.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
           aria-label="Scroll left"
         >
           <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
@@ -171,7 +169,7 @@ export default function TopCategories() {
         {/* Categories Horizontal Scrolling Row */}
         <div 
           ref={scrollRef}
-          className="flex flex-nowrap gap-2 md:gap-8 overflow-x-auto no-scrollbar py-6 px-4 md:px-2 snap-x snap-mandatory scroll-smooth w-full"
+          className="flex flex-nowrap gap-3 md:gap-6 overflow-x-auto no-scrollbar py-6 px-4 md:px-2 snap-x snap-mandatory scroll-smooth w-full"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {list.map((cat, idx) => {
@@ -187,38 +185,30 @@ export default function TopCategories() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03 }}
-                className="flex flex-col items-center group cursor-pointer shrink-0 snap-center px-0.5 min-w-[calc((100%-16px)/3)] max-w-[calc((100%-16px)/3)] sm:min-w-[130px] sm:max-w-none"
+                className="flex flex-col justify-between shrink-0 snap-center p-4 bg-slate-50 dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-xl shadow-sm hover:shadow-md hover:border-cyan-400/40 dark:hover:border-cyan-400/40 transition-all duration-300 min-w-[130px] max-w-[130px] h-[160px] sm:min-w-[170px] sm:max-w-[170px] sm:h-[210px] overflow-hidden group select-none relative cursor-pointer"
               >
-                {/* Premium Squircle Card Frame Container */}
-                <div className="relative w-full aspect-square sm:w-[130px] sm:h-[130px] rounded-full sm:rounded-[2.2rem] p-1 bg-gradient-to-tr from-slate-100 to-white dark:from-slate-900 dark:to-[#0e172a] border border-slate-200/50 dark:border-white/5 shadow-lg transition-all duration-500 hover:scale-105 active:scale-95 group-hover:shadow-[0_15px_30px_rgba(0,0,0,0.15)] dark:group-hover:border-slate-700 flex items-center justify-center overflow-hidden">
-                  
-                  {/* Glowing Ambient Lightspot behind the image */}
-                  <div className={`absolute inset-0 bg-gradient-to-tr ${colorsArray[0]} ${colorsArray[1]} opacity-20 dark:opacity-35 blur-md rounded-full transition-opacity group-hover:opacity-40`} />
+                {/* Top Title & Item Count Label */}
+                <div className="text-left w-full z-10 flex flex-col">
+                  <span className="text-[10px] sm:text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider group-hover:text-eas-blue dark:group-hover:text-cyan-400 transition-colors block truncate max-w-full leading-tight">
+                    {t_smart(cat.name)}
+                  </span>
+                  <span className="text-[7.5px] sm:text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
+                    {productCount} {productCount === 1 ? t('item') || 'item' : t('items') || 'items'}
+                  </span>
+                </div>
 
-                  {/* Inner Styled Circular Image Frame */}
+                {/* Bottom Image Frame with Ambient Glow */}
+                <div className="relative w-full flex-1 mt-2 flex items-center justify-end overflow-hidden">
+                  {/* Glowing Ambient Lightspot behind the image */}
+                  <div className={`absolute -right-4 -bottom-4 w-20 h-20 bg-gradient-to-tr ${colorsArray[0]} ${colorsArray[1]} opacity-20 dark:opacity-35 blur-xl rounded-full z-0 group-hover:opacity-40 transition-opacity`} />
+                  
+                  {/* Category Cutout Image */}
                   <img 
                     src={imageUrl} 
                     alt={cat.name} 
-                    className="w-[86%] h-[86%] object-cover rounded-full sm:rounded-[1.8rem] border border-white/40 dark:border-white/10 shadow-inner group-hover:scale-110 transition-transform duration-700 ease-out z-10"
+                    className="w-[85%] h-[85%] sm:w-[90%] sm:h-[90%] object-contain group-hover:scale-110 transition-transform duration-700 ease-out z-10 filter drop-shadow-md dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)] self-end"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=300'; }}
                   />
-                  
-                  {/* Subtle Colored Outer Rotating Halo Ring */}
-                  <div className={`absolute inset-0.5 rounded-full sm:rounded-[2.1rem] border-2 border-dashed ${colorsArray[2]} opacity-45 group-hover:rotate-45 transition-transform duration-1000 z-0`} />
-                </div>
-
-                {/* Title & Item Count Label */}
-                <div className="text-center w-full mt-3">
-                  <span className="text-[9px] sm:text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider group-hover:text-eas-blue dark:group-hover:text-cyan-400 transition-colors block truncate max-w-full px-1 italic">
-                    {t_smart(cat.name)}
-                  </span>
-                  
-                  {/* High-tech pill badge for item count */}
-                  <div className="inline-flex mt-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200/30 dark:border-slate-800/80 transition-colors group-hover:bg-eas-blue/10 dark:group-hover:bg-cyan-950/30">
-                    <span className={`text-[7px] sm:text-[8px] font-extrabold uppercase tracking-widest transition-colors ${colorsArray[3] || 'text-slate-400 dark:text-slate-500'}`}>
-                      {productCount} {productCount === 1 ? t('item') || 'item' : t('items') || 'items'}
-                    </span>
-                  </div>
                 </div>
               </motion.div>
             );
@@ -228,7 +218,7 @@ export default function TopCategories() {
         {/* Right Floating Scroll Button - Translucent circle suitable for Android touch & desktop hover */}
         <button 
           onClick={() => scroll('right')}
-          className="absolute -right-1.5 sm:right-4 top-[38%] -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
+          className="absolute -right-1.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
           aria-label="Scroll right"
         >
           <ChevronRight className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
