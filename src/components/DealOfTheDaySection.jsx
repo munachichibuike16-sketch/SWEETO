@@ -88,6 +88,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                     product={product} 
                     index={idx} 
                     onProductClick={onProductClick} 
+                    isDailyDeal={true}
                   />
                 </div>
               ))}

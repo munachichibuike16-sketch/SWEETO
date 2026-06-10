@@ -43,7 +43,7 @@ const getSocialProof = (product, lang) => {
   }
 };
 
-const ProductCard = ({ product, index = 0, onProductClick }) => {
+const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }) => {
   const { settings } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
@@ -132,9 +132,15 @@ const ProductCard = ({ product, index = 0, onProductClick }) => {
         {/* Badges */}
         <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20 flex flex-col items-start gap-1">
           {discountPercent > 0 && (
-            <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 dark:border-cyan-400/30 text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
-              -{discountPercent}%
-            </div>
+            isDailyDeal ? (
+              <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 dark:border-cyan-400/30 text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
+                -{discountPercent}% OFFRE ÉLITE
+              </div>
+            ) : (
+              <div className="bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 dark:border-red-400/30 text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
+                -{discountPercent}%
+              </div>
+            )
           )}
         </div>
 

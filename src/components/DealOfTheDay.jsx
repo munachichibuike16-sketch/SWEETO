@@ -91,7 +91,7 @@ const DealOfTheDay = ({ title, isFirst, showVideoPromo, videoAdId }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {visible.map(product => (
               <div key={product.id} className="relative">
-                <ProductCard product={product} />
+                <ProductCard product={product} isDailyDeal={true} />
               </div>
             ))}
           </div>
