@@ -65,6 +65,108 @@ const CheckoutPage = () => {
   const [gpsSuccess, setGpsSuccess] = useState(false);
   const [customCoords, setCustomCoords] = useState(null);
 
+  // Address Autocomplete states
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionField, setSuggestionField] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Click outside to close autocomplete dropdown
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setShowSuggestions(false);
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
+
+  // Debounced search suggest handler
+  const [searchTimer, setSearchTimer] = useState(null);
+
+  const fetchSuggestions = (query, field) => {
+    if (!query || query.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    setSuggestionField(field);
+
+    if (searchTimer) clearTimeout(searchTimer);
+
+    const timer = setTimeout(() => {
+      // Append city context for better search accuracy
+      const fullQuery = field === 'street' ? `${formData.city} ${query}` : query;
+
+      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&format=json&addressdetails=1&limit=5&countrycodes=ci`, {
+        headers: {
+          'Accept-Language': lang === 'fr' ? 'fr' : 'en',
+          'User-Agent': 'Sweeto-Hub-Web-App'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        setSuggestions(data || []);
+        setShowSuggestions(data && data.length > 0);
+        setSearchLoading(false);
+      })
+      .catch(err => {
+        console.warn('Search autocomplete error:', err);
+        setSearchLoading(false);
+      });
+    }, 400);
+
+    setSearchTimer(timer);
+  };
+
+  const handleSelectSuggestion = (place) => {
+    if (!place) return;
+    const addr = place.address || {};
+    
+    const roadVal = addr.road || addr.pedestrian || addr.cycleway || addr.footway || '';
+    const suburbVal = addr.suburb || addr.neighbourhood || addr.quarter || addr.subdivision || '';
+    const rawCity = addr.city || addr.town || addr.village || addr.county || 'Abidjan';
+    
+    const matchedCity = ['Abidjan', 'Yamoussoukro', 'Bouaké', 'San Pédro', 'Daloa', 'Korhogo', 'Man', 'Gagnoa', 'Grand-Bassam', 'Assinie', 'Abengourou'].find(
+      c => c.toLowerCase() === rawCity.toLowerCase()
+    ) || formData.city;
+
+    setFormData(prev => {
+      const updated = { ...prev };
+      
+      if (matchedCity) updated.city = matchedCity;
+      
+      if (suggestionField === 'address') {
+        updated.address = suburbVal || place.display_name.split(',')[0];
+        if (roadVal) updated.street = roadVal;
+      } else if (suggestionField === 'street') {
+        updated.street = roadVal || place.display_name.split(',')[0];
+        if (suburbVal) updated.address = suburbVal;
+      }
+      
+      // Auto-set landmark to display details
+      const landmarkVal = addr.amenity || addr.tourism || addr.shop || addr.building || '';
+      if (landmarkVal) {
+        updated.landmark = `${landmarkVal} (${place.display_name.split(',')[0]})`;
+      } else {
+        updated.landmark = place.display_name.split(',').slice(0, 2).join(', ');
+      }
+      
+      return updated;
+    });
+
+    if (place.lat && place.lon) {
+      setCustomCoords({ lat: parseFloat(place.lat), lng: parseFloat(place.lon) });
+      setGpsSuccess(true);
+    }
+
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
   const fetchGPSLocation = () => {
     if (!navigator.geolocation) {
       alert(lang === 'fr' ? "La géolocalisation n'est pas supportée par votre navigateur." : "Geolocation is not supported by this browser.");
@@ -638,13 +740,45 @@ const CheckoutPage = () => {
                        <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
                      </div>
                   </div>             
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>
-                    <div className="relative">
-                      <input required name="address" value={formData.address} onChange={handleInputChange} placeholder="Cocody, Block 4" className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all" />
-                      <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
-                    </div>
-                  </div>
+                 <div className="space-y-2 relative">
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>
+                     <div className="relative">
+                       <input 
+                         required 
+                         name="address" 
+                         value={formData.address} 
+                         onChange={(e) => {
+                           handleInputChange(e);
+                           fetchSuggestions(e.target.value, 'address');
+                         }} 
+                         placeholder="Cocody, Block 4" 
+                         className="w-full bg-slate-50 border border-slate-100/80 rounded-[1.5rem] px-6 py-5 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:bg-white transition-all" 
+                       />
+                       <MapPin size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                     </div>
+                     {/* Render suggestions for address */}
+                     {showSuggestions && suggestionField === 'address' && (
+                       <div className="absolute left-0 right-0 z-50 mt-1 bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+                         {suggestions.map((p, idx) => (
+                           <button
+                             key={idx}
+                             type="button"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleSelectSuggestion(p);
+                             }}
+                             className="w-full px-5 py-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-50 border-b border-slate-50 last:border-none flex items-start gap-2.5 transition-all"
+                           >
+                             <MapPin size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                             <div>
+                               <p className="font-extrabold text-slate-900">{p.display_name.split(',')[0]}</p>
+                               <p className="text-[10px] text-slate-400 font-medium line-clamp-1 mt-0.5">{p.display_name}</p>
+                             </div>
+                           </button>
+                         ))}
+                       </div>
+                     )}
+                   </div>
                 </div>
 
                 {/* Detailed delivery location details */}
@@ -676,7 +810,7 @@ const CheckoutPage = () => {
                    </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 relative">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                         {lang === 'fr' ? 'Rue / Avenue' : 'Street / Avenue'}
                       </label>
@@ -684,12 +818,37 @@ const CheckoutPage = () => {
                         <input 
                           name="street" 
                           value={formData.street} 
-                          onChange={handleInputChange} 
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            fetchSuggestions(e.target.value, 'street');
+                          }} 
                           placeholder={lang === 'fr' ? 'Ex: Rue L12, Boulevard Latrille' : 'e.g. Rue L12, Latrille Blvd'} 
                           className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 pl-12 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 transition-all" 
                         />
                         <Map className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                       </div>
+                      {/* Render suggestions for street */}
+                      {showSuggestions && suggestionField === 'street' && (
+                        <div className="absolute left-0 right-0 z-50 mt-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+                          {suggestions.map((p, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectSuggestion(p);
+                              }}
+                              className="w-full px-4 py-3 text-left text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-50 dark:border-white/5 last:border-none flex items-start gap-2.5 transition-all"
+                            >
+                              <Map size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="font-extrabold text-slate-900 dark:text-white">{p.display_name.split(',')[0]}</p>
+                                <p className="text-[9px] text-slate-400 font-medium line-clamp-1 mt-0.5">{p.display_name}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
