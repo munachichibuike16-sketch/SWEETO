@@ -12,6 +12,7 @@ import ProductModal from './components/ProductModal';
 import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
+import BrightRetailHome from './components/BrightRetailHome';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
@@ -228,6 +229,30 @@ const Storefront = ({ viewMode = 'home' }) => {
       setIsProductModalOpen(false);
     }
   }, [productId, liveProducts]);
+
+  // Listen for template-specific category & routing triggers
+  useEffect(() => {
+    const handleSelectCategory = (e) => {
+      setSelectedCategory(e.detail);
+      setSelectedBrand(null);
+      setSearchQuery('');
+      setViewMode('home');
+    };
+    const handleViewAllProducts = () => {
+      setSelectedCategory(null);
+      setSelectedBrand(null);
+      setSearchQuery('');
+      setViewMode('products');
+    };
+
+    window.addEventListener('select-category', handleSelectCategory);
+    window.addEventListener('view-all-products', handleViewAllProducts);
+
+    return () => {
+      window.removeEventListener('select-category', handleSelectCategory);
+      window.removeEventListener('view-all-products', handleViewAllProducts);
+    };
+  }, []);
 
   // 2. Scroll to top on navigation/filter change
   useEffect(() => {
@@ -785,46 +810,50 @@ const Storefront = ({ viewMode = 'home' }) => {
             ) : (
               <div className="bg-slate-50 dark:bg-slate-950 transition-colors duration-500 min-h-screen">
                 {viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand ? (
-                  <>
-                    {/* Main Sections */}
-                    {homepageSections.length > 0 ? (
-                      homepageSections.map((section, idx) => {
-                        const rendered = renderSection(section, idx);
-                        if (getSectionType(section) === 'hero' && rendered) {
-                          return (
-                            <React.Fragment key={section.id || `hero-wrap-${idx}`}>
-                              {rendered}
-                              <TopCategories />
-                            </React.Fragment>
-                          );
-                        }
-                        return rendered;
-                      })
-                    ) : (
-                      // Fallback Premium Default Layout
-                      <>
-                        {renderSection({ type: 'hero' }, 0)}
-                        <TopCategories />
-                        {renderSection({ type: 'featured_grid', name: 'Featured Gear' }, 1)}
-                        {renderSection({ type: 'just_arrived', name: 'New Arrivals' }, 2)}
-                        {renderSection({ type: 'trending', name: 'Trending Now' }, 3)}
-                        {renderSection({ type: 'deal_of_the_day' }, 4)}
-                      </>
-                    )}
-                    
-                    {/* Permanent Recently Viewed (Always at the bottom) */}
-                    {recentlyViewed.length > 0 && (
-                      <ProductSection 
-                        title={t('recently_viewed')} 
-                        subtitle={t('tech_history')} 
-                        products={recentlyViewed} 
-                        type="new" 
-                        hideBanner={true}
-                        settings={{ enabled: false }}
-                        onProductClick={handleProductClick}
-                      />
-                    )}
-                  </>
+                  settings?.active_template === 'bright' ? (
+                    <BrightRetailHome onProductClick={handleProductClick} />
+                  ) : (
+                    <>
+                      {/* Main Sections */}
+                      {homepageSections.length > 0 ? (
+                        homepageSections.map((section, idx) => {
+                          const rendered = renderSection(section, idx);
+                          if (getSectionType(section) === 'hero' && rendered) {
+                            return (
+                              <React.Fragment key={section.id || `hero-wrap-${idx}`}>
+                                {rendered}
+                                <TopCategories />
+                              </React.Fragment>
+                            );
+                          }
+                          return rendered;
+                        })
+                      ) : (
+                        // Fallback Premium Default Layout
+                        <>
+                          {renderSection({ type: 'hero' }, 0)}
+                          <TopCategories />
+                          {renderSection({ type: 'featured_grid', name: 'Featured Gear' }, 1)}
+                          {renderSection({ type: 'just_arrived', name: 'New Arrivals' }, 2)}
+                          {renderSection({ type: 'trending', name: 'Trending Now' }, 3)}
+                          {renderSection({ type: 'deal_of_the_day' }, 4)}
+                        </>
+                      )}
+                      
+                      {/* Permanent Recently Viewed (Always at the bottom) */}
+                      {recentlyViewed.length > 0 && (
+                        <ProductSection 
+                          title={t('recently_viewed')} 
+                          subtitle={t('tech_history')} 
+                          products={recentlyViewed} 
+                          type="new" 
+                          hideBanner={true}
+                          settings={{ enabled: false }}
+                          onProductClick={handleProductClick}
+                        />
+                      )}
+                    </>
+                  )
                 ) : searchQuery ? (
                     <div className="px-6 md:px-12">
                     <ProductSection 

@@ -261,7 +261,8 @@ const StoreSettings = () => {
     storeAbout: '',
     currency: 'FCFA',
     language: 'en',
-    admin_key: ''
+    admin_key: '',
+    active_template: 'chilling'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -297,7 +298,8 @@ const StoreSettings = () => {
         storeAbout: settings.storeAbout || '',
         currency: settings.currency || 'FCFA',
         language: settings.language || 'en',
-        admin_key: settings.admin_key || ''
+        admin_key: settings.admin_key || '',
+        active_template: settings.active_template || 'chilling'
       });
     }
   }, [settings, isDirty]);
@@ -625,6 +627,23 @@ const StoreSettings = () => {
                       <option value="ja">日本語 (Japanese)</option>
                       <option value="hi">हिन्दी (Hindi)</option>
                       <option value="ru">Русский (Russian)</option>
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                  </InputWrapper>
+                </div>
+
+                <div className="pt-4">
+                  <InputWrapper label="Storefront Theme Template" icon={Layout}>
+                    <select 
+                      name="active_template"
+                      value={formData.active_template}
+                      onChange={handleInputChange}
+                      className={`${inputStyle} appearance-none cursor-pointer pr-10`}
+                    >
+                      <option value="chilling">Arctic Tech Luxury (Chilling)</option>
+                      <option value="bright">Bright Modern Retail (Shopify / Flipkart style)</option>
                     </select>
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
