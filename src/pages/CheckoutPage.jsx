@@ -9,6 +9,8 @@ import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
 import { apiFetch } from '../utils/api';
 
+const LOCATIONIQ_KEY = import.meta.env.VITE_LOCATIONIQ_KEY || '';
+
 const cityAreas = {
   'Abidjan': ['Cocody', 'Marcory', 'Yopougon', 'Riviera', 'Adjamé', 'Plateau', 'Treichville', 'Koumassi', 'Angré', 'Abobo'],
   'Yamoussoukro': ['Centre-ville', 'Assabou', '220 Logements', 'Morofé', 'Dioulabou', 'Kokrenou'],
@@ -101,14 +103,18 @@ const CheckoutPage = () => {
       // Append city context for better search accuracy
       const fullQuery = field === 'street' ? `${formData.city} ${query}` : query;
 
-      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&format=json&addressdetails=1&limit=5&countrycodes=ci`, {
-        headers: {
-          'Accept-Language': lang === 'fr' ? 'fr' : 'en',
-          'User-Agent': 'Sweeto-Hub-Web-App'
-        }
-      })
+      const url = LOCATIONIQ_KEY
+        ? `https://us1.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(fullQuery)}&limit=5&countrycodes=ci&accept-language=${lang}`
+        : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&format=json&addressdetails=1&limit=5&countrycodes=ci`;
+
+      const headers = LOCATIONIQ_KEY 
+        ? {} 
+        : { 'Accept-Language': lang === 'fr' ? 'fr' : 'en', 'User-Agent': 'Sweeto-Hub-Web-App' };
+
+      fetch(url, { headers })
       .then(res => res.json())
       .then(data => {
+        // LocationIQ has same structure as Nominatim (an array of place objects)
         setSuggestions(data || []);
         setShowSuggestions(data && data.length > 0);
         setSearchLoading(false);
@@ -184,13 +190,16 @@ const CheckoutPage = () => {
         setGpsSuccess(true);
         setGpsLoading(false);
 
-        // Fetch reverse geocoding from OpenStreetMap Nominatim
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-          headers: {
-            'Accept-Language': lang === 'fr' ? 'fr' : 'en',
-            'User-Agent': 'Sweeto-Hub-Web-App'
-          }
-        })
+        // Fetch reverse geocoding from LocationIQ (or fallback to Nominatim)
+        const url = LOCATIONIQ_KEY
+          ? `https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lng}&format=json&accept-language=${lang}`
+          : `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+        const headers = LOCATIONIQ_KEY
+          ? {}
+          : { 'Accept-Language': lang === 'fr' ? 'fr' : 'en', 'User-Agent': 'Sweeto-Hub-Web-App' };
+
+        fetch(url, { headers })
         .then(res => res.json())
         .then(data => {
           if (data && data.address) {
