@@ -317,9 +317,9 @@ const CheckoutPage = () => {
 
   // CHECKOUT SCREEN
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden lg:h-screen">
       {/* LEFT SIDE - ORDER SUMMARY (DARK) */}
-      <div className="lg:w-[45%] bg-slate-950 p-8 lg:p-16 flex flex-col relative overflow-hidden text-white min-h-[50vh] lg:min-h-screen">
+      <div className="lg:w-[45%] bg-slate-950 p-8 lg:p-16 flex flex-col relative text-white min-h-[50vh] lg:h-screen lg:overflow-y-auto overflow-x-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.2),transparent_50%)]"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
         
@@ -383,7 +383,7 @@ const CheckoutPage = () => {
       </div>
 
       {/* RIGHT SIDE - CHECKOUT FORM (LIGHT) */}
-      <div className="lg:w-[55%] bg-white p-8 lg:p-16 flex items-center justify-center">
+      <div className="lg:w-[55%] bg-white p-8 lg:p-12 xl:p-16 flex items-start justify-center lg:h-screen lg:overflow-y-auto">
          <div className="w-full max-w-lg">
             <div className="mb-12">
                <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">{t('delivery_details') || 'Delivery Details'}</h2>
