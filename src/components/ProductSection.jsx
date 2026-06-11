@@ -25,7 +25,7 @@ export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/he
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="relative w-full h-auto py-4 md:py-0 md:h-56 flex items-center justify-center mb-6 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-xl group transition-all"
+      className="relative w-full h-auto py-4 md:py-0 md:h-56 flex items-center justify-center mb-3 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-xl group transition-all"
     >
       {/* Background with Parallax */}
       <div className="absolute inset-0 z-0">
@@ -171,7 +171,7 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
   }`;
 
   return (
-    <div className={`mb-6 md:mb-16 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 relative group ${currentClass}`}>
+    <div className={`mb-3 md:mb-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 relative group ${currentClass}`}>
       {style === 'neon' && (
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[80px]"></div>
       )}
@@ -234,7 +234,7 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
   const isCarousel = type !== 'category';
 
   return (
-    <section className="py-4 md:py-8 px-3 md:px-12">
+    <section className="py-1 md:py-2 px-3 md:px-12">
       {!hideHeader && (
         <SectionHeader 
           title={title} 
@@ -278,7 +278,7 @@ export const MiniSectionHeader = ({ title, subtitle, style = 'bold', sideLabel =
   const currentClass = styles[style] || styles.bold;
 
   return (
-    <div className={`p-3 sm:p-6 rounded-xl sm:rounded-[2rem] flex items-center justify-between gap-3 relative overflow-hidden group mb-3 sm:mb-6 transition-all ${currentClass}`}>
+    <div className={`p-3 sm:p-6 rounded-xl sm:rounded-[2rem] flex items-center justify-between gap-3 relative overflow-hidden group mb-2 sm:mb-3 transition-all ${currentClass}`}>
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none"/>
       
       <div className="flex flex-col justify-center relative z-10">
@@ -405,7 +405,7 @@ export const DualProductSection = ({ section, liveProducts = [], onProductClick 
   const sideBProducts = getFilteredSideProducts(section.roleB || 'trending', section.categoryB || 'All', true);
 
   return (
-    <section className="py-4 md:py-16 px-3 md:px-12 relative overflow-hidden">
+    <section className="py-1 md:py-2 px-3 md:px-12 relative overflow-hidden">
       {/* Background Accents */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/5 dark:bg-orange-500/2 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/5 dark:bg-indigo-500/2 rounded-full blur-[120px] pointer-events-none" />

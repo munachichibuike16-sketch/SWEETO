@@ -106,7 +106,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
     if (gridStyle === 'glass') {
       return (
-        <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-10">
+        <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-2">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-[600px]">
             {/* Main Large Banner — auto-cycles all products */}
             <div 
@@ -301,7 +301,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
     // Default: Full-Bleed Cover style (Immersive fullscreen)
     return (
-      <section className="max-w-[1600px] mx-auto px-6 pt-3 pb-10">
+      <section className="max-w-[1600px] mx-auto px-6 pt-3 pb-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
           
           {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}

@@ -39,7 +39,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
   };
 
   return (
-    <section className="pt-2 pb-12 px-6 md:px-12">
+    <section className="py-2 px-6 md:px-12">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
         {/* Left Column: Products Grid (3/5 on LG/XL) */}
         <div className="lg:col-span-3 bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative group/deals">

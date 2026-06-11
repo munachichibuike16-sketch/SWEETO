@@ -167,7 +167,7 @@ const VideoAdSection = ({ section }) => {
       };
 
       return (
-        <section className="py-8 px-6 md:px-12 max-w-[1600px] mx-auto relative overflow-hidden">
+        <section className="py-2 px-6 md:px-12 max-w-[1600px] mx-auto relative overflow-hidden">
           {/* Standing Alone Banner */}
           <div className="relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden min-h-[380px] sm:min-h-[500px] bg-slate-900 border border-slate-100/5 dark:border-white/5 shadow-2xl group flex flex-col justify-end">
             
@@ -281,7 +281,7 @@ const VideoAdSection = ({ section }) => {
   };
 
   return (
-    <section className="py-16 px-4 md:px-8 max-w-[1600px] mx-auto overflow-hidden relative">
+    <section className="py-3 px-4 md:px-8 max-w-[1600px] mx-auto overflow-hidden relative">
       {/* Background Soft Neon Backglow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-32 bg-pink-500/5 dark:bg-pink-500/2 blur-[100px] rounded-full pointer-events-none" />
 
