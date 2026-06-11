@@ -325,26 +325,13 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center gap-2 md:gap-3 cursor-pointer group"
             >
-              {settings?.shopLogo ? (
-                <motion.div 
-                  animate={{ 
-                    y: [0, -3, 0],
-                    filter: ["drop-shadow(0 0 0px #3B82F600)", "drop-shadow(0 0 8px #3B82F644)", "drop-shadow(0 0 0px #3B82F600)"]
-                  }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="hidden md:block bg-eas-blue p-2 md:p-2.5 rounded-xl shadow-xl shadow-eas-blue/30 overflow-hidden"
-                >
-                  <img src={settings.shopLogo} alt="Logo" className="w-5 h-5 object-contain" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="hidden md:block relative shrink-0"
-                >
-                  <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,0,255,0.3)]" />
-                </motion.div>
-              )}
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="hidden md:block relative shrink-0"
+              >
+                <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,0,255,0.3)]" />
+              </motion.div>
               <div className="flex flex-col justify-center">
                 <div className="flex items-center gap-1.5">
                   <span className="inline-block text-lg sm:text-2xl font-black text-eas-blue tracking-tighter uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
