@@ -4,7 +4,7 @@ import {
   Plus, Edit, Trash2, X, Loader2, CheckCircle2, AlertCircle,
   ArrowLeft, Layers, Type, Hash, Star, Zap, Clock, TrendingUp,
   Smartphone, Monitor, Speaker, Snowflake, Gift, Flame, Grip,
-  Eye, EyeOff, ChevronUp, ChevronDown
+  ChevronUp, ChevronDown
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
@@ -338,10 +338,20 @@ export default function SectionManagement() {
                     <span className="text-[10px] font-black text-slate-900 dark:text-white w-8 h-8 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">#{i + 1}</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => toggleActive(s)} title={s.isActive ? 'Hide section' : 'Show section'} className={`p-2 rounded-xl transition-all shadow-sm ${s.isActive ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 hover:scale-110' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:scale-110'}`}>{s.isActive ? <Eye size={14}/> : <EyeOff size={14}/>}</button>
-                    <button onClick={() => openEdit(s)} className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl hover:scale-110 transition-all shadow-sm"><Edit size={14}/></button>
-                    <button onClick={() => setConfirmDel({ id: s.id, name: s.title })} disabled={deletingId === s.id} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl hover:scale-110 transition-all shadow-sm">{deletingId === s.id ? <Loader2 size={14} className="animate-spin"/> : <Trash2 size={14}/>}</button>
+                  <div className="flex items-center gap-3">
+                    {/* Toggle Switch */}
+                    <button 
+                      onClick={() => toggleActive(s)}
+                      className={`w-10 h-6 rounded-full transition-colors relative shrink-0 flex items-center p-0.5 ${s.isActive ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                      title={s.isActive ? 'Deactivate Section' : 'Activate Section'}
+                    >
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${s.isActive ? 'translate-x-4' : 'translate-x-0'}`}/>
+                    </button>
+
+                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(s)} className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl hover:scale-110 transition-all shadow-sm" title="Edit Section"><Edit size={14}/></button>
+                      <button onClick={() => setConfirmDel({ id: s.id, name: s.title })} disabled={deletingId === s.id} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl hover:scale-110 transition-all shadow-sm" title="Delete Section">{deletingId === s.id ? <Loader2 size={14} className="animate-spin"/> : <Trash2 size={14}/>}</button>
+                    </div>
                   </div>
                 </div>
 
