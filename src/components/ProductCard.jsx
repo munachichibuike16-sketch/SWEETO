@@ -236,7 +236,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
                   );
                 })()}
               </div>
-              <span className="text-[8px] sm:text-[9.5px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest whitespace-nowrap">
+              <span className="text-[8px] sm:text-[9.5px] font-black text-eas-blue uppercase tracking-widest whitespace-nowrap">
                 {getSocialProof(product, lang)}
               </span>
             </div>
