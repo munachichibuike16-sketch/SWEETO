@@ -19,7 +19,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function BrightRetailHome({ onProductClick }) {
-  const { products, categories, settings } = useStore();
+  const { products, categories, settings, sections } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { t, lang, t_smart } = useLanguage();
@@ -49,20 +49,9 @@ export default function BrightRetailHome({ onProductClick }) {
   const activeProducts = products.filter(p => p.status === 'active' && p.stock > 0);
 
   // Split products for sections
-  const featuredProducts = activeProducts.filter(p => p.is_featured);
   const dailyDeals = activeProducts.filter(p => p.is_daily_deal || (p.original_price && p.original_price > p.price));
-  const newArrivals = activeProducts.slice(0, 6);
-  const bestSellers = activeProducts.filter(p => p.rating >= 4.5).slice(0, 6);
-
-  const displayList = activeTab === 'new' ? newArrivals : bestSellers;
 
   // Dynamic images and text from settings
-  const heroSubtitle = settings?.bright_hero_subtitle || 'Under Favorable Smart Gadgets';
-  const heroTitle = settings?.bright_hero_title || 'SUMMER 10% SALE';
-  const heroPrice = settings?.bright_hero_price || 'FROM $399.99';
-  const heroPromoCode = settings?.bright_hero_promo_code || 'SUMMER10';
-  const heroImage = settings?.bright_hero_image || 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500';
-
   const promoImages = {
     mobiles: settings?.bright_promo1_image || 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=400',
     headset: settings?.bright_promo2_image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400',
@@ -79,9 +68,6 @@ export default function BrightRetailHome({ onProductClick }) {
   const promo3Title = settings?.bright_promo3_title || 'Portable Speaker';
   const promo3Subtitle = settings?.bright_promo3_subtitle || 'Bluetooth Waterproof';
 
-  const wideBannerTitle = settings?.bright_wide_banner_title || 'Get Up To 85% OFF on big billion day 2021';
-  const wideBannerSubtitle = settings?.bright_wide_banner_subtitle || 'Big Saving on Top selling Smartphone';
-
   const handleToggleWishlist = (e, productId) => {
     e.stopPropagation();
     toggleWishlist(productId);
@@ -92,17 +78,121 @@ export default function BrightRetailHome({ onProductClick }) {
     addToCart(product);
   };
 
-  return (
-    <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] transition-colors duration-500 pb-20">
-      {/* ─── 1. CIRCULAR OUTLINED CATEGORY ROW ─── */}
-      <div className="bg-white dark:bg-[#0b1329] border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm py-4 px-6 md:px-12 scroll-smooth select-none overflow-x-auto no-scrollbar flex items-center justify-start md:justify-center gap-6 sm:gap-10">
+  // Filter sections belonging to Bright template
+  const brightSections = React.useMemo(() => {
+    const raw = sections || [];
+    const filtered = raw.filter(s => s.role?.startsWith('bright_') || s.key?.startsWith('bright_'));
+    if (filtered.length > 0) {
+      return [...filtered].sort((a, b) => (a.position || 0) - (b.position || 0));
+    }
+    // Default fallback order if database has no sections configured for Bright template
+    return [
+      { id: 'default-cats', role: 'bright_categories', isActive: true, position: 0 },
+      { id: 'default-hero', role: 'bright_hero', isActive: true, position: 1 },
+      { id: 'default-promos', role: 'bright_promos', isActive: true, position: 2 },
+      { id: 'default-tabs', role: 'bright_tabs', isActive: true, position: 3 },
+      { id: 'default-billboard', role: 'bright_billboard', isActive: true, position: 4 },
+      { id: 'default-deal', role: 'bright_dealOfDay', isActive: true, position: 5 },
+      { id: 'default-banners', role: 'bright_promo_banners', isActive: true, position: 6 },
+      { id: 'default-badges', role: 'bright_trust_badges', isActive: true, position: 7 },
+    ];
+  }, [sections]);
+
+  const renderProductCard = (product) => {
+    const discount = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
+    const isWished = isInWishlist(product.id);
+    return (
+      <div 
+        key={product.id}
+        onClick={() => onProductClick(product)}
+        className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl overflow-hidden flex flex-col p-4 relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 dark:hover:border-[#ffc200]/50 transition-all duration-300"
+      >
+        {/* Absolute Badges */}
+        {discount > 0 && (
+          <span className="absolute top-3 left-3 bg-[#ec5b5b] text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm z-10 uppercase shadow-sm">
+            -{discount}%
+          </span>
+        )}
+        {product.stock <= 3 && (
+          <span className="absolute top-3 left-3 bg-orange-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm z-10 uppercase shadow-sm">
+            Stock Limité
+          </span>
+        )}
+
+        <button 
+          onClick={(e) => handleToggleWishlist(e, product.id)}
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 ${
+            isWished 
+              ? 'bg-red-500 text-white' 
+              : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200/40 text-slate-400 dark:text-slate-500 hover:text-red-500'
+          }`}
+        >
+          <Heart size={14} fill={isWished ? 'currentColor' : 'none'} />
+        </button>
+
+        {/* Product Image */}
+        <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl p-3 mb-4">
+          <img 
+            src={product.image_url || product.image || '/hero-banner.png'} 
+            alt={product.name} 
+            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+
+        {/* Product Content */}
+        <div className="flex flex-col flex-1 space-y-1.5">
+          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
+            {product.category}
+          </span>
+          <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight uppercase">
+            {product.name}
+          </h4>
+
+          {/* Ratings */}
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                size={10} 
+                className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
+              />
+            ))}
+            <span className="text-[8px] font-extrabold text-slate-400">({product.reviews_count || 1})</span>
+          </div>
+
+          {/* Prices */}
+          <div className="flex items-baseline gap-2 pt-1">
+            <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
+              {product.price.toLocaleString()} <span className="text-[9px]">{settings.currency || 'FCFA'}</span>
+            </span>
+            {product.original_price && product.original_price > product.price && (
+              <span className="text-[10px] font-bold text-slate-450 line-through font-mono">
+                {product.original_price.toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {/* Action Button */}
+          <button 
+            onClick={(e) => handleAddToCart(e, product)}
+            className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
+          >
+            {t('add_to_cart') || 'Add To Cart'}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCategories = () => {
+    return (
+      <div key="categories-row" className="bg-white dark:bg-[#0b1329] border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm py-4 px-6 md:px-12 scroll-smooth select-none overflow-x-auto no-scrollbar flex items-center justify-start md:justify-center gap-6 sm:gap-10">
         {categories.map((cat, idx) => {
           const catImg = cat.image_url || cat.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=150';
           return (
             <div 
               key={cat.id || idx}
               onClick={() => {
-                // Trigger filter selection by navigating or calling hooks
                 const event = new CustomEvent('select-category', { detail: cat.name });
                 window.dispatchEvent(event);
               }}
@@ -122,52 +212,63 @@ export default function BrightRetailHome({ onProductClick }) {
           );
         })}
       </div>
+    );
+  };
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-8">
-        {/* ─── 2. HERO SLIDER (HEXAGONAL PATTERN ACCENTED) ─── */}
+  const renderHero = (section) => {
+    const title = section.title || settings?.bright_hero_title || 'SUMMER 10% SALE';
+    const subtitle = section.subtitle || settings?.bright_hero_subtitle || 'Under Favorable Smart Gadgets';
+    const image = section.headerImage || settings?.bright_hero_image || 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500';
+    const priceText = settings?.bright_hero_price || 'FROM $399.99';
+    const promoCode = settings?.bright_hero_promo_code || 'SUMMER10';
+
+    return (
+      <div key="hero-slider" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="w-full bg-white dark:bg-[#0b1329] rounded-[1.5rem] border border-slate-200/50 dark:border-slate-800/60 overflow-hidden shadow-sm relative grid grid-cols-1 md:grid-cols-2 min-h-[340px] sm:min-h-[460px] p-6 sm:p-12 items-center">
-          {/* Hexagonal grid absolute overlay */}
           <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[radial-gradient(#000_1px,transparent_1px)] dark:bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
           
-          {/* Left Text */}
           <div className="z-10 space-y-4 text-center md:text-left">
             <span className="inline-block px-3 py-1 bg-[#ffc200] text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-full">
-              {t_smart(heroSubtitle)}
+              {t_smart(subtitle)}
             </span>
             <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none italic">
-              {t_smart(heroTitle)}
+              {t_smart(title)}
             </h1>
             <p className="text-xs font-black tracking-widest uppercase text-slate-450 dark:text-slate-400">
-              {t_smart(heroPrice)}
+              {t_smart(priceText)}
             </p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
               <span className="px-4 py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#020617]">
-                PROMO CODE : <span className="text-[#ffc200] font-mono">{heroPromoCode}</span>
+                PROMO CODE : <span className="text-[#ffc200] font-mono">{promoCode}</span>
               </span>
               <button 
                 onClick={() => {
                   const event = new CustomEvent('view-all-products');
                   window.dispatchEvent(event);
                 }}
-                className="px-6 py-3 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-[#ffc200] dark:hover:bg-[#ffc200] hover:text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
+                className="px-6 py-3 bg-slate-950 dark:bg-white text-white dark:text-slate-955 hover:bg-[#ffc200] dark:hover:bg-[#ffc200] hover:text-slate-955 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
               >
                 {t('start_shopping') || 'Start Shopping'}
               </button>
             </div>
           </div>
 
-          {/* Right Product Graphic */}
           <div className="relative h-64 sm:h-80 w-full flex items-center justify-center mt-6 md:mt-0">
             <div className="absolute w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-slate-100 dark:bg-[#020617] blur-3xl -z-10" />
             <img 
-              src={heroImage} 
-              alt="Summer Sale gadget" 
+              src={image} 
+              alt={title} 
               className="max-h-full max-w-[85%] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
             />
           </div>
         </div>
+      </div>
+    );
+  };
 
-        {/* ─── 3. THREE-COLUMN GRID PROMO CARDS ─── */}
+  const renderPromos = () => {
+    return (
+      <div key="promo-cards" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: Mobiles */}
           <div className="bg-[#4a8bf5] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-white min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
@@ -193,7 +294,7 @@ export default function BrightRetailHome({ onProductClick }) {
           </div>
 
           {/* Card 2: Headsets */}
-          <div className="bg-[#f0c243] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-slate-955 min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+          <div className="bg-[#f0c243] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-slate-950 min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
             <div className="z-10 space-y-1.5 max-w-[65%]">
               <span className="text-[9px] font-black uppercase tracking-widest bg-slate-950/10 px-2 py-0.5 rounded-full">Flat 15% OFF</span>
               <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">{t_smart(promo2Title)}</h3>
@@ -203,7 +304,7 @@ export default function BrightRetailHome({ onProductClick }) {
                   const event = new CustomEvent('view-all-products');
                   window.dispatchEvent(event);
                 }}
-                className="mt-4 px-4 py-2 bg-slate-950 text-white hover:bg-white hover:text-slate-950 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm"
+                className="mt-4 px-4 py-2 bg-slate-955 text-white hover:bg-white hover:text-slate-955 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm"
               >
                 {t('shop_now') || 'Shop Now'}
               </button>
@@ -238,149 +339,90 @@ export default function BrightRetailHome({ onProductClick }) {
             />
           </div>
         </div>
+      </div>
+    );
+  };
 
-        {/* ─── 4. TABS & NEW ARRIVALS GRID ─── */}
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-200 dark:border-slate-800 pb-4 gap-4">
-            <div className="flex items-center gap-6">
-              <button 
-                onClick={() => setActiveTab('new')}
-                className={`text-lg sm:text-2xl font-black uppercase tracking-tight relative pb-4 transition-colors ${
-                  activeTab === 'new' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-650'
-                }`}
-              >
-                New Arrival Item
-                {activeTab === 'new' && (
-                  <motion.div 
-                    layoutId="activeTabUnderline" 
-                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ffc200] rounded-full"
-                  />
-                )}
-              </button>
-              <button 
-                onClick={() => setActiveTab('bestseller')}
-                className={`text-lg sm:text-2xl font-black uppercase tracking-tight relative pb-4 transition-colors ${
-                  activeTab === 'bestseller' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-650'
-                }`}
-              >
-                Best Selling Item
-                {activeTab === 'bestseller' && (
-                  <motion.div 
-                    layoutId="activeTabUnderline" 
-                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ffc200] rounded-full"
-                  />
-                )}
-              </button>
-            </div>
-            
+  const renderTabsSection = (section) => {
+    const maxProducts = section.maxProducts || 6;
+    const cat = section.category || 'All';
+    
+    // Filter products by category if specified
+    const catProducts = cat !== 'All' 
+      ? activeProducts.filter(p => p.category === cat) 
+      : activeProducts;
+      
+    const sectionNewArrivals = catProducts.slice(0, maxProducts);
+    const sectionBestSellers = catProducts.filter(p => p.rating >= 4.5).slice(0, maxProducts);
+    
+    const currentTabProducts = activeTab === 'new' ? sectionNewArrivals : sectionBestSellers;
+
+    return (
+      <div key="tabs-grid" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-200 dark:border-slate-800 pb-4 gap-4">
+          <div className="flex items-center gap-6">
             <button 
-              onClick={() => {
-                const event = new CustomEvent('view-all-products');
-                window.dispatchEvent(event);
-              }}
-              className="text-[10px] font-black text-slate-850 dark:text-slate-350 uppercase tracking-[0.2em] hover:text-[#ffc200] dark:hover:text-[#ffc200] transition-colors"
+              onClick={() => setActiveTab('new')}
+              className={`text-lg sm:text-2xl font-black uppercase tracking-tight relative pb-4 transition-colors ${
+                activeTab === 'new' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-600'
+              }`}
             >
-              Explore All Item
+              New Arrival Item
+              {activeTab === 'new' && (
+                <motion.div 
+                  layoutId="activeTabUnderline" 
+                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ffc200] rounded-full"
+                />
+              )}
+            </button>
+            <button 
+              onClick={() => setActiveTab('bestseller')}
+              className={`text-lg sm:text-2xl font-black uppercase tracking-tight relative pb-4 transition-colors ${
+                activeTab === 'bestseller' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-600'
+              }`}
+            >
+              Best Selling Item
+              {activeTab === 'bestseller' && (
+                <motion.div 
+                  layoutId="activeTabUnderline" 
+                  className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ffc200] rounded-full"
+                />
+              )}
             </button>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {displayList.map(product => {
-              const discount = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
-              const isWished = isInWishlist(product.id);
-              return (
-                <div 
-                  key={product.id}
-                  onClick={() => onProductClick(product)}
-                  className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl overflow-hidden flex flex-col p-4 relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 dark:hover:border-[#ffc200]/50 transition-all duration-300"
-                >
-                  {/* Absolute Badges */}
-                  {discount > 0 && (
-                    <span className="absolute top-3 left-3 bg-[#ec5b5b] text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm z-10 uppercase shadow-sm">
-                      -{discount}%
-                    </span>
-                  )}
-                  {product.stock <= 3 && (
-                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm z-10 uppercase shadow-sm">
-                      Stock Limité
-                    </span>
-                  )}
-
-                  <button 
-                    onClick={(e) => handleToggleWishlist(e, product.id)}
-                    className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 ${
-                      isWished 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200/40 text-slate-400 dark:text-slate-500 hover:text-red-500'
-                    }`}
-                  >
-                    <Heart size={14} fill={isWished ? 'currentColor' : 'none'} />
-                  </button>
-
-                  {/* Product Image */}
-                  <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl p-3 mb-4">
-                    <img 
-                      src={product.image_url || product.image || '/hero-banner.png'} 
-                      alt={product.name} 
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-
-                  {/* Product Content */}
-                  <div className="flex flex-col flex-1 space-y-1.5">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                      {product.category}
-                    </span>
-                    <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight uppercase">
-                      {product.name}
-                    </h4>
-
-                    {/* Ratings */}
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={10} 
-                          className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
-                        />
-                      ))}
-                      <span className="text-[8px] font-extrabold text-slate-400">({product.reviews_count || 1})</span>
-                    </div>
-
-                    {/* Prices */}
-                    <div className="flex items-baseline gap-2 pt-1">
-                      <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
-                        {product.price.toLocaleString()} <span className="text-[9px]">{settings.currency || 'FCFA'}</span>
-                      </span>
-                      {product.original_price && product.original_price > product.price && (
-                        <span className="text-[10px] font-bold text-slate-400 line-through font-mono">
-                          {product.original_price.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Action Button */}
-                    <button 
-                      onClick={(e) => handleAddToCart(e, product)}
-                      className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-950 hover:text-white dark:hover:text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
-                    >
-                      {t('add_to_cart') || 'Add To Cart'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          
+          <button 
+            onClick={() => {
+              const event = new CustomEvent('view-all-products');
+              window.dispatchEvent(event);
+            }}
+            className="text-[10px] font-black text-slate-850 dark:text-slate-350 uppercase tracking-[0.2em] hover:text-[#ffc200] dark:hover:text-[#ffc200] transition-colors"
+          >
+            Explore All Item
+          </button>
         </div>
 
-        {/* ─── 5. WIDE DISCOUNT SAVINGS BILLBOARD BANNER ─── */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {currentTabProducts.map(product => renderProductCard(product))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBillboard = (section) => {
+    const title = section.title || settings?.bright_wide_banner_title || 'Get Up To 85% OFF on big billion day 2021';
+    const subtitle = section.subtitle || settings?.bright_wide_banner_subtitle || 'Big Saving on Top selling Smartphone';
+    const image = section.headerImage || settings?.bright_wide_banner_image || 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200';
+
+    return (
+      <div key="billboard" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="w-full bg-[#3c4da3] rounded-[1.5rem] p-6 sm:p-12 text-white flex flex-col md:flex-row justify-between items-center relative overflow-hidden shadow-sm">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-white/10 opacity-30 pointer-events-none" />
           
           <div className="z-10 space-y-3 text-center md:text-left md:max-w-[55%]">
-            <p className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full inline-block">{wideBannerSubtitle}</p>
+            <p className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full inline-block">{t_smart(subtitle)}</p>
             <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight leading-none italic">
-              {wideBannerTitle}
+              {t_smart(title)}
             </h2>
             <button 
               onClick={() => {
@@ -395,119 +437,135 @@ export default function BrightRetailHome({ onProductClick }) {
 
           <div className="relative h-44 sm:h-52 w-full md:w-[35%] flex items-center justify-center mt-6 md:mt-0 z-10">
             <img 
-              src={promoImages.banner} 
-              alt={wideBannerTitle} 
+              src={image} 
+              alt={title} 
               className="max-h-full object-contain filter drop-shadow-2xl hover:scale-105 transition-transform duration-500 rounded-lg"
             />
           </div>
         </div>
+      </div>
+    );
+  };
 
-        {/* ─── 6. DEAL OF THE DAY COUNTDOWN ROW ─── */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-end border-b border-slate-200 dark:border-slate-800 pb-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                <Zap size={20} fill="#ffc200" className="text-[#ffc200]" /> Deal Of The Day
-              </h2>
-              
-              {/* Countdown Ticker */}
-              <div className="flex items-center gap-1.5 text-xs font-black text-white bg-slate-950 dark:bg-slate-800 px-3 py-1 rounded-lg">
-                <span className="text-[8px] text-slate-400 uppercase tracking-wider mr-1.5">Ends In :</span>
-                <span className="font-mono text-[#ffc200]">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="opacity-50">:</span>
-                <span className="font-mono text-[#ffc200]">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="opacity-50">:</span>
-                <span className="font-mono text-[#ffc200]">{String(timeLeft.seconds).padStart(2, '0')}</span>
-              </div>
+  const renderDealOfDay = (section) => {
+    const cat = section.category || 'All';
+    const maxProducts = section.maxProducts || 3;
+    const catDeals = cat !== 'All' 
+      ? dailyDeals.filter(p => p.category === cat) 
+      : dailyDeals;
+      
+    const displayDeals = catDeals.slice(0, maxProducts);
+
+    return (
+      <div key="deal-of-the-day" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+        <div className="flex justify-between items-end border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              <Zap size={20} fill="#ffc200" className="text-[#ffc200]" /> {section.title || 'Deal Of The Day'}
+            </h2>
+            
+            {/* Countdown Ticker */}
+            <div className="flex items-center gap-1.5 text-xs font-black text-white bg-slate-950 dark:bg-slate-800 px-3 py-1 rounded-lg">
+              <span className="text-[8px] text-slate-400 uppercase tracking-wider mr-1.5">Ends In :</span>
+              <span className="font-mono text-[#ffc200]">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="opacity-50">:</span>
+              <span className="font-mono text-[#ffc200]">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="opacity-50">:</span>
+              <span className="font-mono text-[#ffc200]">{String(timeLeft.seconds).padStart(2, '0')}</span>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {dailyDeals.slice(0, 3).map(product => {
-              const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : 25;
-              
-              // Mock progress bar parameters
-              const hashId = String(product.id).charCodeAt(0) || 0;
-              const totalLimit = 15 + (hashId % 10);
-              const soldCount = Math.max(2, totalLimit - (product.stock || 8));
-              const progressPercent = Math.min(100, Math.round((soldCount / totalLimit) * 100));
-
-              return (
-                <div 
-                  key={product.id}
-                  onClick={() => onProductClick(product)}
-                  className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl p-4 sm:p-5 flex items-center gap-4 group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 transition-all duration-300"
-                >
-                  {/* Left Column Image */}
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-slate-50 dark:bg-[#020617] rounded-xl p-2 shrink-0 relative">
-                    <span className="absolute top-1.5 left-1.5 bg-[#ec5b5b] text-white text-[7px] font-black px-1 py-0.5 rounded-sm z-10 uppercase">
-                      -{discount}%
-                    </span>
-                    <img 
-                      src={product.image_url || product.image || '/hero-banner.png'} 
-                      alt={product.name} 
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-
-                  {/* Right Column Content */}
-                  <div className="flex-1 min-w-0 space-y-1.5">
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate uppercase">
-                      {product.name}
-                    </h4>
-
-                    {/* Ratings */}
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={9} 
-                          className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
-                        />
-                      ))}
-                    </div>
-
-                    {/* Prices */}
-                    <div className="flex items-baseline gap-2 pt-0.5">
-                      <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
-                        {product.price.toLocaleString()} <span className="text-[9px]">{settings.currency || 'FCFA'}</span>
-                      </span>
-                      {product.original_price && product.original_price > product.price && (
-                        <span className="text-[9px] font-bold text-slate-400 line-through font-mono">
-                          {product.original_price.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Sales Progress Indicator */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center text-[8px] font-black text-slate-450 uppercase tracking-wider leading-none">
-                        <span>Sold: {soldCount} / {totalLimit}</span>
-                        <span className="text-slate-600 dark:text-slate-350">{progressPercent}%</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-[#ffc200] rounded-full transition-all duration-500" 
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Action Button */}
-                    <button 
-                      onClick={(e) => handleAddToCart(e, product)}
-                      className="w-full py-1.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-950 hover:text-white dark:hover:text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-md transition-colors"
-                    >
-                      Add To Cart
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
 
-        {/* ─── 7. BOTTOM CATEGORY PROMO BANNERS (5 items) ─── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {displayDeals.map(product => {
+            const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : 25;
+            
+            // Mock progress bar parameters
+            const hashId = String(product.id).charCodeAt(0) || 0;
+            const totalLimit = 15 + (hashId % 10);
+            const soldCount = Math.max(2, totalLimit - (product.stock || 8));
+            const progressPercent = Math.min(100, Math.round((soldCount / totalLimit) * 100));
+
+            return (
+              <div 
+                key={product.id}
+                onClick={() => onProductClick(product)}
+                className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl p-4 sm:p-5 flex items-center gap-4 group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 transition-all duration-300"
+              >
+                {/* Left Column Image */}
+                <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-slate-50 dark:bg-[#020617] rounded-xl p-2 shrink-0 relative">
+                  <span className="absolute top-1.5 left-1.5 bg-[#ec5b5b] text-white text-[7px] font-black px-1 py-0.5 rounded-sm z-10 uppercase">
+                    -{discount}%
+                  </span>
+                  <img 
+                    src={product.image_url || product.image || '/hero-banner.png'} 
+                    alt={product.name} 
+                    className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+
+                {/* Right Column Content */}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate uppercase">
+                    {product.name}
+                  </h4>
+
+                  {/* Ratings */}
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        size={9} 
+                        className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
+                      />
+                    ))}
+                  </div>
+
+                  {/* Prices */}
+                  <div className="flex items-baseline gap-2 pt-0.5">
+                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
+                      {product.price.toLocaleString()} <span className="text-[9px]">{settings.currency || 'FCFA'}</span>
+                    </span>
+                    {product.original_price && product.original_price > product.price && (
+                      <span className="text-[9px] font-bold text-slate-400 line-through font-mono">
+                        {product.original_price.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Sales Progress Indicator */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[8px] font-black text-slate-450 uppercase tracking-wider leading-none">
+                      <span>Sold: {soldCount} / {totalLimit}</span>
+                      <span className="text-slate-600 dark:text-slate-350">{progressPercent}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#ffc200] rounded-full transition-all duration-500" 
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button 
+                    onClick={(e) => handleAddToCart(e, product)}
+                    className="w-full py-1.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-md transition-colors"
+                  >
+                    Add To Cart
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPromoBanners = () => {
+    return (
+      <div key="promo-banners" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-4">
           {[
             { name: 'Handbags', disc: '30-60%', bg: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=250' },
@@ -541,8 +599,13 @@ export default function BrightRetailHome({ onProductClick }) {
             </div>
           ))}
         </div>
+      </div>
+    );
+  };
 
-        {/* ─── 8. BOTTOM TRUST BADGES ROW ─── */}
+  const renderTrustBadges = () => {
+    return (
+      <div key="trust-badges" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-[1.5rem] p-6 sm:p-8 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-[#ffc200]/10 text-[#ffc200] flex items-center justify-center shrink-0">
@@ -584,8 +647,126 @@ export default function BrightRetailHome({ onProductClick }) {
             </div>
           </div>
         </div>
-
       </div>
+    );
+  };
+
+  const renderBrightCustomSection = (section) => {
+    const isDual = section.isDual === true || section.isDual === 1 || section.isDual === 'true';
+    if (isDual) {
+      const displayTitleA = section.subtitle || section.category || 'Side A';
+      const displayTitleB = section.titleB || section.categoryB || 'Side B';
+      
+      const productsA = (section.category && section.category !== 'All' 
+        ? activeProducts.filter(p => p.category === section.category) 
+        : activeProducts).slice(0, 4);
+
+      const productsB = (section.categoryB && section.categoryB !== 'All' 
+        ? activeProducts.filter(p => p.category === section.categoryB) 
+        : activeProducts).slice(0, 4);
+
+      return (
+        <div key={section.id || `custom-dual-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Side A */}
+          <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ffc200]" />
+                {t_smart(displayTitleA)}
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {productsA.map(p => renderProductCard(p))}
+            </div>
+          </div>
+
+          {/* Side B */}
+          <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#4a8bf5]" />
+                {t_smart(displayTitleB)}
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {productsB.map(p => renderProductCard(p))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Single custom grid layout
+    const cat = section.category || 'All';
+    const maxProducts = section.maxProducts || 6;
+    const title = section.title || (cat !== 'All' ? cat : 'Featured Products');
+    const subtitle = section.subtitle || 'Recommended for you';
+
+    const catProducts = cat !== 'All' 
+      ? activeProducts.filter(p => p.category === cat) 
+      : activeProducts;
+
+    const displayProducts = catProducts.slice(0, maxProducts);
+
+    return (
+      <div key={section.id || `custom-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+        <div className="flex justify-between items-end border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#ffc200]" />
+              {t_smart(title)}
+            </h2>
+            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">{t_smart(subtitle)}</p>
+          </div>
+          <button 
+            onClick={() => {
+              const event = new CustomEvent('view-all-products');
+              window.dispatchEvent(event);
+            }}
+            className="text-[10px] font-black text-slate-850 dark:text-slate-350 uppercase tracking-[0.2em] hover:text-[#ffc200] dark:hover:text-[#ffc200] transition-colors"
+          >
+            Explore All Item
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {displayProducts.map(p => renderProductCard(p))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderSection = (section, idx) => {
+    switch (section.role) {
+      case 'bright_categories':
+        return renderCategories();
+      case 'bright_hero':
+        return renderHero(section);
+      case 'bright_promos':
+        return renderPromos();
+      case 'bright_tabs':
+        return renderTabsSection(section);
+      case 'bright_billboard':
+        return renderBillboard(section);
+      case 'bright_dealOfDay':
+        return renderDealOfDay(section);
+      case 'bright_promo_banners':
+        return renderPromoBanners();
+      case 'bright_trust_badges':
+        return renderTrustBadges();
+      case 'bright_custom':
+      default:
+        return renderBrightCustomSection(section);
+    }
+  };
+
+  return (
+    <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] transition-colors duration-500 pb-20">
+      {brightSections.map((section, idx) => {
+        const isEnabled = section.isActive !== false && section.enabled !== false && section.is_active !== false;
+        if (!isEnabled) return null;
+        return renderSection(section, idx);
+      })}
     </div>
   );
 }

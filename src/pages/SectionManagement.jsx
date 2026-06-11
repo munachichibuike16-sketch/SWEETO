@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, X, Loader2, CheckCircle2, AlertCircle,
   ArrowLeft, Layers, Type, Hash, Star, Zap, Clock, TrendingUp,
   Smartphone, Monitor, Speaker, Snowflake, Gift, Flame, Grip,
-  ChevronUp, ChevronDown, Sliders
+  ChevronUp, ChevronDown, Sliders, ShieldCheck
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
@@ -23,6 +23,18 @@ const ROLES = [
   { key: 'flashSale',              label: 'Flash Sale',      icon: Flame,       color: 'orange'  },
   { key: 'giftIdeas',              label: 'Gift Ideas',      icon: Gift,        color: 'pink'    },
   { key: 'custom',                 label: 'Custom',          icon: Layers,      color: 'slate'   },
+];
+
+const BRIGHT_ROLES = [
+  { key: 'bright_categories',      label: 'Categories Circle Row', icon: Layers,      color: 'indigo'  },
+  { key: 'bright_hero',            label: 'Hero Slider',           icon: Monitor,     color: 'rose'    },
+  { key: 'bright_promos',          label: '3-Column Promo Cards',  icon: Gift,        color: 'amber'   },
+  { key: 'bright_tabs',            label: 'New / Bestseller Tabs', icon: TrendingUp,  color: 'rose'    },
+  { key: 'bright_billboard',       label: 'Wide Savings Billboard',icon: Layers,      color: 'blue'    },
+  { key: 'bright_dealOfDay',       label: 'Deal of Day Ticker',    icon: Zap,         color: 'emerald' },
+  { key: 'bright_promo_banners',   label: 'Bottom Promo Banners',  icon: Flame,       color: 'orange'  },
+  { key: 'bright_trust_badges',    label: 'Trust Badges Row',      icon: ShieldCheck, color: 'pink'    },
+  { key: 'bright_custom',          label: 'Custom Section',        icon: Layers,      color: 'slate'   },
 ];
 
 const HEADER_STYLES = [
@@ -61,8 +73,106 @@ const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-sla
 const lbl = 'flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1';
 
 export default function SectionManagement() {
-  const { sections = [], refreshData, categories = [], videoAds = [] } = useStore();
+  const { sections = [], refreshData, categories = [], videoAds = [], settings } = useStore();
   const [view, setView] = useState('list');
+  const [templateMode, setTemplateMode] = useState('chilling');
+
+  useEffect(() => {
+    if (settings?.active_template) {
+      setTemplateMode(settings.active_template === 'bright' ? 'bright' : 'chilling');
+    }
+  }, [settings?.active_template]);
+
+  const initializeDefaultBrightSections = async () => {
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const defaults = [
+        { title: 'Categories Circle Row', subtitle: 'Shop by Category', role: 'bright_categories', position: 1 },
+        { title: 'Hero Slider', subtitle: 'Featured Deals', role: 'bright_hero', position: 2 },
+        { title: '3-Column Promo Cards', subtitle: 'Special Promotions', role: 'bright_promos', position: 3 },
+        { title: 'New / Bestseller Tabs', subtitle: 'Top Items', role: 'bright_tabs', position: 4 },
+        { title: 'Wide Savings Billboard', subtitle: 'Big Billion Sale', role: 'bright_billboard', position: 5 },
+        { title: 'Deal of Day Ticker', subtitle: 'Limited Time Offers', role: 'bright_dealOfDay', position: 6 },
+        { title: 'Bottom Promo Banners', subtitle: 'Category Offers', role: 'bright_promo_banners', position: 7 },
+        { title: 'Trust Badges Row', subtitle: 'Shop with Confidence', role: 'bright_trust_badges', position: 8 }
+      ];
+
+      const isLocalhost = isLocalHost();
+
+      for (const item of defaults) {
+        const payload = {
+          title: item.title,
+          subtitle: item.subtitle,
+          position: item.position,
+          is_active: 1,
+          is_dual: 0,
+          show_view_all: 1,
+          max_products: 8,
+          header_style: 'gradient',
+          header_image: '',
+          category: 'All',
+          role: item.role,
+          titleb: null,
+          subtitleb: null,
+          categoryb: 'All',
+          roleb: 'custom',
+          headerstyleb: 'bold',
+          headerimageb: null
+        };
+
+        const uniqueKey = `${item.role}_${Date.now()}_${item.position}`;
+
+        // Insert to Supabase
+        const { error: err } = await supabase
+          .from('sections')
+          .insert([{ ...payload, key: uniqueKey }]);
+        if (err) throw err;
+
+        // Insert to SQLite if localhost
+        if (isLocalhost) {
+          try {
+            const sqlitePayload = {
+              role: item.role,
+              title: item.title,
+              subtitle: item.subtitle,
+              category: 'All',
+              maxProducts: 8,
+              position: item.position,
+              isActive: 1,
+              headerStyle: 'gradient',
+              headerImage: '',
+              isDual: 0,
+              titleB: null,
+              subtitleB: null,
+              categoryB: 'All',
+              roleB: 'custom',
+              headerStyleB: 'bold',
+              headerImageB: null
+            };
+            await apiFetch('sections', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...sqlitePayload, key: uniqueKey })
+            });
+          } catch (e) {
+            console.warn('Local SQLite write failed:', e);
+          }
+        }
+      }
+
+      setSuccess('Default sections initialized successfully!');
+      refreshData();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to initialize sections: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const currentRoles = templateMode === 'bright' ? BRIGHT_ROLES : ROLES;
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +181,16 @@ export default function SectionManagement() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const openAdd = () => { setForm(EMPTY); setEditingId(null); setError(''); setSuccess(''); setView('form'); };
+  const openAdd = () => {
+    setForm({
+      ...EMPTY,
+      role: templateMode === 'bright' ? 'bright_hero' : 'hero'
+    });
+    setEditingId(null);
+    setError('');
+    setSuccess('');
+    setView('form');
+  };
   const openEdit = (s) => {
     setForm({
       title: s.title||'', subtitle: s.subtitle||'', role: s.role||'',
@@ -292,8 +411,18 @@ export default function SectionManagement() {
     }
   };
 
-  const getRoleInfo = (key) => ROLES.find(r => r.key === key);
-  const sorted = [...(sections || [])].sort((a, b) => (a.position || 0) - (b.position || 0));
+  const getRoleInfo = (key) => ROLES.find(r => r.key === key) || BRIGHT_ROLES.find(r => r.key === key);
+
+  const filteredSections = React.useMemo(() => {
+    const raw = sections || [];
+    if (templateMode === 'bright') {
+      return raw.filter(s => s.role?.startsWith('bright_') || s.key?.startsWith('bright_'));
+    } else {
+      return raw.filter(s => !s.role?.startsWith('bright_') && !s.key?.startsWith('bright_'));
+    }
+  }, [sections, templateMode]);
+
+  const sorted = [...filteredSections].sort((a, b) => (a.position || 0) - (b.position || 0));
 
   /* ── LIST VIEW ── */
   if (view === 'list') return (
@@ -302,13 +431,17 @@ export default function SectionManagement() {
         <div>
           <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-500"><Layers size={20}/></div>
-            Section Management
+            Section Management ({templateMode === 'bright' ? 'Bright Retail' : 'Chilling Tech'})
           </h2>
-          <p className="text-slate-500 text-sm font-medium mt-1 ml-14">{sections.length} storefront sections configured</p>
+          <p className="text-slate-500 text-sm font-medium mt-1 ml-14">{sorted.length} storefront sections configured</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all shadow-sm">
-            <Sliders size={16}/> Switcher
+          <button 
+            type="button"
+            onClick={() => setTemplateMode(prev => prev === 'chilling' ? 'bright' : 'chilling')}
+            className="flex items-center gap-2 px-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all shadow-sm"
+          >
+            <Sliders size={16}/> Switch to {templateMode === 'chilling' ? 'Bright Template' : 'Chilling Template'}
           </button>
           <button onClick={openAdd} className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-orange-500/20">
             <Plus size={16}/> New Section
@@ -320,8 +453,26 @@ export default function SectionManagement() {
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 p-20 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-4"><Layers className="text-orange-400" size={28}/></div>
           <p className="font-black text-slate-900 dark:text-white text-lg mb-2">No Sections Yet</p>
-          <p className="text-slate-500 text-sm mb-8 max-w-xs">Create your first storefront section to organize products into themed groups.</p>
-          <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 transition-all"><Plus size={14}/>Create First Section</button>
+          <p className="text-slate-500 text-sm mb-8 max-w-xs">
+            {templateMode === 'bright'
+              ? 'Initialize the default sections for the Bright template or create your own custom sections.'
+              : 'Create your first storefront section to organize products into themed groups.'}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {templateMode === 'bright' && (
+              <button 
+                onClick={initializeDefaultBrightSections} 
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-6 py-3.5 bg-blue-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 shadow-lg shadow-blue-500/20"
+              >
+                {isSubmitting ? <Loader2 size={14} className="animate-spin"/> : <Sliders size={14}/>}
+                Initialize Default Sections
+              </button>
+            )}
+            <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3.5 bg-orange-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-orange-500/20">
+              <Plus size={14}/>Create Custom Section
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -518,7 +669,7 @@ export default function SectionManagement() {
               <div className="bg-slate-50 dark:bg-slate-950/30 rounded-3xl border border-slate-200 dark:border-slate-800 p-6">
                 <label className={`${lbl} mb-5`}>Section Role — what type of products does this section display?</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {ROLES.map(({ key, label, icon: Icon, color }) => (
+                  {currentRoles.map(({ key, label, icon: Icon, color }) => (
                     <button key={key} type="button" onClick={() => setForm(p => ({ ...p, role: key }))}
                       className={`flex items-center gap-2 py-3.5 px-4 rounded-2xl border-2 transition-all font-black tracking-widest text-xs ${form.role === key ? ROLE_COLORS[color] : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 hover:border-slate-300'}`}>
                       <Icon size={13}/>{label}
@@ -661,7 +812,7 @@ export default function SectionManagement() {
             <label className={`${lbl} mb-4`}>Live Preview</label>
             {!form.isDual ? (
               (() => {
-                const roleInfo = ROLES.find(r => r.key === form.role);
+                const roleInfo = getRoleInfo(form.role);
                 const style = HEADER_STYLES.find(h => h.key === form.headerStyle) || HEADER_STYLES[0];
                 return (
                   <div className={`w-full px-8 py-5 rounded-2xl flex items-center justify-between ${style.preview}`}>
