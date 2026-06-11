@@ -56,13 +56,31 @@ export default function BrightRetailHome({ onProductClick }) {
 
   const displayList = activeTab === 'new' ? newArrivals : bestSellers;
 
-  // Static mock images for promotions as shown in the template
+  // Dynamic images and text from settings
+  const heroSubtitle = settings?.bright_hero_subtitle || 'Under Favorable Smart Gadgets';
+  const heroTitle = settings?.bright_hero_title || 'SUMMER 10% SALE';
+  const heroPrice = settings?.bright_hero_price || 'FROM $399.99';
+  const heroPromoCode = settings?.bright_hero_promo_code || 'SUMMER10';
+  const heroImage = settings?.bright_hero_image || 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500';
+
   const promoImages = {
-    mobiles: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=400',
-    headset: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400',
-    speakers: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400',
-    banner: 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200',
+    mobiles: settings?.bright_promo1_image || 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=400',
+    headset: settings?.bright_promo2_image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400',
+    speakers: settings?.bright_promo3_image || 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400',
+    banner: settings?.bright_wide_banner_image || 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200',
   };
+
+  const promo1Title = settings?.bright_promo1_title || 'Smart Mobiles';
+  const promo1Subtitle = settings?.bright_promo1_subtitle || 'Discover Trends';
+
+  const promo2Title = settings?.bright_promo2_title || 'Smart Headset';
+  const promo2Subtitle = settings?.bright_promo2_subtitle || 'Hi-Fi Audio Experience';
+
+  const promo3Title = settings?.bright_promo3_title || 'Portable Speaker';
+  const promo3Subtitle = settings?.bright_promo3_subtitle || 'Bluetooth Waterproof';
+
+  const wideBannerTitle = settings?.bright_wide_banner_title || 'Get Up To 85% OFF on big billion day 2021';
+  const wideBannerSubtitle = settings?.bright_wide_banner_subtitle || 'Big Saving on Top selling Smartphone';
 
   const handleToggleWishlist = (e, productId) => {
     e.stopPropagation();
@@ -114,17 +132,17 @@ export default function BrightRetailHome({ onProductClick }) {
           {/* Left Text */}
           <div className="z-10 space-y-4 text-center md:text-left">
             <span className="inline-block px-3 py-1 bg-[#ffc200] text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-full">
-              Under Favorable Smart Gadgets
+              {t_smart(heroSubtitle)}
             </span>
             <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none italic">
-              SUMMER <span className="text-[#ffc200]">10%</span> SALE
+              {t_smart(heroTitle)}
             </h1>
-            <p className="text-xs font-black tracking-widest uppercase text-slate-400">
-              FROM <span className="text-xl font-mono text-slate-950 dark:text-white font-extrabold">$399.99</span>
+            <p className="text-xs font-black tracking-widest uppercase text-slate-450 dark:text-slate-400">
+              {t_smart(heroPrice)}
             </p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
               <span className="px-4 py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#020617]">
-                PROMO CODE : <span className="text-[#ffc200] font-mono">SUMMER10</span>
+                PROMO CODE : <span className="text-[#ffc200] font-mono">{heroPromoCode}</span>
               </span>
               <button 
                 onClick={() => {
@@ -133,7 +151,7 @@ export default function BrightRetailHome({ onProductClick }) {
                 }}
                 className="px-6 py-3 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-[#ffc200] dark:hover:bg-[#ffc200] hover:text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
               >
-                Start Shopping
+                {t('start_shopping') || 'Start Shopping'}
               </button>
             </div>
           </div>
@@ -142,7 +160,7 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="relative h-64 sm:h-80 w-full flex items-center justify-center mt-6 md:mt-0">
             <div className="absolute w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-slate-100 dark:bg-[#020617] blur-3xl -z-10" />
             <img 
-              src="https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500" 
+              src={heroImage} 
               alt="Summer Sale gadget" 
               className="max-h-full max-w-[85%] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
             />
@@ -155,28 +173,44 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="bg-[#4a8bf5] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-white min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
             <div className="z-10 space-y-1.5 max-w-[60%]">
               <span className="text-[9px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Sale</span>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">Smart Mobiles</h3>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">Discover Trends</p>
-              <button className="mt-4 px-4 py-2 bg-white text-slate-900 hover:bg-slate-900 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm">Shop Now</button>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">{t_smart(promo1Title)}</h3>
+              <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">{t_smart(promo1Subtitle)}</p>
+              <button 
+                onClick={() => {
+                  const event = new CustomEvent('view-all-products');
+                  window.dispatchEvent(event);
+                }}
+                className="mt-4 px-4 py-2 bg-white text-slate-900 hover:bg-slate-900 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm"
+              >
+                {t('shop_now') || 'Shop Now'}
+              </button>
             </div>
             <img 
               src={promoImages.mobiles} 
-              alt="Smart Mobiles" 
+              alt={promo1Title} 
               className="absolute -right-10 -bottom-8 w-44 h-44 object-contain group-hover:scale-105 transition-transform duration-300 filter drop-shadow-lg"
             />
           </div>
 
           {/* Card 2: Headsets */}
-          <div className="bg-[#f0c243] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-slate-950 min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+          <div className="bg-[#f0c243] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-slate-955 min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
             <div className="z-10 space-y-1.5 max-w-[65%]">
               <span className="text-[9px] font-black uppercase tracking-widest bg-slate-950/10 px-2 py-0.5 rounded-full">Flat 15% OFF</span>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">Smart Headset</h3>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">Hi-Fi Audio Experience</p>
-              <button className="mt-4 px-4 py-2 bg-slate-950 text-white hover:bg-white hover:text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm">Shop Now</button>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">{t_smart(promo2Title)}</h3>
+              <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">{t_smart(promo2Subtitle)}</p>
+              <button 
+                onClick={() => {
+                  const event = new CustomEvent('view-all-products');
+                  window.dispatchEvent(event);
+                }}
+                className="mt-4 px-4 py-2 bg-slate-950 text-white hover:bg-white hover:text-slate-950 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm"
+              >
+                {t('shop_now') || 'Shop Now'}
+              </button>
             </div>
             <img 
               src={promoImages.headset} 
-              alt="Smart Headset" 
+              alt={promo2Title} 
               className="absolute -right-8 -bottom-4 w-40 h-40 object-contain group-hover:scale-105 transition-transform duration-300 filter drop-shadow-lg"
             />
           </div>
@@ -185,13 +219,21 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="bg-[#ec5b5b] rounded-2xl p-6 sm:p-8 flex flex-col justify-between text-white min-h-[190px] relative overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
             <div className="z-10 space-y-1.5 max-w-[65%]">
               <span className="text-[9px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">PAGE 10% OFF</span>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">Portable Speaker</h3>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">Bluetooth Waterproof</p>
-              <button className="mt-4 px-4 py-2 bg-white text-slate-900 hover:bg-slate-900 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm">Shop Now</button>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight">{t_smart(promo3Title)}</h3>
+              <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">{t_smart(promo3Subtitle)}</p>
+              <button 
+                onClick={() => {
+                  const event = new CustomEvent('view-all-products');
+                  window.dispatchEvent(event);
+                }}
+                className="mt-4 px-4 py-2 bg-white text-slate-900 hover:bg-slate-900 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors shadow-sm"
+              >
+                {t('shop_now') || 'Shop Now'}
+              </button>
             </div>
             <img 
               src={promoImages.speakers} 
-              alt="Portable Speaker" 
+              alt={promo3Title} 
               className="absolute -right-8 -bottom-4 w-40 h-40 object-contain group-hover:scale-105 transition-transform duration-300 filter drop-shadow-lg"
             />
           </div>
@@ -322,7 +364,7 @@ export default function BrightRetailHome({ onProductClick }) {
                       onClick={(e) => handleAddToCart(e, product)}
                       className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-950 hover:text-white dark:hover:text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
                     >
-                      Add To Cart
+                      {t('add_to_cart') || 'Add To Cart'}
                     </button>
                   </div>
                 </div>
@@ -336,9 +378,9 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-white/10 opacity-30 pointer-events-none" />
           
           <div className="z-10 space-y-3 text-center md:text-left md:max-w-[55%]">
-            <p className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full inline-block">Big Saving on Top selling Smartphone</p>
+            <p className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full inline-block">{wideBannerSubtitle}</p>
             <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight leading-none italic">
-              Get Up To <span className="text-[#ffc200]">85% OFF</span> on big billion day 2021
+              {wideBannerTitle}
             </h2>
             <button 
               onClick={() => {
@@ -347,14 +389,14 @@ export default function BrightRetailHome({ onProductClick }) {
               }}
               className="mt-2 px-6 py-3 bg-[#ffc200] hover:bg-white text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
             >
-              Shop Now
+              {t('shop_now') || 'Shop Now'}
             </button>
           </div>
 
           <div className="relative h-44 sm:h-52 w-full md:w-[35%] flex items-center justify-center mt-6 md:mt-0 z-10">
             <img 
               src={promoImages.banner} 
-              alt="Deal mobile devices" 
+              alt={wideBannerTitle} 
               className="max-h-full object-contain filter drop-shadow-2xl hover:scale-105 transition-transform duration-500 rounded-lg"
             />
           </div>

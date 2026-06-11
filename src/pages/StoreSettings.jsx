@@ -22,7 +22,10 @@ import {
   Shield,
   Zap,
   MousePointer2,
-  Coins
+  Coins,
+  Tag,
+  Type,
+  Percent
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
@@ -262,7 +265,24 @@ const StoreSettings = () => {
     currency: 'FCFA',
     language: 'en',
     admin_key: '',
-    active_template: 'chilling'
+    active_template: 'chilling',
+    bright_hero_title: 'SUMMER 10% SALE',
+    bright_hero_subtitle: 'Under Favorable Smart Gadgets',
+    bright_hero_price: 'FROM $399.99',
+    bright_hero_promo_code: 'SUMMER10',
+    bright_hero_image: 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500',
+    bright_promo1_title: 'Smart Mobiles',
+    bright_promo1_subtitle: 'Discover Trends',
+    bright_promo1_image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=400',
+    bright_promo2_title: 'Smart Headset',
+    bright_promo2_subtitle: 'Hi-Fi Audio Experience',
+    bright_promo2_image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400',
+    bright_promo3_title: 'Portable Speaker',
+    bright_promo3_subtitle: 'Bluetooth Waterproof',
+    bright_promo3_image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400',
+    bright_wide_banner_title: 'Get Up To 85% OFF on big billion day 2021',
+    bright_wide_banner_subtitle: 'Big Saving on Top selling Smartphone',
+    bright_wide_banner_image: 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -299,7 +319,24 @@ const StoreSettings = () => {
         currency: settings.currency || 'FCFA',
         language: settings.language || 'en',
         admin_key: settings.admin_key || '',
-        active_template: settings.active_template || 'chilling'
+        active_template: settings.active_template || 'chilling',
+        bright_hero_title: settings.bright_hero_title || 'SUMMER 10% SALE',
+        bright_hero_subtitle: settings.bright_hero_subtitle || 'Under Favorable Smart Gadgets',
+        bright_hero_price: settings.bright_hero_price || 'FROM $399.99',
+        bright_hero_promo_code: settings.bright_hero_promo_code || 'SUMMER10',
+        bright_hero_image: settings.bright_hero_image || 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500',
+        bright_promo1_title: settings.bright_promo1_title || 'Smart Mobiles',
+        bright_promo1_subtitle: settings.bright_promo1_subtitle || 'Discover Trends',
+        bright_promo1_image: settings.bright_promo1_image || 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=400',
+        bright_promo2_title: settings.bright_promo2_title || 'Smart Headset',
+        bright_promo2_subtitle: settings.bright_promo2_subtitle || 'Hi-Fi Audio Experience',
+        bright_promo2_image: settings.bright_promo2_image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400',
+        bright_promo3_title: settings.bright_promo3_title || 'Portable Speaker',
+        bright_promo3_subtitle: settings.bright_promo3_subtitle || 'Bluetooth Waterproof',
+        bright_promo3_image: settings.bright_promo3_image || 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400',
+        bright_wide_banner_title: settings.bright_wide_banner_title || 'Get Up To 85% OFF on big billion day 2021',
+        bright_wide_banner_subtitle: settings.bright_wide_banner_subtitle || 'Big Saving on Top selling Smartphone',
+        bright_wide_banner_image: settings.bright_wide_banner_image || 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200'
       });
     }
   }, [settings, isDirty]);
@@ -650,6 +687,110 @@ const StoreSettings = () => {
                     </div>
                   </InputWrapper>
                 </div>
+
+                {formData.active_template === 'bright' && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="pt-6 mt-6 border-t border-slate-200 dark:border-white/10 space-y-6 overflow-hidden"
+                  >
+                    <h4 className="text-xs font-black uppercase tracking-[0.25em] text-blue-600 dark:text-cyan-400 mb-4 flex items-center gap-2">
+                      <Sparkles size={14} /> Bright Retail Template Settings
+                    </h4>
+                    
+                    {/* Hero Section settings */}
+                    <div className="bg-slate-50/35 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
+                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Hero Showcase</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputWrapper label="Hero Badge Text" icon={Tag}>
+                          <input type="text" name="bright_hero_subtitle" value={formData.bright_hero_subtitle || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                        <InputWrapper label="Hero Main Title" icon={Type}>
+                          <input type="text" name="bright_hero_title" value={formData.bright_hero_title || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                        <InputWrapper label="Hero Price Text" icon={Coins}>
+                          <input type="text" name="bright_hero_price" value={formData.bright_hero_price || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                        <InputWrapper label="Hero Promo Code" icon={Percent}>
+                          <input type="text" name="bright_hero_promo_code" value={formData.bright_hero_promo_code || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                      </div>
+                      <InputWrapper label="Hero Image URL" icon={ImageIcon}>
+                        <input type="text" name="bright_hero_image" value={formData.bright_hero_image || ''} onChange={handleInputChange} className={inputStyle} />
+                      </InputWrapper>
+                    </div>
+
+                    {/* Promo Cards settings */}
+                    <div className="bg-slate-50/35 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-6">
+                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400">3-Column Promo Cards</h5>
+                      
+                      {/* Card 1 */}
+                      <div className="space-y-4 pt-2 border-t border-slate-150 dark:border-white/5">
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-450">Card 1 (Left)</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <InputWrapper label="Title" icon={Type}>
+                            <input type="text" name="bright_promo1_title" value={formData.bright_promo1_title || ''} onChange={handleInputChange} className={inputStyle} />
+                          </InputWrapper>
+                          <InputWrapper label="Subtitle" icon={Tag}>
+                            <input type="text" name="bright_promo1_subtitle" value={formData.bright_promo1_subtitle || ''} onChange={handleInputChange} className={inputStyle} />
+                          </InputWrapper>
+                        </div>
+                        <InputWrapper label="Image URL" icon={ImageIcon}>
+                          <input type="text" name="bright_promo1_image" value={formData.bright_promo1_image || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                      </div>
+
+                      {/* Card 2 */}
+                      <div className="space-y-4 pt-4 border-t border-slate-150 dark:border-white/5">
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-450">Card 2 (Center)</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <InputWrapper label="Title" icon={Type}>
+                            <input type="text" name="bright_promo2_title" value={formData.bright_promo2_title || ''} onChange={handleInputChange} className={inputStyle} />
+                          </InputWrapper>
+                          <InputWrapper label="Subtitle" icon={Tag}>
+                            <input type="text" name="bright_promo2_subtitle" value={formData.bright_promo2_subtitle || ''} onChange={handleInputChange} className={inputStyle} />
+                          </InputWrapper>
+                        </div>
+                        <InputWrapper label="Image URL" icon={ImageIcon}>
+                          <input type="text" name="bright_promo2_image" value={formData.bright_promo2_image || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                      </div>
+
+                      {/* Card 3 */}
+                      <div className="space-y-4 pt-4 border-t border-slate-150 dark:border-white/5">
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-450">Card 3 (Right)</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <InputWrapper label="Title" icon={Type}>
+                            <input type="text" name="bright_promo3_title" value={formData.bright_promo3_title || ''} onChange={handleInputChange} className={inputStyle} />
+                          </InputWrapper>
+                          <InputWrapper label="Subtitle" icon={Tag}>
+                            <input type="text" name="bright_promo3_subtitle" value={formData.bright_promo3_subtitle || ''} onChange={handleInputChange} className={inputStyle} />
+                          </InputWrapper>
+                        </div>
+                        <InputWrapper label="Image URL" icon={ImageIcon}>
+                          <input type="text" name="bright_promo3_image" value={formData.bright_promo3_image || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                      </div>
+                    </div>
+
+                    {/* Wide Banner Settings */}
+                    <div className="bg-slate-50/35 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-100 dark:border-white/5 space-y-4">
+                      <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Wide Saving Billboard</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputWrapper label="Billboard Subtitle" icon={Tag}>
+                          <input type="text" name="bright_wide_banner_subtitle" value={formData.bright_wide_banner_subtitle || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                        <InputWrapper label="Billboard Title" icon={Type}>
+                          <input type="text" name="bright_wide_banner_title" value={formData.bright_wide_banner_title || ''} onChange={handleInputChange} className={inputStyle} />
+                        </InputWrapper>
+                      </div>
+                      <InputWrapper label="Billboard Image URL" icon={ImageIcon}>
+                        <input type="text" name="bright_wide_banner_image" value={formData.bright_wide_banner_image || ''} onChange={handleInputChange} className={inputStyle} />
+                      </InputWrapper>
+                    </div>
+
+                  </motion.div>
+                )}
               </div>
             </motion.div>
 
