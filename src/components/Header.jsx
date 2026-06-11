@@ -342,7 +342,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   whileTap={{ scale: 0.95 }}
                   className="hidden md:block relative shrink-0"
                 >
-                  <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,242,254,0.3)]" />
+                  <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,0,255,0.3)]" />
                 </motion.div>
               )}
               <div className="flex flex-col justify-center">

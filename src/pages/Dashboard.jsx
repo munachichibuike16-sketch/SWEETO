@@ -776,7 +776,7 @@ const Dashboard = () => {
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="p-8 flex items-center gap-3">
-          <SweetoLogo size={38} className="drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] shrink-0" />
+          <SweetoLogo size={38} className="drop-shadow-[0_0_8px_rgba(0,0,255,0.3)] shrink-0" />
           <div><h1 className="font-black text-slate-900 dark:text-white tracking-widest uppercase text-[10px]">Control Center</h1><p className="text-[11px] text-blue-500 font-black tracking-widest uppercase">SWEETO HUB</p></div>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-hide">

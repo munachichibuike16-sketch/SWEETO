@@ -62,7 +62,7 @@ export default function LoadingScreen({ isVisible }) {
               
               {/* Frosted premium viewport container with our Sweeto logo inside */}
               <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 flex items-center justify-center shadow-2xl p-1.5">
-                <SweetoLogo size={70} className="w-full h-full drop-shadow-[0_0_12px_rgba(0,242,254,0.4)]" />
+                <SweetoLogo size={70} className="w-full h-full drop-shadow-[0_0_12px_rgba(0,0,255,0.4)]" />
               </div>
             </div>
 

@@ -77,7 +77,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
         <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
           <div className="absolute inset-0 rounded-[1.8rem] border border-cyan-500/20 animate-ping scale-105 opacity-40"></div>
           <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-[1.8rem] border border-white/10 flex items-center justify-center shadow-inner">
-            <SweetoLogo size={74} className="w-full h-full drop-shadow-[0_0_12px_rgba(0,242,254,0.4)] animate-pulse" />
+            <SweetoLogo size={74} className="w-full h-full drop-shadow-[0_0_12px_rgba(0,0,255,0.4)] animate-pulse" />
           </div>
         </div>
 
