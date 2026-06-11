@@ -10,6 +10,7 @@ import VideoAds from './VideoAds';
 import HeroManagement from './HeroManagement';
 import SocialsManagement from './SocialsManagement';
 import StoreSettings from './StoreSettings';
+import Sweeto from './sweeto';
 import OrdersManagement from './OrdersManagement';
 import CustomersManagement from './CustomersManagement';
 import TransportManagement from './TransportManagement';
@@ -133,6 +134,7 @@ const Dashboard = () => {
       case 'Ads': return 'Configure promotional video and graphic ads';
       case 'Socials': return 'Manage social links and external channels';
       case 'Settings': return 'Configure your store settings and shop preferences';
+      case 'Sweeto': return 'Configure Bright Retail template options';
       case 'Promos': return 'Manage your promotional codes and discounts';
       default: return 'Manage your store\'s performance';
     }
@@ -733,7 +735,7 @@ const Dashboard = () => {
     { name: 'Customers', icon: Icons.Users }, { name: 'Reviews', icon: Icons.Star },
     { name: 'Logistics', icon: Icons.Truck }, { name: 'Sections', icon: Icons.Layers },
     { name: 'Hero', icon: Icons.Monitor }, { name: 'Ads', icon: Icons.Film },
-    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Settings', icon: Icons.Settings },
+    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Sweeto', icon: Icons.Sparkles }, { name: 'Settings', icon: Icons.Settings },
   ];
 
   const stats = [
@@ -1011,6 +1013,7 @@ const Dashboard = () => {
           {activeTab === 'Ads' && <div className="max-w-7xl mx-auto"><VideoAds /></div>}
           {activeTab === 'Socials' && <div className="max-w-7xl mx-auto"><SocialsManagement /></div>}
           {activeTab === 'Settings' && <div className="max-w-7xl mx-auto"><StoreSettings /></div>}
+          {activeTab === 'Sweeto' && <div className="max-w-7xl mx-auto"><Sweeto /></div>}
           {activeTab === 'Promos' && <div className="max-w-7xl mx-auto"><PromoCode /></div>}
           {activeTab === 'Sales' && <div className="max-w-7xl mx-auto"><SalesManagement /></div>}
           {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
