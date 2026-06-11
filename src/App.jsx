@@ -89,7 +89,7 @@ const Toast = () => {
         initial={{ y: -50, opacity: 0, scale: 0.9 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: -50, opacity: 0, scale: 0.9 }}
-        className="bg-white/90 dark:bg-[#060b19]/90 backdrop-blur-3xl border border-slate-100 dark:border-cyan-500/15 shadow-[0_20px_50px_rgba(0,240,255,0.05)] px-8 py-4 rounded-3xl flex items-center gap-4 pointer-events-auto"
+        className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-eas-blue/15 shadow-[0_20px_50px_rgba(0,82,255,0.05)] px-8 py-4 rounded-3xl flex items-center gap-4 pointer-events-auto"
       >
         {icons[toast.type] || icons.success}
         <p className="font-black text-xs uppercase tracking-widest text-slate-900 whitespace-nowrap">
@@ -710,7 +710,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                   onClick={() => setActiveSubCategory(item)}
                   className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 ${
                     activeSubCategory === item
-                      ? 'bg-red-600 text-white border-red-600 shadow-xl shadow-red-600/30 scale-105'
+                      ? 'bg-eas-blue text-white border-eas-blue shadow-xl shadow-eas-blue/30 scale-105'
                       : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-200'
                   }`}
                 >
@@ -772,7 +772,7 @@ const Storefront = ({ viewMode = 'home' }) => {
   }, [settings?.homepageSections, settings?.hero_enabled, sections]);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 relative">
+    <div className="min-h-screen bg-eas-light dark:bg-eas-dark relative">
       <Header 
         onMenuClick={() => setIsSidebarOpen(true)} 
         onCartClick={() => setIsCartOpen(true)}
@@ -785,7 +785,7 @@ const Storefront = ({ viewMode = 'home' }) => {
           borderRadius: isProductModalOpen ? '40px' : '0px'
         }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col origin-center transition-colors duration-300"
+        className="min-h-screen bg-eas-light dark:bg-eas-dark flex flex-col origin-center transition-colors duration-300"
         style={{ paddingTop: 'var(--header-height, 96px)' }}
       >
         
@@ -808,7 +808,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             ) : ['privacy', 'terms', 'security'].includes(viewMode) ? (
               <LegalPage type={viewMode} />
             ) : (
-              <div className="bg-slate-50 dark:bg-slate-950 transition-colors duration-500 min-h-screen">
+              <div className="bg-eas-light dark:bg-eas-dark transition-colors duration-500 min-h-screen">
                 {viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand ? (
                   settings?.active_template === 'bright' ? (
                     <BrightRetailHome onProductClick={handleProductClick} />
@@ -946,7 +946,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                     <motion.a 
                       key={i} href={link} target="_blank" rel="noopener noreferrer"
                       whileHover={{ scale: 1.1, backgroundColor: '#3B82F6', color: '#fff' }}
-                      className="w-10 h-10 bg-white dark:bg-[#060b19] rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 transition-all shadow-sm border border-slate-100 dark:border-cyan-500/15"
+                      className="w-10 h-10 bg-white dark:bg-[#020617] rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 transition-all shadow-sm border border-slate-100 dark:border-eas-blue/15"
                     >
                       <social.icon size={18} />
                     </motion.a>
@@ -1121,7 +1121,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             <div className="flex flex-col gap-2 items-center md:items-start">
               <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">{lang === 'fr' ? 'Modes de Paiement Acceptés' : 'Accepted Payment Methods'}</span>
               <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">Wave</span>
+                <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-eas-blue/10 text-eas-blue dark:text-blue-400 border border-eas-blue/20">Wave</span>
                 <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">Orange Money</span>
                 <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">Moov Money</span>
                 <span className="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20">MTN MoMo</span>

@@ -119,10 +119,10 @@ const StoreContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-[#f3f4f6] pb-24 selection:bg-sky-600 selection:text-white relative">
+    <div className="min-h-screen bg-eas-light dark:bg-eas-dark text-slate-800 dark:text-[#f3f4f6] pb-24 selection:bg-eas-blue/30 selection:text-eas-blue relative">
       <style>{`
         body {
-            background-color: ${isDarkMode ? '#030712' : '#f8fafc'} !important;
+            background-color: ${isDarkMode ? '#020617' : '#f0f5ff'} !important;
         }
 
         .glass-pill {
@@ -151,21 +151,21 @@ const StoreContent = () => {
         }
 
         .stat-card-active-orders:hover, .stat-card-active-orders.active {
-            border-color: rgba(56, 189, 248, 0.3);
-            background: rgba(56, 189, 248, 0.04);
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
+            border-color: rgba(0, 82, 255, 0.3);
+            background: rgba(0, 82, 255, 0.04);
+            box-shadow: 0 0 20px rgba(0, 82, 255, 0.12);
         }
 
         .stat-card-total-bought:hover, .stat-card-total-bought.active {
-            border-color: rgba(45, 212, 191, 0.3);
-            background: rgba(45, 212, 191, 0.04);
-            box-shadow: 0 0 20px rgba(45, 212, 191, 0.12);
+            border-color: rgba(0, 82, 255, 0.3);
+            background: rgba(0, 82, 255, 0.04);
+            box-shadow: 0 0 20px rgba(0, 82, 255, 0.12);
         }
 
         .stat-card-liked-items:hover, .stat-card-liked-items.active {
-            border-color: rgba(251, 113, 133, 0.3);
-            background: rgba(251, 113, 133, 0.04);
-            box-shadow: 0 0 20px rgba(251, 113, 133, 0.12);
+            border-color: rgba(255, 59, 48, 0.3);
+            background: rgba(255, 59, 48, 0.04);
+            box-shadow: 0 0 20px rgba(255, 59, 48, 0.12);
         }
 
         .active-order-card {
@@ -177,8 +177,8 @@ const StoreContent = () => {
         }
 
         .dark .active-order-card {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(8, 13, 28, 0.9) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: linear-gradient(135deg, rgba(2, 6, 23, 0.8) 0%, rgba(2, 6, 23, 0.9) 100%);
+            border: 1px solid rgba(0, 82, 255, 0.1);
             color: #f3f4f6;
         }
 
@@ -189,45 +189,45 @@ const StoreContent = () => {
             top: 0;
             bottom: 0;
             width: 4px;
-            background: linear-gradient(180deg, #2dd4bf 0%, #14b8a6 100%);
+            background: linear-gradient(180deg, #0000ff 0%, #3333ff 100%);
             border-top-left-radius: 18px;
             border-bottom-left-radius: 18px;
-            box-shadow: 2px 0 12px rgba(45, 212, 191, 0.4);
+            box-shadow: 2px 0 12px rgba(0, 0, 255, 0.4);
         }
 
         .pulse-dot {
             width: 8px;
             height: 8px;
-            background-color: #38bdf8;
+            background-color: #0000ff;
             border-radius: 50%;
-            box-shadow: 0 0 10px #38bdf8;
+            box-shadow: 0 0 10px #0000ff;
             animation: pulseGlow 2s infinite ease-in-out;
         }
 
         @keyframes pulseGlow {
-            0%, 100% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 6px #38bdf8; }
-            50% { transform: scale(1.25); opacity: 0.6; box-shadow: 0 0 14px #38bdf8; }
+            0%, 100% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 6px rgba(0, 0, 255, 0.4); }
+            50% { transform: scale(1.25); opacity: 0.6; box-shadow: 0 0 14px rgba(0, 0, 255, 0.8); }
         }
       `}</style>
 
       {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="fixed z-30 left-0 right-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 px-4 md:px-8 shadow-sm dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
+      <div className="fixed z-30 left-0 right-0 bg-eas-light/95 dark:bg-eas-dark/95 backdrop-blur-md border-b border-eas-blue/10 py-4 px-4 md:px-8 shadow-sm dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between w-full">
           {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
           <button 
             onClick={goBack} 
-            className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
+            className="active-tap group w-10 h-10 rounded-xl border border-eas-blue/20 dark:border-eas-blue/15 bg-eas-blue/10 dark:bg-eas-blue/20 flex items-center justify-center text-eas-blue dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:border-eas-blue/40 hover:shadow-[0_0_15px_rgba(0,82,255,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
             aria-label="Retour"
           >
             <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
           </button>
 
           {/* Store Hub Button with custom pill border (verbatim from image_3143c1.png) */}
-          <button className="active-tap border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3.5 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)] transition-all duration-300 hover:border-sky-400">
-            <svg className="w-5 h-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <button className="active-tap border border-eas-blue/20 bg-eas-blue/5 dark:bg-eas-blue/10 px-8 py-3.5 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(0,82,255,0.08)] transition-all duration-300 hover:border-eas-blue">
+            <svg className="w-5 h-5 text-eas-blue dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
             </svg>
-            <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">STORE HUB</span>
+            <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-eas-blue dark:text-blue-400">STORE HUB</span>
           </button>
 
           {/* Symmetric spacer to ensure the center "STORE HUB" logo is perfectly aligned */}
@@ -247,7 +247,7 @@ const StoreContent = () => {
             onClick={() => setActiveView('active-orders')} 
             className={`stat-card stat-card-active-orders p-4 text-center ${activeView === 'active-orders' ? 'active' : ''}`}
           >
-            <span className="block text-2xl font-extrabold text-sky-400">{activeOrdersCount}</span>
+            <span className="block text-2xl font-extrabold text-eas-blue dark:text-blue-400">{activeOrdersCount}</span>
             <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold block mt-1">Active Orders</span>
           </div>
 
@@ -279,7 +279,7 @@ const StoreContent = () => {
         {activeView === 'active-orders' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1 mb-2">
-              <h3 className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400 text-left">Active Order Trackers</h3>
+              <h3 className="text-xs uppercase tracking-[0.2em] font-extrabold text-eas-blue dark:text-blue-400 text-left">Active Order Trackers</h3>
               <span className="text-[10px] text-slate-400 dark:text-gray-500 uppercase font-bold bg-slate-200/50 dark:bg-white/5 px-2.5 py-1 rounded-full">Live Tracker</span>
             </div>
 
@@ -299,9 +299,9 @@ const StoreContent = () => {
                   </div>
 
                   {/* Thumbnail / Package */}
-                  <div className="relative w-16 h-16 bg-slate-100 dark:bg-[#0a1122] border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <div className="relative w-16 h-16 bg-eas-light dark:bg-eas-dark border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                     <div className="text-slate-800 dark:text-white text-2xl">📦</div>
-                    <div className="absolute top-1 right-1 bg-amber-500/90 w-4.5 h-4.5 rounded-full flex items-center justify-center border border-slate-100 dark:border-[#0a1122]">
+                    <div className="absolute top-1 right-1 bg-amber-500/90 w-4.5 h-4.5 rounded-full flex items-center justify-center border border-slate-100 dark:border-eas-dark">
                       <i className="fa-solid fa-box text-[8px] text-[#1a1105]"></i>
                     </div>
                   </div>
@@ -327,7 +327,7 @@ const StoreContent = () => {
 
                   {/* Right Action layout */}
                   <div className="flex flex-col items-end justify-between self-stretch flex-shrink-0 min-w-[85px] border-l border-slate-200 dark:border-white/5 pl-2">
-                    <span className="text-[12px] font-black text-sky-600 dark:text-sky-400 tracking-wide">{order.total_amount?.toLocaleString() || order.total?.toLocaleString()} F</span>
+                    <span className="text-[12px] font-black text-eas-blue dark:text-blue-400 tracking-wide">{order.total_amount?.toLocaleString() || order.total?.toLocaleString()} F</span>
                     
                     <div className="flex flex-col items-end gap-1 mt-auto w-full">
                       <button 
@@ -339,7 +339,7 @@ const StoreContent = () => {
                       
                       <button 
                         onClick={() => navigate(`/order-tracking/${order.id}`)}
-                        className="active-tap w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-400 text-white flex items-center justify-center shadow-lg transition-all duration-300 shadow-sky-500/10 cursor-pointer"
+                        className="active-tap w-7 h-7 rounded-full bg-eas-blue hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transition-all duration-300 shadow-eas-blue/30 cursor-pointer"
                       >
                         <i className="fa-solid fa-arrow-right text-[11px]"></i>
                       </button>
@@ -351,7 +351,7 @@ const StoreContent = () => {
 
             {/* Empty State for Active Orders */}
             {realActiveOrders.length === 0 && (
-              <div id="orders-empty-state" className="text-center py-12 px-6 bg-slate-100/50 dark:bg-[#091122]/40 rounded-3xl border border-slate-200 dark:border-white/5">
+              <div id="orders-empty-state" className="text-center py-12 px-6 bg-eas-light/50 dark:bg-eas-dark/40 rounded-3xl border border-slate-200 dark:border-white/5">
                 <div className="text-slate-300 dark:text-gray-600 text-4xl mb-3">
                   <i className="fa-solid fa-box-open"></i>
                 </div>
@@ -380,7 +380,7 @@ const StoreContent = () => {
                 const mainItemName = items[0]?.name || 'Produit';
 
                 return (
-                  <div key={order.id} className="bg-white dark:bg-[#091122]/80 border border-slate-200 dark:border-white/5 p-4 rounded-2xl flex justify-between items-center shadow-sm dark:shadow-none">
+                  <div key={order.id} className="bg-white dark:bg-eas-dark/80 border border-slate-200 dark:border-white/5 p-4 rounded-2xl flex justify-between items-center shadow-sm dark:shadow-none">
                     <div className="flex items-center gap-3 text-left">
                       <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center text-teal-600 dark:text-teal-400 text-lg flex-shrink-0">
                         <i className="fa-solid fa-circle-check"></i>
@@ -397,7 +397,7 @@ const StoreContent = () => {
                       <span className="block text-xs font-bold text-slate-700 dark:text-gray-300">{order.total_amount?.toLocaleString() || order.total?.toLocaleString()} F</span>
                       <button 
                         onClick={() => orderViaWhatsApp(mainItemName, order.total_amount || order.total)}
-                        className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/20 px-2 py-1 rounded cursor-pointer"
+                        className="active-tap mt-1.5 text-[8px] uppercase tracking-wider font-extrabold bg-eas-blue/10 dark:bg-eas-blue/20 text-eas-blue dark:text-blue-400 border border-eas-blue/20 px-2 py-1 rounded cursor-pointer"
                       >
                         Buy Again
                       </button>
@@ -408,7 +408,7 @@ const StoreContent = () => {
 
               {/* Empty State for Completed Purchases */}
               {realCompletedOrders.length === 0 && (
-                <div id="bought-empty-state" className="text-center py-12 px-6 bg-slate-100/50 dark:bg-[#091122]/40 rounded-3xl border border-slate-200 dark:border-white/5">
+                <div id="bought-empty-state" className="text-center py-12 px-6 bg-eas-light/50 dark:bg-eas-dark/40 rounded-3xl border border-slate-200 dark:border-white/5">
                   <div className="text-slate-300 dark:text-gray-600 text-4xl mb-3">
                     <i className="fa-solid fa-circle-check"></i>
                   </div>
@@ -433,7 +433,7 @@ const StoreContent = () => {
               <div id="liked-items-grid" className="grid grid-cols-2 gap-3">
                 {/* Real items from WishlistContext */}
                 {wishlistItems.map((item) => (
-                  <div key={item.id} className="bg-white dark:bg-[#091122]/95 border border-slate-200 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between h-44 relative text-left shadow-sm dark:shadow-none">
+                  <div key={item.id} className="bg-white dark:bg-eas-dark/95 border border-slate-200 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between h-44 relative text-left shadow-sm dark:shadow-none">
                     {/* Floating Heart Unlike Trigger */}
                     <button 
                       onClick={() => handleUnlike(item.id)}
@@ -443,13 +443,13 @@ const StoreContent = () => {
                     </button>
 
                     <div className="mt-2">
-                      <span className="text-[8px] font-black bg-sky-500/10 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded uppercase">{item.category || 'TECH'}</span>
+                      <span className="text-[8px] font-black bg-eas-blue/10 text-eas-blue dark:text-blue-400 px-1.5 py-0.5 rounded uppercase">{item.category || 'TECH'}</span>
                       <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-1 line-clamp-1">{item.name}</h5>
                       <p className="text-[9px] text-slate-400 dark:text-gray-500 leading-normal mt-1 line-clamp-2">Authentic local product from SWEETO-HUB.</p>
                     </div>
 
                     <div className="flex justify-between items-center mt-3">
-                      <span className="text-xs font-extrabold text-sky-600 dark:text-sky-400">{item.price?.toLocaleString()} F</span>
+                      <span className="text-xs font-extrabold text-eas-blue dark:text-blue-400">{item.price?.toLocaleString()} F</span>
                       <button 
                         onClick={() => orderViaWhatsApp(item.name, item.price)}
                         className="active-tap w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-[11px] shadow-lg shadow-teal-500/20 cursor-pointer"
@@ -462,7 +462,7 @@ const StoreContent = () => {
               </div>
             ) : (
               /* Empty State for Liked Grid */
-              <div id="liked-empty-state" className="text-center py-12 px-6 bg-slate-100/50 dark:bg-[#091122]/40 rounded-3xl border border-slate-200 dark:border-white/5">
+              <div id="liked-empty-state" className="text-center py-12 px-6 bg-eas-light/50 dark:bg-eas-dark/40 rounded-3xl border border-slate-200 dark:border-white/5">
                 <div className="text-slate-350 dark:text-gray-600 text-4xl mb-3">
                   <i className="fa-regular fa-heart"></i>
                 </div>

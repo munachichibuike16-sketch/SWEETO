@@ -187,7 +187,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     )}
 
                     {mainSlot.discount > 0 && (
-                      <div className="absolute top-0 right-0 md:top-4 md:right-4 bg-gradient-to-r from-rose-500 to-red-600 text-white text-[9px] font-black px-3.5 py-1.5 rounded-full shadow-[0_8px_20px_rgba(244,63,94,0.3)] z-20">
+                      <div className="absolute top-0 right-0 md:top-4 md:right-4 bg-[#ff3b30] text-white text-[9px] font-black px-3.5 py-1.5 rounded-full shadow-[0_8px_20px_rgba(255,59,48,0.3)] z-20">
                         -{mainSlot.discount}%
                       </div>
                     )}
@@ -203,14 +203,14 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 >
                   <button 
                     onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length); }} 
-                    className="text-white hover:text-cyan-400 transition-colors p-1"
+                    className="text-white hover:text-blue-400 transition-colors p-1"
                   >
                     <ChevronLeft size={14} sm:size={16} strokeWidth={3} />
                   </button>
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev + 1) % activeProducts.length); }} 
-                    className="text-white hover:text-cyan-400 transition-colors p-1"
+                    className="text-white hover:text-blue-400 transition-colors p-1"
                   >
                     <ChevronRight size={14} sm:size={16} strokeWidth={3} />
                   </button>
@@ -331,7 +331,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
             {/* Content Overlays */}
             <div className="absolute inset-0 p-10 md:p-16 flex flex-col justify-center max-w-xl z-20 text-left">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400 mb-3 block">
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400 mb-3 block">
                 {mainSlot.subtitle || t('featured_selection')}
               </span>
               
@@ -376,14 +376,14 @@ const Hero = ({ banners, layout = 'slider' }) => {
               >
                 <button 
                   onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev - 1 + activeProducts.length) % activeProducts.length); }} 
-                  className="text-white hover:text-cyan-400 transition-colors p-1"
+                  className="text-white hover:text-blue-400 transition-colors p-1"
                 >
                   <ChevronLeft size={16} strokeWidth={3} />
                 </button>
                 
                 <button 
                   onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev + 1) % activeProducts.length); }} 
-                  className="text-white hover:text-cyan-400 transition-colors p-1"
+                  className="text-white hover:text-blue-400 transition-colors p-1"
                 >
                   <ChevronRight size={16} strokeWidth={3} />
                 </button>
@@ -516,8 +516,8 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-2"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.25em]">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em]">
                   {displayBanners[currentSlide]?.subtitle || t('exclusive_showcase')}
                 </span>
               </motion.div>
@@ -701,7 +701,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     className={`absolute -top-10 ${isRTL ? '-left-10' : '-right-10'} bg-white/10 dark:bg-slate-800/10 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 p-6 rounded-[2rem] shadow-2xl hidden lg:block`}
                  >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-eas-blue rounded-full flex items-center justify-center text-white font-black text-xs">
+                    <div className="w-10 h-10 bg-[#ff3b30] rounded-full flex items-center justify-center text-white font-black text-xs shadow-lg shadow-red-500/20">
                       {displayBanners[currentSlide]?.discount || 15}%
                     </div>
                     <div className="flex flex-col">

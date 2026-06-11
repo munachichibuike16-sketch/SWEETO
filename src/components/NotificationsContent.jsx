@@ -356,7 +356,7 @@ const NotificationsContent = ({ onProductClick }) => {
     return (
       <div key={notif.id} className="relative overflow-hidden rounded-3xl group">
         {/* Swipe Action Background Indicator */}
-        <div className="absolute inset-0 bg-red-500 rounded-3xl flex items-center justify-end px-6 text-white font-black text-xs uppercase tracking-widest pointer-events-none z-0">
+        <div className="absolute inset-0 bg-eas-blue rounded-3xl flex items-center justify-end px-6 text-white font-black text-xs uppercase tracking-widest pointer-events-none z-0">
           <div className="flex items-center gap-2">
             <span>{lang === 'fr' ? 'Fermer' : 'Dismiss'}</span>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -524,7 +524,7 @@ const NotificationsContent = ({ onProductClick }) => {
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
       {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="fixed z-30 left-0 right-0 bg-slate-50/95 dark:bg-[#030712]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5 py-4 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
+      <div className="fixed z-30 left-0 right-0 bg-eas-light/95 dark:bg-eas-dark/95 backdrop-blur-md border-b border-eas-blue/10 py-4 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
         <div className="max-w-4xl mx-auto flex flex-col gap-4 px-4 md:px-8">
           
           {/* Top Row: Back Button & Title */}
@@ -532,16 +532,16 @@ const NotificationsContent = ({ onProductClick }) => {
             {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
             <button 
               onClick={goBack} 
-              className="active-tap group w-10 h-10 rounded-xl border border-sky-500/20 dark:border-sky-500/15 bg-sky-500/10 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400/40 hover:shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
+              className="active-tap group w-10 h-10 rounded-xl border border-eas-blue/20 dark:border-eas-blue/15 bg-eas-blue/10 dark:bg-eas-blue/20 flex items-center justify-center text-eas-blue dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:border-eas-blue/40 hover:shadow-[0_0_15px_rgba(0,82,255,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
               aria-label="Retour"
             >
               <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
             </button>
 
             {/* Center Pill Badge */}
-            <div className="border border-sky-500/20 bg-sky-500/5 dark:bg-sky-950/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(56,189,248,0.08)]">
-              <Bell className="w-4 h-4 text-sky-600 dark:text-sky-400 animate-pulse" />
-              <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-sky-600 dark:text-sky-400">NOTIFICATIONS</span>
+            <div className="border border-eas-blue/20 bg-eas-blue/5 dark:bg-eas-blue/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(0,82,255,0.08)]">
+              <Bell className="w-4 h-4 text-eas-blue dark:text-blue-400 animate-pulse" />
+              <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-eas-blue dark:text-blue-400">NOTIFICATIONS</span>
             </div>
 
             {/* Symmetric Spacer */}
@@ -576,7 +576,7 @@ const NotificationsContent = ({ onProductClick }) => {
                   <span className={`px-2 py-0.5 rounded-full text-[10px] ${
                     filter === 'unread'
                       ? 'bg-slate-950/10 text-slate-950 font-black'
-                      : 'bg-sky-500/20 text-sky-600 dark:text-sky-400 font-black'
+                      : 'bg-eas-blue/20 text-eas-blue dark:text-blue-400 font-black'
                   }`}>
                     {unreadCount}
                   </span>
@@ -592,7 +592,7 @@ const NotificationsContent = ({ onProductClick }) => {
                 className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors bg-transparent border-none select-none ${
                   unreadCount === 0
                     ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50'
-                    : 'text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 cursor-pointer'
+                    : 'text-eas-blue dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer'
                 }`}
               >
                 <CheckSquare className="w-4 h-4" />

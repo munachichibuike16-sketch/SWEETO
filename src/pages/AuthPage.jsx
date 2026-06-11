@@ -829,10 +829,10 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
   if (sessionUser) {
     return (
-      <div className="auth-body dark:bg-slate-950 transition-colors duration-500">
+      <div className="auth-body dark:bg-eas-dark transition-colors duration-500">
         <button 
           onClick={() => navigate(-1)} 
-          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-850 transition-all z-20 cursor-pointer shadow-sm"
+          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
         >
           <ArrowLeft size={20} />
         </button>
@@ -843,7 +843,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
         <span className="candy-decoration" style={{ bottom: '20%', right: '15%' }}>🚀</span>
         
         <div className="main-container" style={{ maxWidth: currentTab === 'orders' ? '920px' : '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-          <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl" style={{ width: '100%' }}>
+          <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl" style={{ width: '100%' }}>
             <div className="card-content">
               
               {/* Header Info */}
@@ -854,7 +854,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     <img 
                       src={sessionUser.avatarUrl || sessionUser.picture} 
                       alt={sessionUser.name} 
-                      className="brand-icon profile-main-avatar object-cover rounded-2xl border border-slate-100 dark:border-slate-800"
+                      className="brand-icon profile-main-avatar object-cover rounded-2xl border border-slate-100 dark:border-white/5"
                     />
                   ) : (
                     <div className="brand-icon profile-main-avatar">
@@ -882,7 +882,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
               </div>
 
               {/* Tab Selector */}
-              <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
+              <div className="tab-switcher bg-eas-light/80 dark:bg-eas-dark/50 p-1 border-slate-200/50 dark:border-white/5 rounded-2xl mb-8">
                 <button 
                   className={`tab-btn ${currentTab === 'overview' ? 'active' : ''}`}
                   onClick={() => switchTab('overview')}
@@ -911,9 +911,9 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       {/* Orders Count Card */}
                       <div 
                         onClick={() => switchTab('orders')}
-                        className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center cursor-pointer hover:border-eas-blue hover:scale-[1.03] transition-all group"
+                        className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center cursor-pointer hover:border-eas-blue hover:scale-[1.03] transition-all group"
                       >
-                        <div className="stat-icon-circle bg-blue-50 dark:bg-blue-950/30 text-blue-500 group-hover:bg-eas-blue group-hover:text-white transition-all">
+                        <div className="stat-icon-circle bg-eas-blue/10 dark:bg-eas-blue/20 text-eas-blue group-hover:bg-eas-blue group-hover:text-white transition-all">
                           <Package size={16} />
                         </div>
                         <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('my_orders') || 'Orders'}</span>
@@ -925,7 +925,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       {/* Wishlist Count Card */}
                       <div 
                         onClick={() => navigate('/wishlist')}
-                        className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center cursor-pointer hover:border-pink-500 hover:scale-[1.03] transition-all group"
+                        className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center cursor-pointer hover:border-pink-500 hover:scale-[1.03] transition-all group"
                       >
                         <div className="stat-icon-circle bg-pink-50 dark:bg-pink-950/30 text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all">
                           <Heart size={16} />
@@ -937,7 +937,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
 
                       {/* Member Since Card */}
-                      <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
+                      <div className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center">
                         <div className="stat-icon-circle bg-purple-50 dark:bg-purple-950/30 text-purple-500">
                           <Calendar size={16} />
                         </div>
@@ -948,7 +948,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
 
                       {/* Security Status Card */}
-                      <div className="profile-stat-box adorable-card dark:bg-slate-900/40 dark:border-slate-800/80 flex flex-col items-center">
+                      <div className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center">
                         <div className="stat-icon-circle bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500">
                           <Shield size={16} />
                         </div>
@@ -960,14 +960,14 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     </div>
 
                     {/* Personal Information */}
-                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3.5 text-left">
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
+                    <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-3.5 text-left">
+                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-2">
                         <User className="text-eas-blue" size={15} />
                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Personal Information</span>
                       </div>
                       
                       <div className="space-y-3">
-                        <div className="flex justify-between items-center py-1 border-b border-slate-100/30 dark:border-slate-850/50 last:border-0">
+                        <div className="flex justify-between items-center py-1 border-b border-slate-100/30 dark:border-white/5 last:border-0">
                           <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Phone</span>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200">
@@ -976,7 +976,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                             </span>
                             <button 
                               onClick={() => switchTab('settings')}
-                              className="text-eas-blue hover:text-blue-700 text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg"
+                              className="text-eas-blue hover:text-eas-blue/80 text-[9px] font-black uppercase tracking-wider bg-eas-light dark:bg-white/5 px-2.5 py-1.5 rounded-lg"
                             >
                               Edit
                             </button>
@@ -987,15 +987,15 @@ const AuthPage = ({ initialTab = 'login' }) => {
                     </div>
 
                     <div className="quick-links">
-                      <div className="quick-link-item dark:bg-slate-900/40 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900/70" onClick={() => navigate('/')}>
-                        <div className="ql-icon bg-blue-50 dark:bg-blue-950/30 text-blue-500"><ShoppingBag size={18} /></div>
+                      <div className="quick-link-item dark:bg-eas-dark/40 dark:border-white/5 hover:bg-eas-light dark:hover:bg-eas-dark/70" onClick={() => navigate('/')}>
+                        <div className="ql-icon bg-eas-blue/10 dark:bg-eas-blue/20 text-eas-blue"><ShoppingBag size={18} /></div>
                         <div className="ql-text">
                           <span className="ql-title text-slate-900 dark:text-white">{t('continue_shopping') || 'Continue Shopping'}</span>
                           <span className="ql-desc text-slate-400 dark:text-slate-500">{t('explore_premium_arrivals') || 'Explore our latest premium arrivals'}</span>
                         </div>
                         <ChevronRight className="ql-arrow" size={16} />
                       </div>
-                      <div className="quick-link-item dark:bg-slate-900/40 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900/70" onClick={() => navigate('/wishlist')}>
+                      <div className="quick-link-item dark:bg-eas-dark/40 dark:border-white/5 hover:bg-eas-light dark:hover:bg-eas-dark/70" onClick={() => navigate('/wishlist')}>
                         <div className="ql-icon bg-pink-50 dark:bg-pink-950/30 text-pink-500"><Heart size={18} /></div>
                         <div className="ql-text">
                           <span className="ql-title text-slate-900 dark:text-white">{t('my_wishlist') || 'My Wishlist'}</span>
@@ -1005,7 +1005,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       </div>
                     </div>
 
-                    <div className="profile-actions pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="profile-actions pt-4 border-t border-slate-100 dark:border-white/5">
                       <button className="btn-google logout-btn-adorable w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest dark:bg-red-950/10 dark:border-red-900/20" onClick={handleLogout}>
                         <LogOut size={16} /> {t('secure_sign_out') || 'Secure Sign Out'}
                       </button>
@@ -1022,9 +1022,9 @@ const AuthPage = ({ initialTab = 'login' }) => {
                 {currentTab === 'settings' && (
                   <div className="space-y-6 text-left animate-fade-in">
                     
-                    {/* Profile Details Block */}
-                    <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-4">
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-850 pb-2">
+                     {/* Profile Details Block */}
+                    <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-2">
                         <User className="text-eas-blue" size={15} />
                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Profile Details</span>
                       </div>
@@ -1033,29 +1033,28 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Profile Photo</label>
                         <div className="flex items-center gap-4 mt-2">
                           {isUploadingAvatar ? (
-                            <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                            <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-white/5 flex items-center justify-center bg-eas-light dark:bg-eas-dark">
                               <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
                             </div>
                           ) : (settingsForm.avatarUrl || sessionUser?.picture) ? (
                             <img 
                               src={settingsForm.avatarUrl || sessionUser?.picture} 
                               alt="Avatar Preview" 
-                              className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-slate-800"
+                              className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-white/5"
                             />
                           ) : (
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-blue-600 flex items-center justify-center text-white font-black text-xl shadow-md">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xl shadow-md">
                               {sessionUser?.name?.charAt(0).toUpperCase()}
                             </div>
                           )}
                           <div className="flex flex-col gap-1">
-                            <button
-                              type="button"
-                              onClick={() => avatarInputRef.current?.click()}
-                              className="px-4 py-2.5 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
-                              disabled={isUploadingAvatar}
+                            <input type="file" id="avatar-upload-settings" className="hidden" onChange={handleAvatarChange} />
+                            <label 
+                              htmlFor="avatar-upload-settings"
+                              className="px-4 py-2.5 bg-eas-dark dark:bg-white/5 hover:bg-eas-dark/80 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
                             >
-                              {isUploadingAvatar ? 'Uploading...' : 'Choose Image'}
-                            </button>
+                              Upload New Photo
+                            </label>
                             <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">JPG, PNG or WEBP. Max 5MB.</span>
                           </div>
                         </div>
@@ -1070,7 +1069,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                             placeholder="Name" 
                             value={settingsForm.name}
                             onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
-                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                           />
                         </div>
                       </div>
@@ -1081,7 +1080,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           <select 
                             value={settingsForm.countryCode}
                             onChange={(e) => setSettingsForm({...settingsForm, countryCode: e.target.value})}
-                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                             style={{ width: '130px', flexShrink: 0 }}
                           >
                             <option value="">Code</option>
@@ -1095,17 +1094,15 @@ const AuthPage = ({ initialTab = 'login' }) => {
                             placeholder="Phone number" 
                             value={settingsForm.phone}
                             onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                            className="dark:bg-slate-950 dark:border-slate-800 dark:text-white flex-1"
+                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white flex-1"
                           />
                         </div>
                       </div>
                     </div>
 
-
-
                     {/* Security Block (Change Password) */}
                     {!isGoogleUser && (
-                      <div className="bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-3">
+                      <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-3">
                         <button
                           type="button"
                           onClick={() => setShowPasswordChange(!showPasswordChange)}
@@ -1126,7 +1123,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden pt-4 space-y-4 border-t border-slate-100 dark:border-slate-800/60"
+                              className="overflow-hidden pt-4 space-y-4 border-t border-slate-100 dark:border-white/5"
                             >
                               <div className="input-group">
                                 <label className="text-[10px] font-black text-slate-400 tracking-wider">Current Password</label>
@@ -1137,7 +1134,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                                     placeholder="••••••••" 
                                     value={passwordForm.oldPassword}
                                     onChange={(e) => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
-                                    className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                    className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                                   />
                                 </div>
                               </div>
@@ -1152,7 +1149,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                                       placeholder="••••••••" 
                                       value={passwordForm.newPassword}
                                       onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                                      className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                                     />
                                   </div>
                                 </div>
@@ -1165,7 +1162,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                                       placeholder="••••••••" 
                                       value={passwordForm.confirmNewPassword}
                                       onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
-                                      className="dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                                     />
                                   </div>
                                 </div>
@@ -1174,7 +1171,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                               <button 
                                 type="button"
                                 onClick={handlePasswordChange}
-                                className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-black text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow cursor-pointer w-full text-center"
+                                className="bg-eas-dark hover:bg-eas-dark/80 dark:bg-white dark:hover:bg-eas-light text-white dark:text-eas-dark font-black text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow cursor-pointer w-full text-center"
                               >
                                 Update Security Password
                               </button>
@@ -1196,7 +1193,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
 
                     <button 
                       onClick={handleSaveSettings}
-                      className="w-full py-4 rounded-[2rem] bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4"
+                      className="w-full py-4 rounded-[2rem] bg-eas-blue hover:bg-[#0043d0] text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4"
                     >
                       <Save size={16} /> Save Changes
                     </button>
@@ -1215,16 +1212,16 @@ const AuthPage = ({ initialTab = 'login' }) => {
   }
 
   return (
-    <div className="auth-split-wrapper dark:bg-slate-950 transition-colors duration-500">
+    <div className="auth-split-wrapper dark:bg-eas-dark transition-colors duration-500">
       {/* Left side: Premium Branding Column (Hidden on mobile/tablet) */}
-      <div className="auth-brand-column bg-gradient-to-br from-blue-900 via-blue-600 to-blue-500 border-r border-blue-500/20 relative overflow-hidden hidden lg:flex flex-col justify-between p-16">
+      <div className="auth-brand-column bg-gradient-to-br from-blue-950 via-eas-blue to-blue-500 border-r border-eas-blue/20 relative overflow-hidden hidden lg:flex flex-col justify-between p-16">
         {/* Glow ambient background lights */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-200/20 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Top brand header logo */}
         <div className="relative z-10 flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-blue-600 font-black text-lg shadow-[0_8px_20px_rgba(255,255,255,0.2)]">
+          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-eas-blue font-black text-lg shadow-[0_8px_20px_rgba(0,82,255,0.2)]">
             ⚡
           </div>
           <span className="font-black text-xl italic text-white tracking-tighter">SWEETO<span className="text-blue-200 font-bold not-italic">HUB</span></span>
@@ -1271,10 +1268,10 @@ const AuthPage = ({ initialTab = 'login' }) => {
       </div>
 
       {/* Right side: Auth Card Column */}
-      <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30 dark:bg-slate-950 transition-colors duration-500">
+      <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-eas-light/50 via-white to-eas-light/30 dark:bg-eas-dark transition-colors duration-500">
         <button 
           onClick={() => navigate(-1)} 
-          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-850 transition-all z-20 cursor-pointer shadow-sm"
+          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
         >
           <ArrowLeft size={20} />
         </button>
@@ -1284,7 +1281,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
         <span className="candy-decoration lg:hidden">✨</span>
 
         <div className="main-container max-w-[500px] w-full relative z-10">
-          <div className="auth-card dark:bg-slate-900/60 dark:border-slate-800 backdrop-blur-xl">
+          <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl">
             <div className="card-content">
               <div className="brand-section">
                 <div className="brand-icon cursor-pointer mx-auto" onClick={() => navigate('/')}>⚡</div>
@@ -1292,7 +1289,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                 <p className="brand-tagline">{t('powering_digital_life') || 'Powering Your Digital Life'}</p>
               </div>
 
-              <div className="tab-switcher bg-slate-100/80 dark:bg-slate-950/50 p-1 border-slate-200/50 dark:border-slate-800 rounded-2xl mb-8">
+              <div className="tab-switcher bg-eas-light/80 dark:bg-eas-dark/50 p-1 border-slate-200/50 dark:border-white/5 rounded-2xl mb-8">
                 <button 
                   className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'login' ? 'active' : ''}`} 
                   onClick={() => switchTab('login')}
@@ -1320,7 +1317,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder={t('email_placeholder') || "you@example.com"} 
                           value={loginData.email}
                           onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.loginEmail ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.loginEmail ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.loginEmail}</div>
@@ -1339,7 +1336,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder="••••••••" 
                           value={loginData.password}
                           onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.loginPassword ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.loginPassword ? 'input-error' : ''}`}
                         />
                         <button type="button" className="toggle-password" onClick={() => togglePassword('login')}>
                           <i className={`fas ${showPassword.login ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -1373,7 +1370,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                       <label className="text-center w-full mb-2 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t('profile_photo') || 'Profile Photo (Optional)'}</label>
                       <div 
                         onClick={() => signupAvatarInputRef.current?.click()}
-                        className="relative group cursor-pointer w-24 h-24 rounded-3xl flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-eas-blue transition-all overflow-hidden bg-slate-50 dark:bg-slate-950/40 shadow-sm"
+                        className="relative group cursor-pointer w-24 h-24 rounded-3xl flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-white/5 hover:border-eas-blue transition-all overflow-hidden bg-eas-light dark:bg-eas-dark/40 shadow-sm"
                       >
                         {isUploadingAvatar ? (
                           <div className="flex flex-col items-center justify-center gap-1.5">
@@ -1420,7 +1417,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder={t('name_placeholder') || "e.g. Yao Kouassi"} 
                           value={signupData.name}
                           onChange={(e) => setSignupData({...signupData, name: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupName ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.signupName ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupName}</div>
@@ -1434,7 +1431,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder={t('email_placeholder') || "you@example.com"} 
                           value={signupData.email}
                           onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupEmail ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.signupEmail ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupEmail}</div>
@@ -1445,7 +1442,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                         <select 
                           value={signupData.countryCode}
                           onChange={(e) => setSignupData({...signupData, countryCode: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPhone ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.signupPhone ? 'input-error' : ''}`}
                         >
                           <option value="">Code</option>
                           {africanCountries.map(c => (
@@ -1458,7 +1455,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder={t('phone_placeholder') || "e.g. 07070707"} 
                           value={signupData.phone}
                           onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white flex-1 ${errors.signupPhone ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white flex-1 ${errors.signupPhone ? 'input-error' : ''}`}
                         />
                       </div>
                       <div className="error-message">{errors.signupPhone}</div>
@@ -1472,7 +1469,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder="••••••••" 
                           value={signupData.password}
                           onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupPassword ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.signupPassword ? 'input-error' : ''}`}
                         />
                         <button type="button" className="toggle-password" onClick={() => togglePassword('signup')}>
                           <i className={`fas ${showPassword.signup ? 'fa-eye-slash' : 'fa-eye'}`}></i>
@@ -1489,7 +1486,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
                           placeholder="••••••••" 
                           value={signupData.confirmPassword}
                           onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
-                          className={`dark:bg-slate-950 dark:border-slate-800 dark:text-white ${errors.signupConfirmPassword ? 'input-error' : ''}`}
+                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.signupConfirmPassword ? 'input-error' : ''}`}
                         />
                         <button type="button" className="toggle-password" onClick={() => togglePassword('confirm')}>
                           <i className={`fas ${showPassword.confirm ? 'fa-eye-slash' : 'fa-eye'}`}></i>

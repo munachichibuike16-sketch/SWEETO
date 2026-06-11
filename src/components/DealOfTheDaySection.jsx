@@ -176,7 +176,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                   <div className="relative">
                      <ShoppingBag size={24} />
                      {cartCount > 0 && (
-                       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black ring-4 ring-[#007aff]">
+                       <span className="absolute -top-2 -right-2 bg-eas-blue text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black ring-4 ring-[#007aff]">
                          {cartCount}
                        </span>
                      )}

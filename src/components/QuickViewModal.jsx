@@ -113,7 +113,7 @@ const QuickViewModal = ({ product, isOpen, onClose, onViewDetails }) => {
                 {/* Close Button */}
                 <button
                   onClick={onClose}
-                  className={`absolute top-8 ${isRTL ? 'left-8' : 'right-8'} p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 transition-all hover:rotate-90 border border-slate-200 dark:border-slate-700`}
+                  className={`absolute top-8 ${isRTL ? 'left-8' : 'right-8'} p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-eas-blue transition-all hover:rotate-90 border border-slate-200 dark:border-slate-700`}
                 >
                   <X size={20} />
                 </button>

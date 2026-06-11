@@ -308,7 +308,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/75 dark:bg-[#060b19]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-cyan-500/15 transition-all duration-500">
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-eas-blue/15 transition-all duration-500">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2 md:gap-6">
           
           {/* Menu & Logo Section */}
@@ -476,13 +476,13 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 onClick={() => navigate('/wishlist')}
                 className={`p-2.5 rounded-xl transition-all relative ${
                   isWishlistPage 
-                    ? 'bg-red-500 text-white' 
-                    : 'text-slate-400 hover:text-red-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'bg-[#ff3b30] text-white shadow-lg shadow-red-500/20' 
+                    : 'text-slate-400 hover:text-[#ff3b30] hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
               >
                 <Heart 
                   size={19} 
-                  className={wishlistItems.length > 0 || isWishlistPage ? "text-red-500" : ""} 
+                  className={wishlistItems.length > 0 || isWishlistPage ? "text-[#ff3b30]" : ""} 
                   fill={(wishlistItems.length > 0 || isWishlistPage) ? (isWishlistPage ? "white" : "currentColor") : "none"} 
                   style={{ color: isWishlistPage ? 'white' : undefined }}
                 />
@@ -611,7 +611,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 >
                   <Bell size={20} />
                   {unreadNotifCount > 0 && !isNotifOpen && (
-                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-red-500/30 animate-pulse">
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-eas-blue rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-eas-blue/30 animate-pulse">
                       {unreadNotifCount}
                     </span>
                   )}
@@ -695,7 +695,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             >
               <Bell size={20} />
               {unreadNotifCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-red-500/30 animate-pulse">
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-eas-blue rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-eas-blue/30 animate-pulse">
                   {unreadNotifCount}
                 </span>
               )}
@@ -766,7 +766,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#060b19]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
+      <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
         {/* Accueil */}
         <motion.button 
           onClick={() => {
@@ -777,20 +777,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           }} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            isHomePage ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+            isHomePage ? 'text-eas-blue dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           {isHomePage && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {isHomePage && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -808,20 +808,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           onClick={() => navigate('/wishlist')} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            isWishlistPage ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+            isWishlistPage ? 'text-[#ff3b30]' : 'text-slate-400 dark:text-slate-500 hover:text-[#ff3b30]'
           }`}
         >
           {isWishlistPage && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-2 inset-y-1 bg-[#ff3b30]/8 dark:bg-[#ff3b30]/10 rounded-xl blur-sm -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {isWishlistPage && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-[#ff3b30] to-red-700 rounded-b-md shadow-[0_2px_8px_rgba(255,59,48,0.4)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -837,7 +837,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               className="transition-all"
             />
             {wishlistItems.length > 0 && !isWishlistPage && (
-              <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-red-500/20">
+              <span className="absolute -top-1.5 -right-2 bg-[#ff3b30] text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-red-500/20">
                 {wishlistItems.length}
               </span>
             )}
@@ -857,20 +857,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           }} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            location.pathname === '/products' ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+            location.pathname === '/products' ? 'text-eas-blue dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           {location.pathname === '/products' && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {location.pathname === '/products' && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -907,20 +907,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           whileTap={{ scale: 0.92 }} 
           onClick={() => navigate(user ? '/auth' : '/login')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            isProfilePage ? 'text-eas-blue dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+            isProfilePage ? 'text-eas-blue dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}
         >
           {isProfilePage && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-cyan-400/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {isProfilePage && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-cyan-500 dark:from-cyan-500 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(6,182,212,0.4)]"
+              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -932,7 +932,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               <img 
                 src={user.avatarUrl || user.picture} 
                 alt="" 
-                className={`w-5.5 h-5.5 rounded-full object-cover border-2 ${isProfilePage ? 'border-eas-blue dark:border-cyan-400' : 'border-transparent'}`} 
+                className={`w-5.5 h-5.5 rounded-full object-cover border-2 ${isProfilePage ? 'border-eas-blue dark:border-blue-400' : 'border-transparent'}`} 
               />
             ) : (
               <User size={20} strokeWidth={2.5} />

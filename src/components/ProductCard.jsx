@@ -117,27 +117,27 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
       <motion.div 
         whileHover={{ y: -6 }}
         onClick={handleCardClick}
-        className={`group relative rounded-[1.6rem] sm:rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800/60 hover:border-cyan-400/50 dark:hover:border-cyan-400/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,240,255,0.15)] flex flex-col h-full cursor-pointer w-full ${
+        className={`group relative rounded-[1.6rem] sm:rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800/60 hover:border-eas-blue/50 dark:hover:border-eas-blue/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,82,255,0.15)] flex flex-col h-full cursor-pointer w-full ${
           (product.is_featured || discountPercent > 20)
             ? 'bg-transparent'
-            : 'bg-white dark:bg-[#0b1329]'
+            : 'bg-white dark:bg-[#020617]'
         }`}
       >
         {/* Animated Gradient Border & Background for Premium / High-discount / Featured Items */}
         {(product.is_featured || discountPercent > 20) && (
-          <div className="absolute inset-0 p-[1.5px] rounded-[1.6rem] sm:rounded-[2.5rem] bg-gradient-to-r from-cyan-500 via-indigo-500 to-cyan-300 bg-[length:200%_auto] animate-gradient-shift -z-20">
-            <div className="w-full h-full bg-white dark:bg-[#0b1329] rounded-[1.55rem] sm:rounded-[2.45rem]"></div>
+          <div className="absolute inset-0 p-[1.5px] rounded-[1.6rem] sm:rounded-[2.5rem] bg-gradient-to-r from-eas-blue via-indigo-600 to-blue-700 bg-[length:200%_auto] animate-gradient-shift -z-20">
+            <div className="w-full h-full bg-white dark:bg-[#020617] rounded-[1.55rem] sm:rounded-[2.45rem]"></div>
           </div>
         )}
         {/* Badges */}
         <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-20 flex flex-col items-start gap-1">
           {discountPercent > 0 && (
             isDailyDeal ? (
-              <div className="bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 dark:border-cyan-400/30 text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
+              <div className="bg-[#ff3b30] text-white text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
                 -{discountPercent}% OFFRE ÉLITE
               </div>
             ) : (
-              <div className="bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 dark:border-red-400/30 text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
+              <div className="bg-[#ff3b30] text-white text-[9px] sm:text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md">
                 -{discountPercent}%
               </div>
             )
@@ -152,8 +152,8 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
             onClick={handleToggleWishlist}
             className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl shadow-2xl flex items-center justify-center transition-all backdrop-blur-xl border ${
               isWished 
-                ? 'bg-red-500 border-red-400 text-white shadow-red-500/40' 
-                : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-red-500'
+                ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/40' 
+                : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
             }`}
           >
             <Heart size={16} className="sm:w-5 sm:h-5" fill={isWished ? "currentColor" : "none"} />
@@ -254,10 +254,10 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
                 </span>
               )}
               <div className="flex items-baseline gap-0.5 sm:gap-1">
-                <span className="text-base sm:text-2xl font-black text-cyan-600 dark:text-cyan-400 font-mono tracking-tighter">
+                <span className="text-base sm:text-2xl font-black text-eas-blue dark:text-blue-400 font-mono tracking-tighter">
                   {product.price?.toLocaleString()}
                 </span>
-                <span className="text-[8px] sm:text-[10px] font-black text-cyan-600 dark:text-cyan-400 font-mono uppercase tracking-widest mb-0.5 sm:mb-1 ml-0.5">{settings?.currency || 'FCFA'}</span>
+                <span className="text-[8px] sm:text-[10px] font-black text-eas-blue dark:text-blue-400 font-mono uppercase tracking-widest mb-0.5 sm:mb-1 ml-0.5">{settings?.currency || 'FCFA'}</span>
               </div>
             </div>
 

@@ -75,7 +75,7 @@ export default function BrightRetailHome({ onProductClick }) {
   };
 
   return (
-    <div className="w-full bg-[#f8f9fa] dark:bg-[#060b19] transition-colors duration-500 pb-20">
+    <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] transition-colors duration-500 pb-20">
       {/* ─── 1. CIRCULAR OUTLINED CATEGORY ROW ─── */}
       <div className="bg-white dark:bg-[#0b1329] border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm py-4 px-6 md:px-12 scroll-smooth select-none overflow-x-auto no-scrollbar flex items-center justify-start md:justify-center gap-6 sm:gap-10">
         {categories.map((cat, idx) => {
@@ -90,7 +90,7 @@ export default function BrightRetailHome({ onProductClick }) {
               }}
               className="flex flex-col items-center gap-1.5 cursor-pointer group shrink-0"
             >
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-slate-200 dark:border-slate-800 p-0.5 group-hover:border-[#ffc200] dark:group-hover:border-[#ffc200] transition-colors overflow-hidden bg-white dark:bg-[#060b19] flex items-center justify-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-slate-200 dark:border-slate-800 p-0.5 group-hover:border-[#ffc200] dark:group-hover:border-[#ffc200] transition-colors overflow-hidden bg-white dark:bg-[#020617] flex items-center justify-center">
                 <img 
                   src={catImg} 
                   alt={cat.name} 
@@ -123,7 +123,7 @@ export default function BrightRetailHome({ onProductClick }) {
               FROM <span className="text-xl font-mono text-slate-950 dark:text-white font-extrabold">$399.99</span>
             </p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <span className="px-4 py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#060b19]">
+              <span className="px-4 py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#020617]">
                 PROMO CODE : <span className="text-[#ffc200] font-mono">SUMMER10</span>
               </span>
               <button 
@@ -140,7 +140,7 @@ export default function BrightRetailHome({ onProductClick }) {
 
           {/* Right Product Graphic */}
           <div className="relative h-64 sm:h-80 w-full flex items-center justify-center mt-6 md:mt-0">
-            <div className="absolute w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-slate-100 dark:bg-[#060b19] blur-3xl -z-10" />
+            <div className="absolute w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-slate-100 dark:bg-[#020617] blur-3xl -z-10" />
             <img 
               src="https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500" 
               alt="Summer Sale gadget" 
@@ -276,7 +276,7 @@ export default function BrightRetailHome({ onProductClick }) {
                   </button>
 
                   {/* Product Image */}
-                  <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#060b19] rounded-xl p-3 mb-4">
+                  <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl p-3 mb-4">
                     <img 
                       src={product.image_url || product.image || '/hero-banner.png'} 
                       alt={product.name} 
@@ -397,7 +397,7 @@ export default function BrightRetailHome({ onProductClick }) {
                   className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl p-4 sm:p-5 flex items-center gap-4 group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 transition-all duration-300"
                 >
                   {/* Left Column Image */}
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-slate-50 dark:bg-[#060b19] rounded-xl p-2 shrink-0 relative">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-slate-50 dark:bg-[#020617] rounded-xl p-2 shrink-0 relative">
                     <span className="absolute top-1.5 left-1.5 bg-[#ec5b5b] text-white text-[7px] font-black px-1 py-0.5 rounded-sm z-10 uppercase">
                       -{discount}%
                     </span>

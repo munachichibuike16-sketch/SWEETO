@@ -50,7 +50,7 @@ const LegalPage = ({ type = 'privacy' }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-32 pb-32 relative overflow-hidden transition-colors duration-1000">
+    <div className="min-h-screen bg-eas-light dark:bg-eas-dark pt-32 pb-32 relative overflow-hidden transition-colors duration-1000">
       {/* ─── DYNAMIC BACKGROUND ELEMENTS ─── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div 
@@ -87,7 +87,7 @@ const LegalPage = ({ type = 'privacy' }) => {
            >
               <button 
                 onClick={() => navigate('/')}
-                className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500 hover:shadow-xl transition-all group"
+                className="w-14 h-14 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 flex items-center justify-center text-slate-400 hover:text-eas-blue hover:border-eas-blue hover:shadow-xl transition-all group"
               >
                 <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
               </button>
@@ -107,13 +107,13 @@ const LegalPage = ({ type = 'privacy' }) => {
             animate={{ x: 0, opacity: 1 }}
             className="flex items-center gap-3"
            >
-              <button className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-500 transition-all shadow-sm">
+              <button className="p-4 rounded-xl bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 text-slate-400 hover:text-eas-blue transition-all shadow-sm">
                 <Printer size={18} />
               </button>
-              <button className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-500 transition-all shadow-sm">
+              <button className="p-4 rounded-xl bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 text-slate-400 hover:text-eas-blue transition-all shadow-sm">
                 <Share2 size={18} />
               </button>
-              <button className={`flex items-center gap-3 px-8 py-4 bg-gradient-to-r ${activeGradient} text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all`}>
+              <button className={`flex items-center gap-3 px-8 py-4 bg-gradient-to-r ${activeGradient} text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-eas-blue/20 hover:scale-105 active:scale-95 transition-all`}>
                 <Download size={18} />
                 <span>Download PDF</span>
               </button>
@@ -130,7 +130,7 @@ const LegalPage = ({ type = 'privacy' }) => {
             transition={{ delay: 0.2 }}
             className="lg:col-span-3 space-y-8"
           >
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl">
+            <div className="bg-white dark:bg-eas-dark/60 p-8 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-xl">
                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${activeGradient} flex items-center justify-center text-white shadow-lg mb-6`}>
                   <Icon size={32} />
                </div>
@@ -138,7 +138,7 @@ const LegalPage = ({ type = 'privacy' }) => {
                <p className="text-[11px] font-bold text-slate-400 leading-relaxed uppercase tracking-tight">
                  This document is a legally binding policy for <span className="text-slate-900 dark:text-white">{settings?.shopName || 'SWEETO HUB'}</span> and its users.
                </p>
-               <div className="mt-8 pt-8 border-t border-slate-50 dark:border-slate-800 space-y-4">
+               <div className="mt-8 pt-8 border-t border-slate-50 dark:border-white/5 space-y-4">
                   <div className="flex items-center gap-3">
                      <CheckCircle2 size={16} className="text-emerald-500" />
                      <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">Active</span>
@@ -150,13 +150,13 @@ const LegalPage = ({ type = 'privacy' }) => {
                </div>
             </div>
 
-            <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+            <div className="bg-eas-dark p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
                   <HelpCircle size={60} className="text-white" />
                </div>
                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-4">Need Help?</h4>
                <p className="text-xs font-bold text-white/80 leading-relaxed mb-6">If you don't understand any of these terms, our legal team is here.</p>
-               <button className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg">
+               <button className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#0043d0] hover:text-white transition-all shadow-lg">
                  Contact Legal
                </button>
             </div>
@@ -169,11 +169,11 @@ const LegalPage = ({ type = 'privacy' }) => {
             animate="visible"
             className="lg:col-span-9"
           >
-            <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+            <div className="bg-white dark:bg-eas-dark/60 rounded-[3.5rem] border border-slate-100 dark:border-white/5 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
                {/* Document Header Bar */}
-               <div className="bg-slate-50/50 dark:bg-slate-800/30 px-10 md:px-16 py-8 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-6">
+               <div className="bg-slate-50/50 dark:bg-white/5 px-10 md:px-16 py-8 border-b border-slate-100 dark:border-white/5 flex flex-wrap items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
-                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                     <div className="w-10 h-10 rounded-full bg-eas-blue/10 flex items-center justify-center text-eas-blue">
                         <FileText size={18} />
                      </div>
                      <div>
@@ -182,8 +182,8 @@ const LegalPage = ({ type = 'privacy' }) => {
                      </div>
                   </div>
                   <div className="flex gap-2">
-                     <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest">Public</span>
-                     <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest">Enforced</span>
+                     <span className="px-3 py-1 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest">Public</span>
+                     <span className="px-3 py-1 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest">Enforced</span>
                   </div>
                </div>
 
@@ -195,7 +195,7 @@ const LegalPage = ({ type = 'privacy' }) => {
                      </div>
                   </div>
 
-                  <div className="mt-20 pt-12 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="mt-20 pt-12 border-t border-slate-100 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-5">
                        <div className="relative">
                           <div className={`absolute inset-0 bg-gradient-to-r ${activeGradient} blur-lg opacity-40`} />
@@ -226,10 +226,10 @@ const LegalPage = ({ type = 'privacy' }) => {
                     onClick={() => navigate(`/${otherType}`)}
                     className="group flex items-center gap-3"
                   >
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] group-hover:text-blue-500 transition-colors">
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] group-hover:text-eas-blue transition-colors">
                        Go to {otherType}
                      </span>
-                     <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                     <ChevronRight size={14} className="text-slate-300 group-hover:text-eas-blue group-hover:translate-x-1 transition-all" />
                   </button>
                ))}
             </div>

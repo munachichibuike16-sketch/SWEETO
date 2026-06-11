@@ -380,13 +380,13 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
               {/* Top Left Brand Accent */}
               <div className="absolute top-6 left-6 sm:top-8 sm:left-8 flex items-center gap-2 z-50 pointer-events-none select-none">
                 <SweetoLogo size={20} className="w-5 h-5 shrink-0 animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-[0.3em] text-eas-blue dark:text-cyan-400 italic drop-shadow-sm">
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-eas-blue dark:text-blue-400 italic drop-shadow-sm">
                   sweeto
                 </span>
               </div>
               {/* Dynamic Design Accents */}
               <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-eas-blue/5 rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-eas-accent/5 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-eas-blue/5 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none"></div>
 
               {/* Header Actions */}
               <div className="absolute top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-2 sm:gap-3 z-50">
@@ -394,7 +394,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   onClick={handleToggleWishlist}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg backdrop-blur-md border ${isWishlisted ? 'bg-red-500 border-red-500 text-white' : 'bg-white/80 border-slate-100 text-slate-400 hover:text-red-500'}`}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg backdrop-blur-md border ${isWishlisted ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/40' : 'bg-white/80 border-slate-100 text-slate-400 hover:text-[#ff3b30]'}`}
                 >
                   <Heart className="w-[18px] h-[18px] sm:w-5 sm:h-5" fill={isWishlisted ? "currentColor" : "none"} />
                 </motion.button>
@@ -497,7 +497,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       </div>
 
                       {product.discount > 0 && (
-                        <div className="absolute top-4 left-4 sm:top-10 sm:left-10 bg-red-600 text-white text-[10px] sm:text-xs font-black px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xl shadow-red-600/30 z-10">
+                        <div className="absolute top-4 left-4 sm:top-10 sm:left-10 bg-[#ff3b30] text-white text-[10px] sm:text-xs font-black px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xl shadow-red-500/30 z-10">
                           -{product.discount}% EXCLUSIVE
                         </div>
                       )}
@@ -545,7 +545,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                     <div className="flex flex-col gap-2 mb-4">
                       <div className="flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-100 dark:border-white/5">
                         <div className="flex items-baseline gap-4">
-                          <span className="text-4xl font-black text-eas-blue dark:text-cyan-400 tracking-tighter italic">
+                          <span className="text-4xl font-black text-eas-blue dark:text-blue-400 tracking-tighter italic">
                             {product.price?.toLocaleString()}
                             <span className="text-lg ml-2 not-italic opacity-40">{settings?.currency || 'FCFA'}</span>
                           </span>
@@ -564,7 +564,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                             navigator.clipboard.writeText(`${product.price} FCFA`);
                             showToast(lang === 'fr' ? 'Prix copié ! ✓' : 'Price copied! ✓', 'success');
                           }}
-                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-400 hover:text-eas-blue dark:hover:text-cyan-400 border border-slate-100 dark:border-white/5 rounded-xl flex items-center justify-center shadow-sm shrink-0"
+                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-400 hover:text-eas-blue dark:hover:text-blue-400 border border-slate-100 dark:border-white/5 rounded-xl flex items-center justify-center shadow-sm shrink-0"
                           title={lang === 'fr' ? 'Copier le prix' : 'Copy Price'}
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

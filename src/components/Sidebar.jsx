@@ -214,7 +214,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                 onClick={() => { playSound('click'); setActiveTab('filter'); }}
                 className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'filter' 
-                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
+                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-eas-blue' 
                     : 'text-slate-400 dark:text-slate-500 bg-[#f5f5f5] dark:bg-slate-800'
                 }`}
               >
@@ -224,7 +224,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                 onClick={() => { playSound('click'); setActiveTab('brands'); }}
                 className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'brands' 
-                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
+                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-eas-blue' 
                     : 'text-slate-400 dark:text-slate-500 bg-[#f5f5f5] dark:bg-slate-800'
                 }`}
               >
@@ -234,7 +234,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                 onClick={() => { playSound('click'); setActiveTab('menu'); }}
                 className={`flex-1 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em] transition-all cursor-pointer ${
                   activeTab === 'menu' 
-                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-red-600' 
+                    ? 'bg-white dark:bg-slate-900 text-slate-850 dark:text-white border-b-[3px] border-eas-blue' 
                     : 'text-slate-400 dark:text-slate-500 bg-[#f5f5f5] dark:bg-slate-800'
                 }`}
               >
@@ -267,7 +267,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                 onCategorySelect(cat.name);
                                 onClose();
                               }}
-                              className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-red-600 transition-colors cursor-pointer"
+                              className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-eas-blue transition-colors cursor-pointer"
                             >
                               {t_smart(cat.name)}
                             </button>
@@ -277,7 +277,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                 onClick={() => toggleExpand(cat.id)}
                                 className={`w-12 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                                   isExpanded 
-                                    ? 'bg-red-600 text-white border-l-red-600 shadow-inner' 
+                                    ? 'bg-eas-blue text-white border-l-eas-blue shadow-inner' 
                                     : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white'
                                 }`}
                               >
@@ -303,7 +303,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                         onCategorySelect(sub.name);
                                         onClose();
                                       }}
-                                      className="flex-1 text-left py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                      className="flex-1 text-left py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-eas-blue transition-colors cursor-pointer"
                                     >
                                       {t_smart(sub.name)}
                                     </button>
@@ -333,8 +333,8 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                             onClick={() => handleBrandSelect(brand.name)}
                             className={`flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer flex items-center justify-between ${
                               selectedBrand === brand.name 
-                                ? 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-extrabold border-l-4 border-red-600 pl-5' 
-                                : 'text-slate-800 dark:text-slate-200 hover:text-red-600'
+                                ? 'bg-blue-50 dark:bg-blue-950/20 text-eas-blue dark:text-blue-400 font-extrabold border-l-4 border-eas-blue pl-5' 
+                                : 'text-slate-800 dark:text-slate-200 hover:text-eas-blue'
                             }`}
                           >
                             <span>{brand.name}</span>
@@ -370,7 +370,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       <div key={i} className="flex items-stretch justify-between bg-white dark:bg-slate-900 min-h-[52px]">
                         <button
                           onClick={item.onClick}
-                          className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-red-600 transition-colors cursor-pointer"
+                          className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-eas-blue transition-colors cursor-pointer"
                         >
                           {item.name}
                         </button>
@@ -382,7 +382,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       <div className="flex items-stretch justify-between min-h-[52px] border-b border-slate-100 dark:border-slate-800">
                         <button
                           onClick={() => setIsLangExpanded(!isLangExpanded)}
-                          className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-red-650 transition-colors cursor-pointer flex items-center gap-2"
+                          className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-2"
                         >
                           <Globe size={14} className="text-eas-blue animate-pulse" />
                           {t('regional_language') || 'Language'} ({lang.toUpperCase()})
@@ -391,7 +391,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                           onClick={() => setIsLangExpanded(!isLangExpanded)}
                           className={`w-12 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                             isLangExpanded 
-                              ? 'bg-red-600 text-white border-l-red-600 shadow-inner' 
+                              ? 'bg-eas-blue text-white border-l-eas-blue shadow-inner' 
                               : 'text-slate-400 dark:text-slate-500 hover:text-slate-850 dark:hover:text-white'
                           }`}
                         >
@@ -439,7 +439,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-2xl z-50 cursor-pointer hover:bg-red-600 transition-colors"
+              className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-2xl z-50 cursor-pointer hover:bg-eas-blue transition-colors"
               title="Close Menu"
             >
               <X size={20} />

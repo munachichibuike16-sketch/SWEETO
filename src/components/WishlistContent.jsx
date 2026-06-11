@@ -13,7 +13,7 @@ const WishlistContent = ({ onProductClick }) => {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-20 md:py-40 text-center relative overflow-hidden">
         {/* Decorative Background Elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-eas-blue/5 rounded-full blur-[120px] -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#ff3b30]/5 rounded-full blur-[120px] -z-10" />
         
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }}
@@ -21,8 +21,8 @@ const WishlistContent = ({ onProductClick }) => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="w-32 h-32 bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl flex items-center justify-center mb-10 relative group"
         >
-          <Heart size={48} className="text-slate-200 dark:text-slate-800 group-hover:text-red-500 transition-colors duration-500" />
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-tr from-red-500 to-rose-400 rounded-2xl border-4 border-slate-50 dark:border-slate-950 flex items-center justify-center shadow-lg">
+          <Heart size={48} className="text-slate-200 dark:text-slate-800 group-hover:text-[#ff3b30] transition-colors duration-500" />
+          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-tr from-[#ff3b30] to-red-700 rounded-2xl border-4 border-slate-50 dark:border-slate-950 flex items-center justify-center shadow-lg">
             <span className="text-white text-[10px] font-black italic">0</span>
           </div>
         </motion.div>
@@ -41,7 +41,7 @@ const WishlistContent = ({ onProductClick }) => {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => window.location.href = '/'}
-          className="bg-[#00204a] text-white px-12 py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] hover:bg-eas-blue transition-all flex items-center gap-4 shadow-xl shadow-eas-blue/20"
+          className="bg-[#00204a] text-white px-12 py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] hover:bg-[#ff3b30] transition-all flex items-center gap-4 shadow-xl shadow-red-500/20"
         >
           {t('explore_products') || 'Start Discovery'} <ArrowRight size={18} />
         </motion.button>
@@ -57,14 +57,14 @@ const WishlistContent = ({ onProductClick }) => {
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="p-3 sm:p-6 bg-gradient-to-br from-red-600 to-rose-500 shadow-2xl shadow-red-500/20 rounded-2xl sm:rounded-[30px] shrink-0"
+              className="p-3 sm:p-6 bg-gradient-to-br from-[#ff3b30] to-red-750 shadow-2xl shadow-red-500/20 rounded-2xl sm:rounded-[30px] shrink-0"
             >
               <Heart size={24} className="text-white sm:w-8 sm:h-8" fill="currentColor" />
             </motion.div>
             <div className="min-w-0">
               <h2 className="text-2xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none truncate">{t('saved_gear') || 'Saved Gear'}</h2>
               <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#ff3b30] animate-pulse shrink-0" />
                 <p className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em] sm:tracking-[0.4em] truncate">
                   {wishlistItems.length} {wishlistItems.length === 1 ? t('item') || 'Item' : t('items') || 'Items'} {t('ready_checkout') || 'Curated'}
                 </p>
@@ -76,13 +76,13 @@ const WishlistContent = ({ onProductClick }) => {
              <div className="h-12 w-[1px] bg-slate-100 dark:bg-slate-900 hidden md:block" />
              <div className="flex flex-col items-end">
                 <span className="text-[9px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest mb-1">{t('curation_status') || 'Curation Status'}</span>
-                <span className="text-xs font-black text-eas-blue uppercase italic tracking-tighter bg-eas-blue/5 px-4 py-1.5 rounded-full border border-eas-blue/10">Premium Collection</span>
+                <span className="text-xs font-black text-[#ff3b30] uppercase italic tracking-tighter bg-[#ff3b30]/5 px-4 py-1.5 rounded-full border border-[#ff3b30]/10">Premium Collection</span>
              </div>
           </div>
         </div>
         
         {/* Abstract Background Decoration */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-red-500/5 rounded-full blur-3xl -z-10" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#ff3b30]/5 rounded-full blur-3xl -z-10" />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-x-8 sm:gap-y-16">

@@ -96,7 +96,7 @@ const VisitUs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-eas-light dark:bg-eas-dark pt-24 pb-20 selection:bg-eas-blue/30 selection:text-eas-blue">
       <div className="max-w-[1400px] mx-auto px-6 relative">
         
         {/* METICULOUS NAVIGATION */}
@@ -105,18 +105,18 @@ const VisitUs = () => {
             whileHover={{ scale: 1.05, x: -5 }}
             whileActive={{ scale: 0.95 }}
             onClick={() => navigate('/')}
-            className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl shadow-slate-200/20 dark:shadow-black/40 group transition-all"
+            className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 rounded-2xl shadow-xl shadow-eas-blue/5 dark:shadow-black/40 group transition-all"
           >
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all">
+            <div className="w-8 h-8 rounded-xl bg-eas-blue/10 flex items-center justify-center text-eas-blue group-hover:bg-eas-blue group-hover:text-white transition-all">
               <ArrowLeft size={18} />
             </div>
             <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white italic">Back Home</span>
           </motion.button>
 
           <div className="flex items-center gap-4 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">
-            <span className="w-8 h-[2px] bg-blue-500/30"></span>
+            <span className="w-8 h-[2px] bg-eas-blue/30"></span>
             {settings?.shopName || 'SWEETO HUB'} • OFFICIAL LOCATION
-            <span className="w-8 h-[2px] bg-blue-500/30"></span>
+            <span className="w-8 h-[2px] bg-eas-blue/30"></span>
           </div>
         </div>
 
@@ -127,13 +127,13 @@ const VisitUs = () => {
           className="grid grid-cols-1 lg:grid-cols-12 gap-8"
         >
           {/* HERO BANNER SECTION */}
-          <motion.div variants={itemVariants} className="lg:col-span-12 group relative h-[500px] rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border-4 border-white dark:border-slate-900">
+          <motion.div variants={itemVariants} className="lg:col-span-12 group relative h-[500px] rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border-4 border-white dark:border-eas-dark">
             <img 
               src={settings?.shopBanner || "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=2000"} 
               alt="Store Front"
               className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-eas-dark via-eas-dark/20 to-transparent" />
             
             {/* Glassmorphism Title Card */}
             <div className="absolute bottom-12 left-12 right-12 flex flex-col md:flex-row items-end justify-between gap-8">
@@ -145,7 +145,7 @@ const VisitUs = () => {
                   </div>
                 </div>
                 <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter italic leading-none">
-                  Visit Our <br/> <span className="text-blue-400">Flagship</span> Store
+                  Visit Our <br/> <span className="text-eas-blue">Flagship</span> Store
                 </h1>
                 <p className="text-slate-300 font-bold text-sm leading-relaxed max-w-lg">
                   {settings?.experience_text || "Step into the future of tech. Experience our full product range in person at our Douala headquarters."}
@@ -179,9 +179,9 @@ const VisitUs = () => {
           {/* INFORMATION GRID */}
           <motion.div variants={itemVariants} className="lg:col-span-4 space-y-8">
             {/* Address Card */}
-            <div className="p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl group hover:border-blue-500/30 transition-all">
+            <div className="p-10 rounded-[2.5rem] bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 shadow-xl group hover:border-eas-blue/30 transition-all">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:rotate-12 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-eas-blue text-white flex items-center justify-center shadow-lg shadow-eas-blue/30 group-hover:rotate-12 transition-transform">
                   <MapPin size={28} />
                 </div>
                 <div>
@@ -191,10 +191,10 @@ const VisitUs = () => {
               </div>
               <p 
                 onClick={() => handleCopyToClipboard(settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon', lang === 'fr' ? 'Adresse' : 'Address')}
-                className="text-base font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-8 hover:text-blue-500 cursor-pointer transition-colors flex items-center justify-between group/addr"
+                className="text-base font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-8 hover:text-eas-blue cursor-pointer transition-colors flex items-center justify-between group/addr"
               >
                 <span>{settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon'}</span>
-                <span className="text-[9px] opacity-0 group-hover/addr:opacity-100 bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-1 rounded transition-all font-black uppercase shrink-0 ml-2">
+                <span className="text-[9px] opacity-0 group-hover/addr:opacity-100 bg-eas-light dark:bg-white/5 text-slate-400 px-2 py-1 rounded transition-all font-black uppercase shrink-0 ml-2">
                   {lang === 'fr' ? 'Copier' : 'Copy'}
                 </span>
               </p>
@@ -203,14 +203,14 @@ const VisitUs = () => {
                   href={`https://maps.google.com/?q=${encodeURIComponent(settings?.loc_address || "Douala, Cameroon")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-5 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-2xl"
+                  className="w-full py-5 bg-eas-dark dark:bg-white text-white dark:text-eas-dark rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-2xl"
                 >
                   <Navigation size={18} />
                   Get Precise Directions
                 </a>
                 <button 
                   onClick={() => handleCopyToClipboard(settings?.loc_phone || '+2250500619923', lang === 'fr' ? 'Téléphone' : 'Phone')}
-                  className="w-full py-5 border-2 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                  className="w-full py-5 border-2 border-slate-100 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
                 >
                   <Phone size={18} />
                   {lang === 'fr' ? 'Copier le Numéro' : 'Copy Phone Number'}
@@ -219,7 +219,7 @@ const VisitUs = () => {
             </div>
 
             {/* Quick Status */}
-            <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-500/30 overflow-hidden relative group">
+            <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-eas-blue to-blue-800 text-white shadow-2xl shadow-eas-blue/30 overflow-hidden relative group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
@@ -236,7 +236,7 @@ const VisitUs = () => {
                 </div>
                 <button 
                    onClick={() => window.open(`https://wa.me/${settings?.social_whatsapp?.replace(/\D/g, '')}`, '_blank')}
-                   className="w-full flex items-center justify-between p-4 bg-white text-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all"
+                   className="w-full flex items-center justify-between p-4 bg-white text-eas-blue rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-eas-light transition-all"
                 >
                   <span>Chat With Agent</span>
                   <MessageCircle size={18} />
@@ -250,7 +250,7 @@ const VisitUs = () => {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 h-full">
               
               {/* INTERACTIVE SCHEDULE */}
-              <div className="md:col-span-2 p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl flex flex-col">
+              <div className="md:col-span-2 p-10 rounded-[2.5rem] bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 shadow-xl flex flex-col">
                 <div className="flex items-center gap-4 mb-10">
                   <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30">
                     <Clock size={28} />
@@ -268,7 +268,7 @@ const VisitUs = () => {
                       className={`flex justify-between items-center p-4 rounded-2xl transition-all ${
                         item.highlight 
                           ? 'bg-red-500/5 text-red-500 border border-red-500/10' 
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-400'
+                          : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400'
                       }`}
                     >
                       <span className="text-xs font-black uppercase tracking-widest italic">{item.day}</span>
@@ -277,9 +277,9 @@ const VisitUs = () => {
                   ))}
                 </div>
 
-                <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <div className="mt-8 p-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/50"></div>
+                    <div className="w-3 h-3 bg-eas-blue rounded-full animate-pulse shadow-lg shadow-eas-blue/50"></div>
                     <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Open Now</span>
                   </div>
                   <ChevronRight size={16} className="text-slate-400" />
@@ -287,7 +287,7 @@ const VisitUs = () => {
               </div>
 
               {/* HD MAP INTEGRATION */}
-              <div className="md:col-span-3 rounded-[3rem] overflow-hidden bg-white dark:bg-slate-900 border-4 border-white dark:border-slate-800 shadow-2xl relative group h-[600px] md:h-auto">
+              <div className="md:col-span-3 rounded-[3rem] overflow-hidden bg-white dark:bg-eas-dark border-4 border-white dark:border-white/5 shadow-2xl relative group h-[600px] md:h-auto">
                 <iframe 
                   title="Store Location"
                   width="100%" 

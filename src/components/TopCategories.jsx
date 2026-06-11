@@ -29,13 +29,13 @@ export default function TopCategories() {
   const getCategoryColor = (name) => {
     const lowerName = name.toLowerCase();
     if (lowerName.includes('phone') || lowerName.includes('mobile') || lowerName.includes('smart')) {
-      return 'from-blue-500/25 to-cyan-500/25 border-blue-500/30 text-blue-500 dark:text-cyan-400';
+      return 'from-eas-blue/15 to-eas-blue/25 border-eas-blue/30 text-eas-blue dark:text-blue-400';
     }
     if (lowerName.includes('laptop') || lowerName.includes('computer') || lowerName.includes('macbook') || lowerName.includes('pc')) {
       return 'from-purple-500/25 to-indigo-500/25 border-purple-500/30 text-purple-500 dark:text-purple-400';
     }
     if (lowerName.includes('tv') || lowerName.includes('screen') || lowerName.includes('monitor') || lowerName.includes('cinema')) {
-      return 'from-rose-500/25 to-red-500/25 border-rose-500/30 text-rose-500 dark:text-rose-400';
+      return 'from-eas-blue/15 to-eas-blue/25 border-eas-blue/30 text-eas-blue dark:text-blue-400';
     }
     if (lowerName.includes('watch') || lowerName.includes('wearable')) {
       return 'from-amber-500/25 to-orange-500/25 border-amber-500/30 text-amber-500 dark:text-amber-400';
@@ -44,7 +44,7 @@ export default function TopCategories() {
       return 'from-emerald-500/25 to-teal-500/25 border-emerald-500/30 text-emerald-500 dark:text-emerald-400';
     }
     if (lowerName.includes('earbud') || lowerName.includes('headphone') || lowerName.includes('airpod') || lowerName.includes('pods')) {
-      return 'from-cyan-500/25 to-blue-500/25 border-cyan-500/30 text-cyan-500 dark:text-cyan-300';
+      return 'from-eas-blue/15 to-eas-blue/25 border-eas-blue/30 text-eas-blue dark:text-blue-400';
     }
     return 'from-indigo-500/25 to-violet-500/25 border-indigo-500/30 text-indigo-500 dark:text-indigo-400';
   };
@@ -160,7 +160,7 @@ export default function TopCategories() {
         {/* Left Floating Scroll Button - Translucent circle suitable for Android touch & desktop hover */}
         <button 
           onClick={() => scroll('left')}
-          className="absolute -left-1.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
+          className="absolute -left-1.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-eas-blue hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
           aria-label="Scroll left"
         >
           <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
@@ -185,11 +185,11 @@ export default function TopCategories() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03 }}
-                className="flex flex-col justify-between shrink-0 snap-center p-4 bg-slate-50 dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-xl shadow-sm hover:shadow-md hover:border-cyan-400/40 dark:hover:border-cyan-400/40 transition-all duration-300 min-w-[130px] max-w-[130px] h-[160px] sm:min-w-[170px] sm:max-w-[170px] sm:h-[210px] overflow-hidden group select-none relative cursor-pointer"
+                className="flex flex-col justify-between shrink-0 snap-center p-4 bg-slate-50 dark:bg-[#020617] border border-slate-200/50 dark:border-slate-800/60 rounded-xl shadow-sm hover:shadow-md hover:border-eas-blue/40 dark:hover:border-eas-blue/40 transition-all duration-300 min-w-[130px] max-w-[130px] h-[160px] sm:min-w-[170px] sm:max-w-[170px] sm:h-[210px] overflow-hidden group select-none relative cursor-pointer"
               >
                 {/* Top Title & Item Count Label */}
                 <div className="text-left w-full z-10 flex flex-col">
-                  <span className="text-[10px] sm:text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider group-hover:text-eas-blue dark:group-hover:text-cyan-400 transition-colors block truncate max-w-full leading-tight">
+                  <span className="text-[10px] sm:text-sm font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider group-hover:text-eas-blue dark:group-hover:text-eas-blue transition-colors block truncate max-w-full leading-tight">
                     {t_smart(cat.name)}
                   </span>
                   <span className="text-[7.5px] sm:text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
@@ -218,7 +218,7 @@ export default function TopCategories() {
         {/* Right Floating Scroll Button - Translucent circle suitable for Android touch & desktop hover */}
         <button 
           onClick={() => scroll('right')}
-          className="absolute -right-1.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
+          className="absolute -right-1.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-slate-700 dark:text-slate-300 hover:text-eas-blue dark:hover:text-eas-blue hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-black/5"
           aria-label="Scroll right"
         >
           <ChevronRight className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />

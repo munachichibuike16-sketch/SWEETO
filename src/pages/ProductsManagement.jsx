@@ -42,7 +42,7 @@ export default function ProductsManagement() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [colorName, setColorName] = useState('');
-  const [colorCode, setColorCode] = useState('#0066FF');
+  const [colorCode, setColorCode] = useState('#0000FF');
 
   const openAdd = () => { setForm(EMPTY); setEditingProduct(null); setError(''); setSuccess(''); setView('form'); };
   const openEdit = (p) => {
@@ -97,7 +97,7 @@ export default function ProductsManagement() {
     catch { setError('Image upload failed.'); } finally { setIsUploading(false); }
   };
 
-  const addColor = () => { if (!colorName.trim()) return; setForm(p=>({...p,colors:[...(p.colors||[]),{name:colorName.trim(),code:colorCode}]})); setColorName(''); setColorCode('#0066FF'); };
+  const addColor = () => { if (!colorName.trim()) return; setForm(p=>({...p,colors:[...(p.colors||[]),{name:colorName.trim(),code:colorCode}]})); setColorName(''); setColorCode('#0000FF'); };
 
   const discount = () => { const o=parseFloat(form.originalPrice),s=parseFloat(form.price); if(!o||!s||o<=s) return null; return Math.round(((o-s)/o)*100); };
 
