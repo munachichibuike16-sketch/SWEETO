@@ -34,7 +34,7 @@ export default function BackToTop() {
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           onClick={scrollToTop}
-          className="fixed bottom-36 right-6 sm:bottom-24 sm:right-6 z-[90] p-3.5 sm:p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-full text-slate-600 dark:text-slate-300 hover:text-eas-blue dark:hover:text-cyan-400 cursor-pointer hover:scale-110 active:scale-95 transition-transform flex items-center justify-center group"
+          className="fixed bottom-36 right-6 sm:bottom-24 sm:right-6 z-[90] p-3.5 sm:p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-full text-slate-600 dark:text-slate-300 hover:text-eas-blue dark:hover:text-eas-blue cursor-pointer hover:scale-110 active:scale-95 transition-transform flex items-center justify-center group"
           aria-label="Back to Top"
         >
           {/* Glowing background halo */}

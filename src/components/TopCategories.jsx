@@ -138,7 +138,7 @@ export default function TopCategories() {
       {/* Centered Premium Header */}
       <div className="flex flex-col items-center justify-center mb-8 relative">
         {/* Soft Background Neon Backglow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-32 bg-eas-blue/10 dark:bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-32 bg-eas-blue/10 dark:bg-eas-blue/5 blur-[100px] rounded-full pointer-events-none" />
 
         {/* Futuristic Bold Centered Title */}
         <h2 className="text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-center relative text-slate-900 dark:text-white">

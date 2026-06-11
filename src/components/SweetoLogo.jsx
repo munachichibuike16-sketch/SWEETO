@@ -12,7 +12,7 @@ const SweetoLogo = ({ size = 48, className = '' }) => {
       <defs>
         <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#0000ff" />
-          <stop offset="100%" stopColor="#0052ff" />
+          <stop offset="100%" stopColor="#0000ff" />
         </linearGradient>
       </defs>
       
