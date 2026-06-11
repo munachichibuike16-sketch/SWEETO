@@ -4,7 +4,7 @@ import {
   Plus, Edit, Trash2, X, Loader2, CheckCircle2, AlertCircle,
   ArrowLeft, Layers, Type, Hash, Star, Zap, Clock, TrendingUp,
   Smartphone, Monitor, Speaker, Snowflake, Gift, Flame, Grip,
-  ChevronUp, ChevronDown
+  ChevronUp, ChevronDown, Sliders
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
@@ -306,9 +306,14 @@ export default function SectionManagement() {
           </h2>
           <p className="text-slate-500 text-sm font-medium mt-1 ml-14">{sections.length} storefront sections configured</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-orange-500/20">
-          <Plus size={16}/> New Section
-        </button>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all shadow-sm">
+            <Sliders size={16}/> Switcher
+          </button>
+          <button onClick={openAdd} className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-orange-500/20">
+            <Plus size={16}/> New Section
+          </button>
+        </div>
       </div>
 
       {sorted.length === 0 ? (
