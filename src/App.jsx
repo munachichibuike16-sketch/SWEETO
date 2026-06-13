@@ -840,6 +840,27 @@ const Storefront = ({ viewMode = 'home' }) => {
                         </>
                       )}
                       
+                      {/* Permanent Recommended for You */}
+                      {(() => {
+                        const recommendedProducts = liveProducts
+                          ?.filter(p => p.is_featured || p.is_trending)
+                          .slice(0, 10);
+                        if (!recommendedProducts || recommendedProducts.length === 0) return null;
+                        return (
+                          <div className="mt-12 border-t border-slate-100 dark:border-white/5 pt-12">
+                            <ProductSection 
+                              title={lang === 'fr' ? 'Recommandé pour vous' : 'Recommended for you'} 
+                              subtitle={lang === 'fr' ? 'Sélectionné spécialement pour vous' : 'Selected especially for you'} 
+                              products={recommendedProducts} 
+                              type="trending" 
+                              hideBanner={true}
+                              settings={{ enabled: false }}
+                              onProductClick={handleProductClick}
+                            />
+                          </div>
+                        );
+                      })()}
+
                       {/* Permanent Recently Viewed (Always at the bottom) */}
                       {recentlyViewed.length > 0 && (
                         <ProductSection 
@@ -854,41 +875,74 @@ const Storefront = ({ viewMode = 'home' }) => {
                       )}
                     </>
                   )
-                ) : searchQuery ? (
-                    <div className="px-6 md:px-12">
-                    <ProductSection 
-                      title={t('search_results')} 
-                      subtitle={`${t('found_matches')} "${searchQuery}"`} 
-                      products={sortedProducts} 
-                      type="category" 
-                      hideHeader={true}
-                      settings={{ enabled: false }}
-                      onProductClick={handleProductClick}
-                    />
-                  </div>
-                ) : (activeCategory || selectedBrand) ? (
-                  <ProductSection 
-                    title={activeCategory || selectedBrand} 
-                    subtitle={`${t('premium_selection')} ${activeCategory || selectedBrand}`} 
-                    products={sortedProducts} 
-                    type="category" 
-                    hideHeader={true}
-                    hideBanner={true}
-                    settings={{ enabled: false }}
-                    onProductClick={handleProductClick}
-                  />
                 ) : (
-                  <div className="px-6 md:px-12">
-                    <ProductSection 
-                      title={t('all_products')} 
-                      subtitle={t('discover_full_range')} 
-                      products={sortedProducts} 
-                      type="category" 
-                      hideHeader={true}
-                      settings={{ enabled: false }}
-                      onProductClick={handleProductClick}
-                    />
-                  </div>
+                  <>
+                    {searchQuery ? (
+                      <div className="px-6 md:px-12">
+                        <ProductSection 
+                          title={t('search_results')} 
+                          subtitle={`${t('found_matches')} "${searchQuery}"`} 
+                          products={sortedProducts} 
+                          type="category" 
+                          hideHeader={true}
+                          settings={{ enabled: false }}
+                          onProductClick={handleProductClick}
+                        />
+                      </div>
+                    ) : (activeCategory || selectedBrand) ? (
+                      <ProductSection 
+                        title={activeCategory || selectedBrand} 
+                        subtitle={`${t('premium_selection')} ${activeCategory || selectedBrand}`} 
+                        products={sortedProducts} 
+                        type="category" 
+                        hideHeader={true}
+                        hideBanner={true}
+                        settings={{ enabled: false }}
+                        onProductClick={handleProductClick}
+                      />
+                    ) : (
+                      <div className="px-6 md:px-12">
+                        <ProductSection 
+                          title={t('all_products')} 
+                          subtitle={t('discover_full_range')} 
+                          products={sortedProducts} 
+                          type="category" 
+                          hideHeader={true}
+                          settings={{ enabled: false }}
+                          onProductClick={handleProductClick}
+                        />
+                      </div>
+                    )}
+
+                    {/* AliExpress-Style "Recommended for You" section below the results */}
+                    {(() => {
+                      const displayedIds = new Set(sortedProducts.map(p => p.id));
+                      const recommendedProducts = liveProducts
+                        ?.filter(p => !displayedIds.has(p.id) && (p.is_featured || p.is_trending))
+                        .slice(0, 10);
+
+                      if (!recommendedProducts || recommendedProducts.length === 0) return null;
+
+                      return (
+                        <div className="px-6 md:px-12 mt-16 border-t border-slate-200/50 dark:border-white/5 pt-12 pb-8">
+                          <div className="flex items-center gap-2 mb-8">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                            <h2 className="text-xl font-bold uppercase tracking-tight text-slate-900 dark:text-white">
+                              {lang === 'fr' ? 'Recommandé pour vous' : 'Recommended for you'}
+                            </h2>
+                          </div>
+                          <ProductSection 
+                            products={recommendedProducts} 
+                            type="category" 
+                            hideHeader={true}
+                            hideBanner={true}
+                            settings={{ enabled: false }}
+                            onProductClick={handleProductClick}
+                          />
+                        </div>
+                      );
+                    })()}
+                  </>
                 )}
               </div>
             )}
