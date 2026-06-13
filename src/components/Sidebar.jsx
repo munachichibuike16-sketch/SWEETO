@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Box, Sparkles, ChevronRight, Globe,
-  Smartphone, Laptop, Headphones, Watch, Gamepad2
+  Smartphone, Laptop, Headphones, Watch, Gamepad2,
+  Heart, Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
@@ -253,6 +254,69 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                     exit={{ opacity: 0 }}
                     className="divide-y divide-slate-100 dark:divide-slate-800 border-b border-slate-100 dark:border-slate-800"
                   >
+                    {/* Special AliExpress-Style Navigation Items */}
+                    <div className="p-3 bg-slate-50/50 dark:bg-slate-950/20 space-y-1.5 border-b border-slate-100 dark:border-slate-800/60">
+                      {/* For You / Pour vous */}
+                      <button
+                        onClick={() => {
+                          playSound('click');
+                          navigate('/trending');
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-pink-500/10 dark:bg-pink-500/20 flex items-center justify-center text-pink-500">
+                            <Heart size={16} fill="currentColor" />
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 group-hover:text-pink-500 transition-colors">
+                            {lang === 'fr' ? 'Pour vous' : 'For You'}
+                          </span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-pink-500 transition-colors" />
+                      </button>
+
+                      {/* Recommended / Recommandé */}
+                      <button
+                        onClick={() => {
+                          playSound('click');
+                          navigate('/featured');
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-500">
+                            <Sparkles size={16} fill="currentColor" />
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 group-hover:text-blue-500 transition-colors">
+                            {lang === 'fr' ? 'Recommandé' : 'Recommended'}
+                          </span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                      </button>
+
+                      {/* Choice Deals */}
+                      <button
+                        onClick={() => {
+                          playSound('click');
+                          navigate('/deals');
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center text-amber-500">
+                            <Zap size={16} fill="currentColor" />
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 group-hover:text-amber-500 transition-colors">
+                            Choice Deals
+                          </span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500 transition-colors" />
+                      </button>
+                    </div>
+
                     {parentCategories.map((cat, i) => {
                       const subs = getSubcategories(cat.id);
                       const hasChildren = subs.length > 0;
