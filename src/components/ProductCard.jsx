@@ -122,19 +122,19 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
       <motion.div 
         whileHover={{ y: -6 }}
         onClick={handleCardClick}
-        className="group relative rounded-[20px] overflow-hidden border border-slate-100 dark:border-[#1f2430] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_30px_rgba(0,0,0,0.4)] flex flex-col h-full cursor-pointer w-full bg-white dark:bg-[#0b0d14] p-3"
+        className="group relative rounded-[20px] overflow-hidden border border-slate-100 dark:border-[#1f2430] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_30px_rgba(0,0,0,0.4)] flex flex-col h-full cursor-pointer w-full bg-white dark:bg-[#0b0d14]"
       >
         {/* Image Container */}
-        <div className="relative aspect-square bg-[#f8f9fa] dark:bg-white p-4 flex items-center justify-center rounded-[16px] overflow-hidden mb-3">
+        <div className="relative aspect-square bg-[#f8f9fa] dark:bg-white p-6 flex items-center justify-center rounded-b-[16px] overflow-hidden mb-3">
           {/* Badges */}
-          <div className="absolute top-2.5 left-2.5 z-10">
+          <div className="absolute top-3 left-3 z-10">
             <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-sm uppercase tracking-wider">
               {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
             </span>
           </div>
 
           {discountPercent > 0 && (
-            <div className="absolute top-2.5 right-2.5 z-10">
+            <div className="absolute top-3 right-3 z-10">
               <span className="bg-[#ff3b30] text-white font-extrabold text-[8px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-sm uppercase tracking-wider">
                 -{discountPercent}%
               </span>
@@ -142,7 +142,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
           )}
 
           {/* Wishlist Button (Floating/Subtle overlay inside image container) */}
-          <div className="absolute bottom-2.5 right-2.5 z-20 flex flex-col gap-1.5">
+          <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-1.5">
             <button 
               onClick={handleToggleWishlist}
               className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-md flex items-center justify-center transition-all backdrop-blur-md border ${
@@ -167,7 +167,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 px-1">
+        <div className="flex flex-col flex-1 p-4 pt-1 pb-4">
           {/* Category */}
           <span className="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase mb-1">
             {t_smart(product.category)}
