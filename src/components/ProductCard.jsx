@@ -43,6 +43,19 @@ const getSocialProof = (product, lang) => {
   }
 };
 
+const getSoldCount = (product) => {
+  const idStr = String(product.id || '');
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash += idStr.charCodeAt(i);
+  }
+  const base = (hash % 10) + 1; // 1 to 10
+  if (base <= 3) return "100+";
+  if (base <= 6) return "500+";
+  if (base <= 8) return "1 000+";
+  return "5 000+";
+};
+
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }) => {
   const { settings } = useStore();
   const { isDarkMode } = useTheme();
@@ -109,49 +122,29 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
     toggleWishlist(product);
   };
 
-  const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
-
-
-  const handleDetailsClick = (e) => {
-    e.stopPropagation();
-    handleCardClick(e);
-  };
+  const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
+  const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "4.5";
 
   return (
     <>
       <motion.div 
-        whileHover={{ y: -6 }}
+        whileHover={{ y: -4 }}
         onClick={handleCardClick}
-        className="group relative rounded-[20px] overflow-hidden border border-slate-100 dark:border-[#1f2430] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_30px_rgba(0,0,0,0.4)] flex flex-col h-full cursor-pointer w-full bg-white dark:bg-[#0b0d14]"
+        className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 hover:shadow-none"
       >
         {/* Image Container */}
-        <div className="relative aspect-square bg-[#f8f9fa] dark:bg-white p-6 flex items-center justify-center rounded-b-[16px] overflow-hidden mb-3">
-          {/* Badges */}
-          <div className="absolute top-3 left-3 z-10">
-            <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-sm uppercase tracking-wider">
-              {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
-            </span>
-          </div>
-
-          {discountPercent > 0 && (
-            <div className="absolute top-3 right-3 z-10">
-              <span className="bg-[#ff3b30] text-white font-extrabold text-[8px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-sm uppercase tracking-wider">
-                -{discountPercent}%
-              </span>
-            </div>
-          )}
-
-          {/* Wishlist Button (Floating/Subtle overlay inside image container) */}
-          <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-1.5">
+        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-900/20 mb-2.5 p-1.5">
+          {/* Wishlist Button (Floating overlay inside image container) */}
+          <div className="absolute top-2.5 right-2.5 z-20">
             <button 
               onClick={handleToggleWishlist}
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-md flex items-center justify-center transition-all backdrop-blur-md border ${
+              className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
                 isWished 
                   ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
-                  : 'bg-white/80 dark:bg-white/90 border-white/20 text-slate-800 hover:text-[#ff3b30]'
+                  : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
               }`}
             >
-              <Heart size={14} className="sm:w-4 sm:h-4" fill={isWished ? "currentColor" : "none"} />
+              <Heart size={13} fill={isWished ? "currentColor" : "none"} />
             </button>
           </div>
 
@@ -162,68 +155,50 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
               e.target.onerror = null; 
               e.target.src = '/hero-banner.png';
             }}
-            className="w-4/5 h-4/5 object-contain transition-transform duration-700 group-hover:scale-110" 
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 rounded-2xl" 
           />
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 p-4 pt-1 pb-4">
-          {/* Category */}
-          <span className="text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase mb-1">
-            {t_smart(product.category)}
-          </span>
-
-          {/* Title */}
-          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug tracking-normal line-clamp-1 mb-1.5 uppercase">
-            {t_smart(product.name)}
-          </h3>
-
-          {/* Description */}
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-3">
-            {product.description || (lang === 'fr' ? "Protégez vos yeux avec style sous le soleil avec nos produits de qualité supérieure." : "Protect your eyes in style under the sun with our premium products.")}
-          </p>
-
+        <div className="flex flex-col flex-1 py-1">
           {/* Price Section */}
-          <div className="mt-auto">
-            {/* Row 1: Today label + Original price */}
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-wider">
-                {lang === 'fr' ? "AUJOURD'HUI" : "TODAY"}
+          <div className="flex items-baseline flex-wrap gap-1 mb-1">
+            <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
+              {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
+            </span>
+            {product.original_price && (
+              <span className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono">
+                {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
               </span>
-              {product.original_price && (
-                <span className="text-slate-400 dark:text-slate-500 line-through text-[11px] sm:text-xs font-semibold font-mono">
-                  {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
-                </span>
-              )}
-            </div>
+            )}
+          </div>
 
-            {/* Row 2: Current price */}
-            <div className="flex items-baseline mb-4">
-              <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
-                {product.price?.toLocaleString()}
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-900 dark:text-white font-mono uppercase tracking-wider ml-1">
-                {settings?.currency || 'FCFA'}
-              </span>
+          {/* Badges / Choice */}
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+              Choice
+            </span>
+          </div>
+
+          {/* Sold Count & Rating */}
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
+            <span className="font-medium">+{getSoldCount(product)} {lang === 'fr' ? 'vendus' : 'sold'}</span>
+            <span>•</span>
+            <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+              <Star size={11} fill="currentColor" />
+              <span>{averageRating}</span>
             </div>
           </div>
 
-          {/* Buttons Row */}
-          <div className="grid grid-cols-2 gap-2 mt-auto">
-            <button 
-              onClick={handleDetailsClick}
-              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-800 dark:text-white text-xs font-bold transition-all active:scale-95 duration-200"
-            >
-              <Eye size={14} />
-              <span>{lang === 'fr' ? 'Détails' : 'Details'}</span>
-            </button>
-            <button 
-              onClick={handleAddToCart}
-              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all active:scale-95 duration-200 shadow-md shadow-blue-500/10 dark:shadow-none"
-            >
-              <ShoppingCart size={14} />
-              <span>{lang === 'fr' ? 'Ajouter' : 'Add'}</span>
-            </button>
+          {/* Title */}
+          <h3 className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug line-clamp-2 uppercase">
+            {t_smart(product.name)}
+          </h3>
+
+          {/* Shipping Badge */}
+          <div className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-1.5">
+            <span>🚚</span>
+            <span>{lang === 'fr' ? 'Livraison gratuite' : 'Free shipping'}</span>
           </div>
         </div>
       </motion.div>
