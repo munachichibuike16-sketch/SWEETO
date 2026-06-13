@@ -13,6 +13,7 @@ import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
 import BrightRetailHome from './components/BrightRetailHome';
+import ShufflingProductPage from './components/ShufflingProductPage';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
@@ -807,7 +808,7 @@ const Storefront = ({ viewMode = 'home' }) => {
       >
         
         <main className="flex-1 pb-20">
-          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products'].includes(viewMode) && <DiscoveryBar />}
+          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1600px] mx-auto ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
@@ -824,6 +825,8 @@ const Storefront = ({ viewMode = 'home' }) => {
               <StoreContent />
             ) : ['privacy', 'terms', 'security'].includes(viewMode) ? (
               <LegalPage type={viewMode} />
+            ) : ['trending', 'featured'].includes(viewMode) ? (
+              <ShufflingProductPage viewMode={viewMode} onProductClick={handleProductClick} />
             ) : (
               <div className="bg-eas-light dark:bg-eas-dark transition-colors duration-500 min-h-screen">
                 {viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand ? (
