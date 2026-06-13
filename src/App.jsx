@@ -29,6 +29,15 @@ import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
 
+const shuffleArray = (array) => {
+  const arr = [...(array || [])];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
 const getCurrentPath = () => {
   const hash = window.location.hash;
   if (hash) {
@@ -361,10 +370,18 @@ const Storefront = ({ viewMode = 'home' }) => {
   const newProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_new_arrival) === 1).sort((a,b) => b.id - a.id) : [];
   const trendingProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_trending) === 1) : [];
 
+  const shuffledTrending = useMemo(() => {
+    return shuffleArray(filteredProducts);
+  }, [viewMode === 'trending', filteredProducts.length]);
+
+  const shuffledFeatured = useMemo(() => {
+    return shuffleArray(filteredProducts);
+  }, [viewMode === 'featured', filteredProducts.length]);
+
   const currentProducts = viewMode === 'deals' ? dealProducts 
-    : viewMode === 'trending' ? trendingProducts 
+    : viewMode === 'trending' ? shuffledTrending 
     : viewMode === 'new-arrivals' ? newProducts 
-    : viewMode === 'featured' ? filteredProducts.filter(p => Number(p.is_featured) === 1)
+    : viewMode === 'featured' ? shuffledFeatured
     : filteredProducts;
 
   // Logic: 
