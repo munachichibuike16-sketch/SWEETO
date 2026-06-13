@@ -124,6 +124,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
 
   const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "4.5";
+  const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
 
   return (
     <>
@@ -134,8 +135,23 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
       >
         {/* Image Container */}
         <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-900/20 mb-2.5 p-1.5">
-          {/* Wishlist Button (Floating overlay inside image container) */}
-          <div className="absolute top-2.5 right-2.5 z-20">
+          {/* Top Badges */}
+          <div className="absolute top-2.5 left-2.5 z-10">
+            <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
+              {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
+            </span>
+          </div>
+
+          {discountPercent > 0 && (
+            <div className="absolute top-2.5 right-2.5 z-10">
+              <span className="bg-[#ff3b30] text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
+                -{discountPercent}%
+              </span>
+            </div>
+          )}
+
+          {/* Wishlist Button (Floating overlay inside image container bottom-right) */}
+          <div className="absolute bottom-2.5 right-2.5 z-20">
             <button 
               onClick={handleToggleWishlist}
               className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
@@ -162,15 +178,24 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
         {/* Content */}
         <div className="flex flex-col flex-1 py-1">
           {/* Price Section */}
-          <div className="flex items-baseline flex-wrap gap-1 mb-1">
-            <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
-              {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
-            </span>
-            {product.original_price && (
-              <span className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono">
-                {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-baseline flex-wrap gap-1">
+              <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
+                {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
               </span>
-            )}
+              {product.original_price && (
+                <span className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono">
+                  {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+                </span>
+              )}
+            </div>
+            {/* Quick Add to Cart Button */}
+            <button
+              onClick={handleAddToCart}
+              className="w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer shrink-0"
+            >
+              <ShoppingCart size={13} />
+            </button>
           </div>
 
           {/* Badges / Choice */}
