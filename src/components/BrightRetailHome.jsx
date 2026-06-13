@@ -93,10 +93,113 @@ export default function BrightRetailHome({ onProductClick }) {
       { id: 'default-tabs', role: 'bright_tabs', isActive: true, position: 3 },
       { id: 'default-billboard', role: 'bright_billboard', isActive: true, position: 4 },
       { id: 'default-deal', role: 'bright_dealOfDay', isActive: true, position: 5 },
-      { id: 'default-banners', role: 'bright_promo_banners', isActive: true, position: 6 },
-      { id: 'default-badges', role: 'bright_trust_badges', isActive: true, position: 7 },
+      { id: 'default-featured', role: 'bright_featured', isActive: true, position: 6 },
+      { id: 'default-trending', role: 'bright_trending', isActive: true, position: 7 },
+      { id: 'default-banners', role: 'bright_promo_banners', isActive: true, position: 8 },
+      { id: 'default-badges', role: 'bright_trust_badges', isActive: true, position: 9 },
     ];
   }, [sections]);
+
+  const renderBrightHeader = (title, subtitle, section, extraContent = null, isMini = false) => {
+    const styleKey = section?.headerStyle || 'bright_minimal';
+    const showViewAll = section?.showViewAll !== false;
+
+    const handleViewAll = () => {
+      const event = new CustomEvent('view-all-products');
+      window.dispatchEvent(event);
+    };
+
+    // Style-specific containers
+    const containers = isMini ? {
+      bright_banner: "w-full p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-[#4a8bf5] text-white shadow-sm flex items-center justify-between gap-3",
+      bright_yellow: "w-full p-4 rounded-2xl bg-gradient-to-r from-[#ffc200] to-amber-500 text-slate-950 shadow-sm flex items-center justify-between gap-3",
+      bright_minimal: "w-full py-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-transparent",
+      bright_outlined: "w-full p-4 rounded-2xl border-2 border-[#ffc200] bg-white dark:bg-[#0b1329] text-slate-900 dark:text-white flex items-center justify-between gap-3",
+      bright_accent: "w-full pl-4 py-1 border-l-4 border-[#ffc200] flex items-center justify-between gap-3 bg-transparent",
+      bright_glass: "w-full p-4 rounded-2xl bg-white/5 dark:bg-[#0b1329]/20 border border-slate-200/40 dark:border-slate-800/50 backdrop-blur-md text-slate-900 dark:text-white flex items-center justify-between gap-3"
+    } : {
+      bright_banner: "w-full px-6 py-6 sm:px-10 sm:py-8 rounded-2xl bg-gradient-to-r from-blue-600 to-[#4a8bf5] text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+      bright_yellow: "w-full px-6 py-6 sm:px-10 sm:py-8 rounded-2xl bg-gradient-to-r from-[#ffc200] to-amber-500 text-slate-955 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+      bright_minimal: "w-full py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-transparent",
+      bright_outlined: "w-full px-6 py-5 rounded-2xl border-2 border-[#ffc200] bg-white dark:bg-[#0b1329] text-slate-900 dark:text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+      bright_accent: "w-full pl-5 py-2 border-l-4 border-[#ffc200] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-transparent",
+      bright_glass: "w-full px-6 py-5 rounded-2xl bg-white/5 dark:bg-[#0b1329]/20 border border-slate-200/40 dark:border-slate-800/50 backdrop-blur-md text-slate-900 dark:text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+    };
+
+    const containerClass = containers[styleKey] || containers.bright_minimal;
+
+    // Title styling depending on background brightness
+    const isDarkBackground = styleKey === 'bright_banner';
+    const isYellowBackground = styleKey === 'bright_yellow';
+
+    const titleColorClass = isDarkBackground
+      ? "text-white"
+      : isYellowBackground
+        ? "text-slate-950"
+        : "text-slate-900 dark:text-white";
+
+    const subtitleColorClass = isDarkBackground
+      ? "text-white/80"
+      : isYellowBackground
+        ? "text-slate-950/80"
+        : "text-slate-400 dark:text-slate-500";
+
+    const dotColor = isYellowBackground ? "bg-slate-950" : "bg-[#ffc200]";
+
+    const fontClass = isMini 
+      ? "text-sm sm:text-base font-black uppercase tracking-tight flex items-center gap-1.5"
+      : "text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2";
+
+    const btnClass = isMini
+      ? (isDarkBackground
+          ? "px-3 py-1.5 bg-white text-blue-600 hover:bg-slate-100 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-full transition-all shadow-sm active:scale-95 shrink-0"
+          : isYellowBackground
+            ? "px-3 py-1.5 bg-slate-950 text-white hover:bg-slate-900 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-full transition-all shadow-sm active:scale-95 shrink-0"
+            : "px-3 py-1.5 bg-slate-950 text-white dark:bg-slate-800 dark:text-white hover:bg-[#ffc200] dark:hover:bg-[#ffc200] hover:text-slate-955 dark:hover:text-slate-955 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-full transition-all shadow-sm active:scale-95 shrink-0"
+        )
+      : (isDarkBackground
+          ? "px-4 py-2 bg-white text-blue-600 hover:bg-slate-100 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm active:scale-95 shrink-0 self-start sm:self-auto"
+          : isYellowBackground
+            ? "px-4 py-2 bg-slate-950 text-white hover:bg-slate-900 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm active:scale-95 shrink-0 self-start sm:self-auto"
+            : "text-[10px] font-black text-slate-850 dark:text-slate-350 hover:text-[#ffc200] dark:hover:text-[#ffc200] transition-colors uppercase tracking-[0.2em] shrink-0 self-start sm:self-auto"
+        );
+
+    return (
+      <div className={`${containerClass} mb-4`}>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="space-y-0.5">
+            <h2 className={`${fontClass} ${titleColorClass}`}>
+              {/* Show decorative dot or Zap icon */}
+              {section?.role === 'bright_dealOfDay' ? (
+                <Zap size={20} fill="#ffc200" className="text-[#ffc200] shrink-0" />
+              ) : (
+                ['bright_minimal', 'bright_outlined', 'bright_accent', 'bright_glass'].includes(styleKey) && (
+                  <span className={`${isMini ? 'w-2 h-2' : 'w-3 h-3'} rounded-full ${dotColor} shrink-0`} />
+                )
+              )}
+              {t_smart(title)}
+            </h2>
+            {subtitle && (
+              <p className={`text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest ${subtitleColorClass}`}>
+                {t_smart(subtitle)}
+              </p>
+            )}
+          </div>
+          {extraContent && (
+            <div className="flex items-center gap-2">
+              {extraContent}
+            </div>
+          )}
+        </div>
+
+        {showViewAll && (
+          <button onClick={handleViewAll} className={btnClass}>
+            {isMini ? (t('view_all') || 'View All') : (isDarkBackground || isYellowBackground ? t('shop_now') || 'Shop Now' : 'Explore All Item')}
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const renderProductCard = (product) => {
     const discount = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
@@ -458,23 +561,19 @@ export default function BrightRetailHome({ onProductClick }) {
 
     return (
       <div key="deal-of-the-day" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        <div className="flex justify-between items-end border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              <Zap size={20} fill="#ffc200" className="text-[#ffc200]" /> {section.title || 'Deal Of The Day'}
-            </h2>
-            
-            {/* Countdown Ticker */}
-            <div className="flex items-center gap-1.5 text-xs font-black text-white bg-slate-950 dark:bg-slate-800 px-3 py-1 rounded-lg">
-              <span className="text-[8px] text-slate-400 uppercase tracking-wider mr-1.5">Ends In :</span>
-              <span className="font-mono text-[#ffc200]">{String(timeLeft.hours).padStart(2, '0')}</span>
-              <span className="opacity-50">:</span>
-              <span className="font-mono text-[#ffc200]">{String(timeLeft.minutes).padStart(2, '0')}</span>
-              <span className="opacity-50">:</span>
-              <span className="font-mono text-[#ffc200]">{String(timeLeft.seconds).padStart(2, '0')}</span>
-            </div>
+        {renderBrightHeader(
+          section.title || 'Deal Of The Day',
+          section.subtitle || null,
+          section,
+          <div className="flex items-center gap-1.5 text-xs font-black text-white bg-slate-950 dark:bg-slate-800 px-3 py-1 rounded-lg">
+            <span className="text-[8px] text-slate-400 uppercase tracking-wider mr-1.5">Ends In :</span>
+            <span className="font-mono text-[#ffc200]">{String(timeLeft.hours).padStart(2, '0')}</span>
+            <span className="opacity-50">:</span>
+            <span className="font-mono text-[#ffc200]">{String(timeLeft.minutes).padStart(2, '0')}</span>
+            <span className="opacity-50">:</span>
+            <span className="font-mono text-[#ffc200]">{String(timeLeft.seconds).padStart(2, '0')}</span>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {displayDeals.map(product => {
@@ -669,12 +768,7 @@ export default function BrightRetailHome({ onProductClick }) {
         <div key={section.id || `custom-dual-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Side A */}
           <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ffc200]" />
-                {t_smart(displayTitleA)}
-              </h3>
-            </div>
+            {renderBrightHeader(displayTitleA, null, { headerStyle: section.headerStyle, showViewAll: section.showViewAll !== false }, null, true)}
             <div className="grid grid-cols-2 gap-4">
               {productsA.map(p => renderProductCard(p))}
             </div>
@@ -682,12 +776,7 @@ export default function BrightRetailHome({ onProductClick }) {
 
           {/* Side B */}
           <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#4a8bf5]" />
-                {t_smart(displayTitleB)}
-              </h3>
-            </div>
+            {renderBrightHeader(displayTitleB, null, { headerStyle: section.headerStyleB || 'bright_outlined', showViewAll: section.showViewAll !== false }, null, true)}
             <div className="grid grid-cols-2 gap-4">
               {productsB.map(p => renderProductCard(p))}
             </div>
@@ -710,28 +799,69 @@ export default function BrightRetailHome({ onProductClick }) {
 
     return (
       <div key={section.id || `custom-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        <div className="flex justify-between items-end border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#ffc200]" />
-              {t_smart(title)}
-            </h2>
-            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">{t_smart(subtitle)}</p>
-          </div>
-          <button 
-            onClick={() => {
-              const event = new CustomEvent('view-all-products');
-              window.dispatchEvent(event);
-            }}
-            className="text-[10px] font-black text-slate-850 dark:text-slate-350 uppercase tracking-[0.2em] hover:text-[#ffc200] dark:hover:text-[#ffc200] transition-colors"
-          >
-            Explore All Item
-          </button>
-        </div>
+        {renderBrightHeader(title, subtitle, section)}
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {displayProducts.map(p => renderProductCard(p))}
         </div>
+      </div>
+    );
+  };
+
+  const renderBrightFeaturedSection = (section) => {
+    const cat = section.category || 'All';
+    const maxProducts = section.maxProducts || 6;
+    const title = section.title || (cat !== 'All' ? `${t('featured')} ${cat}` : t('featured_items') || 'Featured Products');
+    const subtitle = section.subtitle || t('curated_for_you') || 'Curated For You';
+
+    const featuredProducts = activeProducts.filter(p => Number(p.is_featured) === 1 || p.is_featured === true);
+    const catProducts = cat !== 'All' 
+      ? featuredProducts.filter(p => p.category === cat) 
+      : featuredProducts;
+
+    const displayProducts = catProducts.slice(0, maxProducts);
+
+    return (
+      <div key={section.id || `featured-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+        {renderBrightHeader(title, subtitle, section)}
+        {displayProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {displayProducts.map(p => renderProductCard(p))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-slate-450 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#0b1329] rounded-2xl border border-slate-200/50 dark:border-slate-800/60">
+            No Featured Products Found
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderBrightTrendingSection = (section) => {
+    const cat = section.category || 'All';
+    const maxProducts = section.maxProducts || 6;
+    const title = section.title || (cat !== 'All' ? `${t('trending')} ${cat}` : t('trending') || 'Trending Products');
+    const subtitle = section.subtitle || t('most_popular_on_our_network') || 'Popular Right Now';
+
+    const trendingProducts = activeProducts.filter(p => Number(p.is_trending) === 1 || p.is_trending === true);
+    const catProducts = cat !== 'All' 
+      ? trendingProducts.filter(p => p.category === cat) 
+      : trendingProducts;
+
+    const displayProducts = catProducts.slice(0, maxProducts);
+
+    return (
+      <div key={section.id || `trending-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+        {renderBrightHeader(title, subtitle, section)}
+        {displayProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {displayProducts.map(p => renderProductCard(p))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-slate-450 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#0b1329] rounded-2xl border border-slate-200/50 dark:border-slate-800/60">
+            No Trending Products Found
+          </div>
+        )}
       </div>
     );
   };
@@ -750,6 +880,10 @@ export default function BrightRetailHome({ onProductClick }) {
         return renderBillboard(section);
       case 'bright_dealOfDay':
         return renderDealOfDay(section);
+      case 'bright_featured':
+        return renderBrightFeaturedSection(section);
+      case 'bright_trending':
+        return renderBrightTrendingSection(section);
       case 'bright_promo_banners':
         return renderPromoBanners();
       case 'bright_trust_badges':

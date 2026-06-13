@@ -32,6 +32,8 @@ const BRIGHT_ROLES = [
   { key: 'bright_tabs',            label: 'New / Bestseller Tabs', icon: TrendingUp,  color: 'rose'    },
   { key: 'bright_billboard',       label: 'Wide Savings Billboard',icon: Layers,      color: 'blue'    },
   { key: 'bright_dealOfDay',       label: 'Deal of Day Ticker',    icon: Zap,         color: 'emerald' },
+  { key: 'bright_featured',        label: 'Featured Products Grid',icon: Star,        color: 'amber'   },
+  { key: 'bright_trending',        label: 'Trending Products Grid',icon: TrendingUp,  color: 'rose'    },
   { key: 'bright_promo_banners',   label: 'Bottom Promo Banners',  icon: Flame,       color: 'orange'  },
   { key: 'bright_trust_badges',    label: 'Trust Badges Row',      icon: ShieldCheck, color: 'pink'    },
   { key: 'bright_custom',          label: 'Custom Section',        icon: Layers,      color: 'slate'   },
@@ -45,6 +47,15 @@ const HEADER_STYLES = [
   { key: 'accent',    label: 'Accent',    preview: 'bg-gradient-to-r from-eas-blue to-purple-600' },
   { key: 'neon',      label: 'Neon',      preview: 'bg-black border border-emerald-500' },
   { key: 'glass',     label: 'Glass',     preview: 'bg-white/30 backdrop-blur-md border border-white/20' },
+];
+
+const BRIGHT_HEADER_STYLES = [
+  { key: 'bright_banner',   label: 'Blue Banner',   preview: 'bg-gradient-to-r from-blue-600 to-[#4a8bf5]' },
+  { key: 'bright_yellow',   label: 'Yellow Banner', preview: 'bg-gradient-to-r from-[#ffc200] to-amber-500' },
+  { key: 'bright_minimal',  label: 'Minimal Dot',   preview: 'bg-transparent border-b border-slate-200 dark:border-slate-800' },
+  { key: 'bright_outlined', label: 'Outlined Card', preview: 'border-2 border-[#ffc200]' },
+  { key: 'bright_accent',   label: 'Accent Line',   preview: 'border-l-4 border-[#ffc200]' },
+  { key: 'bright_glass',    label: 'Glassmorphic',  preview: 'bg-white/10 border border-white/20' },
 ];
 
 const ROLE_COLORS = {
@@ -95,8 +106,10 @@ export default function SectionManagement() {
         { title: 'New / Bestseller Tabs', subtitle: 'Top Items', role: 'bright_tabs', position: 4 },
         { title: 'Wide Savings Billboard', subtitle: 'Big Billion Sale', role: 'bright_billboard', position: 5 },
         { title: 'Deal of Day Ticker', subtitle: 'Limited Time Offers', role: 'bright_dealOfDay', position: 6 },
-        { title: 'Bottom Promo Banners', subtitle: 'Category Offers', role: 'bright_promo_banners', position: 7 },
-        { title: 'Trust Badges Row', subtitle: 'Shop with Confidence', role: 'bright_trust_badges', position: 8 }
+        { title: 'Featured Products Grid', subtitle: 'Curated For You', role: 'bright_featured', position: 7 },
+        { title: 'Trending Products Grid', subtitle: 'Popular Right Now', role: 'bright_trending', position: 8 },
+        { title: 'Bottom Promo Banners', subtitle: 'Category Offers', role: 'bright_promo_banners', position: 9 },
+        { title: 'Trust Badges Row', subtitle: 'Shop with Confidence', role: 'bright_trust_badges', position: 10 }
       ];
 
       const isLocalhost = isLocalHost();
@@ -110,7 +123,7 @@ export default function SectionManagement() {
           is_dual: 0,
           show_view_all: 1,
           max_products: 8,
-          header_style: 'gradient',
+          header_style: 'bright_minimal',
           header_image: '',
           category: 'All',
           role: item.role,
@@ -118,7 +131,7 @@ export default function SectionManagement() {
           subtitleb: null,
           categoryb: 'All',
           roleb: 'custom',
-          headerstyleb: 'bold',
+          headerstyleb: 'bright_outlined',
           headerimageb: null
         };
 
@@ -141,14 +154,14 @@ export default function SectionManagement() {
               maxProducts: 8,
               position: item.position,
               isActive: 1,
-              headerStyle: 'gradient',
+              headerStyle: 'bright_minimal',
               headerImage: '',
               isDual: 0,
               titleB: null,
               subtitleB: null,
               categoryB: 'All',
               roleB: 'custom',
-              headerStyleB: 'bold',
+              headerStyleB: 'bright_outlined',
               headerImageB: null
             };
             await apiFetch('sections', {
@@ -173,6 +186,9 @@ export default function SectionManagement() {
   };
 
   const currentRoles = templateMode === 'bright' ? BRIGHT_ROLES : ROLES;
+  const currentHeaderStyles = templateMode === 'bright' ? BRIGHT_HEADER_STYLES : HEADER_STYLES;
+  const getHeaderStyleInfo = (key) => HEADER_STYLES.find(h => h.key === key) || BRIGHT_HEADER_STYLES.find(h => h.key === key);
+
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,7 +200,8 @@ export default function SectionManagement() {
   const openAdd = () => {
     setForm({
       ...EMPTY,
-      role: templateMode === 'bright' ? 'bright_hero' : 'hero'
+      role: templateMode === 'bright' ? 'bright_hero' : 'hero',
+      headerStyle: templateMode === 'bright' ? 'bright_minimal' : 'gradient'
     });
     setEditingId(null);
     setError('');
@@ -194,13 +211,13 @@ export default function SectionManagement() {
   const openEdit = (s) => {
     setForm({
       title: s.title||'', subtitle: s.subtitle||'', role: s.role||'',
-      headerStyle: s.headerStyle||'gradient', headerImage: s.headerImage||'', position: s.position||'',
+      headerStyle: s.headerStyle||(templateMode === 'bright' ? 'bright_minimal' : 'gradient'), headerImage: s.headerImage||'', position: s.position||'',
       isActive: s.isActive !== false, showViewAll: s.showViewAll !== false,
       maxProducts: s.maxProducts||8,
       category: s.category||'All',
       isDual: s.isDual === true || s.isDual === 1 || false,
       titleB: s.titleB||'', subtitleB: s.subtitleB||'', roleB: s.roleB||'trending',
-      headerStyleB: s.headerStyleB||'bold', categoryB: s.categoryB||'All',
+      headerStyleB: s.headerStyleB||(templateMode === 'bright' ? 'bright_minimal' : 'bold'), categoryB: s.categoryB||'All',
       headerImageB: s.headerImageB||''
     });
     setEditingId(s.id); setError(''); setSuccess(''); setView('form');
@@ -478,7 +495,7 @@ export default function SectionManagement() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sorted.map((s, i) => {
             const role = getRoleInfo(s.role);
-            const style = HEADER_STYLES.find(h => h.key === s.headerStyle);
+            const style = getHeaderStyleInfo(s.headerStyle);
             return (
               <motion.div key={s.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
                 className={`relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] p-6 shadow-xl shadow-slate-200/20 dark:shadow-none hover:border-orange-500/30 hover:shadow-2xl hover:shadow-orange-500/10 transition-all group flex flex-col ${!s.isActive ? 'opacity-50 grayscale hover:grayscale-0' : ''}`}>
@@ -639,13 +656,30 @@ export default function SectionManagement() {
                   <>
                     <div>
                       <label className={lbl}>Filter by Product Category</label>
-                      <select value={form.category || 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
+                      <select value={form.category && !form.category.startsWith('chilling_section:') ? form.category : 'All'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className={inp}>
                         <option value="All">All Categories (No filter)</option>
                         {categories.map(cat => (
                           <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
                         ))}
                       </select>
                     </div>
+                    {templateMode === 'bright' && (
+                      <div>
+                        <label className={lbl}>LINK TO CHILLING TECH SECTION</label>
+                        <select 
+                          value={form.category && form.category.startsWith('chilling_section:') ? form.category : ''} 
+                          onChange={e => setForm(p => ({ ...p, category: e.target.value || 'All' }))} 
+                          className={inp}
+                        >
+                          <option value="">No link (Use category filter above)</option>
+                          {sections.filter(s => !s.role?.startsWith('bright_') && !s.key?.startsWith('bright_')).map(cs => (
+                            <option key={cs.id} value={`chilling_section:${cs.id}`}>
+                              [{cs.role.toUpperCase()}] {cs.title || 'Untitled Section'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     {form.role === 'dealOfDay' && (
                       <div>
                         <label className={lbl}>Choose Side Promo Video/Image Ad</label>
@@ -667,12 +701,18 @@ export default function SectionManagement() {
 
               {/* Role Selection */}
               <div className="bg-slate-50 dark:bg-slate-950/30 rounded-3xl border border-slate-200 dark:border-slate-800 p-6">
-                <label className={`${lbl} mb-5`}>Section Role — what type of products does this section display?</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {currentRoles.map(({ key, label, icon: Icon, color }) => (
+                <label className={`${lbl} mb-5`}>SECTION ROLE — WHAT TYPE OF PRODUCTS DOES THIS SECTION DISPLAY?</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {currentRoles.map(({ key, label, icon: Icon }) => (
                     <button key={key} type="button" onClick={() => setForm(p => ({ ...p, role: key }))}
-                      className={`flex items-center gap-2 py-3.5 px-4 rounded-2xl border-2 transition-all font-black tracking-widest text-xs ${form.role === key ? ROLE_COLORS[color] : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 hover:border-slate-300'}`}>
-                      <Icon size={13}/>{label}
+                      className={`flex items-center gap-3 py-3.5 px-5 rounded-2xl border-2 transition-all font-bold text-sm ${
+                        form.role === key 
+                          ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400' 
+                          : 'border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                      }`}
+                    >
+                      <Icon size={16} className={form.role === key ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-450'}/>
+                      <span>{label}</span>
                     </button>
                   ))}
                 </div>
@@ -682,7 +722,7 @@ export default function SectionManagement() {
               <div className="bg-slate-50 dark:bg-slate-950/30 rounded-3xl border border-slate-200 dark:border-slate-800 p-6">
                 <label className={`${lbl} mb-5`}>Header Style — choose the visual appearance of the section header</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {HEADER_STYLES.map(({ key, label, preview }) => (
+                  {currentHeaderStyles.map(({ key, label, preview }) => (
                     <button key={key} type="button" onClick={() => setForm(p => ({ ...p, headerStyle: key }))}
                       className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all ${form.headerStyle === key ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'}`}>
                       <div className={`w-full h-7 rounded-xl ${preview} flex items-center justify-center`}>
@@ -738,7 +778,7 @@ export default function SectionManagement() {
                   <div>
                     <label className={`${lbl} mb-3`}>Side A Header Style / Color</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {HEADER_STYLES.slice(0, 6).map(({ key, label }) => (
+                      {currentHeaderStyles.slice(0, 6).map(({ key, label }) => (
                         <button key={key} type="button" onClick={() => setForm(p => ({ ...p, headerStyle: key }))}
                           className={`py-2 px-1 rounded-xl border text-[9px] font-black uppercase tracking-widest text-center transition-all ${form.headerStyle === key ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400'}`}>
                           {label}
@@ -775,7 +815,7 @@ export default function SectionManagement() {
                   <div>
                     <label className={`${lbl} mb-3`}>Side B Header Style / Color</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {HEADER_STYLES.slice(0, 6).map(({ key, label }) => (
+                      {currentHeaderStyles.slice(0, 6).map(({ key, label }) => (
                         <button key={key} type="button" onClick={() => setForm(p => ({ ...p, headerStyleB: key }))}
                           className={`py-2 px-1 rounded-xl border text-[9px] font-black uppercase tracking-widest text-center transition-all ${form.headerStyleB === key ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400'}`}>
                           {label}
@@ -813,16 +853,49 @@ export default function SectionManagement() {
             {!form.isDual ? (
               (() => {
                 const roleInfo = getRoleInfo(form.role);
-                const style = HEADER_STYLES.find(h => h.key === form.headerStyle) || HEADER_STYLES[0];
+                const style = currentHeaderStyles.find(h => h.key === form.headerStyle) || currentHeaderStyles[0];
+                const isDarkBackground = style.key === 'bright_banner' || style.key === 'gradient' || style.key === 'neon' || style.key === 'accent';
+                const isYellowBackground = style.key === 'bright_yellow';
+                const textColorClass = isDarkBackground
+                  ? "text-white"
+                  : isYellowBackground
+                    ? "text-slate-950"
+                    : "text-slate-900 dark:text-white";
+                const subtitleColorClass = isDarkBackground
+                  ? "text-white/70"
+                  : isYellowBackground
+                    ? "text-slate-900/70"
+                    : "text-slate-500 dark:text-slate-400";
                 return (
                   <div className={`w-full px-8 py-5 rounded-2xl flex items-center justify-between ${style.preview}`}>
                     <div>
-                      <p className="text-white font-black text-lg tracking-tight drop-shadow">{form.title || 'Section Title'}</p>
-                      {form.subtitle && <p className="text-white/70 text-sm font-medium mt-1">{form.subtitle}</p>}
+                      <p className={`font-black text-lg tracking-tight drop-shadow-sm ${textColorClass}`}>{form.title || 'Section Title'}</p>
+                      {form.subtitle && <p className={`text-sm font-medium mt-1 ${subtitleColorClass}`}>{form.subtitle}</p>}
                     </div>
                     <div className="flex items-center gap-3">
-                      {roleInfo && <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl"><roleInfo.icon size={10}/>{roleInfo.label}</span>}
-                      {form.showViewAll && <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl">View All →</span>}
+                      {roleInfo && (
+                        <span className={`flex items-center gap-1.5 backdrop-blur-md text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
+                          isDarkBackground 
+                            ? 'bg-white/20 text-white' 
+                            : isYellowBackground 
+                              ? 'bg-slate-950/10 text-slate-950' 
+                              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350'
+                        }`}>
+                          <roleInfo.icon size={10}/>
+                          {roleInfo.label}
+                        </span>
+                      )}
+                      {form.showViewAll && (
+                        <span className={`backdrop-blur-md text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
+                          isDarkBackground 
+                            ? 'bg-white/20 text-white' 
+                            : isYellowBackground 
+                              ? 'bg-slate-950/10 text-slate-950' 
+                              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350'
+                        }`}>
+                          View All →
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
