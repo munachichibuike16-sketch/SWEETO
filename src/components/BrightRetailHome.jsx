@@ -18,8 +18,27 @@ import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
+const getImagesList = (prod) => {
+  if (!prod) return [];
+  const list = [];
+  const mainImg = prod.image_url || prod.image;
+  if (mainImg) list.push(mainImg);
+  if (prod.images) {
+    try {
+      const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
+      if (Array.isArray(imgs)) {
+        imgs.forEach(img => {
+          if (img && !list.includes(img)) list.push(img);
+        });
+      }
+    } catch (e) {}
+  }
+  if (list.length === 0) list.push('/hero-banner.png');
+  return list;
+};
+
 export default function BrightRetailHome({ onProductClick }) {
-  const { products, categories, settings, sections } = useStore();
+  const { products, categories, settings, sections, openGlobalLightbox } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { t, lang, t_smart } = useLanguage();
@@ -238,7 +257,11 @@ export default function BrightRetailHome({ onProductClick }) {
           <img 
             src={product.image_url || product.image || '/hero-banner.png'} 
             alt={product.name} 
-            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+            onClick={(e) => {
+              e.stopPropagation();
+              openGlobalLightbox(getImagesList(product), 0, product.category, product.id);
+            }}
+            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 cursor-zoom-in"
           />
         </div>
 

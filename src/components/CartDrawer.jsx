@@ -8,10 +8,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import cartEmptyMascot from '../assets/cart_empty_mascot.png';
 
 const CartDrawer = ({ isOpen, onClose }) => {
-  const { settings } = useStore();
+  const { settings, showToast, openGlobalLightbox } = useStore();
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const { t, isRTL } = useLanguage();
-  const { showToast } = useStore();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const navigate = useNavigate();
 
@@ -167,7 +166,16 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
                           {/* Product Image */}
                           <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-3 shadow-sm group-hover:scale-102 transition-transform shrink-0">
-                            <img src={item.image_url || item.image || '/hero-banner.png'} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                            <img 
+                              src={item.image_url || item.image || '/hero-banner.png'} 
+                              alt="" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                openGlobalLightbox([item.image_url || item.image || '/hero-banner.png'], 0, item.category || '', item.id);
+                              }}
+                              className="w-full h-full object-contain mix-blend-multiply cursor-zoom-in" 
+                            />
                           </div>
 
                           {/* Product Details */}

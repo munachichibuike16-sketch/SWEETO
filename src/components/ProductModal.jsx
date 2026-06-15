@@ -14,7 +14,7 @@ import { supabase } from '../lib/supabase';
 import SweetoLogo from './SweetoLogo';
 
 const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductClick }) => {
-  const { settings, addToRecent, setSelectedCategory, showToast } = useStore();
+  const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
@@ -444,7 +444,11 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                       >
                         {imagesList.map((img, idx) => (
                           <div key={idx} className="w-full h-full shrink-0 snap-center flex items-center justify-center p-4">
-                            <img src={img} className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                            <img 
+                              src={img} 
+                              onClick={() => openGlobalLightbox(imagesList, idx, product.category, product.id)}
+                              className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in" 
+                            />
                           </div>
                         ))}
                       </div>
@@ -471,6 +475,10 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         }}
                         onMouseEnter={() => setIsZooming(true)}
                         onMouseLeave={() => setIsZooming(false)}
+                        onClick={() => {
+                          const activeIdx = imagesList.indexOf(selectedImage);
+                          openGlobalLightbox(imagesList, activeIdx >= 0 ? activeIdx : 0, product.category, product.id);
+                        }}
                         className="hidden md:flex w-full h-full items-center justify-center cursor-zoom-in relative"
                       >
                         <AnimatePresence mode="wait">

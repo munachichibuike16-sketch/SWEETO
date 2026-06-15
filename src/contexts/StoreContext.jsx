@@ -40,6 +40,32 @@ export const StoreProvider = ({ children }) => {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [realtimeNotification, setRealtimeNotification] = useState(null);
 
+  const [globalLightbox, setGlobalLightbox] = useState({
+    isOpen: false,
+    images: [],
+    index: 0,
+    category: '',
+    productId: null
+  });
+
+  const openGlobalLightbox = (images, index = 0, category = '', productId = null) => {
+    setGlobalLightbox({
+      isOpen: true,
+      images: images || [],
+      index: index,
+      category: category || '',
+      productId: productId
+    });
+  };
+
+  const closeGlobalLightbox = () => {
+    setGlobalLightbox(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const setGlobalLightboxIndex = (index) => {
+    setGlobalLightbox(prev => ({ ...prev, index }));
+  };
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -824,6 +850,10 @@ export const StoreProvider = ({ children }) => {
       closeConfirm,
       realtimeNotification,
       setRealtimeNotification,
+      globalLightbox,
+      openGlobalLightbox,
+      closeGlobalLightbox,
+      setGlobalLightboxIndex,
       refreshData: () => fetchStoreData(true) 
     }}>
       {children}

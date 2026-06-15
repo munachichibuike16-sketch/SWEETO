@@ -24,6 +24,7 @@ import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
 import ProductDetailPage from './pages/ProductDetailPage';
+import GlobalLightbox from './components/GlobalLightbox';
 import BackToTop from './components/BackToTop';
 import SwipeGestures from './components/SwipeGestures';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
@@ -1405,6 +1406,7 @@ function App() {
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
+        <GlobalLightbox />
         <RouteTracker />
         <Routes>
           <Route path="/" element={<Storefront viewMode="home" />} />

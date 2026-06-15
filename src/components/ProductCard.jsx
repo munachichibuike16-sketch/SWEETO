@@ -57,12 +57,31 @@ const getSoldCount = (product) => {
 };
 
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }) => {
-  const { settings } = useStore();
+  const { settings, openGlobalLightbox } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+  const getImagesList = (prod) => {
+    if (!prod) return [];
+    const list = [];
+    const mainImg = prod.image_url || prod.image;
+    if (mainImg) list.push(mainImg);
+    if (prod.images) {
+      try {
+        const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
+        if (Array.isArray(imgs)) {
+          imgs.forEach(img => {
+            if (img && !list.includes(img)) list.push(img);
+          });
+        }
+      } catch (e) {}
+    }
+    if (list.length === 0) list.push('/hero-banner.png');
+    return list;
+  };
 
   const handleCardClick = (e) => {
     trackVisit(`/product/${product.id}`, 'product clicked');
@@ -171,7 +190,11 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
               e.target.onerror = null; 
               e.target.src = '/hero-banner.png';
             }}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 rounded-2xl" 
+            onClick={(e) => {
+              e.stopPropagation();
+              openGlobalLightbox(getImagesList(product), 0, product.category, product.id);
+            }}
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 rounded-2xl cursor-zoom-in" 
           />
         </div>
 
