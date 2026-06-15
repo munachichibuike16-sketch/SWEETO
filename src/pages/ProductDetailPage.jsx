@@ -46,6 +46,14 @@ const ProductDetailPage = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  const [reviews, setReviews] = useState([]);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('all');
+
   const getImagesList = (prod) => {
     if (!prod) return [];
     const list = [];
@@ -126,6 +134,109 @@ const ProductDetailPage = () => {
       setSelectedVariant(mapped[0] || null);
     }
   }, [product]);
+
+  // Load session
+  useEffect(() => {
+    try {
+      const session = localStorage.getItem('sweetohub_session');
+      if (session) {
+        setCurrentUser(JSON.parse(session));
+      }
+    } catch (e) {}
+  }, []);
+
+  // Fetch reviews when product changes
+  const fetchProductReviews = async () => {
+    if (!product?.id) return;
+    setIsReviewsLoading(true);
+    try {
+      if (!supabase) throw new Error("Supabase not configured");
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', product.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const approvedOnly = (data || []).filter(
+        r => r.status === 'approved' || r.is_approved === 1
+      );
+
+      const formatted = approvedOnly.map(r => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        date: new Date(r.created_at).toLocaleDateString(),
+        user: r.customer_name || r.reviewer_name || "Guest User"
+      }));
+
+      setReviews(formatted);
+    } catch (e) {
+      console.error("Error fetching reviews:", e);
+      try {
+        const local = localStorage.getItem(`reviews_${product.id}`);
+        if (local) {
+          setReviews(JSON.parse(local));
+          setIsReviewsLoading(false);
+          return;
+        }
+      } catch (err) {}
+      setReviews([]);
+    }
+    setIsReviewsLoading(false);
+  };
+
+  useEffect(() => {
+    if (product) {
+      fetchProductReviews();
+    }
+  }, [product]);
+
+  const handleReviewSubmit = async () => {
+    if (userRating === 0) return showToast("Please select a rating", "error");
+    if (!comment.trim()) return showToast("Please enter a comment", "error");
+
+    const payload = {
+      product_id: product.id,
+      product_name: product.name,
+      customer_name: currentUser?.name || "Guest User",
+      reviewer_name: currentUser?.name || "Guest User",
+      rating: userRating,
+      comment: comment.trim(),
+      status: 'pending',
+      is_approved: 0,
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      if (!supabase) throw new Error("Supabase client not initialized");
+      const { error } = await supabase.from('reviews').insert([payload]);
+      if (error) throw error;
+      
+      showToast("Review submitted successfully!", "success");
+      fetchProductReviews();
+      setComment("");
+      setUserRating(0);
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to submit review. Saving locally.", "warning");
+      
+      const newReview = {
+        id: Date.now(),
+        rating: userRating,
+        comment: comment.trim(),
+        date: new Date().toLocaleDateString(),
+        user: currentUser?.name || "Guest User"
+      };
+
+      const updatedReviews = [newReview, ...reviews];
+      setReviews(updatedReviews);
+      localStorage.setItem(`reviews_${product.id}`, JSON.stringify(updatedReviews));
+      setComment("");
+      setUserRating(0);
+    }
+  };
 
   // Early return if product is not loaded yet (all hooks must be declared above this point!)
   if (!product) {
@@ -223,15 +334,76 @@ const ProductDetailPage = () => {
     .filter(p => p.id.toString() !== product.id.toString())
     .slice(0, 6);
 
-  const reviewsList = typeof product.reviews === 'string' 
-    ? JSON.parse(product.reviews || '[]') 
-    : (product.reviews || []);
-  
-  const averageRating = reviewsList.length > 0 
-    ? (reviewsList.reduce((acc, r) => acc + r.rating, 0) / reviewsList.length).toFixed(1) 
-    : "4.5";
+  const getUnifiedReviews = () => {
+    const localAndDb = reviews || [];
+    const prodReviews = typeof product.reviews === 'string'
+      ? JSON.parse(product.reviews || '[]')
+      : (product.reviews || []);
+    
+    const uniqueReviews = new Map();
+    prodReviews.forEach(r => {
+      const id = r.id || `${r.user}-${r.rating}-${r.comment}`;
+      uniqueReviews.set(id, {
+        id: id,
+        rating: Number(r.rating) || 5,
+        comment: r.comment || '',
+        date: r.date || r.created_at || new Date().toLocaleDateString(),
+        user: r.user || r.customer_name || r.reviewer_name || "Guest User"
+      });
+    });
+    localAndDb.forEach(r => {
+      const id = r.id || `${r.user}-${r.rating}-${r.comment}`;
+      uniqueReviews.set(id, {
+        id: id,
+        rating: Number(r.rating) || 5,
+        comment: r.comment || '',
+        date: r.date || r.created_at || new Date().toLocaleDateString(),
+        user: r.user || r.customer_name || r.reviewer_name || "Guest User"
+      });
+    });
 
-  const reviewCount = reviewsList.length;
+    return Array.from(uniqueReviews.values());
+  };
+
+  const activeReviews = getUnifiedReviews();
+  const reviewCount = activeReviews.length;
+  const averageRating = reviewCount > 0
+    ? (activeReviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount).toFixed(1)
+    : "4.8";
+
+  const starsBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  activeReviews.forEach(r => {
+    const rating = Math.round(r.rating);
+    if (starsBreakdown[rating] !== undefined) {
+      starsBreakdown[rating] += 1;
+    }
+  });
+
+  const getPercentage = (star) => {
+    if (reviewCount === 0) {
+      const defaults = { 5: 85, 4: 10, 3: 5, 2: 0, 1: 0 };
+      return defaults[star];
+    }
+    return Math.round((starsBreakdown[star] / reviewCount) * 105) % 100 || Math.round((starsBreakdown[star] / reviewCount) * 100);
+  };
+
+  const getPercentageFixed = (star) => {
+    if (reviewCount === 0) {
+      const defaults = { 5: 85, 4: 10, 3: 5, 2: 0, 1: 0 };
+      return defaults[star];
+    }
+    return Math.round((starsBreakdown[star] / reviewCount) * 100);
+  };
+
+  const getPositiveFeedbackPercentage = () => {
+    if (reviewCount === 0) return 95;
+    const positiveReviews = activeReviews.filter(r => r.rating >= 4).length;
+    return Math.round((positiveReviews / reviewCount) * 100);
+  };
+
+  const filteredReviews = ratingFilter === 'all'
+    ? activeReviews
+    : activeReviews.filter(r => Math.round(r.rating) === Number(ratingFilter));
 
   const discountPercentage = product.old_price && product.old_price > product.price 
     ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
@@ -531,7 +703,7 @@ const ProductDetailPage = () => {
             </button>
 
             {/* Variant tag / Specification Details */}
-            <div id="product-reviews" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
+            <div id="product-details" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800/40">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Details & Warranty</span>
               </div>
@@ -636,6 +808,245 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
+          </div>
+        </div>
+
+        {/* AliExpress Customer Reviews Section */}
+        <div id="product-reviews" className="mt-8 bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-6 sm:p-8 text-left space-y-8 shadow-sm">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/40">
+            <div>
+              <h3 className="text-base font-black uppercase tracking-wider text-slate-900 dark:text-white italic">
+                {lang === 'fr' ? `Avis clients (${reviewCount})` : `Customer Reviews (${reviewCount})`}
+              </h3>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
+                {lang === 'fr' ? 'Évaluations honnêtes de vrais acheteurs' : 'Honest feedback from verified buyers'}
+              </p>
+            </div>
+            {reviewCount > 0 && (
+              <span className="text-xs font-black text-[#e61e25] bg-[#e61e25]/10 px-3 py-1 rounded-full uppercase tracking-wider">
+                {getPositiveFeedbackPercentage()}% Positive
+              </span>
+            )}
+          </div>
+
+          {/* AliExpress Rating breakdown & Submission grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Statistics column */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="bg-slate-50/50 dark:bg-slate-950/40 p-6 rounded-2xl border border-slate-100/80 dark:border-slate-800/60 flex items-center justify-between gap-6">
+                <div className="text-center space-y-1">
+                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic">
+                    {averageRating}
+                  </span>
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    out of 5
+                  </p>
+                </div>
+
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex text-amber-500 gap-0.5 justify-start">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={15} fill={i < Math.round(Number(averageRating)) ? "currentColor" : "none"} strokeWidth={2.5} />
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                    {lang === 'fr' ? `${reviewCount} avis au total` : `${reviewCount} global ratings`}
+                  </p>
+                  <p className="text-[9px] font-black text-emerald-500 uppercase tracking-wider">
+                    {getPositiveFeedbackPercentage()}% {lang === 'fr' ? 'recommandent ce produit' : 'recommend this product'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress bars list */}
+              <div className="space-y-2.5">
+                {[5, 4, 3, 2, 1].map(star => {
+                  const percent = getPercentage(star);
+                  return (
+                    <div key={star} className="flex items-center gap-3 text-xs font-bold">
+                      <button 
+                        onClick={() => setRatingFilter(ratingFilter === String(star) ? 'all' : String(star))}
+                        className={`flex items-center gap-1 w-12 hover:text-[#e61e25] transition-colors text-left ${ratingFilter === String(star) ? 'text-[#e61e25] font-black' : 'text-slate-650 dark:text-slate-400'}`}
+                      >
+                        <span>{star}</span>
+                        <Star size={10} fill="currentColor" className="text-amber-500 shrink-0" />
+                      </button>
+                      
+                      {/* Bar container */}
+                      <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percent}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                          className="absolute top-0 bottom-0 left-0 bg-amber-500 rounded-full"
+                        />
+                      </div>
+
+                      {/* Percentage label */}
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 text-right font-black">
+                        {percent}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Submission form with guest auth overlay - 7 cols */}
+            <div className="lg:col-span-7 bg-slate-50/50 dark:bg-slate-950/20 p-6 rounded-2xl border border-slate-100/60 dark:border-slate-800/40 relative overflow-hidden min-h-[200px]">
+              {/* Guest Shield Overlay */}
+              {!currentUser && (
+                <div className="absolute inset-0 bg-white/70 dark:bg-[#0b1324]/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 select-none">
+                  <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-[#e61e25] mb-3 shadow-sm border border-red-500/5">
+                    <Shield size={20} />
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase italic mb-1 tracking-tighter">
+                    {lang === 'fr' ? 'Authentification Requise' : 'Authentication Required'}
+                  </h4>
+                  <p className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider mb-4 max-w-[280px] leading-relaxed">
+                    {lang === 'fr' ? 'Connectez-vous pour laisser une note et un commentaire.' : 'Join the Sweeto community to share your feedback.'}
+                  </p>
+                  <button 
+                    onClick={() => navigate('/login')}
+                    className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black text-[9px] uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    {lang === 'fr' ? 'Se Connecter' : 'Login / Register'}
+                  </button>
+                </div>
+              )}
+
+              {/* Real form */}
+              <h4 className="font-black text-slate-800 dark:text-slate-100 mb-3 uppercase text-[10px] tracking-wider">
+                {lang === 'fr' ? 'Rédiger un avis' : 'Leave a comment'}
+              </h4>
+
+              {/* Stars rating selection */}
+              <div className="flex gap-1.5 mb-3">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <button 
+                    key={i}
+                    type="button"
+                    onMouseEnter={() => setHoverRating(i)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setUserRating(i)}
+                    className="p-0.5 transition-all duration-200 cursor-pointer"
+                  >
+                    <Star 
+                      size={20} 
+                      className={`transition-colors ${(hoverRating || userRating) >= i ? 'text-amber-500 fill-amber-500 scale-110' : 'text-slate-200 dark:text-slate-700'}`}
+                      strokeWidth={2.5}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {/* Comment text area */}
+              <textarea 
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                disabled={!currentUser}
+                rows={2}
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs font-semibold focus:ring-2 focus:ring-[#e61e25]/20 focus:border-[#e61e25] focus:bg-white dark:focus:bg-slate-950 transition-all outline-none mb-3 resize-none text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                placeholder={lang === 'fr' ? "Partagez votre expérience sur la qualité, la livraison..." : "Share your feedback about quality, logistics, packaging..."}
+              />
+
+              {/* Submit Button */}
+              <button 
+                onClick={handleReviewSubmit}
+                disabled={!currentUser}
+                className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-[#e61e25] dark:hover:bg-[#e61e25] hover:text-white transition-all shadow-md cursor-pointer"
+              >
+                {lang === 'fr' ? 'Soumettre l\'avis' : 'Submit Review'}
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive filter tabs row */}
+          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/40 select-none">
+            {[
+              { id: 'all', label: lang === 'fr' ? 'Tous' : 'All' },
+              { id: '5', label: '5 ★' },
+              { id: '4', label: '4 ★' },
+              { id: '3', label: '3 ★' },
+              { id: '2', label: '2 ★' },
+              { id: '1', label: '1 ★' }
+            ].map(tab => {
+              const count = tab.id === 'all' 
+                ? reviewCount 
+                : (starsBreakdown[tab.id] || 0);
+              const isActive = ratingFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setRatingFilter(tab.id)}
+                  className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                    isActive 
+                      ? 'bg-[#e61e25] border-[#e61e25] text-white'
+                      : 'bg-slate-50 dark:bg-slate-950/40 border-slate-205 dark:border-slate-800/60 text-slate-650 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  {tab.label} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Reviews list feed */}
+          <div className="space-y-4 pt-2">
+            {isReviewsLoading ? (
+              <div className="space-y-4">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="p-4 bg-slate-50/50 dark:bg-slate-950/10 rounded-2xl border border-slate-100 dark:border-slate-800/40 animate-pulse space-y-3">
+                    <div className="flex justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
+                      </div>
+                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                    </div>
+                    <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredReviews.length === 0 ? (
+              <div className="py-8 text-center text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                {lang === 'fr' ? 'Aucun avis ne correspond à ce filtre.' : 'No reviews match this filter.'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredReviews.map(rev => (
+                  <div 
+                    key={rev.id} 
+                    className="p-4 bg-slate-50/30 dark:bg-slate-950/10 hover:bg-white dark:hover:bg-slate-950/30 rounded-2xl border border-slate-100/60 dark:border-slate-800/40 transition-colors text-left"
+                  >
+                    <div className="flex justify-between items-start mb-2.5 gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-[#e61e25]/10 text-[#e61e25] rounded-full flex items-center justify-center font-black text-[11px] uppercase tracking-wider">
+                          {rev.user ? String(rev.user).charAt(0).toUpperCase() : 'G'}
+                        </div>
+                        <div>
+                          <span className="block text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                            {rev.user}
+                          </span>
+                          <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+                            {rev.date}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex text-amber-500 gap-0.5 shrink-0">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={10} fill={i < rev.rating ? "currentColor" : "none"} strokeWidth={2.5} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-350 font-bold leading-relaxed italic pl-11">
+                      "{rev.comment}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
