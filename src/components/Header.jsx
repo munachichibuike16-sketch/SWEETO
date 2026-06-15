@@ -308,7 +308,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 transition-all duration-500">
+      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 ${isScrolled ? 'py-2 px-4' : 'py-3.5 px-4 md:px-12'}`}>
         {/* Desktop Header Layout */}
         <div className="hidden md:flex max-w-[1600px] mx-auto items-center justify-between gap-6 w-full">
           
@@ -653,7 +653,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
         {/* Mobile Header Layout */}
         <div className="flex flex-col md:hidden w-full">
-          <div className="flex items-center justify-between w-full">
+          {/* Row 1: Logo & Icons (collapses on scroll) */}
+          <div className={`flex items-center justify-between w-full transition-all duration-300 origin-top overflow-hidden ${
+            isScrolled 
+              ? 'h-0 opacity-0 pointer-events-none mb-0 scale-y-95' 
+              : 'h-10 opacity-100 mb-2 scale-y-100'
+          }`}>
             {/* AliExpress Logo with Checkmark */}
             <div 
               onClick={() => {
@@ -728,7 +733,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
           </div>
 
           {/* Row 2: Pill-shaped Search Bar */}
-          <form onSubmit={handleSearchTrigger} className="w-full flex items-center bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm mt-3">
+          <form 
+            onSubmit={handleSearchTrigger} 
+            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${
+              isScrolled ? 'mt-0' : 'mt-2.5'
+            }`}
+          >
             {/* Camera Icon */}
             <button type="button" className="text-slate-450 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
               <Camera size={19} strokeWidth={2} />
