@@ -734,7 +734,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
+      {!location.pathname.startsWith('/product/') && (
+        <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
         {/* Accueil */}
         <motion.button 
           onClick={() => {
@@ -888,6 +889,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           <span className="text-[8.5px] font-black uppercase tracking-widest">{user ? t('me') : t('profile')}</span>
         </motion.button>
       </nav>
+      )}
     </>
   );
 };
