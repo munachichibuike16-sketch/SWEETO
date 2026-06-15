@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ShoppingCart, Star, Minus, Plus, MessageCircle, 
-  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft
+  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -150,6 +150,32 @@ const ProductDetailPage = () => {
     return list;
   };
   const imagesList = getImagesList();
+
+  const [isVariantSheetOpen, setIsVariantSheetOpen] = useState(false);
+  const [variants, setVariants] = useState([]);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [sheetScrollY, setSheetScrollY] = useState(0);
+
+  useEffect(() => {
+    if (product) {
+      const list = getImagesList();
+      const mapped = list.map((img, idx) => {
+        let name = 'Default Color';
+        if (idx === 0) name = 'EDC Knife';
+        else if (idx === 1) name = 'Silver Metal';
+        else if (idx === 2) name = 'Shadow Black';
+        else if (idx === 3) name = 'Carbon Steel';
+        else name = `Option ${idx + 1}`;
+        return { id: idx, name, image: img };
+      });
+      setVariants(mapped);
+      setSelectedVariant(mapped[0] || null);
+    }
+  }, [product]);
+
+  const handleSheetScroll = (e) => {
+    setSheetScrollY(e.currentTarget.scrollTop);
+  };
 
   // Recommendations feed
   const recommendedProducts = liveProducts
@@ -438,6 +464,18 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
+            {/* Variant Selector Button (Mobile only) */}
+            <button 
+              onClick={() => setIsVariantSheetOpen(true)}
+              className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
+            >
+              <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">Color:</span>
+                <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
+              </div>
+              <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+            </button>
+
             {/* Variant tag / Specification Details */}
             <div id="product-reviews" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800/40">
@@ -597,6 +635,230 @@ const ProductDetailPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Variant Slide-up Sheet (Mobile Bottom Sheet) */}
+      <AnimatePresence>
+        {isVariantSheetOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsVariantSheetOpen(false)}
+              className="fixed inset-0 z-50 bg-black/60 md:hidden"
+            />
+
+            {/* Bottom Sheet Modal */}
+            <motion.div 
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#0b1324] rounded-t-[2rem] shadow-2xl md:hidden flex flex-col max-h-[85vh]"
+            >
+              {/* Sticky Top Header (Only visible when scrolled down) */}
+              {sheetScrollY > 100 ? (
+                <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800/80 bg-white/95 dark:bg-[#0b1324]/95 backdrop-blur z-20 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={selectedVariant ? selectedVariant.image : product.image_url} 
+                      alt="" 
+                      className="w-11 h-11 rounded-lg object-contain bg-slate-50 border border-slate-100 dark:border-slate-800" 
+                    />
+                    <div className="text-left">
+                      <h4 className="text-[11px] font-black uppercase text-slate-850 dark:text-white truncate max-w-[190px]">
+                        {product.name}
+                      </h4>
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                        Color: {selectedVariant ? selectedVariant.name : 'Default'}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setIsVariantSheetOpen(false)}
+                    className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:text-slate-400 cursor-pointer"
+                  >
+                    <X size={16} strokeWidth={2.5} />
+                  </button>
+                </div>
+              ) : (
+                /* Unscrolled Close button */
+                <div className="absolute top-4 right-4 z-20">
+                  <button 
+                    onClick={() => setIsVariantSheetOpen(false)}
+                    className="w-8 h-8 rounded-full bg-slate-950/40 backdrop-blur-sm flex items-center justify-center text-white cursor-pointer hover:bg-slate-950/60 transition-colors"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
+              )}
+
+              {/* Scrollable Sheet Content */}
+              <div 
+                onScroll={handleSheetScroll}
+                className="overflow-y-auto flex-1 pb-6 px-4 text-left no-scrollbar"
+              >
+                {/* Large visual image (Only shown when unscrolled) */}
+                {sheetScrollY <= 100 && (
+                  <div className="w-full aspect-[4/3] bg-white dark:bg-slate-900 rounded-b-2xl relative overflow-hidden flex items-center justify-center p-6 border-b border-slate-100 dark:border-slate-800/40">
+                    <img 
+                      src={selectedVariant ? selectedVariant.image : product.image_url} 
+                      alt="" 
+                      className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
+                    />
+                    {/* Floating cart icon */}
+                    <button 
+                      onClick={() => {
+                        addToCart(product);
+                        showToast("Added to shopping cart! 🛒", "success");
+                        setIsVariantSheetOpen(false);
+                      }}
+                      className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <ShoppingCart size={18} />
+                    </button>
+                  </div>
+                )}
+
+                {/* MID-YEAR SALE Banner & Price block */}
+                <div className="mt-4 space-y-3">
+                  <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-3 flex justify-between items-center text-white shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-widest italic">Mid-Year Sale • SuperDeals</span>
+                    </div>
+                    <span className="text-[9px] font-bold opacity-90 uppercase">Ends: Jun 25</span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/40">
+                    <div className="space-y-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-[#e61e25] italic tracking-tighter">
+                          {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
+                        </span>
+                        <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                          -50% now | Save {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
+                        </span>
+                      </div>
+                      {product.old_price && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 line-through font-bold">
+                          {settings?.currency || 'XOF'} {product.old_price.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                    {/* Secondary floating cart when scrolled */}
+                    {sheetScrollY > 100 && (
+                      <button 
+                        onClick={() => {
+                          addToCart(product);
+                          showToast("Added to shopping cart! 🛒", "success");
+                          setIsVariantSheetOpen(false);
+                        }}
+                        className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      >
+                        <ShoppingCart size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Tax excluded, add at checkout if applicable; Extra 1% off with coins
+                  </p>
+                </div>
+
+                {/* Variant Color Section */}
+                <div className="mt-5 space-y-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                    Color: {selectedVariant ? selectedVariant.name : 'Default'}
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {variants.map((v, idx) => {
+                      const isSelected = selectedVariant && selectedVariant.id === v.id;
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => {
+                            setSelectedVariant(v);
+                            setActiveImageIndex(v.id);
+                          }}
+                          className={`relative w-20 aspect-square rounded-2xl p-1 bg-slate-50 dark:bg-slate-900/50 border transition-all cursor-pointer flex flex-col items-center justify-center ${
+                            isSelected 
+                              ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/10 dark:ring-white/10' 
+                              : 'border-slate-150 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <img 
+                            src={v.image} 
+                            alt="" 
+                            className="w-12 h-12 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg" 
+                          />
+                          <span className="text-[8px] font-black uppercase tracking-wide truncate max-w-full mt-1.5 text-slate-500 dark:text-slate-400">
+                            {v.name}
+                          </span>
+                          
+                          {/* Selected Check overlay */}
+                          {isSelected && (
+                            <div className="absolute top-1 left-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-md p-0.5 shadow-sm scale-75">
+                              <Check size={8} strokeWidth={4} />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Quantity Stepper */}
+                <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/40 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Qty</h4>
+                    <p className="text-[10px] font-bold text-emerald-500 uppercase">In stock</p>
+                  </div>
+                  <div className="border border-slate-300 dark:border-slate-700 rounded-full flex items-center justify-between w-24 p-1">
+                    <button 
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer"
+                    >
+                      <Minus size={12} strokeWidth={3} />
+                    </button>
+                    <span className="text-xs font-black text-slate-800 dark:text-white select-none">{quantity}</span>
+                    <button 
+                      onClick={() => setQuantity(q => q + 1)}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer"
+                    >
+                      <Plus size={12} strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Sticky Action Buttons */}
+              <div className="p-4 border-t border-slate-150 dark:border-slate-800 bg-white/95 dark:bg-[#0b1324]/95 backdrop-blur flex gap-3 pb-[calc(env(safe-area-inset-bottom,0px)+14px)]">
+                <button 
+                  onClick={() => {
+                    addToCart(product);
+                    showToast("Added to shopping cart! 🛒", "success");
+                    setIsVariantSheetOpen(false);
+                  }}
+                  className="flex-1 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center bg-transparent"
+                >
+                  Add to Cart
+                </button>
+                <button 
+                  onClick={() => {
+                    addToCart(product);
+                    setIsVariantSheetOpen(false);
+                    navigate('/checkout');
+                  }}
+                  className="flex-1 py-3 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
+                >
+                  Buy Now
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Global Sidebar & Cart overlay drawers */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
