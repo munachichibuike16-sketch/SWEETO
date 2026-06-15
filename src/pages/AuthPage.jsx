@@ -39,6 +39,14 @@ import './AuthPage.css';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 
+const CoteDivoireFlag = () => (
+  <svg width="20" height="20" viewBox="0 0 3 3" xmlns="http://www.w3.org/2000/svg" className="rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.15)] flex-shrink-0">
+    <rect width="1" height="3" fill="#F77F00"/>
+    <rect x="1" width="1" height="3" fill="#FFFFFF"/>
+    <rect x="2" width="1" height="3" fill="#009E60"/>
+  </svg>
+);
+
 const AuthPage = ({ initialTab }) => {
   const navigate = useNavigate();
   const { showToast, settings } = useStore();
@@ -860,9 +868,8 @@ const AuthPage = ({ initialTab }) => {
               >
                 <SettingsIcon size={20} />
               </button>
-              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 text-white/80 hover:text-white transition-colors">
-                <Globe size={20} />
-                <span className="text-[10px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-white">FR</span>
+              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
+                <CoteDivoireFlag />
               </button>
               <button 
                 onClick={() => setCurrentTab('orders')} 
@@ -1338,27 +1345,30 @@ const AuthPage = ({ initialTab }) => {
     return (
       <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <div className="main-container max-w-[480px]">
-          {/* Welcome Banner */}
-          <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
-            {/* Background elements */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
-
-            {/* Header Row (Integrated inside banner) */}
-            <div className="flex justify-end items-center gap-4 mb-4 z-10 relative">
+          {/* Header Row: Sign in/Register and icons */}
+          <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-eas-dark/50 rounded-3xl mx-4 my-2 border border-slate-100 dark:border-white/5 shadow-sm">
+            <span 
+              onClick={() => { 
+                switchTab('login');
+                setShowAuthForm(true); 
+              }}
+              className="font-bold text-[17px] text-slate-800 dark:text-white cursor-pointer hover:text-eas-blue transition-colors pl-2"
+            >
+              Sign in/Register
+            </span>
+            <div className="flex items-center gap-4 pr-2">
+              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
+                <CoteDivoireFlag />
+              </button>
               <button 
                 onClick={() => { 
                   showToast("Settings are only available for signed-in users.", "info"); 
                   switchTab('login');
                   setShowAuthForm(true); 
                 }} 
-                className="text-white/80 hover:text-white transition-colors"
+                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
               >
                 <SettingsIcon size={20} />
-              </button>
-              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 text-white/80 hover:text-white transition-colors">
-                <Globe size={20} />
-                <span className="text-[10px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-white">FR</span>
               </button>
               <button 
                 onClick={() => { 
@@ -1366,77 +1376,10 @@ const AuthPage = ({ initialTab }) => {
                   switchTab('login');
                   setShowAuthForm(true); 
                 }} 
-                className="text-white/80 hover:text-white transition-colors relative"
+                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors relative"
               >
                 <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
               </button>
-            </div>
-            
-            <div className="flex justify-between items-start z-10 relative">
-              <div className="space-y-4 max-w-[65%]">
-                <div>
-                  <h2 className="text-xl font-black italic tracking-tighter uppercase text-left">Welcome to SWEETO HUB</h2>
-                  <p className="text-[10px] text-red-100 font-semibold mt-1 text-left">Shop premium local products, tech & electronics with ease.</p>
-                </div>
-                
-                <button 
-                  onClick={() => { 
-                    switchTab('login'); 
-                    setShowAuthForm(true); 
-                  }} 
-                  className="bg-black hover:bg-neutral-900 text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md flex items-center gap-1.5"
-                >
-                  Sign in / Register
-                </button>
-              </div>
-
-              {/* Cute Waving Yellow Chick Mascot */}
-              <div className="w-24 h-24 flex items-center justify-center relative">
-                <svg className="w-20 h-20 drop-shadow-md" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                  {/* Feet */}
-                  <path d="M38,78 Q38,88 34,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
-                  <path d="M62,78 Q62,88 66,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
-                  <circle cx="34" cy="88" r="3" fill="#ff9233" />
-                  <circle cx="66" cy="88" r="3" fill="#ff9233" />
-                  
-                  {/* Body & Head */}
-                  <ellipse cx="50" cy="50" rx="32" ry="30" fill="#ffdf00" />
-                  
-                  {/* Hair / Tuft */}
-                  <path d="M45,20 Q50,8 55,20" fill="#ffdf00" />
-                  <path d="M48,20 Q52,12 52,20" fill="#ffdf00" />
-                  
-                  {/* Cheeks */}
-                  <circle cx="28" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
-                  <circle cx="72" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
-                  
-                  {/* Eyes */}
-                  <circle cx="36" cy="46" r="4.5" fill="#1a1a1a" />
-                  <circle cx="34.5" cy="44.5" r="1.5" fill="#ffffff" />
-                  <circle cx="64" cy="46" r="4.5" fill="#1a1a1a" />
-                  <circle cx="62.5" cy="44.5" r="1.5" fill="#ffffff" />
-                  
-                  {/* Beak */}
-                  <polygon points="45,49 55,49 50,58" fill="#ff9233" />
-                  
-                  {/* Left Wing (Normal) */}
-                  <path d="M19,50 C12,52 10,62 18,62 C22,62 21,54 19,50 Z" fill="#ffdf00" />
-                  
-                  {/* Waving Right Wing */}
-                  <g className="mascot-wing-wave">
-                    <path d="M81,50 C88,48 95,35 90,30 C85,25 78,40 81,50 Z" fill="#ffdf00" />
-                    <path d="M92,20 L94,22 M96,17 L99,18 M95,12 L97,11" stroke="#ffdf00" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
-                  </g>
-                </svg>
-              </div>
-            </div>
-
-            {/* Checkmark style items row */}
-            <div className="mt-5 pt-4 border-t border-white/10 flex justify-between items-center text-[9px] font-bold text-red-100/90 tracking-wide uppercase">
-              <span className="flex items-center gap-1">✨ Verified Products</span>
-              <span className="flex items-center gap-1">⚡ Fast Delivery</span>
-              <span className="flex items-center gap-1">🔒 Secure Payments</span>
             </div>
           </div>
 
