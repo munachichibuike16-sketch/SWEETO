@@ -835,11 +835,288 @@ const AuthPage = ({ initialTab }) => {
   const { lang, changeLanguage } = useLanguage();
   const isGoogleUser = sessionUser?.provider === 'google';
 
-  if (sessionUser) {
+  if (sessionUser && currentTab === 'overview') {
     return (
-      <div className="auth-body dark:bg-eas-dark transition-colors duration-500">
+      <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <button 
-          onClick={() => navigate(-1)} 
+          onClick={() => navigate('/')} 
+          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
+        >
+          <ArrowLeft size={20} />
+        </button>
+
+        <div className="main-container max-w-[480px] w-full">
+          {/* Header Row: settings, flag, notification */}
+          <div className="flex justify-between items-center px-4 py-3 text-slate-800 dark:text-slate-200">
+            <span className="font-black italic text-lg tracking-tighter text-eas-blue dark:text-white flex items-center gap-1.5">
+              ⚡ SWEETO HUB
+            </span>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setCurrentTab('settings')} 
+                className="hover:text-eas-blue transition-colors"
+              >
+                <SettingsIcon size={20} />
+              </button>
+              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 hover:text-eas-blue transition-colors">
+                <Globe size={20} />
+                <span className="text-[10px] font-bold bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200">FR</span>
+              </button>
+              <button 
+                onClick={() => setCurrentTab('orders')} 
+                className="hover:text-eas-blue transition-colors relative"
+              >
+                <Bell size={20} />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+            </div>
+          </div>
+
+          {/* Welcome Banner (Signed In) */}
+          <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
+            {/* Background elements */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
+            
+            <div className="flex justify-between items-center z-10 relative">
+              <div className="flex items-center gap-4 max-w-[70%]">
+                {/* Avatar with click upload handler */}
+                <div 
+                  className="profile-avatar-wrapper group cursor-pointer relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-md bg-white/10 flex-shrink-0"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
+                  {sessionUser.avatarUrl || sessionUser.picture ? (
+                    <img 
+                      src={sessionUser.avatarUrl || sessionUser.picture} 
+                      alt={sessionUser.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white font-black text-xl bg-gradient-to-r from-eas-blue to-eas-blue/80">
+                      {sessionUser.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {/* Hover edit overlay */}
+                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <Camera size={16} className="text-white mb-0.5" />
+                    <span className="text-[8px] text-white font-black uppercase tracking-wider">Change</span>
+                  </div>
+                  
+                  <input 
+                    type="file"
+                    ref={avatarInputRef}
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp"
+                  />
+                </div>
+
+                <div className="text-left">
+                  <h2 className="text-lg font-black tracking-tight leading-tight">
+                    Bonjour, {sessionUser.name?.split(' ')[0]}! 👋
+                  </h2>
+                  <p className="text-[10px] text-red-100 font-semibold truncate mt-0.5 max-w-[180px] text-left">
+                    {sessionUser.email}
+                  </p>
+                  <button 
+                    onClick={() => setCurrentTab('settings')}
+                    className="mt-2 text-[9px] font-black uppercase tracking-widest bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-all"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+
+              {/* Cute Waving Yellow Chick Mascot */}
+              <div className="w-20 h-20 flex items-center justify-center relative">
+                <svg className="w-16 h-16 drop-shadow-md" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M38,78 Q38,88 34,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
+                  <path d="M62,78 Q62,88 66,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
+                  <circle cx="34" cy="88" r="3" fill="#ff9233" />
+                  <circle cx="66" cy="88" r="3" fill="#ff9233" />
+                  <ellipse cx="50" cy="50" rx="32" ry="30" fill="#ffdf00" />
+                  <path d="M45,20 Q50,8 55,20" fill="#ffdf00" />
+                  <path d="M48,20 Q52,12 52,20" fill="#ffdf00" />
+                  <circle cx="28" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
+                  <circle cx="72" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
+                  <circle cx="36" cy="46" r="4.5" fill="#1a1a1a" />
+                  <circle cx="34.5" cy="44.5" r="1.5" fill="#ffffff" />
+                  <circle cx="64" cy="46" r="4.5" fill="#1a1a1a" />
+                  <circle cx="62.5" cy="44.5" r="1.5" fill="#ffffff" />
+                  <polygon points="45,49 55,49 50,58" fill="#ff9233" />
+                  <path d="M19,50 C12,52 10,62 18,62 C22,62 21,54 19,50 Z" fill="#ffdf00" />
+                  <g className="mascot-wing-wave">
+                    <path d="M81,50 C88,48 95,35 90,30 C85,25 78,40 81,50 Z" fill="#ffdf00" />
+                    <path d="M92,20 L94,22 M96,17 L99,18 M95,12 L97,11" stroke="#ffdf00" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            {/* Badges Row */}
+            <div className="mt-4 pt-3.5 border-t border-white/10 flex justify-between items-center text-[9px] font-bold text-red-100/90 tracking-wide uppercase">
+              <span className="flex items-center gap-1">✨ Verified Products</span>
+              <span className="flex items-center gap-1">⚡ Fast Delivery</span>
+              <span className="flex items-center gap-1">🔒 Secure Payments</span>
+            </div>
+          </div>
+
+          {/* My Orders Section */}
+          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">My orders</h3>
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="text-[10px] font-black uppercase text-eas-blue dark:text-blue-400 tracking-wider hover:underline"
+              >
+                View all ({stats.ordersCount})
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-5 gap-1 text-center">
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <CreditCard size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <Clock size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <Truck size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <MessageSquare size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <RotateCcw size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Grid Options */}
+          <div className="mx-4 my-4 grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => setCurrentTab('orders')}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-eas-blue/40 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-eas-blue flex items-center justify-center">
+                <Clock size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">History</div>
+                <div className="text-[9px] font-bold text-slate-400">View browsed items</div>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => navigate('/wishlist')}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-pink-400 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 flex items-center justify-center">
+                <Heart size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">Wishlist</div>
+                <div className="text-[9px] font-bold text-slate-400">Saved: {stats.wishlistCount} items</div>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => showToast("No coupons available right now.", "info")}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-amber-400 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-500 flex items-center justify-center">
+                <Tag size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">Coupons</div>
+                <div className="text-[9px] font-bold text-slate-400">Manage discounts</div>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => showToast("You are not following any stores yet.", "info")}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-purple-400 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-500 flex items-center justify-center">
+                <Store size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">Stores</div>
+                <div className="text-[9px] font-bold text-slate-400">Followed outlets</div>
+              </div>
+            </button>
+          </div>
+
+          {/* Mid-Year Sale Promo Banner */}
+          <div className="mx-4 my-4 p-5 rounded-3xl bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white relative overflow-hidden shadow-md flex justify-between items-center group cursor-pointer border border-pink-500/20">
+            <div className="absolute -top-12 -left-12 w-28 h-28 bg-white/10 rounded-full blur-xl" />
+            <div className="z-10 space-y-1">
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] bg-white/20 px-2 py-0.5 rounded-full">LIMITED OFFER</span>
+              <h4 className="text-sm font-black italic tracking-tight uppercase">MID-YEAR SUPER SALE</h4>
+              <p className="text-[9px] text-pink-100 font-semibold text-left">Get up to 70% off + free delivery right now!</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-pink-600 transition-all z-10">
+              <ChevronRight size={18} />
+            </div>
+          </div>
+
+          {/* Secure Sign Out */}
+          <div className="px-4 pt-4 pb-8">
+            <button 
+              className="btn-google logout-btn-adorable w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest dark:bg-red-950/10 dark:border-red-900/20" 
+              onClick={handleLogout}
+            >
+              <LogOut size={16} /> {t('secure_sign_out') || 'Secure Sign Out'}
+            </button>
+          </div>
+
+          <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-2">
+            Premium Experience by SWEETO HUB
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (sessionUser && (currentTab === 'orders' || currentTab === 'settings')) {
+    return (
+      <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+        <button 
+          onClick={() => setCurrentTab('overview')} 
           className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
         >
           <ArrowLeft size={20} />
@@ -853,174 +1130,17 @@ const AuthPage = ({ initialTab }) => {
         <div className="main-container" style={{ maxWidth: currentTab === 'orders' ? '920px' : '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl" style={{ width: '100%' }}>
             <div className="card-content">
-              
-              {/* Header Info */}
-              <div className="brand-section">
-                <div className="profile-avatar-wrapper group cursor-pointer relative" onClick={() => avatarInputRef.current?.click()}>
-                  <div className="profile-avatar-glow"></div>
-                  {sessionUser.avatarUrl || sessionUser.picture ? (
-                    <img 
-                      src={sessionUser.avatarUrl || sessionUser.picture} 
-                      alt={sessionUser.name} 
-                      className="brand-icon profile-main-avatar object-cover rounded-2xl border border-slate-100 dark:border-white/5"
-                    />
-                  ) : (
-                    <div className="brand-icon profile-main-avatar">
-                      {sessionUser.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  {/* Hover edit overlay */}
-                  <div className="absolute inset-0 bg-black/40 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <Camera size={16} className="text-white mb-0.5" />
-                    <span className="text-[8px] text-white font-black uppercase tracking-wider">Change</span>
-                  </div>
-                  
-                  <input 
-                    type="file"
-                    ref={avatarInputRef}
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/webp"
-                  />
-                </div>
-                <h1 className="brand-name font-black italic tracking-tighter" style={{ fontSize: '2.2rem', marginTop: '1rem' }}>
-                  {t('hello') || 'Hello'}, {sessionUser.name?.split(' ')[0]}! 👋
-                </h1>
-                <p className="brand-tagline text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em]">{sessionUser.email}</p>
-              </div>
-
-              {/* Tab Selector */}
-              <div className="tab-switcher bg-eas-light/80 dark:bg-eas-dark/50 p-1 border-slate-200/50 dark:border-white/5 rounded-2xl mb-8">
-                <button 
-                  className={`tab-btn ${currentTab === 'overview' ? 'active' : ''}`}
-                  onClick={() => switchTab('overview')}
-                >
-                  <User size={14} /> {t('profile') || 'Profile'}
-                </button>
-                <button 
-                  className={`tab-btn ${currentTab === 'orders' ? 'active' : ''}`}
-                  onClick={() => switchTab('orders')}
-                >
-                  <Package size={14} /> {t('my_orders') || 'Orders'}
-                </button>
-                <button 
-                  className={`tab-btn ${currentTab === 'settings' ? 'active' : ''}`}
-                  onClick={() => switchTab('settings')}
-                >
-                  <SettingsIcon size={14} /> {t('settings') || 'Settings'}
-                </button>
+              {/* Back to overview Link */}
+              <div 
+                className="flex items-center gap-2 mb-6 cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors" 
+                onClick={() => setCurrentTab('overview')}
+              >
+                <ArrowLeft size={16} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Back to Profile Dashboard</span>
               </div>
 
               {/* Content Panels */}
               <div className="profile-dashboard mt-0">
-                {currentTab === 'overview' && (
-                  <div className="space-y-8 animate-fade-in">
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Orders Count Card */}
-                      <div 
-                        onClick={() => switchTab('orders')}
-                        className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center cursor-pointer hover:border-eas-blue hover:scale-[1.03] transition-all group"
-                      >
-                        <div className="stat-icon-circle bg-eas-blue/10 dark:bg-eas-blue/20 text-eas-blue group-hover:bg-eas-blue group-hover:text-white transition-all">
-                          <Package size={16} />
-                        </div>
-                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('my_orders') || 'Orders'}</span>
-                        <span className="stat-value text-base font-black text-slate-900 dark:text-white mt-1">
-                          {stats.ordersCount}
-                        </span>
-                      </div>
-
-                      {/* Wishlist Count Card */}
-                      <div 
-                        onClick={() => navigate('/wishlist')}
-                        className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center cursor-pointer hover:border-pink-500 hover:scale-[1.03] transition-all group"
-                      >
-                        <div className="stat-icon-circle bg-pink-50 dark:bg-pink-950/30 text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all">
-                          <Heart size={16} />
-                        </div>
-                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('wishlist') || 'Wishlist'}</span>
-                        <span className="stat-value text-base font-black text-slate-900 dark:text-white mt-1">
-                          {stats.wishlistCount}
-                        </span>
-                      </div>
-
-                      {/* Member Since Card */}
-                      <div className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center">
-                        <div className="stat-icon-circle bg-purple-50 dark:bg-purple-950/30 text-purple-500">
-                          <Calendar size={16} />
-                        </div>
-                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('member_since') || 'Member Since'}</span>
-                        <span className="stat-value text-[11px] font-black text-slate-700 dark:text-slate-300 mt-1.5 text-center leading-tight">
-                          {new Date(sessionUser.createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-                        </span>
-                      </div>
-
-                      {/* Security Status Card */}
-                      <div className="profile-stat-box adorable-card dark:bg-eas-dark/40 dark:border-white/5 flex flex-col items-center">
-                        <div className="stat-icon-circle bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500">
-                          <Shield size={16} />
-                        </div>
-                        <span className="stat-label text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('security') || 'Security'}</span>
-                        <span className="stat-value text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase mt-1.5 text-center leading-tight">
-                          {sessionUser.provider || 'Verified'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Personal Information */}
-                    <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-3.5 text-left">
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-2">
-                        <User className="text-eas-blue" size={15} />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Personal Information</span>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center py-1 border-b border-slate-100/30 dark:border-white/5 last:border-0">
-                          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Phone</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                              {sessionUser.phoneCountryCode || sessionUser.countryCode ? `${sessionUser.phoneCountryCode || sessionUser.countryCode} ` : ''}
-                              {sessionUser.phoneNumber || sessionUser.phone || 'Not set'}
-                            </span>
-                            <button 
-                              onClick={() => switchTab('settings')}
-                              className="text-eas-blue hover:text-eas-blue/80 text-[9px] font-black uppercase tracking-wider bg-eas-light dark:bg-white/5 px-2.5 py-1.5 rounded-lg"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-
-                    <div className="quick-links">
-                      <div className="quick-link-item dark:bg-eas-dark/40 dark:border-white/5 hover:bg-eas-light dark:hover:bg-eas-dark/70" onClick={() => navigate('/')}>
-                        <div className="ql-icon bg-eas-blue/10 dark:bg-eas-blue/20 text-eas-blue"><ShoppingBag size={18} /></div>
-                        <div className="ql-text">
-                          <span className="ql-title text-slate-900 dark:text-white">{t('continue_shopping') || 'Continue Shopping'}</span>
-                          <span className="ql-desc text-slate-400 dark:text-slate-500">{t('explore_premium_arrivals') || 'Explore our latest premium arrivals'}</span>
-                        </div>
-                        <ChevronRight className="ql-arrow" size={16} />
-                      </div>
-                      <div className="quick-link-item dark:bg-eas-dark/40 dark:border-white/5 hover:bg-eas-light dark:hover:bg-eas-dark/70" onClick={() => navigate('/wishlist')}>
-                        <div className="ql-icon bg-pink-50 dark:bg-pink-950/30 text-pink-500"><Heart size={18} /></div>
-                        <div className="ql-text">
-                          <span className="ql-title text-slate-900 dark:text-white">{t('my_wishlist') || 'My Wishlist'}</span>
-                          <span className="ql-desc text-slate-400 dark:text-slate-500">{t('check_saved_items') || 'Check the items you saved for later'}</span>
-                        </div>
-                        <ChevronRight className="ql-arrow" size={16} />
-                      </div>
-                    </div>
-
-                    <div className="profile-actions pt-4 border-t border-slate-100 dark:border-white/5">
-                      <button className="btn-google logout-btn-adorable w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest dark:bg-red-950/10 dark:border-red-900/20" onClick={handleLogout}>
-                        <LogOut size={16} /> {t('secure_sign_out') || 'Secure Sign Out'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 {currentTab === 'orders' && (
                   <div className="animate-fade-in w-full overflow-hidden">
                     <OrdersHistoryContent isProfileTab={true} />
