@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import OrdersHistoryContent from '../components/OrdersHistoryContent';
+import CouponsContent from '../components/CouponsContent';
 import ProductCard from '../components/ProductCard';
 import { 
   User, 
@@ -987,7 +988,7 @@ const AuthPage = ({ initialTab }) => {
             <div className="grid grid-cols-4 gap-1 text-center">
               <button 
                 onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1"
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Clock size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">History</span>
@@ -995,15 +996,15 @@ const AuthPage = ({ initialTab }) => {
 
               <button 
                 onClick={() => navigate('/wishlist')}
-                className="flex flex-col items-center gap-2 group py-1"
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Wishlist</span>
               </button>
 
               <button 
-                onClick={() => showToast("No coupons available right now.", "info")}
-                className="flex flex-col items-center gap-2 group py-1"
+                onClick={() => setCurrentTab('coupons')}
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Tag size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Coupons</span>
@@ -1011,7 +1012,7 @@ const AuthPage = ({ initialTab }) => {
 
               <button 
                 onClick={() => showToast("You are not following any stores yet.", "info")}
-                className="flex flex-col items-center gap-2 group py-1"
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Store size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Followed stores</span>
@@ -1048,6 +1049,16 @@ const AuthPage = ({ initialTab }) => {
           <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-2">
             Premium Experience by SWEETO HUB
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentTab === 'coupons') {
+    return (
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
+        <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
+          <CouponsContent onBack={() => setCurrentTab('overview')} />
         </div>
       </div>
     );
@@ -1408,7 +1419,7 @@ const AuthPage = ({ initialTab }) => {
                   switchTab('login');
                   setShowAuthForm(true); 
                 }}
-                className="flex flex-col items-center gap-2 group py-1"
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Clock size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">History</span>
@@ -1416,19 +1427,15 @@ const AuthPage = ({ initialTab }) => {
 
               <button 
                 onClick={() => navigate('/wishlist')}
-                className="flex flex-col items-center gap-2 group py-1"
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Wishlist</span>
               </button>
 
               <button 
-                onClick={() => { 
-                  showToast("Please sign in to view coupons.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1"
+                onClick={() => setCurrentTab('coupons')}
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Tag size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Coupons</span>
@@ -1440,7 +1447,7 @@ const AuthPage = ({ initialTab }) => {
                   switchTab('login');
                   setShowAuthForm(true); 
                 }}
-                className="flex flex-col items-center gap-2 group py-1"
+                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Store size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Followed stores</span>

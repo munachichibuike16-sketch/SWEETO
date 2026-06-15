@@ -6,6 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from './ProductCard';
+import orderEmptyMascot from '../assets/order_empty_mascot.png';
 
 const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
   const { settings, showToast, products } = useStore();
@@ -418,7 +419,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center w-full flex-1">
               <div className="w-48 h-48 mb-6 flex items-center justify-center">
                 <img 
-                  src="/src/assets/order_empty_mascot.png" 
+                  src={orderEmptyMascot} 
                   alt="No orders" 
                   className="w-full h-full object-contain"
                 />
