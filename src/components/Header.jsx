@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -308,11 +308,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-eas-blue/15 transition-all duration-500">
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-2 md:gap-6">
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] py-3 px-4 md:px-12 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 transition-all duration-500">
+        {/* Desktop Header Layout */}
+        <div className="hidden md:flex max-w-[1600px] mx-auto items-center justify-between gap-6 w-full">
           
           {/* Menu & Logo Section */}
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-4">
             {/* Logo — comes first */}
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
@@ -323,14 +324,14 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 setSelectedBrand(null);
                 navigate('/');
               }}
-              className="flex items-center gap-2 md:gap-3 cursor-pointer group"
+              className="flex items-center gap-3 cursor-pointer group"
             >
               <motion.div
                 whileHover={{ scale: 1.05, rotate: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="hidden md:block relative shrink-0"
+                className="relative shrink-0"
               >
-                <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,0,255,0.3)]" />
+                <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,255,0,0.3)]" />
               </motion.div>
               <div className="flex flex-col justify-center">
                 <div className="flex items-center gap-1.5">
@@ -354,15 +355,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     Connected
                   </span>
                 </div>
-                
-                {/* Under logo Connected text for extra small mobile */}
-                <span className="inline-flex sm:hidden items-center gap-1 text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none mt-0.5">
-                  <span className="relative flex h-1 w-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
-                  </span>
-                  Connected
-                </span>
               </div>
             </motion.div>
 
@@ -371,7 +363,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               whileHover={{ scale: 1.1, rotate: 5 }}
               whileTap={{ scale: 0.9 }}
               onClick={onMenuClick}
-              className="p-2 md:p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
+              className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
             >
               <Menu size={20} />
             </motion.button>
@@ -386,14 +378,22 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 setSelectedBrand(null);
                 navigate('/');
               }}
-              className="hidden md:flex p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
+              className="flex p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
             >
               <Home size={22} />
             </motion.button>
           </div>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearchTrigger} className="hidden md:flex flex-1 max-w-xl relative group">
+          <form onSubmit={handleSearchTrigger} className="flex-1 max-w-xl flex items-center bg-slate-50 dark:bg-slate-900/40 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-5 pr-1 gap-3 relative group transition-all focus-within:ring-4 focus-within:ring-blue-500/10">
+            {/* Camera Icon */}
+            <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 shrink-0">
+              <Camera size={19} strokeWidth={2} />
+            </button>
+            
+            {/* Divider */}
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
+
             <input 
               type="text" 
               value={inputValue}
@@ -401,10 +401,26 @@ const Header = ({ onMenuClick, onCartClick }) => {
               onFocus={() => inputValue.length > 1 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder={t('search_placeholder')} 
-              className={`w-full ${isRTL ? 'pr-14 pl-4' : 'pl-14 pr-4'} py-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/10 rounded-[2rem] shadow-inner focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-sm outline-none dark:text-white`}
+              className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-2"
             />
-            <button type="submit" className={`absolute ${isRTL ? 'right-5' : 'left-5'} top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors`}>
-              <Search size={20} strokeWidth={3} />
+
+            {inputValue && (
+              <button 
+                type="button" 
+                onClick={() => setInputValue('')} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 shrink-0"
+              >
+                <X size={15} />
+              </button>
+            )}
+
+            {/* Solid Black Search Button */}
+            <button 
+              type="submit" 
+              className="bg-slate-950 dark:bg-slate-800 hover:bg-slate-900 text-white rounded-full px-5 py-2 font-bold flex items-center justify-center transition-all active:scale-95 shrink-0 text-sm gap-2"
+            >
+              <Search size={15} strokeWidth={2.5} />
+              <span>{t('search') || 'Search'}</span>
             </button>
 
             {/* Desktop Suggestions */}
@@ -425,7 +441,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                       <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
                         <img src={product.image_url || product.image || '/hero-banner.png'} alt={product.name} className="w-full h-full object-cover" />
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col text-start">
                         <span className="text-sm font-bold text-slate-900 dark:text-white">{product.name}</span>
                         <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{product.category}</span>
                       </div>
@@ -440,8 +456,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           </form>
 
           {/* Desktop Action Center */}
-          <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
-
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* Unified Icon Pill */}
             <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 rounded-2xl shadow-inner px-1 py-1 gap-1">
               
@@ -603,41 +618,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     </span>
                   )}
                 </motion.button>
-
-                <AnimatePresence>
-                  {isNotifOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className={`absolute top-full ${isRTL ? 'start-0' : 'end-0'} mt-3 w-80 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]`}
-                    >
-                      <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">{t('recent_arrivals')}</span>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-eas-blue bg-eas-blue/10 px-2 py-1 rounded-lg">{t('new')}</span>
-                      </div>
-                      <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
-                        {products.filter(p => p.is_new_arrival).slice(0, 5).map(product => (
-                          <div key={product.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-4 transition-colors">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-                              <img src={product.image_url} alt="" className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-[11px] font-black text-slate-900 dark:text-white line-clamp-1">{product.name}</p>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t('just_arrived')}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <button 
-                        onClick={() => { setIsNotifOpen(false); navigate('/notifications'); }}
-                        className="w-full p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-eas-blue transition-colors border-t border-slate-50 dark:border-slate-800"
-                      >
-                        {t('view_all_new')}
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
               
               {/* Cart Button */}
@@ -669,87 +649,149 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </motion.div>
             </div>
           </div>
-
-          {/* Mobile Actions */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl">
-              <Search size={20} />
-            </button>
-            <button 
-              onClick={() => navigate('/notifications')} 
-              className="p-3 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl relative"
-              title={t('notifications')}
-            >
-              <Bell size={20} />
-              {unreadNotifCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-eas-blue rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-eas-blue/30 animate-pulse">
-                  {unreadNotifCount}
-                </span>
-              )}
-            </button>
-            <div 
-              onClick={onCartClick}
-              className="relative p-3 bg-slate-900 text-white rounded-xl shadow-xl shadow-slate-900/10 cursor-pointer"
-            >
-              <ShoppingCart size={20} />
-              {cartCount > 0 && <span className="absolute -top-1 -end-1 bg-eas-blue text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-black">{cartCount}</span>}
-            </div>
-          </div>
         </div>
 
-        <AnimatePresence>
-          {isSearchOpen && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="md:hidden mt-4 pb-2 overflow-hidden"
+        {/* Mobile Header Layout */}
+        <div className="flex flex-col md:hidden w-full">
+          <div className="flex items-center justify-between w-full">
+            {/* AliExpress Logo with Checkmark */}
+            <div 
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory(null);
+                setSelectedBrand(null);
+                navigate('/');
+              }}
+              className="flex items-center text-2xl font-black tracking-tight text-slate-900 dark:text-white select-none cursor-pointer"
             >
-              <form onSubmit={handleSearchTrigger} className="relative">
-                <input 
-                  autoFocus
-                  type="text" 
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  placeholder={t('search_placeholder')} 
-                  className={`w-full ${isRTL ? 'pe-12 ps-12' : 'ps-12 pe-12'} py-4 bg-slate-100 border-none rounded-[1.5rem] focus:ring-2 focus:ring-eas-blue font-bold text-sm`}
-                />
-                <Search className={`absolute ${isRTL ? 'end-4' : 'start-4'} top-1/2 -translate-y-1/2 text-slate-400`} size={18} />
-                <button type="button" onClick={() => setIsSearchOpen(false)} className={`absolute ${isRTL ? 'start-4' : 'end-4'} top-1/2 -translate-y-1/2 text-slate-400`}>
-                  <X size={18} />
-                </button>
+              <span className="relative inline-flex items-center">
+                {/* Checkmark overlaying 'A' */}
+                <svg 
+                  className="absolute left-[-1.5px] top-[4px] w-3 h-3 text-[#ffb100] dark:text-[#ffc300]" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="5.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span className="pl-[7.5px] italic">Ali</span>
+              </span>
+              <span className="font-semibold text-slate-855 dark:text-slate-100 italic">Express</span>
+            </div>
 
-                {/* Mobile Suggestions */}
-                <AnimatePresence>
-                  {showSuggestions && suggestions.length > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+            {/* Action Icons: Notification & Cart & Menu */}
+            <div className="flex items-center gap-1">
+              {/* Notifications bell */}
+              <button 
+                onClick={() => navigate('/notifications')} 
+                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
+                title={t('notifications')}
+              >
+                <Bell size={22} strokeWidth={1.5} />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 min-w-4.5 h-4.5 px-1 bg-[#ff3b30] rounded-full flex items-center justify-center text-white text-[8px] font-black shadow-md animate-pulse leading-none">
+                    {unreadNotifCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Cart icon */}
+              <button 
+                onClick={onCartClick} 
+                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
+                title={t('cart')}
+              >
+                <ShoppingCart size={22} strokeWidth={1.5} />
+                {cartCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 min-w-4.5 h-4.5 px-1 bg-blue-600 rounded-full flex items-center justify-center text-white text-[8px] font-black shadow-md leading-none">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Menu icon */}
+              <button 
+                onClick={onMenuClick} 
+                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
+                title="Menu"
+              >
+                <Menu size={22} strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+
+          {/* Row 2: Pill-shaped Search Bar */}
+          <form onSubmit={handleSearchTrigger} className="w-full flex items-center bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm mt-3">
+            {/* Camera Icon */}
+            <button type="button" className="text-slate-450 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
+              <Camera size={19} strokeWidth={2} />
+            </button>
+            
+            {/* Separator line */}
+            <div className="h-4 w-[1px] bg-slate-250 dark:bg-slate-800 shrink-0"></div>
+            
+            {/* Input field */}
+            <input 
+              type="text" 
+              value={inputValue}
+              onChange={handleInputChange}
+              onFocus={() => inputValue.length > 1 && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              placeholder={t('search_placeholder') || "Slip Sans Trace"} 
+              className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1.5"
+            />
+            
+            {/* Clear button */}
+            {inputValue && (
+              <button 
+                type="button" 
+                onClick={() => setInputValue('')} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 shrink-0"
+              >
+                <X size={15} />
+              </button>
+            )}
+
+            {/* Black Search Button */}
+            <button 
+              type="submit" 
+              className="bg-slate-950 dark:bg-slate-800 text-white rounded-full p-2 flex items-center justify-center transition-all hover:bg-slate-900 active:scale-95 shrink-0"
+            >
+              <Search size={16} strokeWidth={2.5} />
+            </button>
+
+            {/* Mobile Suggestions */}
+            <AnimatePresence>
+              {showSuggestions && suggestions.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
+                >
+                  {suggestions.map((product) => (
+                    <div 
+                      key={product.id}
+                      onClick={() => handleSuggestionClick(product)}
+                      className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-none"
                     >
-                      {suggestions.map((product) => (
-                        <div 
-                          key={product.id}
-                          onClick={() => handleSuggestionClick(product)}
-                          className="flex items-center gap-3 p-3 hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50 last:border-none"
-                        >
-                          <div className="w-8 h-8 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                            <img src={product.image_url || product.image || '/hero-banner.png'} alt={product.name} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-900">{product.name}</span>
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{product.category}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                      <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src={product.image_url || product.image || '/hero-banner.png'} alt={product.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex flex-col text-start">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{product.name}</span>
+                        <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{product.category}</span>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </form>
+        </div>
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
