@@ -356,15 +356,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </div>
             </motion.div>
 
-            {/* Menu button */}
-            <motion.button 
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onMenuClick}
-              className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
-            >
-              <Menu size={20} />
-            </motion.button>
+            {/* Menu button removed */}
 
             {/* Home button */}
             <motion.button 
@@ -617,34 +609,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   )}
                 </motion.button>
               </div>
-              
-              {/* Cart Button */}
-              <motion.div 
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={onCartClick}
-                className={`flex items-center gap-3 bg-slate-900 text-white ${isRTL ? 'pe-4 ps-5' : 'ps-4 pe-5'} py-3 rounded-2xl cursor-pointer shadow-xl shadow-slate-900/20 group hover:bg-eas-blue transition-all`}
-              >
-                <div className="relative">
-                  <ShoppingCart size={18} className="group-hover:rotate-12 transition-transform" />
-                  <AnimatePresence>
-                    {cartCount > 0 && (
-                      <motion.span 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        className="absolute -top-2.5 -end-2.5 bg-eas-blue group-hover:bg-white group-hover:text-eas-blue text-white text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-black shadow"
-                      >
-                        {cartCount}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-white/50 uppercase tracking-widest leading-none">{t('cart')}</span>
-                  <span className="text-[11px] font-black whitespace-nowrap">{settings?.currency || 'FCFA'} {cartTotal.toLocaleString()}</span>
-                </div>
-              </motion.div>
             </div>
           </div>
         </div>
@@ -675,7 +639,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </span>
             </div>
 
-            {/* Action Icons: Notification & Cart & Menu */}
+            {/* Action Icons: Only Notification bell */}
             <div className="flex items-center gap-1">
               {/* Notifications bell */}
               <button 
@@ -689,29 +653,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     {unreadNotifCount}
                   </span>
                 )}
-              </button>
-
-              {/* Cart icon */}
-              <button 
-                onClick={onCartClick} 
-                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
-                title={t('cart')}
-              >
-                <ShoppingCart size={22} strokeWidth={1.5} />
-                {cartCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 min-w-4.5 h-4.5 px-1 bg-blue-600 rounded-full flex items-center justify-center text-white text-[8px] font-black shadow-md leading-none">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Menu icon */}
-              <button 
-                onClick={onMenuClick} 
-                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
-                title="Menu"
-              >
-                <Menu size={22} strokeWidth={1.5} />
               </button>
             </div>
           </div>
