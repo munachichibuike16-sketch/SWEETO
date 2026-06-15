@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ShoppingCart, Star, Minus, Plus, MessageCircle, 
-  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X
+  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X, Camera
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -19,7 +19,7 @@ import { supabase } from '../lib/supabase';
 const ProductDetailPage = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { products: liveProducts, settings, showToast, addToRecent } = useStore();
+  const { products: liveProducts, settings, showToast, addToRecent, setSearchQuery, setSelectedCategory, setSelectedBrand } = useStore();
   const { addToCart, cartCount } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
@@ -177,6 +177,31 @@ const ProductDetailPage = () => {
     setSheetScrollY(e.currentTarget.scrollTop);
   };
 
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [searchInputValue, setSearchInputValue] = useState('');
+
+  // Extract unique categories dynamically from products list
+  const categories = Array.from(new Set(liveProducts.map(p => p.category).filter(Boolean))).slice(0, 12);
+
+  const handleDiscoverClick = (categoryName) => {
+    setSearchQuery('');
+    setSelectedCategory(categoryName);
+    setSelectedBrand(null);
+    setIsSearchOverlayOpen(false);
+    navigate('/');
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (searchInputValue.trim()) {
+      setSearchQuery(searchInputValue);
+      setSelectedCategory(null);
+      setSelectedBrand(null);
+      setIsSearchOverlayOpen(false);
+      navigate('/');
+    }
+  };
+
   // Recommendations feed
   const recommendedProducts = liveProducts
     .filter(p => p.id.toString() !== product.id.toString())
@@ -237,7 +262,8 @@ const ProductDetailPage = () => {
               {/* Search Bar Input Container */}
               <div 
                 onClick={() => {
-                  navigate('/');
+                  setSearchInputValue(product.category || '');
+                  setIsSearchOverlayOpen(true);
                 }}
                 className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full py-1 pl-4 pr-1 flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
               >
@@ -857,6 +883,125 @@ const ProductDetailPage = () => {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Search Overlay Modal */}
+      <AnimatePresence>
+        {isSearchOverlayOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="fixed inset-0 z-[1000] bg-slate-50 dark:bg-[#0b1324] md:hidden flex flex-col"
+          >
+            {/* Search Top Bar */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0c1527] gap-3">
+              {/* Close/Back Chevron */}
+              <button 
+                onClick={() => setIsSearchOverlayOpen(false)}
+                className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-75"
+              >
+                <ChevronLeft size={24} strokeWidth={2.5} />
+              </button>
+
+              {/* Form Input Container */}
+              <form 
+                onSubmit={handleSearchSubmit}
+                className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full py-1 pl-3.5 pr-1 flex items-center gap-2 border border-slate-200/50 dark:border-slate-700/50"
+              >
+                {/* Camera Icon */}
+                <button 
+                  type="button" 
+                  onClick={() => showToast("Visual image search coming soon! 📸", "info")}
+                  className="text-slate-400 dark:text-slate-500 hover:text-slate-650 cursor-pointer"
+                >
+                  <Camera size={16} strokeWidth={2.5} />
+                </button>
+                
+                {/* Divider */}
+                <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700" />
+
+                {/* Input Text */}
+                <input 
+                  type="text" 
+                  value={searchInputValue}
+                  onChange={(e) => setSearchInputValue(e.target.value)}
+                  placeholder={lang === 'fr' ? "Rechercher des produits..." : "Search products..."}
+                  className="flex-1 bg-transparent border-none outline-none text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 py-1"
+                  autoFocus
+                />
+
+                {/* Rounded Black Search Button */}
+                <button 
+                  type="submit"
+                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-950 rounded-full flex items-center justify-center text-white cursor-pointer active:scale-95 transition-all scale-90"
+                >
+                  <Search size={12} strokeWidth={3} />
+                </button>
+              </form>
+            </div>
+
+            {/* Discover More Content Area */}
+            <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white text-left mb-4">
+                {lang === 'fr' ? 'Découvrir plus' : 'Discover more'}
+              </h3>
+
+              {/* Grid Layout (2 columns) */}
+              <div className="grid grid-cols-2 gap-3">
+                {categories.map((catName, idx) => {
+                  // Find a representative product for its image
+                  const representativeProduct = liveProducts.find(p => p.category === catName);
+                  const imgUrl = representativeProduct?.image_url || representativeProduct?.image || '/hero-banner.png';
+                  
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleDiscoverClick(catName)}
+                      className="flex items-center gap-3 p-2.5 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-sm hover:border-slate-350 dark:hover:border-slate-700 transition-colors text-left cursor-pointer group"
+                    >
+                      {/* Image Thumbnail */}
+                      <div className="w-12 h-12 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center justify-center p-1 border border-slate-100 dark:border-slate-850 shrink-0 overflow-hidden">
+                        <img 
+                          src={imgUrl} 
+                          alt="" 
+                          className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform" 
+                        />
+                      </div>
+
+                      {/* Text details */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 truncate leading-snug">
+                          {catName}
+                        </h4>
+                        
+                        {/* Subtitle Badges */}
+                        {idx % 3 === 0 ? (
+                          <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black text-[#e61e25] mt-1 uppercase">
+                            {/* Small Coupon SVG badge */}
+                            <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-1 9h-2v-2h2v2zm-4 0H5v-2h10v2zm4-4h-2V7h2v2zm-4 0H5V7h10v2z" />
+                            </svg>
+                            Coupons
+                          </span>
+                        ) : idx % 3 === 1 ? (
+                          <span className="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 mt-1 block">
+                            {(idx * 12 + 45)}+ items
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black text-amber-500 mt-1 uppercase">
+                            ★ Trending
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
