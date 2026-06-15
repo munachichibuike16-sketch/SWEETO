@@ -121,13 +121,41 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (product) {
       const list = getImagesList(product);
+      
+      // Parse colors from product.colors
+      let parsedColors = [];
+      if (Array.isArray(product.colors)) {
+        parsedColors = product.colors;
+      } else if (typeof product.colors === 'string' && product.colors.trim() !== '') {
+        try {
+          const parsed = JSON.parse(product.colors);
+          if (Array.isArray(parsed)) parsedColors = parsed;
+        } catch (e) {
+          parsedColors = product.colors.split(',').map(c => c.trim()).filter(Boolean);
+        }
+      }
+
       const mapped = list.map((img, idx) => {
-        let name = 'Default Color';
-        if (idx === 0) name = 'EDC Knife';
-        else if (idx === 1) name = 'Silver Metal';
-        else if (idx === 2) name = 'Shadow Black';
-        else if (idx === 3) name = 'Carbon Steel';
-        else name = `Option ${idx + 1}`;
+        let name = '';
+        if (parsedColors[idx]) {
+          name = parsedColors[idx];
+        } else {
+          const category = (product.category || '').toLowerCase();
+          const pName = (product.name || '').toLowerCase();
+          if (category.includes('knife') || pName.includes('knife')) {
+            if (idx === 0) name = 'EDC Knife';
+            else if (idx === 1) name = 'Silver Metal';
+            else if (idx === 2) name = 'Shadow Black';
+            else if (idx === 3) name = 'Carbon Steel';
+            else name = `Option ${idx + 1}`;
+          } else {
+            if (idx === 0) name = 'Default Option';
+            else if (idx === 1) name = 'Classic Edition';
+            else if (idx === 2) name = 'Premium Edition';
+            else if (idx === 3) name = 'Special Edition';
+            else name = `Option ${idx + 1}`;
+          }
+        }
         return { id: idx, name, image: img };
       });
       setVariants(mapped);
