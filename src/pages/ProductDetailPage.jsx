@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ShoppingCart, Star, Minus, Plus, MessageCircle, 
-  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check
+  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -30,6 +30,7 @@ const ProductDetailPage = () => {
   const [activeTab, setActiveTab] = useState('specs');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
   
   // Countdown timers for flash deal
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 });
@@ -67,6 +68,22 @@ const ProductDetailPage = () => {
       </div>
     );
   }
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 50) {
+      setActiveImageIndex(prev => (prev + 1) % imagesList.length);
+    } else if (diff < -50) {
+      setActiveImageIndex(prev => (prev - 1 + imagesList.length) % imagesList.length);
+    }
+    setTouchStartX(null);
+  };
 
   const getImagesList = () => {
     const list = [];
@@ -119,44 +136,74 @@ const ProductDetailPage = () => {
       {/* Desktop Header */}
       <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
       
-      {/* Mobile Sticky Navigation Row */}
-      <div className="sticky top-0 z-30 lg:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shadow-sm">
+      {/* Mobile Visual Gallery (Full-bleed AliExpress Style) */}
+      <div 
+        className="block lg:hidden w-full aspect-square bg-white dark:bg-slate-900 relative overflow-hidden select-none"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img 
+          src={imagesList[activeImageIndex]} 
+          alt={product.name} 
+          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
+        />
+
+        {/* Top-left: Back Button */}
         <button 
-          onClick={() => navigate(-1)}
-          className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer text-slate-800 dark:text-white"
+          onClick={() => navigate(-1)} 
+          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors z-20"
         >
-          <ArrowLeft size={22} />
+          <ChevronLeft size={20} strokeWidth={3} />
         </button>
-        <span className="text-xs font-black tracking-widest uppercase italic max-w-[180px] truncate text-slate-900 dark:text-white">
-          {product.name}
-        </span>
-        <div className="flex items-center gap-3">
+
+        {/* Top-right: Zoom & Share Buttons */}
+        <div className="absolute top-4 right-4 flex items-center gap-2.5 z-20">
           <button 
-            onClick={shareProduct}
-            className="p-1 text-slate-600 dark:text-slate-350 hover:text-eas-blue cursor-pointer"
+            onClick={() => showToast("Swipe left or right to change images! 📷", "info")} 
+            className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
-            <Share2 size={20} />
+            <Search size={18} />
           </button>
           <button 
-            onClick={() => setIsCartOpen(true)}
-            className="p-1 text-slate-600 dark:text-slate-350 hover:text-eas-blue relative cursor-pointer"
+            onClick={shareProduct} 
+            className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
-            <ShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-[#e61e25] text-white font-black text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center animate-pulse">
-                {cartCount}
-              </span>
-            )}
+            <Share2 size={18} />
           </button>
         </div>
+
+        {/* Center: Play Button Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <button 
+            onClick={() => showToast("Playing product video presentation... 🎬", "success")}
+            className="w-12 h-12 rounded-full bg-slate-950/40 border-2 border-white flex items-center justify-center text-white cursor-pointer hover:bg-slate-950/65 transition-all pointer-events-auto transform hover:scale-105 active:scale-95 shadow-md"
+          >
+            <svg className="w-5 h-5 fill-current ml-1 text-white" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Bottom-left: Slide Indicator Pill */}
+        <div className="absolute bottom-4 left-4 bg-slate-950/40 backdrop-blur-sm px-3.5 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-wider select-none z-20">
+          Item {activeImageIndex + 1}/{imagesList.length}
+        </div>
+
+        {/* Bottom-right: Wishlist Heart Button */}
+        <button 
+          onClick={() => toggleWishlist(product)} 
+          className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-slate-900 text-slate-400 hover:text-red-500 flex items-center justify-center shadow-lg cursor-pointer transition-all z-20"
+        >
+          <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} className={isInWishlist(product.id) ? "text-red-500" : ""} />
+        </button>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 lg:py-6">
         {/* Main Columns wrapper */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
-          {/* Left Column: Visual Gallery Carousel */}
-          <div className="w-full lg:w-[45%] bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 shadow-sm space-y-4">
+          {/* Left Column: Visual Gallery Carousel (Desktop only) */}
+          <div className="hidden lg:block w-full lg:w-[45%] bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 shadow-sm space-y-4">
             
             {/* Main Image View */}
             <div className="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden group">
