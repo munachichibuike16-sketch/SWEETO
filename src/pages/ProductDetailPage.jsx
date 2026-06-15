@@ -33,6 +33,38 @@ const ProductDetailPage = () => {
   const [touchStartX, setTouchStartX] = useState(null);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const [activeScrollSection, setActiveScrollSection] = useState('overview');
+  
+  // Countdown timers for flash deal
+  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 });
+
+  const [isVariantSheetOpen, setIsVariantSheetOpen] = useState(false);
+  const [variants, setVariants] = useState([]);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [sheetScrollY, setSheetScrollY] = useState(0);
+
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const getImagesList = (prod) => {
+    if (!prod) return [];
+    const list = [];
+    const mainImg = prod.image_url || prod.image;
+    if (mainImg) list.push(mainImg);
+    if (prod.images) {
+      try {
+        const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
+        if (Array.isArray(imgs)) {
+          imgs.forEach(img => {
+            if (img && !list.includes(img)) list.push(img);
+          });
+        }
+      } catch (e) {}
+    }
+    if (list.length === 0) list.push('/hero-banner.png');
+    return list;
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,25 +95,6 @@ const ProductDetailPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-  
-  // Countdown timers for flash deal
-  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 });
-
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -108,6 +121,24 @@ const ProductDetailPage = () => {
     }
   }, [productId, liveProducts, navigate]);
 
+  useEffect(() => {
+    if (product) {
+      const list = getImagesList(product);
+      const mapped = list.map((img, idx) => {
+        let name = 'Default Color';
+        if (idx === 0) name = 'EDC Knife';
+        else if (idx === 1) name = 'Silver Metal';
+        else if (idx === 2) name = 'Shadow Black';
+        else if (idx === 3) name = 'Carbon Steel';
+        else name = `Option ${idx + 1}`;
+        return { id: idx, name, image: img };
+      });
+      setVariants(mapped);
+      setSelectedVariant(mapped[0] || null);
+    }
+  }, [product]);
+
+  // Early return if product is not loaded yet (all hooks must be declared above this point!)
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -115,6 +146,22 @@ const ProductDetailPage = () => {
       </div>
     );
   }
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
@@ -132,53 +179,33 @@ const ProductDetailPage = () => {
     setTouchStartX(null);
   };
 
-  const getImagesList = () => {
-    const list = [];
-    const mainImg = product.image_url || product.image;
-    if (mainImg) list.push(mainImg);
-    if (product.images) {
-      try {
-        const imgs = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
-        if (Array.isArray(imgs)) {
-          imgs.forEach(img => {
-            if (img && !list.includes(img)) list.push(img);
-          });
-        }
-      } catch (e) {}
-    }
-    if (list.length === 0) list.push('/hero-banner.png');
-    return list;
-  };
-  const imagesList = getImagesList();
-
-  const [isVariantSheetOpen, setIsVariantSheetOpen] = useState(false);
-  const [variants, setVariants] = useState([]);
-  const [selectedVariant, setSelectedVariant] = useState(null);
-  const [sheetScrollY, setSheetScrollY] = useState(0);
-
-  useEffect(() => {
-    if (product) {
-      const list = getImagesList();
-      const mapped = list.map((img, idx) => {
-        let name = 'Default Color';
-        if (idx === 0) name = 'EDC Knife';
-        else if (idx === 1) name = 'Silver Metal';
-        else if (idx === 2) name = 'Shadow Black';
-        else if (idx === 3) name = 'Carbon Steel';
-        else name = `Option ${idx + 1}`;
-        return { id: idx, name, image: img };
-      });
-      setVariants(mapped);
-      setSelectedVariant(mapped[0] || null);
-    }
-  }, [product]);
+  const imagesList = getImagesList(product);
 
   const handleSheetScroll = (e) => {
     setSheetScrollY(e.currentTarget.scrollTop);
   };
 
-  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  const [searchInputValue, setSearchInputValue] = useState('');
+  const handleSearchInputValueChange = (value) => {
+    setSearchInputValue(value);
+    if (value.trim().length > 1) {
+      const filtered = liveProducts.filter(p => 
+        p.name.toLowerCase().includes(value.toLowerCase()) || 
+        p.category.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 5);
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (prod) => {
+    setSearchInputValue('');
+    setShowSuggestions(false);
+    setIsSearchOverlayOpen(false);
+    navigate(`/product/${prod.id}`);
+  };
 
   // Extract unique categories dynamically from products list
   const categories = Array.from(new Set(liveProducts.map(p => p.category).filter(Boolean))).slice(0, 12);
@@ -909,7 +936,7 @@ const ProductDetailPage = () => {
               {/* Form Input Container */}
               <form 
                 onSubmit={handleSearchSubmit}
-                className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full py-1 pl-3.5 pr-1 flex items-center gap-2 border border-slate-200/50 dark:border-slate-700/50"
+                className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full py-1 pl-3.5 pr-1 flex items-center gap-2 border border-slate-200/50 dark:border-slate-700/50 relative"
               >
                 {/* Camera Icon */}
                 <button 
@@ -922,17 +949,34 @@ const ProductDetailPage = () => {
                 
                 {/* Divider */}
                 <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700" />
-
+ 
                 {/* Input Text */}
                 <input 
                   type="text" 
                   value={searchInputValue}
-                  onChange={(e) => setSearchInputValue(e.target.value)}
+                  onChange={(e) => handleSearchInputValueChange(e.target.value)}
+                  onFocus={() => searchInputValue.length > 1 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   placeholder={lang === 'fr' ? "Rechercher des produits..." : "Search products..."}
                   className="flex-1 bg-transparent border-none outline-none text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 py-1"
                   autoFocus
                 />
 
+                {/* Clear button */}
+                {searchInputValue && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setSearchInputValue('');
+                      setSuggestions([]);
+                      setShowSuggestions(false);
+                    }} 
+                    className="text-slate-405 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 shrink-0 cursor-pointer"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+ 
                 {/* Rounded Black Search Button */}
                 <button 
                   type="submit"
@@ -940,6 +984,34 @@ const ProductDetailPage = () => {
                 >
                   <Search size={12} strokeWidth={3} />
                 </button>
+
+                {/* Mobile Suggestions */}
+                <AnimatePresence>
+                  {showSuggestions && suggestions.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
+                    >
+                      {suggestions.map((prod) => (
+                        <div 
+                          key={prod.id}
+                          onClick={() => handleSuggestionClick(prod)}
+                          className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-none"
+                        >
+                          <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src={prod.image_url || prod.image || '/hero-banner.png'} alt={prod.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex flex-col text-start">
+                            <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{prod.name}</span>
+                            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{prod.category}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </form>
             </div>
 

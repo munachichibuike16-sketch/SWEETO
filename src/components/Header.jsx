@@ -292,12 +292,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
   };
 
   const handleSuggestionClick = (product) => {
-    setInputValue(product.name);
-    setSearchQuery(product.name);
-    logSearch(product.name);
+    setInputValue('');
     setShowSuggestions(false);
     setIsSearchOpen(false);
-    navigate('/');
+    navigate(`/product/${product.id}`);
   };
 
   useEffect(() => {
