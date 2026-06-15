@@ -854,124 +854,78 @@ const AuthPage = ({ initialTab }) => {
         </button>
 
         <div className="main-container max-w-[480px] w-full">
-          {/* Welcome Banner (Signed In) */}
-          <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
-            {/* Background elements */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
-            
-            {/* Header Row (Integrated inside banner) */}
-            <div className="flex justify-end items-center gap-4 mb-4 z-10 relative">
-              <button 
-                onClick={() => setCurrentTab('settings')} 
-                className="text-white/80 hover:text-white transition-colors"
+          {/* Header Row (Signed In): Avatar, Name, and Icons */}
+          <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-eas-dark/50 rounded-3xl mx-4 my-2 border border-slate-100 dark:border-white/5 shadow-sm">
+            <div className="flex items-center gap-3 pl-2">
+              {/* Avatar with click upload handler */}
+              <div 
+                className="profile-avatar-wrapper group cursor-pointer relative w-12 h-12 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm bg-slate-50 flex-shrink-0"
+                onClick={() => avatarInputRef.current?.click()}
               >
-                <SettingsIcon size={20} />
-              </button>
+                {sessionUser.avatarUrl || sessionUser.picture ? (
+                  <img 
+                    src={sessionUser.avatarUrl || sessionUser.picture} 
+                    alt={sessionUser.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white font-black text-lg bg-gradient-to-r from-eas-blue to-eas-blue/80">
+                    {sessionUser.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {/* Hover edit overlay */}
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <Camera size={14} className="text-white" />
+                </div>
+                
+                <input 
+                  type="file"
+                  ref={avatarInputRef}
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  accept="image/jpeg,image/png,image/webp"
+                />
+              </div>
+
+              <div className="text-left flex flex-col justify-center">
+                <span className="font-bold text-[17px] text-slate-800 dark:text-white leading-tight">
+                  {sessionUser.name || 'SweeTo user'}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate max-w-[150px] mt-0.5">
+                  {sessionUser.email}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 pr-2">
               <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
                 <CoteDivoireFlag />
               </button>
               <button 
+                onClick={() => setCurrentTab('settings')} 
+                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
+              >
+                <SettingsIcon size={20} />
+              </button>
+              <button 
                 onClick={() => setCurrentTab('orders')} 
-                className="text-white/80 hover:text-white transition-colors relative"
+                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors relative"
               >
                 <Bell size={20} />
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
               </button>
-            </div>
-            
-            <div className="flex justify-between items-center z-10 relative">
-              <div className="flex items-center gap-4 max-w-[70%]">
-                {/* Avatar with click upload handler */}
-                <div 
-                  className="profile-avatar-wrapper group cursor-pointer relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-md bg-white/10 flex-shrink-0"
-                  onClick={() => avatarInputRef.current?.click()}
-                >
-                  {sessionUser.avatarUrl || sessionUser.picture ? (
-                    <img 
-                      src={sessionUser.avatarUrl || sessionUser.picture} 
-                      alt={sessionUser.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white font-black text-xl bg-gradient-to-r from-eas-blue to-eas-blue/80">
-                      {sessionUser.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  {/* Hover edit overlay */}
-                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <Camera size={16} className="text-white mb-0.5" />
-                    <span className="text-[8px] text-white font-black uppercase tracking-wider">Change</span>
-                  </div>
-                  
-                  <input 
-                    type="file"
-                    ref={avatarInputRef}
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/webp"
-                  />
-                </div>
-
-                <div className="text-left">
-                  <h2 className="text-lg font-black tracking-tight leading-tight">
-                    Bonjour, {sessionUser.name?.split(' ')[0]}! 👋
-                  </h2>
-                  <p className="text-[10px] text-red-100 font-semibold truncate mt-0.5 max-w-[180px] text-left">
-                    {sessionUser.email}
-                  </p>
-                  <button 
-                    onClick={() => setCurrentTab('settings')}
-                    className="mt-2 text-[9px] font-black uppercase tracking-widest bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-all"
-                  >
-                    Edit Profile
-                  </button>
-                </div>
-              </div>
-
-              {/* Cute Waving Yellow Chick Mascot */}
-              <div className="w-20 h-20 flex items-center justify-center relative">
-                <svg className="w-16 h-16 drop-shadow-md" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M38,78 Q38,88 34,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
-                  <path d="M62,78 Q62,88 66,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
-                  <circle cx="34" cy="88" r="3" fill="#ff9233" />
-                  <circle cx="66" cy="88" r="3" fill="#ff9233" />
-                  <ellipse cx="50" cy="50" rx="32" ry="30" fill="#ffdf00" />
-                  <path d="M45,20 Q50,8 55,20" fill="#ffdf00" />
-                  <path d="M48,20 Q52,12 52,20" fill="#ffdf00" />
-                  <circle cx="28" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
-                  <circle cx="72" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
-                  <circle cx="36" cy="46" r="4.5" fill="#1a1a1a" />
-                  <circle cx="34.5" cy="44.5" r="1.5" fill="#ffffff" />
-                  <circle cx="64" cy="46" r="4.5" fill="#1a1a1a" />
-                  <circle cx="62.5" cy="44.5" r="1.5" fill="#ffffff" />
-                  <polygon points="45,49 55,49 50,58" fill="#ff9233" />
-                  <path d="M19,50 C12,52 10,62 18,62 C22,62 21,54 19,50 Z" fill="#ffdf00" />
-                  <g className="mascot-wing-wave">
-                    <path d="M81,50 C88,48 95,35 90,30 C85,25 78,40 81,50 Z" fill="#ffdf00" />
-                    <path d="M92,20 L94,22 M96,17 L99,18 M95,12 L97,11" stroke="#ffdf00" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
-                  </g>
-                </svg>
-              </div>
-            </div>
-
-            {/* Badges Row */}
-            <div className="mt-4 pt-3.5 border-t border-white/10 flex justify-between items-center text-[9px] font-bold text-red-100/90 tracking-wide uppercase">
-              <span className="flex items-center gap-1">✨ Verified Products</span>
-              <span className="flex items-center gap-1">⚡ Fast Delivery</span>
-              <span className="flex items-center gap-1">🔒 Secure Payments</span>
             </div>
           </div>
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">My orders</h3>
+              <h3 className="text-sm font-black text-slate-800 dark:text-white">My orders</h3>
               <button 
                 onClick={() => setCurrentTab('orders')}
-                className="text-[10px] font-black uppercase text-eas-blue dark:text-blue-400 tracking-wider hover:underline"
+                className="text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors flex items-center gap-0.5"
               >
-                View all ({stats.ordersCount})
+                View all <ChevronRight size={12} />
               </button>
             </div>
             
@@ -980,107 +934,79 @@ const AuthPage = ({ initialTab }) => {
                 onClick={() => setCurrentTab('orders')}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <CreditCard size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
+                <CreditCard size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
               </button>
 
               <button 
                 onClick={() => setCurrentTab('orders')}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <Clock size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
+                <Package size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
               </button>
 
               <button 
                 onClick={() => setCurrentTab('orders')}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <Truck size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
+                <Truck size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
               </button>
 
               <button 
                 onClick={() => setCurrentTab('orders')}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <MessageSquare size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
+                <MessageSquare size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
               </button>
 
               <button 
                 onClick={() => setCurrentTab('orders')}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <RotateCcw size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
+                <RotateCcw size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
               </button>
             </div>
           </div>
 
-          {/* Grid Options */}
-          <div className="mx-4 my-4 grid grid-cols-2 gap-4">
-            <button 
-              onClick={() => setCurrentTab('orders')}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-eas-blue/40 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-eas-blue flex items-center justify-center">
-                <Clock size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">History</div>
-                <div className="text-[9px] font-bold text-slate-400">View browsed items</div>
-              </div>
-            </button>
+          {/* Options Section */}
+          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm">
+            <div className="grid grid-cols-4 gap-1 text-center">
+              <button 
+                onClick={() => setCurrentTab('orders')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Clock size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">History</span>
+              </button>
 
-            <button 
-              onClick={() => navigate('/wishlist')}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-pink-400 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 flex items-center justify-center">
-                <Heart size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">Wishlist</div>
-                <div className="text-[9px] font-bold text-slate-400">Saved: {stats.wishlistCount} items</div>
-              </div>
-            </button>
+              <button 
+                onClick={() => navigate('/wishlist')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Wishlist</span>
+              </button>
 
-            <button 
-              onClick={() => showToast("No coupons available right now.", "info")}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-amber-400 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-500 flex items-center justify-center">
-                <Tag size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">Coupons</div>
-                <div className="text-[9px] font-bold text-slate-400">Manage discounts</div>
-              </div>
-            </button>
+              <button 
+                onClick={() => showToast("No coupons available right now.", "info")}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Tag size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Coupons</span>
+              </button>
 
-            <button 
-              onClick={() => showToast("You are not following any stores yet.", "info")}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-purple-400 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-500 flex items-center justify-center">
-                <Store size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">Stores</div>
-                <div className="text-[9px] font-bold text-slate-400">Followed outlets</div>
-              </div>
-            </button>
+              <button 
+                onClick={() => showToast("You are not following any stores yet.", "info")}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Store size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Followed stores</span>
+              </button>
+            </div>
           </div>
 
           {/* Mid-Year Sale Promo Banner */}
@@ -1386,16 +1312,16 @@ const AuthPage = ({ initialTab }) => {
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">My orders</h3>
+              <h3 className="text-sm font-black text-slate-800 dark:text-white">My orders</h3>
               <button 
                 onClick={() => { 
                   showToast("Please sign in to view your orders.", "info"); 
                   switchTab('login');
                   setShowAuthForm(true); 
                 }}
-                className="text-[10px] font-black uppercase text-eas-blue dark:text-blue-400 tracking-wider hover:underline"
+                className="text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors flex items-center gap-0.5"
               >
-                View all
+                View all <ChevronRight size={12} />
               </button>
             </div>
             
@@ -1408,10 +1334,8 @@ const AuthPage = ({ initialTab }) => {
                 }}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <CreditCard size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
+                <CreditCard size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
               </button>
 
               <button 
@@ -1422,10 +1346,8 @@ const AuthPage = ({ initialTab }) => {
                 }}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <Clock size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
+                <Package size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
               </button>
 
               <button 
@@ -1436,10 +1358,8 @@ const AuthPage = ({ initialTab }) => {
                 }}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <Truck size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
+                <Truck size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
               </button>
 
               <button 
@@ -1450,10 +1370,8 @@ const AuthPage = ({ initialTab }) => {
                 }}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <MessageSquare size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
+                <MessageSquare size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
               </button>
 
               <button 
@@ -1464,79 +1382,59 @@ const AuthPage = ({ initialTab }) => {
                 }}
                 className="flex flex-col items-center gap-2 group py-1"
               >
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
-                  <RotateCcw size={18} />
-                </div>
-                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
+                <RotateCcw size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
               </button>
             </div>
           </div>
 
-          {/* Grid Options */}
-          <div className="mx-4 my-4 grid grid-cols-2 gap-4">
-            <button 
-              onClick={() => { 
-                showToast("Please sign in to view history.", "info"); 
-                switchTab('login');
-                setShowAuthForm(true); 
-              }}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-eas-blue/40 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-eas-blue flex items-center justify-center">
-                <Clock size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">History</div>
-                <div className="text-[9px] font-bold text-slate-400">View browsed items</div>
-              </div>
-            </button>
+          {/* Options Section */}
+          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm">
+            <div className="grid grid-cols-4 gap-1 text-center">
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view history.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Clock size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">History</span>
+              </button>
 
-            <button 
-              onClick={() => navigate('/wishlist')}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-pink-400 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 flex items-center justify-center">
-                <Heart size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">Wishlist</div>
-                <div className="text-[9px] font-bold text-slate-400">Saved items count</div>
-              </div>
-            </button>
+              <button 
+                onClick={() => navigate('/wishlist')}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Wishlist</span>
+              </button>
 
-            <button 
-              onClick={() => { 
-                showToast("Please sign in to view coupons.", "info"); 
-                switchTab('login');
-                setShowAuthForm(true); 
-              }}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-amber-400 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-500 flex items-center justify-center">
-                <Tag size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">Coupons</div>
-                <div className="text-[9px] font-bold text-slate-400">Manage discounts</div>
-              </div>
-            </button>
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view coupons.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Tag size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Coupons</span>
+              </button>
 
-            <button 
-              onClick={() => { 
-                showToast("Please sign in to view followed stores.", "info"); 
-                switchTab('login');
-                setShowAuthForm(true); 
-              }}
-              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-purple-400 text-left transition-all hover:scale-[1.02]"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-500 flex items-center justify-center">
-                <Store size={18} />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-800 dark:text-white">Stores</div>
-                <div className="text-[9px] font-bold text-slate-400">Followed outlets</div>
-              </div>
-            </button>
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view followed stores.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <Store size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
+                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Followed stores</span>
+              </button>
+            </div>
           </div>
 
           {/* Mid-Year Sale Promo Banner */}
