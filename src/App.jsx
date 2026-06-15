@@ -808,7 +808,7 @@ const Storefront = ({ viewMode = 'home' }) => {
       >
         
         <main className="flex-1 pb-20">
-          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured'].includes(viewMode) && <DiscoveryBar />}
+          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1600px] mx-auto ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
@@ -827,6 +827,8 @@ const Storefront = ({ viewMode = 'home' }) => {
               <LegalPage type={viewMode} />
             ) : ['trending', 'featured'].includes(viewMode) ? (
               <ShufflingProductPage viewMode={viewMode} onProductClick={handleProductClick} />
+            ) : ['auth', 'login', 'signup'].includes(viewMode) ? (
+              <AuthPage initialTab={viewMode === 'signup' ? 'signup' : (viewMode === 'login' ? 'login' : undefined)} />
             ) : (
               <div className="bg-eas-light dark:bg-eas-dark transition-colors duration-500 min-h-screen">
                 {viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand ? (
@@ -1405,9 +1407,9 @@ function App() {
           <Route path="/wishlist" element={<Storefront viewMode="wishlist" />} />
           <Route path="/notifications" element={<Storefront viewMode="notifications" />} />
           <Route path="/products" element={<Storefront viewMode="products" />} />
-          <Route path="/login" element={<AuthPage initialTab="login" />} />
-          <Route path="/register" element={<AuthPage initialTab="signup" />} />
-          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/login" element={<Storefront viewMode="login" />} />
+          <Route path="/register" element={<Storefront viewMode="signup" />} />
+          <Route path="/auth" element={<Storefront viewMode="auth" />} />
           <Route path="/deals" element={<Storefront viewMode="deals" />} />
           <Route path="/trending" element={<Storefront viewMode="trending" />} />
           <Route path="/new-arrivals" element={<Storefront viewMode="new-arrivals" />} />
