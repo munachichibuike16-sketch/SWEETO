@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ShoppingCart, Star, Minus, Plus, MessageCircle, 
-  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X, Camera
+  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X, Camera, Save
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -33,6 +33,10 @@ const ProductDetailPage = () => {
   const [touchStartX, setTouchStartX] = useState(null);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const [activeScrollSection, setActiveScrollSection] = useState('overview');
+  
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
+  const [lightboxTouchStartX, setLightboxTouchStartX] = useState(null);
   
 
 
@@ -582,7 +586,8 @@ const ProductDetailPage = () => {
         <img 
           src={imagesList[activeImageIndex]} 
           alt={product.name} 
-          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
+          onClick={() => { setLightboxImageIndex(activeImageIndex); setIsLightboxOpen(true); }}
+          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in"
         />
 
         {/* Top-left: Back Button */}
@@ -596,7 +601,7 @@ const ProductDetailPage = () => {
         {/* Top-right: Zoom & Share Buttons */}
         <div className="absolute top-4 right-4 flex items-center gap-2.5 z-20">
           <button 
-            onClick={() => showToast("Swipe left or right to change images! 📷", "info")} 
+            onClick={() => { setLightboxImageIndex(activeImageIndex); setIsLightboxOpen(true); }} 
             className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
             <Search size={18} />
@@ -606,18 +611,6 @@ const ProductDetailPage = () => {
             className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
             <Share2 size={18} />
-          </button>
-        </div>
-
-        {/* Center: Play Button Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <button 
-            onClick={() => showToast("Playing product video presentation... 🎬", "success")}
-            className="w-12 h-12 rounded-full bg-slate-950/40 border-2 border-white flex items-center justify-center text-white cursor-pointer hover:bg-slate-950/65 transition-all pointer-events-auto transform hover:scale-105 active:scale-95 shadow-md"
-          >
-            <svg className="w-5 h-5 fill-current ml-1 text-white" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
           </button>
         </div>
 
@@ -643,7 +636,10 @@ const ProductDetailPage = () => {
           <div className="hidden lg:block w-full lg:w-[45%] bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 shadow-sm space-y-4">
             
             {/* Main Image View */}
-            <div className="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden group">
+            <div 
+              onClick={() => { setLightboxImageIndex(activeImageIndex); setIsLightboxOpen(true); }}
+              className="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden group cursor-zoom-in"
+            >
               <img 
                 src={imagesList[activeImageIndex]} 
                 alt={product.name} 
@@ -1474,6 +1470,130 @@ const ProductDetailPage = () => {
       {/* Global Sidebar & Cart overlay drawers */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* AliExpress-Style Full-Screen Image Lightbox Modal */}
+      <AnimatePresence>
+        {isLightboxOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2000] bg-black flex flex-col justify-between select-none"
+            onTouchStart={(e) => setLightboxTouchStartX(e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              if (lightboxTouchStartX === null) return;
+              const touchEndX = e.changedTouches[0].clientX;
+              const diff = lightboxTouchStartX - touchEndX;
+              if (diff > 50) {
+                // Swipe Left -> Next
+                setLightboxImageIndex(prev => (prev + 1) % imagesList.length);
+              } else if (diff < -50) {
+                // Swipe Right -> Prev
+                setLightboxImageIndex(prev => (prev - 1 + imagesList.length) % imagesList.length);
+              }
+              setLightboxTouchStartX(null);
+            }}
+          >
+            {/* Top Bar Navigation Row */}
+            <div className="p-4 flex items-center justify-between bg-black/40 backdrop-blur-sm z-20">
+              {/* Close X button */}
+              <button 
+                onClick={() => setIsLightboxOpen(false)}
+                className="text-white hover:opacity-75 transition-opacity p-2 cursor-pointer"
+              >
+                <X size={24} strokeWidth={2.5} />
+              </button>
+
+              {/* Find Similar Action Badge */}
+              <button 
+                onClick={() => {
+                  setIsLightboxOpen(false);
+                  setSearchQuery(product.category || '');
+                  setSelectedCategory(product.category || null);
+                  setSelectedBrand(null);
+                  navigate('/');
+                  showToast("Searching for similar products... 🔍", "info");
+                }}
+                className="border border-white/40 hover:border-white text-white rounded-full px-5 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Search size={14} strokeWidth={2.5} />
+                <span>Find similar</span>
+              </button>
+
+              {/* Save Image Button (Triggers mock download/save) */}
+              <button 
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = imagesList[lightboxImageIndex];
+                  link.download = `product-${product.id}-${lightboxImageIndex}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  showToast("Image saved successfully! 💾", "success");
+                }}
+                className="text-white hover:opacity-75 transition-opacity p-2 cursor-pointer"
+              >
+                <Save size={24} strokeWidth={2} />
+              </button>
+            </div>
+
+            {/* Middle Image viewport with desktop chevrons */}
+            <div className="flex-1 relative flex items-center justify-center p-4">
+              <img 
+                src={imagesList[lightboxImageIndex]} 
+                alt={product.name} 
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+
+              {/* Desktop Left navigation chevron */}
+              {imagesList.length > 1 && (
+                <button 
+                  onClick={() => setLightboxImageIndex(prev => (prev - 1 + imagesList.length) % imagesList.length)}
+                  className="hidden md:flex absolute left-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 items-center justify-center text-white transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={28} strokeWidth={2.5} />
+                </button>
+              )}
+
+              {/* Desktop Right navigation chevron */}
+              {imagesList.length > 1 && (
+                <button 
+                  onClick={() => setLightboxImageIndex(prev => (prev + 1) % imagesList.length)}
+                  className="hidden md:flex absolute right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 items-center justify-center text-white transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={28} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
+
+            {/* Bottom Row Slide Indicator Pill */}
+            <div className="pb-8 pt-4 flex flex-col items-center gap-4 bg-gradient-to-t from-black/60 to-transparent">
+              <div className="bg-white/15 backdrop-blur px-4 py-1.5 rounded-full text-[10px] font-black text-white uppercase tracking-widest">
+                {lightboxImageIndex + 1} / {imagesList.length}
+              </div>
+
+              {/* Thumbnail Strip (desktop only) */}
+              {imagesList.length > 1 && (
+                <div className="hidden md:flex gap-2 max-w-lg overflow-x-auto no-scrollbar py-1">
+                  {imagesList.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setLightboxImageIndex(idx)}
+                      className={`w-12 h-12 rounded-lg bg-white/5 border p-1 transition-all cursor-pointer ${
+                        lightboxImageIndex === idx 
+                          ? 'border-white ring-2 ring-white/10 scale-105' 
+                          : 'border-white/20 hover:border-white/50'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-contain rounded" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
