@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Search, Clock, MapPin, ChevronRight, Loader2, ArrowRight, ExternalLink, ShoppingBag, Truck, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Package, Search, Clock, MapPin, ChevronRight, Loader2, ArrowRight, ExternalLink, ShoppingBag, Truck, CheckCircle2, ShieldAlert, ArrowLeft, SlidersHorizontal, Headphones, Trash2, X } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import ProductCard from './ProductCard';
 
-const OrdersHistoryContent = ({ isProfileTab = false }) => {
-  const { settings, showToast } = useStore();
+const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
+  const { settings, showToast, products } = useStore();
   const { t } = useLanguage();
   const navigate = useNavigate();
   
@@ -15,7 +16,10 @@ const OrdersHistoryContent = ({ isProfileTab = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('all'); // all, pending, shipping, completed
+  const [activeTab, setActiveTab] = useState('all'); // all, to_pay, processing, processed
+  const [sortOrder, setSortOrder] = useState('newest'); // newest, oldest
+  const [showQA, setShowQA] = useState(false);
+  const [randomProducts, setRandomProducts] = useState([]);
 
   // Get current logged-in user from localStorage on mount
   useEffect(() => {
@@ -152,14 +156,352 @@ const OrdersHistoryContent = ({ isProfileTab = false }) => {
     }
   };
 
-  // Filter orders based on active tab
+  // Shuffling products for "More to love" recommendations feed
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const shuffled = [...products]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 10);
+      setRandomProducts(shuffled);
+    }
+  }, [products]);
+
+  const toggleSort = () => {
+    const nextSort = sortOrder === 'newest' ? 'oldest' : 'newest';
+    setSortOrder(nextSort);
+    showToast(nextSort === 'newest' ? 'Sorting: Newest first 🕒' : 'Sorting: Oldest first 🕒', 'info');
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setActiveTab('all');
+    setSortOrder('newest');
+    showToast('Search and filters cleared 🧹', 'info');
+  };
+
+  const handleSwitchAccount = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('sweetohub_session');
+      showToast('Logged out to switch account 🔄', 'success');
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to sign out', 'error');
+    }
+  };
+
+  // Filter orders based on active tab and search query
   const filteredOrders = orders.filter(order => {
+    // 1. Search query filter (Order ID or Product Name)
+    let matchesSearch = true;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesId = order.id.toString().includes(q);
+      let matchesProducts = false;
+      try {
+        const items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+        matchesProducts = items.some(item => item.name?.toLowerCase().includes(q));
+      } catch (e) {}
+      matchesSearch = matchesId || matchesProducts;
+    }
+
+    if (!matchesSearch) return false;
+
+    // 2. Tab filter
     if (activeTab === 'all') return true;
-    if (activeTab === 'pending') return order.status === 'pending' || order.status === 'confirmed';
-    if (activeTab === 'shipping') return order.status === 'shipping';
-    if (activeTab === 'completed') return order.status === 'completed';
+    if (activeTab === 'to_pay') return order.status === 'pending';
+    if (activeTab === 'processing') return order.status === 'confirmed' || order.status === 'processing';
+    if (activeTab === 'processed') return order.status === 'shipping' || order.status === 'completed';
     return true;
   });
+
+  // Sort orders based on sortOrder
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    const dateA = new Date(a.created_at);
+    const dateB = new Date(b.created_at);
+    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+  });
+
+  if (isProfileTab) {
+    return (
+      <div className="w-full flex flex-col bg-[#f8fafc] dark:bg-[#0f172a] min-h-screen text-slate-800 dark:text-white select-none">
+        
+        {/* Header Row: Back button, Search input, sorting/help/trash icons */}
+        <div className="sticky top-0 z-30 bg-white dark:bg-[#0f172a] border-b border-slate-100 dark:border-white/5 shadow-sm px-4 py-3 flex items-center gap-3 w-full">
+          {/* Back button */}
+          <button 
+            onClick={onBack}
+            className="text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          
+          {/* Search bar input container */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input 
+              type="text"
+              placeholder="Order ID, product..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-full text-slate-900 dark:text-white text-[13px] font-medium placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none transition-all"
+            />
+          </div>
+          
+          {/* Right actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button 
+              onClick={toggleSort}
+              title="Toggle Sort Order"
+              className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal size={18} />
+            </button>
+            <button 
+              onClick={() => window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}`, '_blank')}
+              title="Chat with Support"
+              className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
+            >
+              <Headphones size={18} />
+            </button>
+            <button 
+              onClick={clearFilters}
+              title="Clear Search & Filters"
+              className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs Row */}
+        <div className="bg-white dark:bg-[#0f172a] border-b border-slate-100 dark:border-white/5 w-full flex items-center justify-between px-6 py-2.5 relative">
+          {[
+            { id: 'all', label: 'View all' },
+            { id: 'to_pay', label: 'To pay' },
+            { id: 'processing', label: 'Processing' },
+            { id: 'processed', label: 'Processed' }
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="relative py-2 text-[13px] font-bold transition-all duration-300 flex-1 text-center cursor-pointer"
+              >
+                <span className={isActive ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-slate-500"}>
+                  {tab.label}
+                </span>
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeOrderTabIndicator"
+                    className="absolute bottom-0 left-[20%] right-[20%] h-[3px] bg-slate-900 dark:bg-white rounded-full"
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Orders list / empty state container */}
+        <div className="flex-1 w-full flex flex-col">
+          {loading ? (
+            <div className="text-center py-20 flex-1 flex flex-col justify-center">
+              <Loader2 size={36} className="animate-spin text-eas-blue mx-auto mb-4" />
+              <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Searching records...</p>
+            </div>
+          ) : sortedOrders.length > 0 ? (
+            <div className="space-y-4 px-4 py-4">
+              <AnimatePresence mode="popLayout">
+                {sortedOrders.map((order, index) => {
+                  const statusConfig = getStatusConfig(order.status);
+                  const StatusIcon = statusConfig.icon;
+                  
+                  let orderItems = [];
+                  try {
+                    orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+                  } catch (e) {
+                    console.error('Failed to parse items for order', order.id);
+                  }
+
+                  return (
+                    <motion.div
+                      key={order.id}
+                      layout
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 rounded-3xl p-5 shadow-sm relative overflow-hidden"
+                    >
+                      {/* Status indicator bar */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eas-blue to-purple-500" />
+                      
+                      {/* Header row */}
+                      <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b border-slate-50 dark:border-slate-700/40">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-slate-900 dark:text-white uppercase italic">Order #{order.id}</span>
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border flex items-center gap-1 ${statusConfig.color}`}>
+                              <StatusIcon size={10} />
+                              {statusConfig.label}
+                            </span>
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-400 mt-1">
+                            {new Date(order.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[14px] font-black text-eas-blue">{settings?.currency || 'FCFA'} {(order.total_amount || order.total || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Items */}
+                      <div className="space-y-2 mb-4">
+                        {orderItems.map((item, itemIdx) => (
+                          <div key={itemIdx} className="flex justify-between items-center text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                            <span className="truncate max-w-[220px]">{item.name} <span className="text-slate-400 font-medium text-[9px] ml-1">x{item.quantity}</span></span>
+                            <span>{settings?.currency || 'FCFA'} {((item.price || 0) * (item.quantity || 1)).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Delivery and action */}
+                      <div className="flex justify-between items-center pt-3 border-t border-slate-50 dark:border-slate-700/40">
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold truncate max-w-[200px]">
+                          <MapPin size={12} className="text-eas-blue" />
+                          <span className="truncate">{order.city || 'Abidjan'} - {order.address || 'Address unspecified'}</span>
+                        </div>
+                        {order.status !== 'completed' ? (
+                          <button
+                            onClick={() => navigate(`/order-tracking/${order.id}`)}
+                            className="bg-eas-blue hover:bg-blue-600 text-white font-black text-[9px] uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-md shadow-eas-blue/10 flex items-center gap-1 cursor-pointer"
+                          >
+                            Track Live <ArrowRight size={12} />
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-black uppercase tracking-wider">
+                            <CheckCircle2 size={12} /> Done
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          ) : (
+            /* Empty State matching layout reference */
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center w-full flex-1">
+              <div className="w-48 h-48 mb-6 flex items-center justify-center">
+                <img 
+                  src="/src/assets/order_empty_mascot.png" 
+                  alt="No orders" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              
+              <h3 className="text-[17px] font-bold text-slate-800 dark:text-white mb-2">
+                No orders in this account
+              </h3>
+              
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 max-w-[320px] leading-relaxed">
+                If you remember ordering before,{' '}
+                <button 
+                  onClick={handleSwitchAccount} 
+                  className="text-eas-blue hover:underline font-semibold inline cursor-pointer bg-transparent border-none p-0"
+                >
+                  switch account
+                </button>{' '}
+                or{' '}
+                <button 
+                  onClick={() => setShowQA(true)} 
+                  className="text-eas-blue hover:underline font-semibold inline cursor-pointer bg-transparent border-none p-0"
+                >
+                  Q&A
+                </button>
+              </p>
+            </div>
+          )}
+
+          {/* More to Love Section */}
+          {randomProducts && randomProducts.length > 0 && (
+            <div className="mt-8 border-t border-slate-100 dark:border-white/5 pt-6 bg-slate-50/50 dark:bg-slate-900/10">
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
+                <span className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-slate-800 dark:text-slate-200">
+                  More to love
+                </span>
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 px-4 pb-8">
+                {randomProducts.map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onProductClick={(p) => navigate(`/product/${p.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Q&A Modal */}
+        <AnimatePresence>
+          {showQA && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end justify-center p-4">
+              <motion.div 
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="bg-white dark:bg-[#0f172a] w-full max-w-[440px] rounded-t-[2.5rem] p-6 pb-8 shadow-2xl relative"
+              >
+                <button 
+                  onClick={() => setShowQA(false)}
+                  className="absolute top-5 right-5 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+                
+                <h3 className="text-sm font-black text-slate-800 dark:text-white mb-6 uppercase tracking-wider">
+                  Support & Q&A
+                </h3>
+                
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+                  <div className="space-y-1.5 text-left">
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">How do I track my order?</h4>
+                    <p className="text-xs text-slate-400 font-medium">Use the Search bar at the top with your 4-digit Order ID or phone number to find details instantly.</p>
+                  </div>
+                  <div className="space-y-1.5 text-left border-t border-slate-50 dark:border-white/5 pt-3">
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">Can I modify my address?</h4>
+                    <p className="text-xs text-slate-400 font-medium">Yes. Please contact our express delivery team immediately via WhatsApp before the order is dispatched.</p>
+                  </div>
+                  <div className="space-y-1.5 text-left border-t border-slate-50 dark:border-white/5 pt-3">
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">How long does shipping take?</h4>
+                    <p className="text-xs text-slate-400 font-medium">Standard regional courier transit takes 15-45 minutes. Contact support if you need live dispatch monitoring.</p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => {
+                    setShowQA(false);
+                    window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}`, '_blank');
+                  }}
+                  className="w-full mt-6 py-3.5 bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  Chat with Agent
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <div className={isProfileTab ? "w-full relative py-2" : "relative min-h-screen px-4 py-8 md:px-8 max-w-4xl mx-auto overflow-hidden pb-32"}>
@@ -262,9 +604,9 @@ const OrdersHistoryContent = ({ isProfileTab = false }) => {
             <Loader2 size={40} className="animate-spin text-eas-blue mx-auto mb-4" />
             <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Searching records...</p>
           </div>
-        ) : filteredOrders.length > 0 ? (
+        ) : sortedOrders.length > 0 ? (
           <AnimatePresence mode="popLayout">
-            {filteredOrders.map((order, index) => {
+            {sortedOrders.map((order, index) => {
               const statusConfig = getStatusConfig(order.status);
               const StatusIcon = statusConfig.icon;
               

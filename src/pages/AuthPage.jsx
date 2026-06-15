@@ -1053,7 +1053,17 @@ const AuthPage = ({ initialTab }) => {
     );
   }
 
-  if (sessionUser && (currentTab === 'orders' || currentTab === 'settings')) {
+  if (sessionUser && currentTab === 'orders') {
+    return (
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
+        <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
+          <OrdersHistoryContent isProfileTab={true} onBack={() => setCurrentTab('overview')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (sessionUser && currentTab === 'settings') {
     return (
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <button 
@@ -1068,7 +1078,7 @@ const AuthPage = ({ initialTab }) => {
         <span className="candy-decoration" style={{ top: '20%', left: '15%' }}>💖</span>
         <span className="candy-decoration" style={{ bottom: '20%', right: '15%' }}>🚀</span>
         
-        <div className="main-container" style={{ maxWidth: currentTab === 'orders' ? '920px' : '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div className="main-container" style={{ maxWidth: '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl" style={{ width: '100%' }}>
             <div className="card-content">
               {/* Back to overview Link */}
@@ -1082,14 +1092,7 @@ const AuthPage = ({ initialTab }) => {
 
               {/* Content Panels */}
               <div className="profile-dashboard mt-0">
-                {currentTab === 'orders' && (
-                  <div className="animate-fade-in w-full overflow-hidden">
-                    <OrdersHistoryContent isProfileTab={true} />
-                  </div>
-                )}
-
-                {currentTab === 'settings' && (
-                  <div className="space-y-6 text-left animate-fade-in">
+                <div className="space-y-6 text-left animate-fade-in">
                     
                      {/* Profile Details Block */}
                     <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-4">
@@ -1267,7 +1270,6 @@ const AuthPage = ({ initialTab }) => {
                       <Save size={16} /> Save Changes
                     </button>
                   </div>
-                )}
               </div>
               
               <div className="auth-footer-text dark:text-slate-500" style={{ marginTop: '2rem', opacity: 0.7 }}>
