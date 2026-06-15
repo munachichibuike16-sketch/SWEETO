@@ -28,7 +28,7 @@ const cityAreas = {
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { settings } = useStore();
+  const { settings, showToast } = useStore();
   const { t, isRTL, lang } = useLanguage();
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -176,7 +176,7 @@ const CheckoutPage = () => {
 
   const fetchGPSLocation = () => {
     if (!navigator.geolocation) {
-      alert(lang === 'fr' ? "La géolocalisation n'est pas supportée par votre navigateur." : "Geolocation is not supported by this browser.");
+      showToast(lang === 'fr' ? "La géolocalisation n'est pas supportée par votre navigateur." : "Geolocation is not supported by this browser.", "error");
       return;
     }
 
@@ -249,7 +249,7 @@ const CheckoutPage = () => {
         if (error.code === error.PERMISSION_DENIED) {
           msg = lang === 'fr' ? "Accès à la localisation refusé." : "Location access denied.";
         }
-        alert(msg);
+        showToast(msg, "error");
       },
       {
         enableHighAccuracy: true,

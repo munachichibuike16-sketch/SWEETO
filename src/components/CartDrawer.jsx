@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ShoppingBag, Trash2, Plus, Minus, Check, ChevronDown, Hourglass, MapPin, Heart } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Trash2, Plus, Minus, Check, ChevronDown, Hourglass, MapPin, Heart, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -12,6 +12,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const { t, isRTL } = useLanguage();
   const { showToast } = useStore();
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const navigate = useNavigate();
 
   const handleGoToCheckout = () => {
@@ -24,10 +25,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
       showToast("Your cart is already empty!", "info");
       return;
     }
-    if (window.confirm("Clear all items from your cart? 🗑️")) {
-      clearCart();
-      showToast("Cart cleared!", "info");
-    }
+    setShowClearConfirm(true);
   };
 
   const totalItemsCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -265,6 +263,67 @@ const CartDrawer = ({ isOpen, onClose }) => {
               </div>
             )}
           </motion.aside>
+
+          {/* Custom Confirmation Modal */}
+          <AnimatePresence>
+            {showClearConfirm && (
+              <>
+                {/* Overlay Backdrop */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowClearConfirm(false)}
+                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[320]"
+                />
+
+                {/* Modal Container */}
+                <div className="fixed inset-0 z-[330] flex items-center justify-center p-4 pointer-events-none">
+                  <motion.div 
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    className="bg-white dark:bg-slate-900 w-full max-w-[340px] rounded-[2rem] p-6 shadow-2xl text-center pointer-events-auto border border-slate-100 dark:border-slate-800"
+                  >
+                    {/* Warning Icon */}
+                    <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-4 text-[#e61e25]">
+                      <Trash2 size={24} />
+                    </div>
+                    
+                    {/* Title */}
+                    <h3 className="text-sm font-black text-slate-850 dark:text-white uppercase italic tracking-tight mb-2">
+                      Clear your cart?
+                    </h3>
+                    
+                    {/* Subtitle */}
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 max-w-[220px] mx-auto mb-6 leading-relaxed">
+                      Are you sure you want to clear all items from your cart? This action cannot be undone. 🗑️
+                    </p>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => setShowClearConfirm(false)}
+                        className="flex-1 py-3 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350 font-black text-[11px] uppercase tracking-wider rounded-full transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={() => {
+                          clearCart();
+                          setShowClearConfirm(false);
+                          showToast("Cart cleared! 🗑️", "success");
+                        }}
+                        className="flex-1 py-3 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-[11px] uppercase tracking-wider rounded-full shadow-lg shadow-red-500/10 transition-all cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              </>
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
