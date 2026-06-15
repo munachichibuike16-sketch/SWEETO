@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -62,6 +62,7 @@ const CheckoutPage = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [shippingZones, setShippingZones] = useState([]);
   const [shippingFee, setShippingFee] = useState(1500);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
 
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsSuccess, setGpsSuccess] = useState(false);
@@ -728,28 +729,70 @@ const CheckoutPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('city') || 'City'}</label>
-                     <div className="relative">
-                       <select name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-white border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-eas-dark outline-none focus:border-eas-blue focus:bg-white transition-all appearance-none cursor-pointer pl-12">
-                         {shippingZones.length === 0 ? (
-                           <>
-                             <option value="Abidjan">Abidjan</option>
-                             <option value="Yamoussoukro">Yamoussoukro</option>
-                             <option value="Bouaké">Bouaké</option>
-                             <option value="San Pédro">San Pédro</option>
-                             <option value="Daloa">Daloa</option>
-                             <option value="Korhogo">Korhogo</option>
-                             <option value="Man">Man</option>
-                             <option value="Gagnoa">Gagnoa</option>
-                             <option value="Grand-Bassam">Grand-Bassam</option>
-                             <option value="Assinie">Assinie</option>
-                             <option value="Abengourou">Abengourou</option>
-                           </>
-                         ) : shippingZones.map(z => (
-                           <option key={z.id} value={z.name}>{z.name}</option>
-                         ))}
-                       </select>
-                       <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
-                     </div>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowCityDropdown(!showCityDropdown)}
+                          className="w-full bg-white border border-slate-100/80 rounded-[1.5rem] px-6 py-5 text-sm font-bold text-eas-dark text-left outline-none focus:border-eas-blue transition-all cursor-pointer pl-12 pr-4 flex justify-between items-center"
+                        >
+                          <span>{formData.city || 'Select City'}</span>
+                          <ChevronDown size={16} className="text-slate-400" />
+                        </button>
+                        <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                        
+                        <AnimatePresence>
+                          {showCityDropdown && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setShowCityDropdown(false)} />
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 max-h-60 overflow-y-auto"
+                              >
+                                <div className="p-2 space-y-1">
+                                  {(shippingZones.length === 0 
+                                    ? [
+                                        { name: 'Abidjan' },
+                                        { name: 'Yamoussoukro' },
+                                        { name: 'Bouaké' },
+                                        { name: 'San Pédro' },
+                                        { name: 'Daloa' },
+                                        { name: 'Korhogo' },
+                                        { name: 'Man' },
+                                        { name: 'Gagnoa' },
+                                        { name: 'Grand-Bassam' },
+                                        { name: 'Assinie' },
+                                        { name: 'Abengourou' }
+                                      ] 
+                                    : shippingZones
+                                  ).map((z, idx) => {
+                                    const isSelected = formData.city === z.name;
+                                    return (
+                                      <button
+                                        key={z.id || idx}
+                                        type="button"
+                                        onClick={() => {
+                                          setFormData({ ...formData, city: z.name });
+                                          setShowCityDropdown(false);
+                                        }}
+                                        className={`w-full text-left px-4 py-3 text-sm font-bold rounded-xl transition-all flex justify-between items-center cursor-pointer ${
+                                          isSelected 
+                                            ? 'bg-eas-blue/10 text-eas-blue' 
+                                            : 'text-slate-700 hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        <span>{z.name}</span>
+                                        {isSelected && <Check size={14} strokeWidth={3} className="text-eas-blue" />}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
                   </div>             
                  <div className="space-y-2 relative">
                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('precise_address') || 'Address'}</label>

@@ -35,7 +35,9 @@ import {
   RotateCcw,
   Clock,
   Tag,
-  Store
+  Store,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import './AuthPage.css';
 import { compressImage } from '../utils/imageCompressor';
@@ -118,6 +120,8 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState('menu'); // 'menu', 'profile', 'address', 'security', 'about'
   const [cacheSize, setCacheSize] = useState('32.4 MB');
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: '',
     newPassword: '',
@@ -1360,18 +1364,57 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
                   <div className="input-group">
                     <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
-                    <div className="phone-row mt-1 flex gap-2">
-                      <select 
-                        value={settingsForm.countryCode}
-                        onChange={(e) => setSettingsForm({...settingsForm, countryCode: e.target.value})}
-                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                        style={{ width: '130px', flexShrink: 0 }}
-                      >
-                        <option value="">Code</option>
-                        {africanCountries.map(c => (
-                          <option key={c.name} value={c.code}>{c.code} {c.name}</option>
-                        ))}
-                      </select>
+                    <div className="phone-row mt-1 flex gap-2 relative">
+                      {/* Custom Country Code Dropdown */}
+                      <div className="relative" style={{ width: '130px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                          className="w-full h-full min-h-[50px] bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/5 rounded-xl px-3 text-xs font-bold text-slate-800 dark:text-white flex justify-between items-center cursor-pointer"
+                        >
+                          <span>{settingsForm.countryCode || 'Code'}</span>
+                          <ChevronDown size={14} className="text-slate-400" />
+                        </button>
+                        
+                        <AnimatePresence>
+                          {showCountryDropdown && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setShowCountryDropdown(false)} />
+                              <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 5 }}
+                                className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
+                              >
+                                <div className="p-1 space-y-0.5">
+                                  {africanCountries.map((c) => {
+                                    const isSelected = settingsForm.countryCode === c.code;
+                                    return (
+                                      <button
+                                        key={c.name}
+                                        type="button"
+                                        onClick={() => {
+                                          setSettingsForm({ ...settingsForm, countryCode: c.code });
+                                          setShowCountryDropdown(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 text-xs font-bold rounded-lg transition-all flex justify-between items-center cursor-pointer ${
+                                          isSelected 
+                                            ? 'bg-eas-blue/10 text-eas-blue' 
+                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+                                        }`}
+                                      >
+                                        <span>{c.code} {c.name}</span>
+                                        {isSelected && <Check size={12} strokeWidth={3} className="text-eas-blue" />}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
                       <input 
                         type="tel" 
                         inputMode="numeric"
@@ -1408,26 +1451,61 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 <div className="space-y-5 text-left animate-fade-in">
                   <div className="input-group">
                     <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Shipping City</label>
-                    <div className="phone-row mt-1">
-                      <select 
-                        value={settingsForm.city}
-                        onChange={(e) => setSettingsForm({...settingsForm, city: e.target.value})}
-                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white w-full"
+                    <div className="phone-row mt-1 relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowCityDropdown(!showCityDropdown)}
+                        className="w-full bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/5 rounded-xl px-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white text-left outline-none flex justify-between items-center cursor-pointer"
                       >
-                        <option value="">Select City</option>
-                        {shippingZones.length > 0 ? (
-                          shippingZones.map(z => (
-                            <option key={z.id} value={z.name}>{z.name} (Shipping: {settings?.currency || 'XOF'} {z.price?.toLocaleString()})</option>
-                          ))
-                        ) : (
+                        <span>{settingsForm.city || 'Select City'}</span>
+                        <ChevronDown size={14} className="text-slate-400" />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {showCityDropdown && (
                           <>
-                            <option value="Abidjan">Abidjan</option>
-                            <option value="Bouake">Bouake</option>
-                            <option value="Yamoussoukro">Yamoussoukro</option>
-                            <option value="San Pedro">San Pedro</option>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowCityDropdown(false)} />
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
+                            >
+                              <div className="p-1 space-y-0.5">
+                                {(shippingZones.length > 0 
+                                  ? shippingZones 
+                                  : [
+                                      { id: 'abidjan', name: 'Abidjan', price: 1500 },
+                                      { id: 'bouake', name: 'Bouake', price: 2500 },
+                                      { id: 'yamoussoukro', name: 'Yamoussoukro', price: 2500 },
+                                      { id: 'sanpedro', name: 'San Pedro', price: 3000 }
+                                    ]
+                                ).map((z) => {
+                                  const isSelected = settingsForm.city === z.name;
+                                  return (
+                                    <button
+                                      key={z.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setSettingsForm({ ...settingsForm, city: z.name });
+                                        setShowCityDropdown(false);
+                                      }}
+                                      className={`w-full text-left px-3 py-2.5 text-xs font-bold rounded-lg transition-all flex justify-between items-center cursor-pointer ${
+                                        isSelected 
+                                          ? 'bg-eas-blue/10 text-eas-blue' 
+                                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+                                      }`}
+                                    >
+                                      <span>{z.name} (Shipping: {settings?.currency || 'XOF'} {z.price?.toLocaleString()})</span>
+                                      {isSelected && <Check size={12} strokeWidth={3} className="text-eas-blue" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
                           </>
                         )}
-                      </select>
+                      </AnimatePresence>
                     </div>
                   </div>
 
