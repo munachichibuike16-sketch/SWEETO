@@ -830,47 +830,29 @@ const Header = ({ onMenuClick, onCartClick }) => {
           <span className="text-[8.5px] font-black uppercase tracking-widest">{t('home')}</span>
         </motion.button>
 
-        {/* Enregistré */}
+        {/* Cart */}
         <motion.button 
-          onClick={() => navigate('/wishlist')} 
+          onClick={onCartClick} 
           whileTap={{ scale: 0.92 }} 
-          className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            isWishlistPage ? 'text-[#ff3b30]' : 'text-slate-400 dark:text-slate-500 hover:text-[#ff3b30]'
-          }`}
+          className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
         >
-          {isWishlistPage && (
-            <motion.div 
-              layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-[#ff3b30]/8 dark:bg-[#ff3b30]/10 rounded-xl blur-sm -z-10"
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            />
-          )}
-          {isWishlistPage && (
-            <motion.div 
-              layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-[#ff3b30] to-red-700 rounded-b-md shadow-[0_2px_8px_rgba(255,59,48,0.4)]"
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            />
-          )}
           <motion.div
-            animate={{ scale: isWishlistPage ? 1.12 : 1, y: isWishlistPage ? -1 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="relative"
           >
-            <Heart 
+            <ShoppingCart 
               size={20} 
               strokeWidth={2.5} 
-              fill={isWishlistPage ? "currentColor" : "none"} 
               className="transition-all"
             />
-            {wishlistItems.length > 0 && !isWishlistPage && (
-              <span className="absolute -top-1.5 -right-2 bg-[#ff3b30] text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-red-500/20">
-                {wishlistItems.length}
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 bg-eas-blue text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-eas-blue/20">
+                {cartCount}
               </span>
             )}
           </motion.div>
           <span className="text-[8.5px] font-black uppercase tracking-widest">
-            {t('saved')}
+            {t('cart')}
           </span>
         </motion.button>
 
@@ -910,23 +892,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           <span className="text-[8.5px] font-black uppercase tracking-widest">{t('store_tab')}</span>
         </motion.button>
 
-        {/* Thème */}
+        {/* Category (Sidebar) */}
         <motion.button 
-          onClick={toggleTheme} 
+          onClick={onMenuClick} 
           whileTap={{ scale: 0.92 }} 
           className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
         >
           <motion.div
-            whileTap={{ rotate: 180 }}
-            transition={{ duration: 0.4 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            {isDarkMode ? (
-              <Sun size={20} strokeWidth={2.5} className="text-amber-500 dark:text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
-            ) : (
-              <Moon size={20} strokeWidth={2.5} className="text-slate-500 dark:text-slate-400" />
-            )}
+            <Menu size={20} strokeWidth={2.5} className="transition-all" />
           </motion.div>
-          <span className="text-[8.5px] font-black uppercase tracking-widest">{t('theme')}</span>
+          <span className="text-[8.5px] font-black uppercase tracking-widest">
+            {lang === 'fr' ? 'Catégorie' : 'Category'}
+          </span>
         </motion.button>
 
         {/* Profil */}
