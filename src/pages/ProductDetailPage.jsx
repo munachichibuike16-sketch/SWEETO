@@ -31,6 +31,53 @@ const ProductDetailPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [touchStartX, setTouchStartX] = useState(null);
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const [activeScrollSection, setActiveScrollSection] = useState('overview');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > 120) {
+        setShowStickyHeader(true);
+      } else {
+        setShowStickyHeader(false);
+      }
+
+      const overviewEl = document.getElementById('product-overview');
+      const reviewsEl = document.getElementById('product-reviews');
+      const descEl = document.getElementById('product-description');
+      const recomEl = document.getElementById('product-recommendations');
+
+      if (recomEl && currentScrollY >= recomEl.offsetTop - 140) {
+        setActiveScrollSection('recommendations');
+      } else if (descEl && currentScrollY >= descEl.offsetTop - 140) {
+        setActiveScrollSection('description');
+      } else if (reviewsEl && currentScrollY >= reviewsEl.offsetTop - 140) {
+        setActiveScrollSection('reviews');
+      } else {
+        setActiveScrollSection('overview');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
   
   // Countdown timers for flash deal
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 });
@@ -141,12 +188,94 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-white pb-24 transition-colors duration-300">
-      
+      {/* Mobile Sticky Scroll Header (revealed on scroll) */}
+      <AnimatePresence>
+        {showStickyHeader && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0b1324]/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 md:hidden flex flex-col pt-3 pb-1"
+          >
+            {/* Header top row */}
+            <div className="flex items-center justify-between px-4 gap-3">
+              {/* Back chevron */}
+              <button 
+                onClick={() => navigate(-1)}
+                className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-70 transition-opacity"
+              >
+                <ChevronLeft size={24} strokeWidth={2.5} />
+              </button>
+
+              {/* Search Bar Input Container */}
+              <div 
+                onClick={() => {
+                  navigate('/');
+                }}
+                className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full py-1 pl-4 pr-1 flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
+              >
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
+                  {product.category || product.name}
+                </span>
+                <div className="px-3 py-1.5 bg-slate-900 dark:bg-slate-950 rounded-full flex items-center justify-center text-white scale-90">
+                  <Search size={12} strokeWidth={3} />
+                </div>
+              </div>
+
+              {/* Share button */}
+              <button 
+                onClick={shareProduct}
+                className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-70 transition-opacity"
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Header tab items */}
+            <div className="flex items-center justify-around mt-2.5 border-t border-slate-100/60 dark:border-slate-800/40 px-2 select-none">
+              {[
+                { id: 'overview', targetId: 'product-overview', label: lang === 'fr' ? 'Aperçu' : 'Overview' },
+                { id: 'reviews', targetId: 'product-reviews', label: lang === 'fr' ? 'Avis' : 'Reviews' },
+                { id: 'description', targetId: 'product-description', label: lang === 'fr' ? 'Description' : 'Description' },
+                { id: 'recommendations', targetId: 'product-recommendations', label: lang === 'fr' ? 'Recommandations' : 'Recommendations' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => scrollToSection(tab.targetId)}
+                  className={`py-2 text-[10px] font-black uppercase tracking-wider relative cursor-pointer transition-colors duration-300 ${
+                    activeScrollSection === tab.id 
+                      ? 'text-[#e61e25] font-black' 
+                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-650'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {activeScrollSection === tab.id && (
+                    <motion.div 
+                      layoutId="activeStickyTabUnderline" 
+                      className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#e61e25] rounded-full" 
+                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Desktop Header */}
       <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
       
       {/* Mobile Visual Gallery (Full-bleed AliExpress Style) */}
       <div 
+        id="product-overview"
         className="block lg:hidden w-full aspect-square bg-white dark:bg-slate-900 relative overflow-hidden select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -310,7 +439,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Variant tag / Specification Details */}
-            <div className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
+            <div id="product-reviews" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800/40">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Details & Warranty</span>
               </div>
@@ -376,7 +505,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Tabbed view: specs/faqs */}
-            <div className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left shadow-sm">
+            <div id="product-description" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left shadow-sm">
               <div className="flex gap-4 border-b border-slate-100 dark:border-slate-800/40 pb-2">
                 {[
                   { id: 'specs', label: 'Specs' },
@@ -419,7 +548,7 @@ const ProductDetailPage = () => {
         </div>
 
         {/* More to love grid */}
-        <div className="mt-12 space-y-6 text-left">
+        <div id="product-recommendations" className="mt-12 space-y-6 text-left">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">More to love</h3>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest">Recommended products</span>
