@@ -403,7 +403,7 @@ const AuthPage = ({ initialTab }) => {
         );
       }
     }
-  }, [googleLoaded]);
+  }, [googleLoaded, showAuthForm, currentTab]);
 
   const handleGoogleCredentialResponse = async (response) => {
     const parseJwt = (token) => {
