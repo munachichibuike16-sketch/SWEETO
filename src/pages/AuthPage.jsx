@@ -865,17 +865,11 @@ const AuthPage = ({ initialTab }) => {
 
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row (Signed In): Avatar, Name, and Icons */}
-          <div className={`${
-            profileScrolled 
-              ? "fixed top-0 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[448px] z-50 bg-white/95 dark:bg-eas-dark/95 backdrop-blur-md shadow-md border border-slate-100 dark:border-white/5 py-2.5 px-4 rounded-2xl mt-2" 
-              : "flex justify-between items-center px-4 py-4 bg-white dark:bg-eas-dark/50 rounded-3xl mx-4 my-2 border border-slate-100 dark:border-white/5 shadow-sm"
-          } flex justify-between items-center transition-all duration-300`}>
-            <div className="flex items-center gap-3 pl-2">
+          <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
+            <div className="flex items-center gap-3">
               {/* Avatar with click upload handler */}
               <div 
-                className={`profile-avatar-wrapper group cursor-pointer relative ${
-                  profileScrolled ? "w-9 h-9" : "w-12 h-12"
-                } rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm bg-slate-50 flex-shrink-0 transition-all duration-300`}
+                className="profile-avatar-wrapper group cursor-pointer relative w-12 h-12 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm bg-slate-50 flex-shrink-0 transition-all duration-300"
                 onClick={() => avatarInputRef.current?.click()}
               >
                 {sessionUser.avatarUrl || sessionUser.picture ? (
@@ -891,7 +885,7 @@ const AuthPage = ({ initialTab }) => {
                 )}
                 {/* Hover edit overlay */}
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <Camera size={profileScrolled ? 10 : 14} className="text-white" />
+                  <Camera size={14} className="text-white" />
                 </div>
                 
                 <input 
@@ -904,20 +898,16 @@ const AuthPage = ({ initialTab }) => {
               </div>
 
               <div className="text-left flex flex-col justify-center">
-                <span className={`font-bold text-slate-800 dark:text-white leading-tight transition-all duration-300 ${
-                  profileScrolled ? "text-[14px]" : "text-[17px]"
-                }`}>
+                <span className="font-bold text-slate-800 dark:text-white leading-tight text-[17px] transition-all duration-300">
                   {sessionUser.name || 'SweeTo user'}
                 </span>
-                {!profileScrolled && (
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate max-w-[150px] mt-0.5">
-                    {sessionUser.email}
-                  </span>
-                )}
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate max-w-[150px] mt-0.5">
+                  {sessionUser.email}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 pr-2">
+            <div className="flex items-center gap-4">
               <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
                 <CoteDivoireFlag />
               </button>
@@ -937,8 +927,8 @@ const AuthPage = ({ initialTab }) => {
             </div>
           </div>
 
-          {/* Placeholder to prevent layout jump */}
-          {profileScrolled && <div className="h-[80px]" />}
+          {/* Placeholder to prevent layout jump under fixed header */}
+          <div className="h-[84px]" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
@@ -1298,23 +1288,17 @@ const AuthPage = ({ initialTab }) => {
       <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <div className="main-container max-w-[480px]">
           {/* Header Row: Sign in/Register and icons */}
-          <div className={`${
-            profileScrolled 
-              ? "fixed top-0 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[448px] z-50 bg-white/95 dark:bg-eas-dark/95 backdrop-blur-md shadow-md border border-slate-100 dark:border-white/5 py-2.5 px-4 rounded-2xl mt-2" 
-              : "flex justify-between items-center px-4 py-4 bg-white dark:bg-eas-dark/50 rounded-3xl mx-4 my-2 border border-slate-100 dark:border-white/5 shadow-sm"
-          } flex justify-between items-center transition-all duration-300`}>
+          <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
             <span 
               onClick={() => { 
                 switchTab('login');
                 setShowAuthForm(true); 
               }}
-              className={`font-bold text-slate-800 dark:text-white cursor-pointer hover:text-eas-blue transition-all pl-2 ${
-                profileScrolled ? "text-[15px]" : "text-[17px]"
-              }`}
+              className="font-bold text-slate-800 dark:text-white cursor-pointer hover:text-eas-blue transition-all pl-2 text-[17px]"
             >
               Sign in/Register
             </span>
-            <div className="flex items-center gap-4 pr-2">
+            <div className="flex items-center gap-4">
               <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
                 <CoteDivoireFlag />
               </button>
@@ -1341,8 +1325,8 @@ const AuthPage = ({ initialTab }) => {
             </div>
           </div>
 
-          {/* Placeholder to prevent layout jump */}
-          {profileScrolled && <div className="h-[80px]" />}
+          {/* Placeholder to prevent layout jump under fixed header */}
+          <div className="h-[84px]" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
