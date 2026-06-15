@@ -1,4 +1,4 @@
-.auth-body {
+:root {
     --blue-primary: #2563eb;
     --blue-deep: #1d4ed8;
     --blue-light: #bfdbfe;
@@ -18,7 +18,9 @@
     --border-radius: 18px;
     --border-radius-sm: 10px;
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
+.auth-body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 30%, #e0f2fe 60%, #ffffff 100%);
     min-height: 100vh;
@@ -630,6 +632,7 @@
 /* Google login official button styling */
 #google-button-official {
     width: 100% !important;
+    height: 100% !important;
     display: flex;
     justify-content: center;
     align-items: center;
