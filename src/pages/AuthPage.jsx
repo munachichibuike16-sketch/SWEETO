@@ -1008,15 +1008,7 @@ const AuthPage = ({ initialTab }) => {
 
 
 
-          {/* Secure Sign Out */}
-          <div className="px-4 pt-4 pb-4">
-            <button 
-              className="btn-google logout-btn-adorable w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest dark:bg-red-950/10 dark:border-red-900/20" 
-              onClick={handleLogout}
-            >
-              <LogOut size={16} /> {t('secure_sign_out') || 'Secure Sign Out'}
-            </button>
-          </div>
+
 
           {/* More to Love Section */}
           {products && products.length > 0 && (
