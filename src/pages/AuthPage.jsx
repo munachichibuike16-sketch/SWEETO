@@ -1010,18 +1010,7 @@ const AuthPage = ({ initialTab }) => {
             </div>
           </div>
 
-          {/* Mid-Year Sale Promo Banner */}
-          <div className="mx-4 my-4 p-5 rounded-3xl bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white relative overflow-hidden shadow-md flex justify-between items-center group cursor-pointer border border-pink-500/20">
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-white/10 rounded-full blur-xl" />
-            <div className="z-10 space-y-1">
-              <span className="text-[8px] font-black uppercase tracking-[0.2em] bg-white/20 px-2 py-0.5 rounded-full">LIMITED OFFER</span>
-              <h4 className="text-sm font-black italic tracking-tight uppercase">MID-YEAR SUPER SALE</h4>
-              <p className="text-[9px] text-pink-100 font-semibold text-left">Get up to 70% off + free delivery right now!</p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-pink-600 transition-all z-10">
-              <ChevronRight size={18} />
-            </div>
-          </div>
+
 
           {/* Secure Sign Out */}
           <div className="px-4 pt-4 pb-8">
@@ -1438,18 +1427,7 @@ const AuthPage = ({ initialTab }) => {
             </div>
           </div>
 
-          {/* Mid-Year Sale Promo Banner */}
-          <div className="mx-4 my-4 p-5 rounded-3xl bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white relative overflow-hidden shadow-md flex justify-between items-center group cursor-pointer border border-pink-500/20" onClick={() => { switchTab('login'); setShowAuthForm(true); }}>
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-white/10 rounded-full blur-xl" />
-            <div className="z-10 space-y-1">
-              <span className="text-[8px] font-black uppercase tracking-[0.2em] bg-white/20 px-2 py-0.5 rounded-full">LIMITED OFFER</span>
-              <h4 className="text-sm font-black italic tracking-tight uppercase">MID-YEAR SUPER SALE</h4>
-              <p className="text-[9px] text-pink-100 font-semibold text-left">Get up to 70% off + free delivery right now!</p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-pink-600 transition-all z-10">
-              <ChevronRight size={18} />
-            </div>
-          </div>
+
 
           <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-8">
             Premium Experience by SWEETO HUB
