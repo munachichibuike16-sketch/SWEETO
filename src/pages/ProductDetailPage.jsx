@@ -138,7 +138,11 @@ const ProductDetailPage = () => {
       const mapped = list.map((img, idx) => {
         let name = '';
         if (parsedColors[idx]) {
-          name = parsedColors[idx];
+          if (typeof parsedColors[idx] === 'object' && parsedColors[idx] !== null) {
+            name = parsedColors[idx].name || parsedColors[idx].code || `Option ${idx + 1}`;
+          } else {
+            name = parsedColors[idx];
+          }
         } else {
           const category = (product.category || '').toLowerCase();
           const pName = (product.name || '').toLowerCase();
