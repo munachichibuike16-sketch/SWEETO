@@ -23,6 +23,7 @@ import VisitUs from './pages/VisitUs';
 import LegalPage from './pages/LegalPage';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
+import ProductDetailPage from './pages/ProductDetailPage';
 import BackToTop from './components/BackToTop';
 import SwipeGestures from './components/SwipeGestures';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
@@ -1407,7 +1408,7 @@ function App() {
         <RouteTracker />
         <Routes>
           <Route path="/" element={<Storefront viewMode="home" />} />
-          <Route path="/product/:productId" element={<Storefront viewMode="home" />} />
+          <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/wishlist" element={<Storefront viewMode="wishlist" />} />
           <Route path="/notifications" element={<Storefront viewMode="notifications" />} />
           <Route path="/products" element={<Storefront viewMode="products" />} />
