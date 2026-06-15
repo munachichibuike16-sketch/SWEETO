@@ -920,6 +920,21 @@
     text-decoration: underline !important;
 }
 
+/* Waving Chick Mascot Animation */
+@keyframes wave-wing-mascot {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-25deg);
+  }
+}
+
+.mascot-wing-wave {
+  transform-origin: 81px 50px;
+  animation: wave-wing-mascot 0.8s ease-in-out infinite;
+}
+
 
 
 

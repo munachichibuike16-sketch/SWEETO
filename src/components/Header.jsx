@@ -590,7 +590,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/auth')}
                   className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm px-3 py-2 cursor-pointer group"
                 >
                   <div className="w-8 h-8 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-eas-blue group-hover:text-white transition-all">
@@ -948,7 +948,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
         {/* Profil */}
         <motion.button 
           whileTap={{ scale: 0.92 }} 
-          onClick={() => navigate(user ? '/auth' : '/login')}
+          onClick={() => navigate('/auth')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
             isProfilePage ? 'text-eas-blue dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
           }`}

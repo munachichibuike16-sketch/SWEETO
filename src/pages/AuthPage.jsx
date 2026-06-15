@@ -26,19 +26,27 @@ import {
   CheckCircle2,
   ChevronRight,
   Bell,
-  Camera
+  Camera,
+  CreditCard,
+  Truck,
+  MessageSquare,
+  RotateCcw,
+  Clock,
+  Tag,
+  Store
 } from 'lucide-react';
 import './AuthPage.css';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 
-const AuthPage = ({ initialTab = 'login' }) => {
+const AuthPage = ({ initialTab }) => {
   const navigate = useNavigate();
   const { showToast, settings } = useStore();
   const { t } = useLanguage();
   const { isDarkMode, toggleTheme } = useTheme();
   
-  const [currentTab, setCurrentTab] = useState(initialTab);
+  const [currentTab, setCurrentTab] = useState(initialTab || 'login');
+  const [showAuthForm, setShowAuthForm] = useState(initialTab === 'login' || initialTab === 'signup');
   const [showPassword, setShowPassword] = useState({});
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -1211,6 +1219,294 @@ const AuthPage = ({ initialTab = 'login' }) => {
     );
   }
 
+  if (!showAuthForm) {
+    return (
+      <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+        <div className="main-container max-w-[480px]">
+          {/* Header Row: settings, flag, notification */}
+          <div className="flex justify-between items-center px-4 py-3 text-slate-800 dark:text-slate-200">
+            <span className="font-black italic text-lg tracking-tighter text-eas-blue dark:text-white flex items-center gap-1.5">
+              ⚡ SWEETO HUB
+            </span>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => { 
+                  showToast("Settings are only available for signed-in users.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }} 
+                className="hover:text-eas-blue transition-colors"
+              >
+                <SettingsIcon size={20} />
+              </button>
+              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 hover:text-eas-blue transition-colors">
+                <Globe size={20} />
+                <span className="text-[10px] font-bold bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200">FR</span>
+              </button>
+              <button 
+                onClick={() => { 
+                  showToast("Notifications are only available for signed-in users.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }} 
+                className="hover:text-eas-blue transition-colors relative"
+              >
+                <Bell size={20} />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+            </div>
+          </div>
+
+          {/* Welcome Banner */}
+          <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
+            {/* Background elements */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
+            
+            <div className="flex justify-between items-start z-10 relative">
+              <div className="space-y-4 max-w-[65%]">
+                <div>
+                  <h2 className="text-xl font-black italic tracking-tighter uppercase text-left">Welcome to SWEETO HUB</h2>
+                  <p className="text-[10px] text-red-100 font-semibold mt-1 text-left">Shop premium local products, tech & electronics with ease.</p>
+                </div>
+                
+                <button 
+                  onClick={() => { 
+                    switchTab('login'); 
+                    setShowAuthForm(true); 
+                  }} 
+                  className="bg-black hover:bg-neutral-900 text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md flex items-center gap-1.5"
+                >
+                  Sign in / Register
+                </button>
+              </div>
+
+              {/* Cute Waving Yellow Chick Mascot */}
+              <div className="w-24 h-24 flex items-center justify-center relative">
+                <svg className="w-20 h-20 drop-shadow-md" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                  {/* Feet */}
+                  <path d="M38,78 Q38,88 34,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
+                  <path d="M62,78 Q62,88 66,88" stroke="#ff9233" strokeWidth="4" strokeLinecap="round" fill="none" />
+                  <circle cx="34" cy="88" r="3" fill="#ff9233" />
+                  <circle cx="66" cy="88" r="3" fill="#ff9233" />
+                  
+                  {/* Body & Head */}
+                  <ellipse cx="50" cy="50" rx="32" ry="30" fill="#ffdf00" />
+                  
+                  {/* Hair / Tuft */}
+                  <path d="M45,20 Q50,8 55,20" fill="#ffdf00" />
+                  <path d="M48,20 Q52,12 52,20" fill="#ffdf00" />
+                  
+                  {/* Cheeks */}
+                  <circle cx="28" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
+                  <circle cx="72" cy="54" r="5" fill="#ff9aa2" opacity="0.8" />
+                  
+                  {/* Eyes */}
+                  <circle cx="36" cy="46" r="4.5" fill="#1a1a1a" />
+                  <circle cx="34.5" cy="44.5" r="1.5" fill="#ffffff" />
+                  <circle cx="64" cy="46" r="4.5" fill="#1a1a1a" />
+                  <circle cx="62.5" cy="44.5" r="1.5" fill="#ffffff" />
+                  
+                  {/* Beak */}
+                  <polygon points="45,49 55,49 50,58" fill="#ff9233" />
+                  
+                  {/* Left Wing (Normal) */}
+                  <path d="M19,50 C12,52 10,62 18,62 C22,62 21,54 19,50 Z" fill="#ffdf00" />
+                  
+                  {/* Waving Right Wing */}
+                  <g className="mascot-wing-wave">
+                    <path d="M81,50 C88,48 95,35 90,30 C85,25 78,40 81,50 Z" fill="#ffdf00" />
+                    <path d="M92,20 L94,22 M96,17 L99,18 M95,12 L97,11" stroke="#ffdf00" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            {/* Checkmark style items row */}
+            <div className="mt-5 pt-4 border-t border-white/10 flex justify-between items-center text-[9px] font-bold text-red-100/90 tracking-wide uppercase">
+              <span className="flex items-center gap-1">✨ Verified Products</span>
+              <span className="flex items-center gap-1">⚡ Fast Delivery</span>
+              <span className="flex items-center gap-1">🔒 Secure Payments</span>
+            </div>
+          </div>
+
+          {/* My Orders Section */}
+          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">My orders</h3>
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view your orders.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="text-[10px] font-black uppercase text-eas-blue dark:text-blue-400 tracking-wider hover:underline"
+              >
+                View all
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-5 gap-1 text-center">
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view payments.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <CreditCard size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
+              </button>
+
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view shipments.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <Clock size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
+              </button>
+
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to view tracking.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <Truck size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
+              </button>
+
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to write reviews.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <MessageSquare size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
+              </button>
+
+              <button 
+                onClick={() => { 
+                  showToast("Please sign in to request returns.", "info"); 
+                  switchTab('login');
+                  setShowAuthForm(true); 
+                }}
+                className="flex flex-col items-center gap-2 group py-1"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 flex items-center justify-center group-hover:bg-eas-blue/10 group-hover:text-eas-blue transition-all">
+                  <RotateCcw size={18} />
+                </div>
+                <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Grid Options */}
+          <div className="mx-4 my-4 grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => { 
+                showToast("Please sign in to view history.", "info"); 
+                switchTab('login');
+                setShowAuthForm(true); 
+              }}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-eas-blue/40 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-eas-blue flex items-center justify-center">
+                <Clock size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">History</div>
+                <div className="text-[9px] font-bold text-slate-400">View browsed items</div>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => navigate('/wishlist')}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-pink-400 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 flex items-center justify-center">
+                <Heart size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">Wishlist</div>
+                <div className="text-[9px] font-bold text-slate-400">Saved items count</div>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => { 
+                showToast("Please sign in to view coupons.", "info"); 
+                switchTab('login');
+                setShowAuthForm(true); 
+              }}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-amber-400 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-500 flex items-center justify-center">
+                <Tag size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">Coupons</div>
+                <div className="text-[9px] font-bold text-slate-400">Manage discounts</div>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => { 
+                showToast("Please sign in to view followed stores.", "info"); 
+                switchTab('login');
+                setShowAuthForm(true); 
+              }}
+              className="p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-3 hover:border-purple-400 text-left transition-all hover:scale-[1.02]"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-500 flex items-center justify-center">
+                <Store size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-800 dark:text-white">Stores</div>
+                <div className="text-[9px] font-bold text-slate-400">Followed outlets</div>
+              </div>
+            </button>
+          </div>
+
+          {/* Mid-Year Sale Promo Banner */}
+          <div className="mx-4 my-4 p-5 rounded-3xl bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white relative overflow-hidden shadow-md flex justify-between items-center group cursor-pointer border border-pink-500/20" onClick={() => { switchTab('login'); setShowAuthForm(true); }}>
+            <div className="absolute -top-12 -left-12 w-28 h-28 bg-white/10 rounded-full blur-xl" />
+            <div className="z-10 space-y-1">
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] bg-white/20 px-2 py-0.5 rounded-full">LIMITED OFFER</span>
+              <h4 className="text-sm font-black italic tracking-tight uppercase">MID-YEAR SUPER SALE</h4>
+              <p className="text-[9px] text-pink-100 font-semibold text-left">Get up to 70% off + free delivery right now!</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-pink-600 transition-all z-10">
+              <ChevronRight size={18} />
+            </div>
+          </div>
+
+          <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-8">
+            Premium Experience by SWEETO HUB
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-split-wrapper dark:bg-eas-dark transition-colors duration-500">
       {/* Left side: Premium Branding Column (Hidden on mobile/tablet) */}
@@ -1270,7 +1566,7 @@ const AuthPage = ({ initialTab = 'login' }) => {
       {/* Right side: Auth Card Column */}
       <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-eas-light/50 via-white to-eas-light/30 dark:bg-eas-dark transition-colors duration-500">
         <button 
-          onClick={() => navigate(-1)} 
+          onClick={() => setShowAuthForm(false)} 
           className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
         >
           <ArrowLeft size={20} />
