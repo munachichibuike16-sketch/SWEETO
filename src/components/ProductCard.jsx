@@ -44,16 +44,7 @@ const getSocialProof = (product, lang) => {
 };
 
 const getSoldCount = (product) => {
-  const idStr = String(product.id || '');
-  let hash = 0;
-  for (let i = 0; i < idStr.length; i++) {
-    hash += idStr.charCodeAt(i);
-  }
-  const base = (hash % 10) + 1; // 1 to 10
-  if (base <= 3) return "100+";
-  if (base <= 6) return "500+";
-  if (base <= 8) return "1 000+";
-  return "5 000+";
+  return product.sold_count || 0;
 };
 
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }) => {
@@ -226,7 +217,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
 
           {/* Sold Count & Rating */}
           <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
-            <span className="font-medium">+{getSoldCount(product)} {lang === 'fr' ? 'vendus' : 'sold'}</span>
+            <span className="font-medium">
+              {getSoldCount(product) > 0 ? `+${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
+            </span>
             {reviews.length > 0 && (
               <>
                 <span>•</span>

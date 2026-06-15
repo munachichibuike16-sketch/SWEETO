@@ -1027,6 +1027,31 @@ app.get('/api/brands', (req, res) => {
   res.json(brands);
 });
 
+const getRealSoldCounts = () => {
+  const soldCounts = {};
+  try {
+    const orders = db.prepare('SELECT items FROM orders').all();
+    orders.forEach(order => {
+      if (!order.items) return;
+      try {
+        const items = JSON.parse(order.items);
+        if (Array.isArray(items)) {
+          items.forEach(item => {
+            const pid = item.id;
+            const qty = parseInt(item.quantity) || 1;
+            if (pid) {
+              soldCounts[pid] = (soldCounts[pid] || 0) + qty;
+            }
+          });
+        }
+      } catch (e) {}
+    });
+  } catch (err) {
+    console.error("Error calculating real sold counts:", err);
+  }
+  return soldCounts;
+};
+
 app.get('/api/products', (req, res) => {
   try {
     const products = db.prepare(`
@@ -1036,6 +1061,7 @@ app.get('/api/products', (req, res) => {
       ORDER BY p.created_at DESC
     `).all();
     
+    const soldCounts = getRealSoldCounts();
     const formatted = products.map(p => {
       let colors = [];
       let related_products = [];
@@ -1046,13 +1072,15 @@ app.get('/api/products', (req, res) => {
       try { placements = JSON.parse(p.placements || '[]'); } catch(e) {}
       try { additional_images = JSON.parse(p.additional_images || '[]'); } catch(e) {}
       
+      const sold_count = soldCounts[p.id] || 0;
       return {
         ...p,
         colors,
         related_products,
         placements,
         additional_images,
-        images: additional_images
+        images: additional_images,
+        sold_count
       };
     });
     res.json(formatted);
@@ -1076,13 +1104,16 @@ app.get('/api/products/:id', (req, res) => {
       try { placements = JSON.parse(product.placements || '[]'); } catch(e) {}
       try { additional_images = JSON.parse(product.additional_images || '[]'); } catch(e) {}
       
+      const soldCounts = getRealSoldCounts();
+      const sold_count = soldCounts[product.id] || 0;
       res.json({
         ...product,
         colors,
         related_products,
         placements,
         additional_images,
-        images: additional_images
+        images: additional_images,
+        sold_count
       });
     } else {
       console.log(`Product ${id} not found in DB`);

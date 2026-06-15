@@ -449,17 +449,8 @@ const ProductDetailPage = () => {
     : 0;
 
   const getSoldCount = (prod) => {
-    if (!prod) return "0";
-    const idStr = String(prod.id || '');
-    let hash = 0;
-    for (let i = 0; i < idStr.length; i++) {
-      hash += idStr.charCodeAt(i);
-    }
-    const base = (hash % 10) + 1; // 1 to 10
-    if (base <= 3) return "100+";
-    if (base <= 6) return "500+";
-    if (base <= 8) return "1 000+";
-    return "5 000+";
+    if (!prod) return 0;
+    return prod.sold_count || 0;
   };
 
   const handleBuyNow = () => {
@@ -716,7 +707,9 @@ const ProductDetailPage = () => {
                 <span>•</span>
                 <span>{reviewCount} {lang === 'fr' ? 'Avis' : 'Reviews'}</span>
                 <span>•</span>
-                <span className="text-[#e61e25] uppercase tracking-wide italic">{getSoldCount(product)} {lang === 'fr' ? 'Vendus' : 'Sold'}</span>
+                <span className="text-[#e61e25] uppercase tracking-wide italic">
+                  {getSoldCount(product) > 0 ? `+${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'Vendus' : 'Sold'}
+                </span>
               </div>
             </div>
 
