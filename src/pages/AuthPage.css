@@ -32,6 +32,18 @@
     overflow-x: hidden;
 }
 
+.profile-body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 30%, #e0f2fe 60%, #ffffff 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    position: relative;
+}
+
 /* Floating tech decorations */
 .candy-decoration {
     position: fixed;
@@ -64,7 +76,6 @@
     z-index: 1;
     width: 100%;
     max-width: 500px;
-    perspective: 1200px;
 }
 
 .auth-card {

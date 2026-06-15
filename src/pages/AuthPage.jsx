@@ -860,12 +860,12 @@ const AuthPage = ({ initialTab }) => {
 
   if (sessionUser && currentTab === 'overview') {
     return (
-      <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
 
 
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row (Signed In): Avatar, Name, and Icons */}
-          <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
+          <div className="sticky top-0 w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
             <div className="flex items-center gap-3">
               {/* Avatar with click upload handler */}
               <div 
@@ -926,9 +926,6 @@ const AuthPage = ({ initialTab }) => {
               </button>
             </div>
           </div>
-
-          {/* Placeholder to prevent layout jump under fixed header */}
-          <div className="h-[84px]" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
@@ -1058,7 +1055,7 @@ const AuthPage = ({ initialTab }) => {
 
   if (sessionUser && (currentTab === 'orders' || currentTab === 'settings')) {
     return (
-      <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <button 
           onClick={() => setCurrentTab('overview')} 
           className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
@@ -1285,10 +1282,10 @@ const AuthPage = ({ initialTab }) => {
 
   if (!showAuthForm) {
     return (
-      <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
-        <div className="main-container max-w-[480px]">
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+        <div className="main-container max-w-[480px] w-full">
           {/* Header Row: Sign in/Register and icons */}
-          <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
+          <div className="sticky top-0 w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
             <span 
               onClick={() => { 
                 switchTab('login');
@@ -1324,9 +1321,6 @@ const AuthPage = ({ initialTab }) => {
               </button>
             </div>
           </div>
-
-          {/* Placeholder to prevent layout jump under fixed header */}
-          <div className="h-[84px]" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
