@@ -846,37 +846,32 @@ const AuthPage = ({ initialTab }) => {
         </button>
 
         <div className="main-container max-w-[480px] w-full">
-          {/* Header Row: settings, flag, notification */}
-          <div className="flex justify-between items-center px-4 py-3 text-slate-800 dark:text-slate-200">
-            <span className="font-black italic text-lg tracking-tighter text-eas-blue dark:text-white flex items-center gap-1.5">
-              ⚡ SWEETO HUB
-            </span>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setCurrentTab('settings')} 
-                className="hover:text-eas-blue transition-colors"
-              >
-                <SettingsIcon size={20} />
-              </button>
-              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 hover:text-eas-blue transition-colors">
-                <Globe size={20} />
-                <span className="text-[10px] font-bold bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200">FR</span>
-              </button>
-              <button 
-                onClick={() => setCurrentTab('orders')} 
-                className="hover:text-eas-blue transition-colors relative"
-              >
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-            </div>
-          </div>
-
           {/* Welcome Banner (Signed In) */}
           <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
             {/* Background elements */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
+            
+            {/* Header Row (Integrated inside banner) */}
+            <div className="flex justify-end items-center gap-4 mb-4 z-10 relative">
+              <button 
+                onClick={() => setCurrentTab('settings')} 
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <SettingsIcon size={20} />
+              </button>
+              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 text-white/80 hover:text-white transition-colors">
+                <Globe size={20} />
+                <span className="text-[10px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-white">FR</span>
+              </button>
+              <button 
+                onClick={() => setCurrentTab('orders')} 
+                className="text-white/80 hover:text-white transition-colors relative"
+              >
+                <Bell size={20} />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+              </button>
+            </div>
             
             <div className="flex justify-between items-center z-10 relative">
               <div className="flex items-center gap-4 max-w-[70%]">
@@ -1343,25 +1338,27 @@ const AuthPage = ({ initialTab }) => {
     return (
       <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <div className="main-container max-w-[480px]">
-          {/* Header Row: settings, flag, notification */}
-          <div className="flex justify-between items-center px-4 py-3 text-slate-800 dark:text-slate-200">
-            <span className="font-black italic text-lg tracking-tighter text-eas-blue dark:text-white flex items-center gap-1.5">
-              ⚡ SWEETO HUB
-            </span>
-            <div className="flex items-center gap-4">
+          {/* Welcome Banner */}
+          <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
+            {/* Background elements */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
+
+            {/* Header Row (Integrated inside banner) */}
+            <div className="flex justify-end items-center gap-4 mb-4 z-10 relative">
               <button 
                 onClick={() => { 
                   showToast("Settings are only available for signed-in users.", "info"); 
                   switchTab('login');
                   setShowAuthForm(true); 
                 }} 
-                className="hover:text-eas-blue transition-colors"
+                className="text-white/80 hover:text-white transition-colors"
               >
                 <SettingsIcon size={20} />
               </button>
-              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 hover:text-eas-blue transition-colors">
+              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center gap-1 text-white/80 hover:text-white transition-colors">
                 <Globe size={20} />
-                <span className="text-[10px] font-bold bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200">FR</span>
+                <span className="text-[10px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-white">FR</span>
               </button>
               <button 
                 onClick={() => { 
@@ -1369,19 +1366,12 @@ const AuthPage = ({ initialTab }) => {
                   switchTab('login');
                   setShowAuthForm(true); 
                 }} 
-                className="hover:text-eas-blue transition-colors relative"
+                className="text-white/80 hover:text-white transition-colors relative"
               >
                 <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
               </button>
             </div>
-          </div>
-
-          {/* Welcome Banner */}
-          <div className="mx-4 my-2 rounded-3xl bg-gradient-to-br from-[#d3122a] via-[#e52d27] to-[#f04f35] text-white p-6 relative overflow-hidden shadow-lg border border-red-500/20">
-            {/* Background elements */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-red-800/20 rounded-full blur-lg pointer-events-none" />
             
             <div className="flex justify-between items-start z-10 relative">
               <div className="space-y-4 max-w-[65%]">
