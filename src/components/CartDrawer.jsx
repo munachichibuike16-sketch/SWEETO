@@ -172,9 +172,10 @@ const CartDrawer = ({ isOpen, onClose }) => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                openGlobalLightbox([item.image_url || item.image || '/hero-banner.png'], 0, item.category || '', item.id);
+                                onClose();
+                                navigate(`/product/${item.id}`);
                               }}
-                              className="w-full h-full object-contain mix-blend-multiply cursor-zoom-in" 
+                              className="w-full h-full object-contain mix-blend-multiply cursor-pointer" 
                             />
                           </div>
 

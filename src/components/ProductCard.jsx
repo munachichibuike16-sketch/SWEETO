@@ -190,11 +190,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
               e.target.onerror = null; 
               e.target.src = '/hero-banner.png';
             }}
-            onClick={(e) => {
-              e.stopPropagation();
-              openGlobalLightbox(getImagesList(product), 0, product.category, product.id);
-            }}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 rounded-2xl cursor-zoom-in" 
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 rounded-2xl" 
           />
         </div>
 

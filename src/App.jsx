@@ -573,10 +573,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             products={liveProducts.filter(p => p.category === catName).slice(0, maxProducts)} 
             type="category" 
             headerStyle={section.headerStyle}
-            onProductClick={(p) => {
-              setSelectedProduct(p);
-              setIsProductModalOpen(true);
-            }}
+            onProductClick={handleProductClick}
             onViewAllClick={() => {
               setSelectedCategory(null);
               setSelectedBrand(null);
@@ -601,10 +598,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             }).slice(0, maxProducts)} 
             type="category" 
             headerStyle={section.headerStyle}
-            onProductClick={(p) => {
-              setSelectedProduct(p);
-              setIsProductModalOpen(true);
-            }}
+            onProductClick={handleProductClick}
             onViewAllClick={section.category && section.category !== 'All' ? () => {
               setSelectedCategory(null);
               setSelectedBrand(null);
