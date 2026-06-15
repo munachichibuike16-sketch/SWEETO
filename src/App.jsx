@@ -469,6 +469,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
             videoAdId={section.categoryB}
+            onCartClick={() => setIsCartOpen(true)}
           />
         );
       case 'newArrival':
@@ -828,7 +829,10 @@ const Storefront = ({ viewMode = 'home' }) => {
             ) : ['trending', 'featured'].includes(viewMode) ? (
               <ShufflingProductPage viewMode={viewMode} onProductClick={handleProductClick} />
             ) : ['auth', 'login', 'signup'].includes(viewMode) ? (
-              <AuthPage initialTab={viewMode === 'signup' ? 'signup' : (viewMode === 'login' ? 'login' : undefined)} />
+              <AuthPage 
+                initialTab={viewMode === 'signup' ? 'signup' : (viewMode === 'login' ? 'login' : undefined)} 
+                onCartClick={() => setIsCartOpen(true)}
+              />
             ) : (
               <div className="bg-eas-light dark:bg-eas-dark transition-colors duration-500 min-h-screen">
                 {viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand ? (

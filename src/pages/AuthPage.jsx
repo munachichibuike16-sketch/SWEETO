@@ -49,7 +49,7 @@ const CoteDivoireFlag = () => (
   </svg>
 );
 
-const AuthPage = ({ initialTab }) => {
+const AuthPage = ({ initialTab, onCartClick }) => {
   const navigate = useNavigate();
   const { showToast, settings, products } = useStore();
   const { t } = useLanguage();
@@ -1058,7 +1058,7 @@ const AuthPage = ({ initialTab }) => {
     return (
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
         <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
-          <CouponsContent onBack={() => setCurrentTab('overview')} />
+          <CouponsContent onBack={() => setCurrentTab('overview')} onCartClick={onCartClick} />
         </div>
       </div>
     );

@@ -9,7 +9,7 @@ import { useStore } from '../contexts/StoreContext';
 import { SectionBanner, SectionHeader, MiniSectionHeader } from './ProductSection';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId }) => {
+const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick }) => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
   const { videoAds } = useStore();
@@ -169,7 +169,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               initial={{ scale: 0 }}
               whileInView={{ scale: 1 }}
               className="absolute bottom-4 right-4 z-20 md:hidden cursor-pointer" // Only show on mobile as a float, or hide if we want it like the screenshot
-              onClick={() => navigate('/checkout')}
+              onClick={onCartClick || (() => navigate('/checkout'))}
               whileTap={{ scale: 0.95 }}
             >
                <div className="bg-[#007aff] hover:bg-[#0062cc] active:scale-95 transition-all text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/20 backdrop-blur-xl">

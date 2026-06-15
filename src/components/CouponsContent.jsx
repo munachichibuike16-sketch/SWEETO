@@ -5,7 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useNavigate } from 'react-router-dom';
 import couponEmptyMascot from '../assets/coupon_empty_mascot.png';
 
-const CouponsContent = ({ onBack }) => {
+const CouponsContent = ({ onBack, onCartClick }) => {
   const { showToast } = useStore();
   const navigate = useNavigate();
   
@@ -45,10 +45,10 @@ const CouponsContent = ({ onBack }) => {
         </div>
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => {
+            onClick={onCartClick || (() => {
               showToast("Redirecting to storefront... 🛍️", "info");
               navigate('/');
-            }}
+            })}
             className="text-white p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
           >
             <ShoppingCart size={22} />

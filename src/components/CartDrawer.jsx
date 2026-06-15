@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import cartEmptyMascot from '../assets/cart_empty_mascot.png';
 
 const CartDrawer = ({ isOpen, onClose }) => {
   const { settings } = useStore();
@@ -78,16 +79,31 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   <motion.div 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="h-full flex flex-col items-center justify-center text-center p-8"
+                    className="h-full flex flex-col items-center justify-center text-center p-8 w-full"
                   >
-                    <div className="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] flex items-center justify-center mb-6 text-slate-300 dark:text-slate-700 border border-slate-100 dark:border-slate-800 shadow-inner">
-                      <ShoppingBag size={36} />
+                    {/* Mascot Illustration */}
+                    <div className="w-48 h-48 mb-6 flex items-center justify-center">
+                      <img 
+                        src={cartEmptyMascot} 
+                        alt="Empty Cart" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
-                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase italic mb-2 tracking-tighter">{t('empty_cart')}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-600 mb-6">{t('select_gear')}</p>
-                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 italic max-w-xs leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 w-full">
-                      « Elite Local Commerce • Managed by @sweeto »
+                    
+                    <h3 className="text-[17px] font-black text-slate-800 dark:text-white mb-2 uppercase italic tracking-tight">
+                      {t('empty_cart') || 'Your cart is empty'}
+                    </h3>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mb-6 max-w-[240px]">
+                      {t('select_gear') || 'Find premium products and fill your cart!'}
                     </p>
+                    
+                    {/* Go shopping action button */}
+                    <button 
+                      onClick={onClose}
+                      className="px-10 py-3 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-sm rounded-full transition-all shadow-lg shadow-red-500/10 hover:scale-[1.03] active:scale-[0.97] cursor-pointer uppercase tracking-wider"
+                    >
+                      {t('go_shopping') || 'Go shopping'}
+                    </button>
                   </motion.div>
                 )}
 
