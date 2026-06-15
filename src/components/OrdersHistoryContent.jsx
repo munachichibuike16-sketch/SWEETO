@@ -20,6 +20,9 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
   const [sortOrder, setSortOrder] = useState('newest'); // newest, oldest
   const [showQA, setShowQA] = useState(false);
   const [randomProducts, setRandomProducts] = useState([]);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showTrashConfirm, setShowTrashConfirm] = useState(false);
+  const [timeframe, setTimeframe] = useState('all'); // all, 30_days, 6_months
 
   // Get current logged-in user from localStorage on mount
   useEffect(() => {
@@ -166,16 +169,23 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
     }
   }, [products, activeTab]);
 
-  const toggleSort = () => {
-    const nextSort = sortOrder === 'newest' ? 'oldest' : 'newest';
-    setSortOrder(nextSort);
-    showToast(nextSort === 'newest' ? 'Sorting: Newest first 🕒' : 'Sorting: Oldest first 🕒', 'info');
+  const handleFilterClick = () => {
+    setShowFilterSheet(true);
+  };
+
+  const handleTrashClick = () => {
+    if (!searchQuery.trim()) {
+      showToast('No active search query to delete 🚫', 'info');
+    } else {
+      setShowTrashConfirm(true);
+    }
   };
 
   const clearFilters = () => {
     setSearchQuery('');
     setActiveTab('all');
     setSortOrder('newest');
+    setTimeframe('all');
     showToast('Search and filters cleared 🧹', 'info');
   };
 
@@ -191,7 +201,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
     }
   };
 
-  // Filter orders based on active tab and search query
+  // Filter orders based on active tab, search query, and timeframe
   const filteredOrders = orders.filter(order => {
     // 1. Search query filter (Order ID or Product Name)
     let matchesSearch = true;
@@ -213,6 +223,17 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
     if (activeTab === 'to_pay') return order.status === 'pending';
     if (activeTab === 'processing') return order.status === 'confirmed' || order.status === 'processing';
     if (activeTab === 'processed') return order.status === 'shipping' || order.status === 'completed';
+    
+    // 3. Timeframe filter
+    if (timeframe !== 'all') {
+      const orderDate = new Date(order.created_at);
+      const now = new Date();
+      const diffTime = Math.abs(now - orderDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (timeframe === '30_days' && diffDays > 30) return false;
+      if (timeframe === '6_months' && diffDays > 180) return false;
+    }
+
     return true;
   });
 
@@ -252,8 +273,8 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
           {/* Right actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <button 
-              onClick={toggleSort}
-              title="Toggle Sort Order"
+              onClick={handleFilterClick}
+              title="Toggle Filter Options"
               className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
             >
               <SlidersHorizontal size={18} />
@@ -266,7 +287,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
               <Headphones size={18} />
             </button>
             <button 
-              onClick={clearFilters}
+              onClick={handleTrashClick}
               title="Clear Search & Filters"
               className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
             >
@@ -495,6 +516,176 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                 >
                   Chat with Agent
                 </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Filter Bottom Sheet Modal */}
+        <AnimatePresence>
+          {showFilterSheet && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end justify-center p-4">
+              <motion.div 
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="bg-white dark:bg-[#0f172a] w-full max-w-[440px] rounded-t-[2.5rem] p-6 pb-8 shadow-2xl relative text-left"
+              >
+                <button 
+                  onClick={() => setShowFilterSheet(false)}
+                  className="absolute top-5 right-5 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+                
+                <h3 className="text-sm font-black text-slate-800 dark:text-white mb-6 uppercase tracking-wider">
+                  Filter Orders
+                </h3>
+                
+                <div className="space-y-6">
+                  {/* Sort Order Option */}
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Sort By</h4>
+                    <div className="flex gap-2">
+                      {[
+                        { id: 'newest', label: 'Newest First' },
+                        { id: 'oldest', label: 'Oldest First' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setSortOrder(item.id)}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                            sortOrder === item.id 
+                              ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' 
+                              : 'bg-transparent border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Order Status Option */}
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Order Status</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: 'all', label: 'All Statuses' },
+                        { id: 'to_pay', label: 'To Pay' },
+                        { id: 'processing', label: 'Processing' },
+                        { id: 'processed', label: 'Processed' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveTab(item.id)}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                            activeTab === item.id 
+                              ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' 
+                              : 'bg-transparent border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Timeframe Option */}
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Timeframe</h4>
+                    <div className="flex gap-2">
+                      {[
+                        { id: 'all', label: 'All Time' },
+                        { id: '30_days', label: 'Last 30 Days' },
+                        { id: '6_months', label: 'Last 6 Months' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setTimeframe(item.id)}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                            timeframe === item.id 
+                              ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900' 
+                              : 'bg-transparent border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <button 
+                    onClick={() => {
+                      setSortOrder('newest');
+                      setActiveTab('all');
+                      setTimeframe('all');
+                      setShowFilterSheet(false);
+                      showToast('Filters reset 🧹', 'info');
+                    }}
+                    className="flex-1 py-3.5 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer text-center"
+                  >
+                    Reset
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowFilterSheet(false);
+                      showToast('Filters applied successfully! 🎯', 'success');
+                    }}
+                    className="flex-1 py-3.5 bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all cursor-pointer text-center"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Trash Confirmation Modal */}
+        <AnimatePresence>
+          {showTrashConfirm && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end justify-center p-4">
+              <motion.div 
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="bg-white dark:bg-[#0f172a] w-full max-w-[440px] rounded-t-[2.5rem] p-6 pb-8 shadow-2xl relative text-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-4 text-red-500">
+                  <Trash2 size={24} />
+                </div>
+                
+                <h3 className="text-base font-bold text-slate-800 dark:text-white mb-2">
+                  Clear Search Query?
+                </h3>
+                
+                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[280px] mx-auto mb-6">
+                  Are you sure you want to clear your active search query "{searchQuery}"?
+                </p>
+                
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowTrashConfirm(false)}
+                    className="flex-1 py-3.5 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowTrashConfirm(false);
+                      showToast('Search query deleted 🗑️', 'success');
+                    }}
+                    className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
               </motion.div>
             </div>
           )}
