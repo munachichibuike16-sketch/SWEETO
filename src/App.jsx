@@ -1394,7 +1394,7 @@ function App() {
       <RealtimeNotification />
       <BackToTop />
       <SwipeGestures />
-      {!getCurrentPath().includes('/dashboard') && <FloatingWhatsApp />}
+      {!getCurrentPath().includes('/dashboard') && !['/auth', '/login', '/register'].includes(getCurrentPath()) && <FloatingWhatsApp />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
