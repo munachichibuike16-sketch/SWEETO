@@ -34,8 +34,7 @@ const ProductDetailPage = () => {
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const [activeScrollSection, setActiveScrollSection] = useState('overview');
   
-  // Countdown timers for flash deal
-  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 });
+
 
   const [isVariantSheetOpen, setIsVariantSheetOpen] = useState(false);
   const [variants, setVariants] = useState([]);
@@ -95,17 +94,7 @@ const ProductDetailPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 4, minutes: 34, seconds: 12 }; // Loop
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+
 
   useEffect(() => {
     if (productId && liveProducts.length > 0) {
@@ -234,8 +223,37 @@ const ProductDetailPage = () => {
     .filter(p => p.id.toString() !== product.id.toString())
     .slice(0, 6);
 
-  const averageRating = product.average_rating || 4.8;
-  const reviewCount = product.reviews_count || 12;
+  const reviewsList = typeof product.reviews === 'string' 
+    ? JSON.parse(product.reviews || '[]') 
+    : (product.reviews || []);
+  
+  const averageRating = reviewsList.length > 0 
+    ? (reviewsList.reduce((acc, r) => acc + r.rating, 0) / reviewsList.length).toFixed(1) 
+    : "4.5";
+
+  const reviewCount = reviewsList.length;
+
+  const discountPercentage = product.old_price && product.old_price > product.price 
+    ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
+    : 0;
+
+  const savingsAmount = product.old_price && product.old_price > product.price 
+    ? product.old_price - product.price
+    : 0;
+
+  const getSoldCount = (prod) => {
+    if (!prod) return "0";
+    const idStr = String(prod.id || '');
+    let hash = 0;
+    for (let i = 0; i < idStr.length; i++) {
+      hash += idStr.charCodeAt(i);
+    }
+    const base = (hash % 10) + 1; // 1 to 10
+    if (base <= 3) return "100+";
+    if (base <= 6) return "500+";
+    if (base <= 8) return "1 000+";
+    return "5 000+";
+  };
 
   const handleBuyNow = () => {
     addToCart(product);
@@ -462,26 +480,7 @@ const ProductDetailPage = () => {
           {/* Right Column: Key details */}
           <div className="w-full lg:w-[55%] space-y-6">
             
-            {/* Flash Deal Urgency Countdown */}
-            <div className="bg-gradient-to-r from-[#e61e25] to-[#f94e55] rounded-3xl p-4 flex justify-between items-center text-white shadow-md">
-              <div className="flex items-center gap-2">
-                <Clock size={18} className="animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest italic">Flash Deal Discount</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-black text-xs">
-                <span className="bg-black/20 px-2 py-1 rounded-lg tracking-tight">
-                  {String(timeLeft.hours).padStart(2, '0')}
-                </span>
-                <span>:</span>
-                <span className="bg-black/20 px-2 py-1 rounded-lg tracking-tight">
-                  {String(timeLeft.minutes).padStart(2, '0')}
-                </span>
-                <span>:</span>
-                <span className="bg-black/20 px-2 py-1 rounded-lg tracking-tight">
-                  {String(timeLeft.seconds).padStart(2, '0')}
-                </span>
-              </div>
-            </div>
+
 
             {/* Header info */}
             <div className="space-y-3.5 text-left">
@@ -499,9 +498,11 @@ const ProductDetailPage = () => {
                     {settings?.currency || 'XOF'} {product.old_price.toLocaleString()}
                   </span>
                 )}
-                <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">
-                  {product.old_price ? `${Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF` : '50% OFF'}
-                </span>
+                {product.old_price && product.old_price > product.price && (
+                  <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">
+                    {Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF
+                  </span>
+                )}
               </div>
 
               {/* Rating + Sold proof */}
@@ -511,9 +512,9 @@ const ProductDetailPage = () => {
                   <span className="font-extrabold text-slate-700 dark:text-slate-200">{averageRating}</span>
                 </div>
                 <span>•</span>
-                <span>{reviewCount} Reviews</span>
+                <span>{reviewCount} {lang === 'fr' ? 'Avis' : 'Reviews'}</span>
                 <span>•</span>
-                <span className="text-[#e61e25] uppercase tracking-wide italic">500+ Sold</span>
+                <span className="text-[#e61e25] uppercase tracking-wide italic">{getSoldCount(product)} {lang === 'fr' ? 'Vendus' : 'Sold'}</span>
               </div>
             </div>
 
@@ -776,12 +777,7 @@ const ProductDetailPage = () => {
 
                 {/* MID-YEAR SALE Banner & Price block */}
                 <div className="mt-4 space-y-3">
-                  <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-3 flex justify-between items-center text-white shadow-sm">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-black uppercase tracking-widest italic">Mid-Year Sale • SuperDeals</span>
-                    </div>
-                    <span className="text-[9px] font-bold opacity-90 uppercase">Ends: Jun 25</span>
-                  </div>
+
 
                   <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/40">
                     <div className="space-y-1">
@@ -789,9 +785,11 @@ const ProductDetailPage = () => {
                         <span className="text-2xl font-black text-[#e61e25] italic tracking-tighter">
                           {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
                         </span>
-                        <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                          -50% now | Save {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
-                        </span>
+                        {discountPercentage > 0 && (
+                          <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                            -{discountPercentage}% now | Save {settings?.currency || 'XOF'} {savingsAmount.toLocaleString()}
+                          </span>
+                        )}
                       </div>
                       {product.old_price && (
                         <p className="text-xs text-slate-400 dark:text-slate-500 line-through font-bold">
@@ -1015,63 +1013,12 @@ const ProductDetailPage = () => {
               </form>
             </div>
 
-            {/* Discover More Content Area */}
-            <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white text-left mb-4">
-                {lang === 'fr' ? 'Découvrir plus' : 'Discover more'}
-              </h3>
-
-              {/* Grid Layout (2 columns) */}
-              <div className="grid grid-cols-2 gap-3">
-                {categories.map((catName, idx) => {
-                  // Find a representative product for its image
-                  const representativeProduct = liveProducts.find(p => p.category === catName);
-                  const imgUrl = representativeProduct?.image_url || representativeProduct?.image || '/hero-banner.png';
-                  
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleDiscoverClick(catName)}
-                      className="flex items-center gap-3 p-2.5 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-sm hover:border-slate-350 dark:hover:border-slate-700 transition-colors text-left cursor-pointer group"
-                    >
-                      {/* Image Thumbnail */}
-                      <div className="w-12 h-12 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center justify-center p-1 border border-slate-100 dark:border-slate-850 shrink-0 overflow-hidden">
-                        <img 
-                          src={imgUrl} 
-                          alt="" 
-                          className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform" 
-                        />
-                      </div>
-
-                      {/* Text details */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 truncate leading-snug">
-                          {catName}
-                        </h4>
-                        
-                        {/* Subtitle Badges */}
-                        {idx % 3 === 0 ? (
-                          <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black text-[#e61e25] mt-1 uppercase">
-                            {/* Small Coupon SVG badge */}
-                            <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
-                              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-1 9h-2v-2h2v2zm-4 0H5v-2h10v2zm4-4h-2V7h2v2zm-4 0H5V7h10v2z" />
-                            </svg>
-                            Coupons
-                          </span>
-                        ) : idx % 3 === 1 ? (
-                          <span className="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 mt-1 block">
-                            {(idx * 12 + 45)}+ items
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black text-amber-500 mt-1 uppercase">
-                            ★ Trending
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Clean empty search overlay layout */}
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none opacity-40">
+              <Search size={48} className="text-slate-350 dark:text-slate-600 mb-3" strokeWidth={1.5} />
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                {lang === 'fr' ? 'Saisissez un mot-clé pour commencer...' : 'Type a keyword to start searching...'}
+              </p>
             </div>
           </motion.div>
         )}
