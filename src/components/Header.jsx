@@ -665,9 +665,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
               className="flex items-center text-2xl font-black tracking-tight text-slate-900 dark:text-white select-none cursor-pointer"
             >
               <span className="relative inline-flex items-center">
-                {/* Checkmark overlaying 'A' */}
+                {/* Checkmark overlaying first letter */}
                 <svg 
-                  className="absolute left-[-1.5px] top-[4px] w-3 h-3 text-[#ffb100] dark:text-[#ffc300]" 
+                  className="absolute left-[-2px] top-[4px] w-3 h-3 text-[#ffb100] dark:text-[#ffc300]" 
                   viewBox="0 0 24 24" 
                   fill="none" 
                   stroke="currentColor" 
@@ -677,9 +677,13 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 >
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span className="pl-[7.5px] italic">Ali</span>
+                <span className="pl-[8px] italic uppercase text-eas-blue">
+                  {settings?.shopName ? settings.shopName.split(' ')[0] : 'SWEETO'}
+                </span>
               </span>
-              <span className="font-semibold text-slate-855 dark:text-slate-100 italic">Express</span>
+              <span className="font-semibold text-slate-855 dark:text-slate-100 italic uppercase ml-1">
+                {settings?.shopName ? settings.shopName.split(' ').slice(1).join(' ') : 'HUB'}
+              </span>
             </div>
 
             {/* Action Icons: Notification & Cart & Menu */}
