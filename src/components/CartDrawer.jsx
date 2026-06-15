@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Trash2, Plus, Minus, CreditCard } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Trash2, Plus, Minus, Check, ChevronDown, Hourglass, MapPin, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -9,14 +9,28 @@ import cartEmptyMascot from '../assets/cart_empty_mascot.png';
 
 const CartDrawer = ({ isOpen, onClose }) => {
   const { settings } = useStore();
-  const { cartItems, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const { t, isRTL } = useLanguage();
+  const { showToast } = useStore();
   const navigate = useNavigate();
 
   const handleGoToCheckout = () => {
     onClose();
     navigate('/checkout');
   };
+
+  const handleClearCart = () => {
+    if (cartItems.length === 0) {
+      showToast("Your cart is already empty!", "info");
+      return;
+    }
+    if (window.confirm("Clear all items from your cart? 🗑️")) {
+      clearCart();
+      showToast("Cart cleared!", "info");
+    }
+  };
+
+  const totalItemsCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <AnimatePresence>
@@ -47,29 +61,42 @@ const CartDrawer = ({ isOpen, onClose }) => {
             </div>
 
             {/* Header */}
-            <div className="p-6 sm:p-10 border-b border-slate-100 dark:border-slate-800/80 flex justify-between items-center bg-white/50 dark:bg-slate-900/30 z-10">
-              <div className="flex items-center gap-4">
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="bg-eas-blue p-3 rounded-2xl shadow-xl shadow-eas-blue/30"
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex justify-between items-center bg-white/50 dark:bg-slate-900/30 z-10">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={onClose}
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer text-slate-800 dark:text-white"
                 >
-                  <ShoppingBag className="text-white" size={24} />
-                </motion.div>
-                <div className="flex flex-col">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-none mb-1">
-                    {t('your_cart')}
-                  </h2>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{cartItems.length} {t('premium_items')}</span>
-                </div>
+                  <ArrowLeft size={22} />
+                </button>
+                <h2 className="text-[17px] font-black text-slate-900 dark:text-white uppercase italic tracking-tight">
+                  Cart ({totalItemsCount})
+                </h2>
               </div>
-              <motion.button 
-                whileHover={{ rotate: 90, backgroundColor: '#f8fafc' }}
-                onClick={onClose} 
-                className="p-3 rounded-2xl transition-all text-slate-400 dark:text-slate-500 border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                <X size={24} />
-              </motion.button>
+              
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-1 text-[10px] font-black text-slate-600 dark:text-slate-405 bg-slate-100 dark:bg-slate-800/80 px-3 py-1 rounded-full border border-slate-200/30 dark:border-white/5 shadow-sm">
+                  <MapPin size={12} className="text-[#e61e25]" />
+                  <span>Cote D'Ivoire</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    onClose();
+                    navigate('/wishlist');
+                  }}
+                  className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                  title="Wishlist"
+                >
+                  <Heart size={20} />
+                </button>
+                <button 
+                  onClick={handleClearCart}
+                  className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                  title="Clear Cart"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Cart Items List */}
@@ -151,32 +178,40 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
             {/* Footer / Checkout Area */}
             {cartItems.length > 0 && (
-              <div className="p-6 sm:p-10 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 space-y-6 sm:space-y-8 rounded-t-[2.5rem] sm:rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.03)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">
-                    <span>{t('subtotal')}</span>
-                    <span className="text-slate-900 dark:text-white italic">{settings?.currency || 'FCFA'} {cartTotal.toLocaleString()}</span>
+              <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0f172a] flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-20">
+                {/* Left: Checked select all */}
+                <div className="flex items-center gap-2 select-none">
+                  <div className="w-5 h-5 rounded-full bg-[#e61e25] flex items-center justify-center text-white shadow-sm shadow-red-500/20">
+                    <Check size={12} strokeWidth={3.5} />
                   </div>
-                  <div className="flex justify-between items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">
-                    <span>{t('local_handling')}</span>
-                    <span className="text-green-500 font-black italic">{t('gratis')}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-800/80">
-                    <span className="text-slate-900 dark:text-white font-black text-xs uppercase tracking-[0.3em] italic">{t('total')}</span>
-                    <span className="text-eas-blue dark:text-blue-400 font-black text-3xl italic tracking-tighter leading-none">{settings?.currency || 'FCFA'} {cartTotal.toLocaleString()}</span>
-                  </div>
+                  <span className="text-[12px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">All</span>
                 </div>
 
-                <div className="space-y-4">
-                  <motion.button 
-                    whileHover={{ scale: 1.02, backgroundColor: '#3B82F6' }}
-                    whileTap={{ scale: 0.98 }}
+                {/* Middle: Pricing & Savings */}
+                <div className="flex flex-col items-end pr-2">
+                  <div className="flex items-center gap-1 cursor-pointer" onClick={() => showToast("Free delivery local handling active 🚀", "info")}>
+                    <span className="font-extrabold text-[15px] text-slate-900 dark:text-white tracking-tight leading-none">
+                      {settings?.currency || 'XOF'} {cartTotal.toLocaleString()}
+                    </span>
+                    <ChevronDown size={14} className="text-slate-500 dark:text-slate-400" />
+                  </div>
+                  <span className="text-[9px] font-black text-[#e61e25] mt-1 tracking-tight">
+                    Saved: {settings?.currency || 'XOF'} {Math.round(cartTotal * 0.15).toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Right: Checkout button & urgency indicator */}
+                <div className="flex flex-col items-center gap-1">
+                  <button 
                     onClick={handleGoToCheckout}
-                    className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-5 sm:py-6 rounded-2xl sm:rounded-3xl font-black text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.3em] flex items-center justify-center gap-3 sm:gap-4 shadow-2xl shadow-slate-900/20 active:scale-95 transition-all group"
+                    className="px-6 py-2.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-[13px] rounded-full transition-all shadow-md shadow-red-500/10 hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
                   >
-                    <CreditCard className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" strokeWidth={3} className="group-hover:rotate-12 transition-transform" />
-                    {t('checkout')}
-                  </motion.button>
+                    Checkout ({totalItemsCount})
+                  </button>
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-[#e61e25] uppercase tracking-wide">
+                    <Hourglass size={10} className="animate-pulse" />
+                    <span>Almost sold out!</span>
+                  </div>
                 </div>
               </div>
             )}
