@@ -9,7 +9,7 @@ const CouponsContent = ({ onBack, onCartClick }) => {
   const { showToast } = useStore();
   const navigate = useNavigate();
   
-  const [activeChip, setActiveChip] = useState('all'); // all, aliexpress, store
+  const [activeChip, setActiveChip] = useState('all'); // all, platform, store
   const [activeFooterTab, setActiveFooterTab] = useState('coupons'); // coupons, history, help
   const [showGetCoupons, setShowGetCoupons] = useState(false);
   const [copiedCode, setCopiedCode] = useState('');
@@ -66,7 +66,7 @@ const CouponsContent = ({ onBack, onCartClick }) => {
       <div className="bg-white dark:bg-[#0f172a] border-b border-slate-100 dark:border-white/5 py-3 px-4 flex gap-2.5 overflow-x-auto no-scrollbar select-none w-full">
         {[
           { id: 'all', label: 'All' },
-          { id: 'aliexpress', label: 'AliExpress coupon codes' },
+          { id: 'platform', label: 'Platform coupon codes' },
           { id: 'store', label: 'Store coupon codes' }
         ].map((chip) => {
           const isActive = activeChip === chip.id;

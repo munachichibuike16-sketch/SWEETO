@@ -1560,7 +1560,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
                     <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed space-y-2.5">
                       <p>
-                        <strong>SWEETO HUB</strong> is a premium, state-of-the-art e-commerce gateway built to simulate the absolute best shopping mechanics of global leaders like AliExpress.
+                        <strong>SWEETO HUB</strong> is a premium, state-of-the-art e-commerce gateway built to simulate the absolute best shopping mechanics.
                       </p>
                       <p>
                         Our platform features real-time notifications, local currency settings, offline fallback capabilities, fully interactive coupon rules, dynamic pricing, and optimized order tracing.
