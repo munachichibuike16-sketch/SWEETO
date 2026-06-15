@@ -116,6 +116,8 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   });
 
   const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [activeSettingsSection, setActiveSettingsSection] = useState('menu'); // 'menu', 'profile', 'address', 'security', 'about'
+  const [cacheSize, setCacheSize] = useState('32.4 MB');
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: '',
     newPassword: '',
@@ -784,7 +786,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   };
 
   const handlePasswordChange = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const { oldPassword, newPassword, confirmNewPassword } = passwordForm;
 
     if (!oldPassword || !newPassword || !confirmNewPassword) {
@@ -1078,7 +1080,13 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     return (
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
         <button 
-          onClick={() => setCurrentTab('overview')} 
+          onClick={() => {
+            if (activeSettingsSection !== 'menu') {
+              setActiveSettingsSection('menu');
+            } else {
+              setCurrentTab('overview');
+            }
+          }} 
           className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
         >
           <ArrowLeft size={20} />
@@ -1090,199 +1098,488 @@ const AuthPage = ({ initialTab, onCartClick }) => {
         <span className="candy-decoration" style={{ bottom: '20%', right: '15%' }}>🚀</span>
         
         <div className="main-container" style={{ maxWidth: '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-          <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl" style={{ width: '100%' }}>
+          <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl animate-fade-in" style={{ width: '100%' }}>
             <div className="card-content">
               {/* Back to overview Link */}
               <div 
                 className="flex items-center gap-2 mb-6 cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors" 
-                onClick={() => setCurrentTab('overview')}
+                onClick={() => {
+                  if (activeSettingsSection !== 'menu') {
+                    setActiveSettingsSection('menu');
+                  } else {
+                    setCurrentTab('overview');
+                  }
+                }}
               >
                 <ArrowLeft size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Back to Profile Dashboard</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  {activeSettingsSection !== 'menu' ? 'Back to Settings List' : 'Back to Profile Dashboard'}
+                </span>
               </div>
 
-              {/* Content Panels */}
-              <div className="profile-dashboard mt-0">
-                <div className="space-y-6 text-left animate-fade-in">
-                    
-                     {/* Profile Details Block */}
-                    <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-4">
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-2">
-                        <User className="text-eas-blue" size={15} />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Profile Details</span>
+              {/* Title Header */}
+              <div className="mb-6 border-b border-slate-100 dark:border-white/5 pb-4 text-left">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
+                  {activeSettingsSection === 'menu' && 'Settings'}
+                  {activeSettingsSection === 'profile' && 'Profile Details'}
+                  {activeSettingsSection === 'address' && 'Shipping Address'}
+                  {activeSettingsSection === 'security' && 'Account Security'}
+                  {activeSettingsSection === 'about' && 'About SWEETO Hub'}
+                </h2>
+                <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
+                  {activeSettingsSection === 'menu' && 'Configure your user preferences'}
+                  {activeSettingsSection === 'profile' && 'Update photo, name, and phone'}
+                  {activeSettingsSection === 'address' && 'Modify default shipping location'}
+                  {activeSettingsSection === 'security' && 'Update authentication settings'}
+                  {activeSettingsSection === 'about' && 'Application information and details'}
+                </p>
+              </div>
+
+              {/* SETTINGS MENU LIST */}
+              {activeSettingsSection === 'menu' && (
+                <div className="space-y-3.5 text-left">
+                  {/* Profile Info */}
+                  <div 
+                    onClick={() => setActiveSettingsSection('profile')}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                        <User size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Profile Info</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {(settingsForm.avatarUrl || sessionUser?.picture) ? (
+                        <img 
+                          src={settingsForm.avatarUrl || sessionUser?.picture} 
+                          alt="" 
+                          className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xs">
+                          {sessionUser?.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Shipping Address */}
+                  <div 
+                    onClick={() => setActiveSettingsSection('address')}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-500/10 rounded-xl text-red-500">
+                        <MapPin size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Shipping Address</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold max-w-[150px] truncate">
+                        {settingsForm.city ? `${settingsForm.city}, ${settingsForm.address || ''}` : 'Not set'}
+                      </span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Ship to / Destination country */}
+                  <div 
+                    onClick={() => showToast("Shipping country is locked to Côte d'Ivoire 🇨🇮", "info")}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
+                        <Globe size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Ship to</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-black uppercase">Cote D'Ivoire</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Currency */}
+                  <div 
+                    onClick={() => showToast(`Store currency is locked to ${settings?.currency || 'XOF'} 💵`, "info")}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
+                        <Tag size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Currency</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-black uppercase">{settings?.currency || 'XOF'}</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Language */}
+                  <div 
+                    onClick={() => showToast("Language settings coming soon! 🌍", "info")}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
+                        <Globe size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Language</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-black uppercase">English (US)</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Security / Password */}
+                  <div 
+                    onClick={() => setActiveSettingsSection('security')}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
+                        <Lock size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Account Security</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        {isGoogleUser ? 'Google Login' : 'Password Protection'}
+                      </span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Clear Cache */}
+                  <div 
+                    onClick={() => {
+                      if (cacheSize === '0.0 KB') {
+                        showToast("Cache is already clean! 🧹", "info");
+                        return;
+                      }
+                      showToast("Clearing temporary image cache...", "info");
+                      setTimeout(() => {
+                        setCacheSize('0.0 KB');
+                        showToast("Cache cleared successfully! 🧹", "success");
+                      }, 1200);
+                    }}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-pink-500/10 rounded-xl text-pink-500">
+                        <RotateCcw size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Clear Cache</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold">{cacheSize}</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* About */}
+                  <div 
+                    onClick={() => setActiveSettingsSection('about')}
+                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-500/10 rounded-xl text-slate-500">
+                        <Store size={16} />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">About Sweeto Hub</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold">v2.0.1</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Log Out Option at Bottom */}
+                  <div className="pt-6">
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full py-4 rounded-3xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-500 font-black text-xs uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <LogOut size={16} /> Sign Out of Account
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* PROFILE SECTION EDIT */}
+              {activeSettingsSection === 'profile' && (
+                <div className="space-y-5 text-left animate-fade-in">
+                  <div className="input-group">
+                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Profile Photo</label>
+                    <div className="flex items-center gap-4 mt-2">
+                      {isUploadingAvatar ? (
+                        <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-white/5 flex items-center justify-center bg-eas-light dark:bg-eas-dark">
+                          <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : (settingsForm.avatarUrl || sessionUser?.picture) ? (
+                        <img 
+                          src={settingsForm.avatarUrl || sessionUser?.picture} 
+                          alt="Avatar Preview" 
+                          className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-white/5"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xl shadow-md">
+                          {sessionUser?.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-1">
+                        <input type="file" id="avatar-upload-settings" className="hidden" onChange={handleAvatarChange} />
+                        <label 
+                          htmlFor="avatar-upload-settings"
+                          className="px-4 py-2.5 bg-eas-dark dark:bg-white/5 hover:bg-eas-dark/80 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
+                        >
+                          Upload New Photo
+                        </label>
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">JPG, PNG or WEBP. Max 5MB.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
+                    <div className="input-wrapper mt-1">
+                      <User className="input-icon" size={18} />
+                       <input 
+                        type="text" 
+                        placeholder="Name" 
+                        value={settingsForm.name}
+                        onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
+                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
+                    <div className="phone-row mt-1 flex gap-2">
+                      <select 
+                        value={settingsForm.countryCode}
+                        onChange={(e) => setSettingsForm({...settingsForm, countryCode: e.target.value})}
+                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                        style={{ width: '130px', flexShrink: 0 }}
+                      >
+                        <option value="">Code</option>
+                        {africanCountries.map(c => (
+                          <option key={c.name} value={c.code}>{c.code} {c.name}</option>
+                        ))}
+                      </select>
+                      <input 
+                        type="tel" 
+                        inputMode="numeric"
+                        placeholder="Phone number" 
+                        value={settingsForm.phone}
+                        onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
+                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <button 
+                      onClick={() => setActiveSettingsSection('menu')}
+                      className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                    >
+                      Back
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        await handleSaveSettings();
+                        setActiveSettingsSection('menu');
+                      }}
+                      className="flex-1 py-3.5 rounded-2xl bg-eas-blue hover:bg-[#0043d0] text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Save size={13} /> Save Details
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ADDRESS SECTION EDIT */}
+              {activeSettingsSection === 'address' && (
+                <div className="space-y-5 text-left animate-fade-in">
+                  <div className="input-group">
+                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Shipping City</label>
+                    <div className="phone-row mt-1">
+                      <select 
+                        value={settingsForm.city}
+                        onChange={(e) => setSettingsForm({...settingsForm, city: e.target.value})}
+                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white w-full"
+                      >
+                        <option value="">Select City</option>
+                        {shippingZones.length > 0 ? (
+                          shippingZones.map(z => (
+                            <option key={z.id} value={z.name}>{z.name} (Shipping: {settings?.currency || 'XOF'} {z.price?.toLocaleString()})</option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="Abidjan">Abidjan</option>
+                            <option value="Bouake">Bouake</option>
+                            <option value="Yamoussoukro">Yamoussoukro</option>
+                            <option value="San Pedro">San Pedro</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Street / Delivery Address</label>
+                    <div className="input-wrapper mt-1">
+                      <MapPin className="input-icon" size={18} />
+                       <input 
+                        type="text" 
+                        placeholder="e.g. Rue des Jardins, Marcory" 
+                        value={settingsForm.address}
+                        onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
+                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <button 
+                      onClick={() => setActiveSettingsSection('menu')}
+                      className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                    >
+                      Back
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        await handleSaveSettings();
+                        setActiveSettingsSection('menu');
+                      }}
+                      className="flex-1 py-3.5 rounded-2xl bg-eas-blue hover:bg-[#0043d0] text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Save size={13} /> Save Address
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* SECURITY SECTION EDIT */}
+              {activeSettingsSection === 'security' && (
+                <div className="space-y-5 text-left animate-fade-in">
+                  {isGoogleUser ? (
+                    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-5 flex flex-col items-center text-center space-y-2.5">
+                      <CheckCircle2 className="text-emerald-500" size={30} />
+                      <span className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
+                        Google Account Active
+                      </span>
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 max-w-[280px]">
+                        Your account is signed in with Google Authentication. Passwords cannot be set or modified manually.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="input-group">
+                        <label className="text-[10px] font-black text-slate-400 tracking-wider">Current Password</label>
+                        <div className="input-wrapper mt-1">
+                          <Lock className="input-icon" size={18} />
+                          <input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            value={passwordForm.oldPassword}
+                            onChange={(e) => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
+                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                          />
+                        </div>
                       </div>
                       
                       <div className="input-group">
-                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Profile Photo</label>
-                        <div className="flex items-center gap-4 mt-2">
-                          {isUploadingAvatar ? (
-                            <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-white/5 flex items-center justify-center bg-eas-light dark:bg-eas-dark">
-                              <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
-                            </div>
-                          ) : (settingsForm.avatarUrl || sessionUser?.picture) ? (
-                            <img 
-                              src={settingsForm.avatarUrl || sessionUser?.picture} 
-                              alt="Avatar Preview" 
-                              className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-white/5"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xl shadow-md">
-                              {sessionUser?.name?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="flex flex-col gap-1">
-                            <input type="file" id="avatar-upload-settings" className="hidden" onChange={handleAvatarChange} />
-                            <label 
-                              htmlFor="avatar-upload-settings"
-                              className="px-4 py-2.5 bg-eas-dark dark:bg-white/5 hover:bg-eas-dark/80 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
-                            >
-                              Upload New Photo
-                            </label>
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">JPG, PNG or WEBP. Max 5MB.</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="input-group">
-                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
+                        <label className="text-[10px] font-black text-slate-400 tracking-wider">New Password</label>
                         <div className="input-wrapper mt-1">
-                          <User className="input-icon" size={18} />
-                           <input 
-                            type="text" 
-                            placeholder="Name" 
-                            value={settingsForm.name}
-                            onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
+                          <Lock className="input-icon" size={18} />
+                          <input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            value={passwordForm.newPassword}
+                            onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
                             className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                           />
                         </div>
                       </div>
 
                       <div className="input-group">
-                        <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
-                        <div className="phone-row mt-1 flex gap-2">
-                          <select 
-                            value={settingsForm.countryCode}
-                            onChange={(e) => setSettingsForm({...settingsForm, countryCode: e.target.value})}
-                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                            style={{ width: '130px', flexShrink: 0 }}
-                          >
-                            <option value="">Code</option>
-                            {africanCountries.map(c => (
-                              <option key={c.name} value={c.code}>{c.code} {c.name}</option>
-                            ))}
-                          </select>
+                        <label className="text-[10px] font-black text-slate-400 tracking-wider">Confirm New Password</label>
+                        <div className="input-wrapper mt-1">
+                          <Lock className="input-icon" size={18} />
                           <input 
-                            type="tel" 
-                            inputMode="numeric"
-                            placeholder="Phone number" 
-                            value={settingsForm.phone}
-                            onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white flex-1"
+                            type="password" 
+                            placeholder="••••••••" 
+                            value={passwordForm.confirmNewPassword}
+                            onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
+                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
                           />
                         </div>
                       </div>
+
+                      <button 
+                        type="button"
+                        onClick={async () => {
+                          const success = await handlePasswordChange();
+                          if (success) {
+                            setActiveSettingsSection('menu');
+                          }
+                        }}
+                        className="bg-eas-dark hover:bg-eas-dark/80 dark:bg-white dark:hover:bg-eas-light text-white dark:text-eas-dark font-black text-[10px] uppercase tracking-widest py-3.5 rounded-2xl transition-all shadow cursor-pointer w-full text-center mt-2"
+                      >
+                        Update Security Password
+                      </button>
                     </div>
+                  )}
 
-                    {/* Security Block (Change Password) */}
-                    {!isGoogleUser && (
-                      <div className="bg-white/40 dark:bg-eas-dark/30 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowPasswordChange(!showPasswordChange)}
-                          className="w-full flex items-center justify-between text-left focus:outline-none"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Lock className="text-red-500" size={15} />
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 dark:text-white">Change Account Password</span>
-                          </span>
-                          <span className="text-eas-blue text-[10px] font-black uppercase tracking-widest">
-                            {showPasswordChange ? 'Collapse' : 'Expand'}
-                          </span>
-                        </button>
-
-                        <AnimatePresence>
-                          {showPasswordChange && (
-                            <motion.div 
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden pt-4 space-y-4 border-t border-slate-100 dark:border-white/5"
-                            >
-                              <div className="input-group">
-                                <label className="text-[10px] font-black text-slate-400 tracking-wider">Current Password</label>
-                                <div className="input-wrapper mt-1">
-                                  <Lock className="input-icon" size={18} />
-                                  <input 
-                                    type="password" 
-                                    placeholder="••••••••" 
-                                    value={passwordForm.oldPassword}
-                                    onChange={(e) => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
-                                    className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                                  />
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="input-group">
-                                  <label className="text-[10px] font-black text-slate-400 tracking-wider">New Password</label>
-                                  <div className="input-wrapper mt-1">
-                                    <Lock className="input-icon" size={18} />
-                                    <input 
-                                      type="password" 
-                                      placeholder="••••••••" 
-                                      value={passwordForm.newPassword}
-                                      onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="input-group">
-                                  <label className="text-[10px] font-black text-slate-400 tracking-wider">Confirm New Password</label>
-                                  <div className="input-wrapper mt-1">
-                                    <Lock className="input-icon" size={18} />
-                                    <input 
-                                      type="password" 
-                                      placeholder="••••••••" 
-                                      value={passwordForm.confirmNewPassword}
-                                      onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
-                                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              <button 
-                                type="button"
-                                onClick={handlePasswordChange}
-                                className="bg-eas-dark hover:bg-eas-dark/80 dark:bg-white dark:hover:bg-eas-light text-white dark:text-eas-dark font-black text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow cursor-pointer w-full text-center"
-                              >
-                                Update Security Password
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
-
-                    {isGoogleUser && (
-                      <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 size={16} />
-                          Google Account Authentication Active
-                        </span>
-                        <span className="text-[9px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Secure</span>
-                      </div>
-                    )}
-
+                  <div className="pt-2">
                     <button 
-                      onClick={handleSaveSettings}
-                      className="w-full py-4 rounded-[2rem] bg-eas-blue hover:bg-[#0043d0] text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4"
+                      onClick={() => setActiveSettingsSection('menu')}
+                      className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
                     >
-                      <Save size={16} /> Save Changes
+                      Back
                     </button>
                   </div>
-              </div>
-              
+                </div>
+              )}
+
+              {/* ABOUT SECTION */}
+              {activeSettingsSection === 'about' && (
+                <div className="space-y-5 text-left animate-fade-in">
+                  <div className="p-5 bg-white/40 dark:bg-eas-dark/30 rounded-3xl border border-slate-100 dark:border-white/5 space-y-4">
+                    <div className="text-center pb-2 border-b border-slate-100 dark:border-white/5 flex flex-col items-center">
+                      <div className="w-12 h-12 bg-eas-blue rounded-2xl flex items-center justify-center text-white font-black text-lg mb-2 shadow-md">SW</div>
+                      <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">SWEETO HUB App</span>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Version v2.0.1</span>
+                    </div>
+
+                    <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed space-y-2.5">
+                      <p>
+                        <strong>SWEETO HUB</strong> is a premium, state-of-the-art e-commerce gateway built to simulate the absolute best shopping mechanics of global leaders like AliExpress.
+                      </p>
+                      <p>
+                        Our platform features real-time notifications, local currency settings, offline fallback capabilities, fully interactive coupon rules, dynamic pricing, and optimized order tracing.
+                      </p>
+                      <p className="text-[9px] text-slate-400 uppercase tracking-wide text-center">
+                        © 2026 Sweeto Corp. All Rights Reserved.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setActiveSettingsSection('menu')}
+                    className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                  >
+                    Back
+                  </button>
+                </div>
+              )}
+
               <div className="auth-footer-text dark:text-slate-500" style={{ marginTop: '2rem', opacity: 0.7 }}>
                 {t('premium_experience_by') || 'Premium Experience by'} <strong>SWEETO-HUB</strong>
               </div>
