@@ -221,9 +221,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
           </h3>
 
           {/* Shipping Badge */}
-          <div className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-1.5">
+          <div className="flex items-center gap-1 text-[11px] text-[#e61e25] font-semibold mt-1.5">
             <span>🚚</span>
-            <span>{lang === 'fr' ? 'Livraison gratuite' : 'Free shipping'}</span>
+            <span>{lang === 'fr' ? `Livraison: ${settings?.currency || 'XOF'} 1 500` : `Shipping: ${settings?.currency || 'XOF'} 1,500`}</span>
           </div>
         </div>
       </motion.div>

@@ -61,7 +61,7 @@ const CheckoutPage = () => {
   const [promoError, setPromoError] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [shippingZones, setShippingZones] = useState([]);
-  const [shippingFee, setShippingFee] = useState(2500);
+  const [shippingFee, setShippingFee] = useState(1500);
 
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsSuccess, setGpsSuccess] = useState(false);
@@ -573,7 +573,9 @@ const CheckoutPage = () => {
 
               <div className="flex justify-between text-white/50 text-[10px] font-black uppercase tracking-widest">
                  <span>{t('shipping') || 'Shipping'}</span>
-                 <span className={shipping === 0 ? "text-emerald-400" : ""}>{shipping === 0 ? (t('free') || 'FREE') : shipping.toLocaleString()}</span>
+                  <span className={shipping === 0 ? "text-emerald-400" : ""}>
+                    {shipping === 0 ? (t('free') || 'FREE') : `${shipping.toLocaleString()} ${settings?.currency || 'FCFA'}`}
+                  </span>
               </div>
               
 

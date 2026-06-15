@@ -31,6 +31,8 @@ const CartDrawer = ({ isOpen, onClose }) => {
   };
 
   const totalItemsCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const shippingFee = cartItems.length > 0 ? 1500 : 0;
+  const grandTotal = cartTotal + shippingFee;
 
   return (
     <AnimatePresence>
@@ -134,45 +136,92 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   </motion.div>
                 )}
 
-                {cartItems.map((item, i) => (
-                  <motion.div 
-                    key={item.id} 
-                    layout
-                    initial={{ x: isRTL ? -50 : 50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: isRTL ? -50 : 50, opacity: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex gap-4 sm:gap-6 p-4 sm:p-6 bg-white/50 dark:bg-slate-900/50 rounded-[1.8rem] sm:rounded-[2rem] border border-slate-100 dark:border-slate-850 group hover:shadow-xl hover:shadow-slate-900/5 transition-all"
-                  >
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-3 shadow-sm group-hover:scale-105 transition-transform shrink-0">
-                      <img src={item.image_url || item.image || '/hero-banner.png'} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                {cartItems.length > 0 && (
+                  <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-[1.8rem] sm:rounded-[2rem] border border-slate-100 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm space-y-4">
+                    {/* Store Header */}
+                    <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800/40 select-none">
+                      <div className="w-[18px] h-[18px] rounded-full bg-[#e61e25] flex items-center justify-center text-white shadow-sm shrink-0">
+                        <Check size={11} strokeWidth={4} />
+                      </div>
+                      <span className="text-xs font-black text-slate-850 dark:text-slate-100 uppercase tracking-tight italic">
+                        Sweeto Official Store
+                      </span>
                     </div>
-                    <div className="flex-1 flex flex-col justify-between py-0.5">
-                      <div className="flex justify-between items-start gap-2 sm:gap-4">
-                        <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm uppercase italic tracking-tighter leading-tight group-hover:text-eas-blue transition-colors line-clamp-2">{item.name}</h4>
-                        <motion.button 
-                          whileHover={{ scale: 1.2, color: '#ef4444' }}
-                          onClick={() => removeFromCart(item.id)} 
-                          className="text-slate-350 dark:text-slate-500 hover:text-red-500 transition-colors shrink-0"
+
+                    {/* Products List */}
+                    <div className="space-y-4">
+                      {cartItems.map((item, i) => (
+                        <motion.div 
+                          key={item.id} 
+                          layout
+                          initial={{ x: isRTL ? -30 : 30, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          exit={{ x: isRTL ? -30 : 30, opacity: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-white/70 dark:bg-slate-900/40 rounded-[1.2rem] sm:rounded-[1.5rem] border border-slate-100 dark:border-slate-850/60 group hover:shadow-md transition-all items-stretch"
                         >
-                          <Trash2 className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />
-                        </motion.button>
-                      </div>
-                      <div className="flex justify-between items-center mt-3 sm:mt-4 gap-2">
-                        <span className="font-black text-eas-blue dark:text-blue-400 text-sm sm:text-lg italic tracking-tighter leading-none">{settings?.currency || 'FCFA'} {item.price?.toLocaleString()}</span>
-                        <div className="flex items-center gap-3 sm:gap-4 bg-white dark:bg-slate-950 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-sm shrink-0">
-                          <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-slate-300 hover:text-eas-blue transition-colors">
-                            <Minus className="w-[10px] h-[10px] sm:w-[14px] sm:h-[14px]" strokeWidth={3} />
-                          </motion.button>
-                          <span className="text-[10px] sm:text-xs font-black text-slate-900 dark:text-white min-w-[15px] sm:min-w-[20px] text-center italic">{item.quantity}</span>
-                          <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-slate-300 hover:text-eas-blue transition-colors">
-                            <Plus className="w-[10px] h-[10px] sm:w-[14px] sm:h-[14px]" strokeWidth={3} />
-                          </motion.button>
-                        </div>
-                      </div>
+                          {/* Checked selection icon on the far left */}
+                          <div className="flex items-center justify-center pr-1 select-none">
+                            <div className="w-[18px] h-[18px] rounded-full bg-[#e61e25] flex items-center justify-center text-white shadow-sm shrink-0">
+                              <Check size={11} strokeWidth={4} />
+                            </div>
+                          </div>
+
+                          {/* Product Image */}
+                          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-3 shadow-sm group-hover:scale-102 transition-transform shrink-0">
+                            <img src={item.image_url || item.image || '/hero-banner.png'} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                          </div>
+
+                          {/* Product Details */}
+                          <div className="flex-1 flex flex-col justify-between py-0.5">
+                            <div>
+                              <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm uppercase italic tracking-tighter leading-tight group-hover:text-[#e61e25] transition-colors line-clamp-2 mb-1">{item.name}</h4>
+                              
+                              {/* Variant specification box */}
+                              <div className="inline-block text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/20 dark:border-white/5 mb-1.5">
+                                Category: {item.category || 'Official'} • Official Warranty
+                              </div>
+                              
+                              {/* Paid shipping status */}
+                              <div className="text-[10px] font-black text-[#e61e25] tracking-wide mb-2 uppercase italic">
+                                Shipping: {settings?.currency || 'XOF'} 1,500
+                              </div>
+                            </div>
+
+                            {/* Bottom row containing the price on the left and the stepper + trash delete button on the right */}
+                            <div className="flex justify-between items-center gap-2 mt-auto">
+                              <span className="font-black text-slate-950 dark:text-white text-sm sm:text-base italic tracking-tighter leading-none">{settings?.currency || 'XOF'} {item.price?.toLocaleString()}</span>
+                              
+                              <div className="flex items-center gap-2 shrink-0">
+                                {/* Stepper */}
+                                <div className="flex items-center gap-2 bg-white dark:bg-slate-950 px-2 py-1 rounded-lg border border-slate-150 dark:border-slate-800/80 shadow-sm">
+                                  <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-slate-400 hover:text-[#e61e25] transition-colors cursor-pointer">
+                                    <Minus className="w-[10px] h-[10px] sm:w-[12px] sm:h-[12px]" strokeWidth={3} />
+                                  </motion.button>
+                                  <span className="text-[10px] sm:text-xs font-black text-slate-900 dark:text-white min-w-[12px] text-center italic">{item.quantity}</span>
+                                  <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-slate-400 hover:text-[#e61e25] transition-colors cursor-pointer">
+                                    <Plus className="w-[10px] h-[10px] sm:w-[12px] sm:h-[12px]" strokeWidth={3} />
+                                  </motion.button>
+                                </div>
+
+                                {/* Trash button */}
+                                <motion.button 
+                                  whileHover={{ scale: 1.1, color: '#ef4444' }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => removeFromCart(item.id)} 
+                                  className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                                  title="Remove from cart"
+                                >
+                                  <Trash2 className="w-[15px] h-[15px] sm:w-[16px] sm:h-[16px]" />
+                                </motion.button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
-                  </motion.div>
-                ))}
+                  </div>
+                )}
               </AnimatePresence>
             </div>
 
@@ -189,9 +238,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
                 {/* Middle: Pricing & Savings */}
                 <div className="flex flex-col items-end pr-2">
-                  <div className="flex items-center gap-1 cursor-pointer" onClick={() => showToast("Free delivery local handling active 🚀", "info")}>
+                  <div className="flex items-center gap-1 cursor-pointer" onClick={() => showToast(`Total includes ${settings?.currency || 'XOF'} 1,500 shipping fee 📦`, "info")}>
                     <span className="font-extrabold text-[15px] text-slate-900 dark:text-white tracking-tight leading-none">
-                      {settings?.currency || 'XOF'} {cartTotal.toLocaleString()}
+                      {settings?.currency || 'XOF'} {grandTotal.toLocaleString()}
                     </span>
                     <ChevronDown size={14} className="text-slate-500 dark:text-slate-400" />
                   </div>
