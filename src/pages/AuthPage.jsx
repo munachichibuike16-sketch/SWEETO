@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import OrdersHistoryContent from '../components/OrdersHistoryContent';
+import ProductCard from '../components/ProductCard';
 import { 
   User, 
   Package, 
@@ -49,7 +50,7 @@ const CoteDivoireFlag = () => (
 
 const AuthPage = ({ initialTab }) => {
   const navigate = useNavigate();
-  const { showToast, settings } = useStore();
+  const { showToast, settings, products } = useStore();
   const { t } = useLanguage();
   const { isDarkMode, toggleTheme } = useTheme();
   
@@ -847,12 +848,7 @@ const AuthPage = ({ initialTab }) => {
   if (sessionUser && currentTab === 'overview') {
     return (
       <div className="auth-body dark:bg-eas-dark transition-colors duration-500 pb-20">
-        <button 
-          onClick={() => navigate('/')} 
-          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
-        >
-          <ArrowLeft size={20} />
-        </button>
+
 
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row (Signed In): Avatar, Name, and Icons */}
@@ -1013,7 +1009,7 @@ const AuthPage = ({ initialTab }) => {
 
 
           {/* Secure Sign Out */}
-          <div className="px-4 pt-4 pb-8">
+          <div className="px-4 pt-4 pb-4">
             <button 
               className="btn-google logout-btn-adorable w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest dark:bg-red-950/10 dark:border-red-900/20" 
               onClick={handleLogout}
@@ -1021,6 +1017,28 @@ const AuthPage = ({ initialTab }) => {
               <LogOut size={16} /> {t('secure_sign_out') || 'Secure Sign Out'}
             </button>
           </div>
+
+          {/* More to Love Section */}
+          {products && products.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
+                <span className="text-xs font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
+                  {t('more_to_love') || 'More to Love'}
+                </span>
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 px-4 pb-6">
+                {products.slice(0, 10).map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onProductClick={(p) => navigate(`/product/${p.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-2">
             Premium Experience by SWEETO HUB
@@ -1428,6 +1446,28 @@ const AuthPage = ({ initialTab }) => {
           </div>
 
 
+
+          {/* More to Love Section */}
+          {products && products.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
+                <span className="text-xs font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
+                  {t('more_to_love') || 'More to Love'}
+                </span>
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 px-4 pb-6">
+                {products.slice(0, 10).map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onProductClick={(p) => navigate(`/product/${p.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-8">
             Premium Experience by SWEETO HUB
