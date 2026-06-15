@@ -164,7 +164,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
         .slice(0, 10);
       setRandomProducts(shuffled);
     }
-  }, [products]);
+  }, [products, activeTab]);
 
   const toggleSort = () => {
     const nextSort = sortOrder === 'newest' ? 'oldest' : 'newest';

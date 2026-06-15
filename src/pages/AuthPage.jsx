@@ -76,7 +76,7 @@ const AuthPage = ({ initialTab }) => {
   const randomProducts = useMemo(() => {
     if (!products || products.length === 0) return [];
     return [...products].sort(() => 0.5 - Math.random()).slice(0, 10);
-  }, [products]);
+  }, [products, currentTab]);
 
   const [loginData, setLoginData] = useState({ email: '', password: '', rememberMe: false });
   const [signupData, setSignupData] = useState({ 
@@ -918,7 +918,7 @@ const AuthPage = ({ initialTab }) => {
                 <SettingsIcon size={20} />
               </button>
               <button 
-                onClick={() => setCurrentTab('orders')} 
+                onClick={() => navigate('/notifications')} 
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors relative"
               >
                 <Bell size={20} />
@@ -1312,11 +1312,7 @@ const AuthPage = ({ initialTab }) => {
                 <SettingsIcon size={20} />
               </button>
               <button 
-                onClick={() => { 
-                  showToast("Notifications are only available for signed-in users.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }} 
+                onClick={() => navigate('/notifications')} 
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors relative"
               >
                 <Bell size={20} />
