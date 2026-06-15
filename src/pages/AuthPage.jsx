@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -72,6 +72,11 @@ const AuthPage = ({ initialTab }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const randomProducts = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    return [...products].sort(() => 0.5 - Math.random()).slice(0, 10);
+  }, [products]);
 
   const [loginData, setLoginData] = useState({ email: '', password: '', rememberMe: false });
   const [signupData, setSignupData] = useState({ 
@@ -1042,7 +1047,7 @@ const AuthPage = ({ initialTab }) => {
                 <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
               </div>
               <div className="grid grid-cols-2 gap-3 px-4 pb-6">
-                {products.slice(0, 10).map((product) => (
+                {randomProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product} 
@@ -1480,7 +1485,7 @@ const AuthPage = ({ initialTab }) => {
                 <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
               </div>
               <div className="grid grid-cols-2 gap-3 px-4 pb-6">
-                {products.slice(0, 10).map((product) => (
+                {randomProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
                     product={product} 
