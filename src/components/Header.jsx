@@ -335,15 +335,13 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </motion.div>
               <div className="flex flex-col justify-center">
                 <div className="flex items-center gap-1.5">
-                  <span className="inline-block text-lg sm:text-2xl font-black text-eas-blue tracking-tighter uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
-                    {settings?.shopName ? (
-                      <>
-                        {settings.shopName.split(' ')[0]}
-                        <span className="text-slate-900 dark:text-white">{settings.shopName.split(' ').slice(1).join(' ') || 'HUB'}</span>
-                      </>
-                    ) : (
-                      <>SWEETO<span className="text-slate-900 dark:text-white">HUB</span></>
-                    )}
+                  <span className="inline-block text-lg sm:text-2xl font-black tracking-tighter uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
+                    <span className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+                      {settings?.shopName ? settings.shopName.split(' ')[0] : 'SWEETO'}
+                    </span>
+                    <span className="text-slate-900 dark:text-white ml-1.5">
+                      {settings?.shopName ? settings.shopName.split(' ').slice(1).join(' ') || 'HUB' : 'HUB'}
+                    </span>
                   </span>
                   
                   {/* Glowing Active Online Dot */}
@@ -659,7 +657,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               ? 'h-0 opacity-0 pointer-events-none mb-0 scale-y-95' 
               : 'h-10 opacity-100 mb-2 scale-y-100'
           }`}>
-            {/* AliExpress Logo with Checkmark */}
+            {/* Redesigned Icy Cool Mobile Branding without checkmark */}
             <div 
               onClick={() => {
                 setSearchQuery('');
@@ -667,26 +665,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 setSelectedBrand(null);
                 navigate('/');
               }}
-              className="flex items-center text-2xl font-black tracking-tight text-slate-900 dark:text-white select-none cursor-pointer"
+              className="flex items-center text-xl font-black tracking-tight select-none cursor-pointer group"
             >
-              <span className="relative inline-flex items-center">
-                {/* Checkmark overlaying first letter */}
-                <svg 
-                  className="absolute left-[-2px] top-[4px] w-3 h-3 text-[#ffb100] dark:text-[#ffc300]" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="5.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span className="pl-[8px] italic uppercase text-eas-blue">
-                  {settings?.shopName ? settings.shopName.split(' ')[0] : 'SWEETO'}
-                </span>
+              <span className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.25)] uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
+                {settings?.shopName ? settings.shopName.split(' ')[0] : 'SWEETO'}
               </span>
-              <span className="font-semibold text-slate-855 dark:text-slate-100 italic uppercase ml-1">
+              <span className="font-black text-slate-900 dark:text-white uppercase italic ml-1.5 leading-none">
                 {settings?.shopName ? settings.shopName.split(' ').slice(1).join(' ') : 'HUB'}
               </span>
             </div>
