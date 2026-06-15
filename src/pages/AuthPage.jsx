@@ -1919,7 +1919,7 @@ const AuthPage = ({ initialTab }) => {
               )}
             </div>
 
-            <div className="relative w-full max-w-[320px] mx-auto min-h-[46px] my-3 flex justify-center items-center">
+            <div className="relative w-full max-w-[320px] mx-auto h-12 my-3 flex justify-center items-center">
               {/* Custom styled Google Button that is ALWAYS visible */}
               <button 
                 type="button"

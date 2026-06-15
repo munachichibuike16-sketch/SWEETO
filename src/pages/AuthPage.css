@@ -637,6 +637,11 @@
     justify-content: center;
     align-items: center;
     min-height: 46px;
+    pointer-events: none;
+}
+
+#google-button-official iframe {
+    pointer-events: auto !important;
 }
 
 /* Split Layout for Authentication */
