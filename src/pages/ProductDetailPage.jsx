@@ -369,7 +369,7 @@ const ProductDetailPage = () => {
   const reviewCount = activeReviews.length;
   const averageRating = reviewCount > 0
     ? (activeReviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount).toFixed(1)
-    : "4.8";
+    : "0.0";
 
   const starsBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   activeReviews.forEach(r => {
@@ -381,22 +381,20 @@ const ProductDetailPage = () => {
 
   const getPercentage = (star) => {
     if (reviewCount === 0) {
-      const defaults = { 5: 85, 4: 10, 3: 5, 2: 0, 1: 0 };
-      return defaults[star];
+      return 0;
     }
     return Math.round((starsBreakdown[star] / reviewCount) * 105) % 100 || Math.round((starsBreakdown[star] / reviewCount) * 100);
   };
 
   const getPercentageFixed = (star) => {
     if (reviewCount === 0) {
-      const defaults = { 5: 85, 4: 10, 3: 5, 2: 0, 1: 0 };
-      return defaults[star];
+      return 0;
     }
     return Math.round((starsBreakdown[star] / reviewCount) * 100);
   };
 
   const getPositiveFeedbackPercentage = () => {
-    if (reviewCount === 0) return 95;
+    if (reviewCount === 0) return 0;
     const positiveReviews = activeReviews.filter(r => r.rating >= 4).length;
     return Math.round((positiveReviews / reviewCount) * 100);
   };
@@ -853,9 +851,15 @@ const ProductDetailPage = () => {
                   <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
                     {lang === 'fr' ? `${reviewCount} avis au total` : `${reviewCount} global ratings`}
                   </p>
-                  <p className="text-[9px] font-black text-emerald-500 uppercase tracking-wider">
-                    {getPositiveFeedbackPercentage()}% {lang === 'fr' ? 'recommandent ce produit' : 'recommend this product'}
-                  </p>
+                  {reviewCount > 0 ? (
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-wider">
+                      {getPositiveFeedbackPercentage()}% {lang === 'fr' ? 'recommandent ce produit' : 'recommend this product'}
+                    </p>
+                  ) : (
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                      {lang === 'fr' ? 'Aucune évaluation pour le moment' : 'No ratings yet'}
+                    </p>
+                  )}
                 </div>
               </div>
 

@@ -123,7 +123,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
   };
 
   const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
-  const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "4.5";
+  const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
   const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
 
   return (
@@ -208,11 +208,15 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
           {/* Sold Count & Rating */}
           <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
             <span className="font-medium">+{getSoldCount(product)} {lang === 'fr' ? 'vendus' : 'sold'}</span>
-            <span>•</span>
-            <div className="flex items-center gap-0.5 text-amber-500 font-bold">
-              <Star size={11} fill="currentColor" />
-              <span>{averageRating}</span>
-            </div>
+            {reviews.length > 0 && (
+              <>
+                <span>•</span>
+                <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                  <Star size={11} fill="currentColor" />
+                  <span>{averageRating}</span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Title */}
