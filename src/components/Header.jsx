@@ -630,12 +630,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
         {/* Mobile Header Layout */}
         <div className="flex flex-col md:hidden w-full">
-          {/* Row 1: Logo & Icons (collapses on scroll) */}
-          <div className={`flex items-center justify-between w-full transition-all duration-300 origin-top overflow-hidden ${
-            isScrolled 
-              ? 'h-0 opacity-0 pointer-events-none mb-0 scale-y-95' 
-              : 'h-10 opacity-100 mb-2 scale-y-100'
-          }`}>
+          {/* Row 1: Logo & Icons (fixed, persistent) */}
+          <div className="flex items-center justify-between w-full h-10 opacity-100 mb-2 scale-y-100">
             {/* Redesigned Icy Cool Mobile Branding without checkmark */}
             <div 
               onClick={() => {
@@ -653,7 +649,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 {settings?.shopName ? settings.shopName.split(' ').slice(1).join(' ') : 'HUB'}
               </span>
             </div>
-
+ 
             {/* Action Icons: Only Notification bell */}
             <div className="flex items-center gap-1">
               {/* Notifications bell */}
@@ -671,13 +667,11 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </button>
             </div>
           </div>
-
-          {/* Row 2: Pill-shaped Search Bar */}
+ 
+          {/* Row 2: Pill-shaped Search Bar (fixed, persistent) */}
           <form 
             onSubmit={handleSearchTrigger} 
-            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${
-              isScrolled ? 'mt-0' : 'mt-2.5'
-            }`}
+            className="w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm"
           >
             {/* Camera Icon */}
             <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
@@ -708,7 +702,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 <X size={15} />
               </button>
             )}
-
+ 
             {/* Black Search Button */}
             <button 
               type="submit" 
@@ -716,7 +710,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             >
               <Search size={16} strokeWidth={2.5} />
             </button>
-
+ 
             {/* Mobile Suggestions */}
             <AnimatePresence>
               {showSuggestions && suggestions.length > 0 && (
@@ -745,13 +739,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
               )}
             </AnimatePresence>
           </form>
-
-          {/* Row 3: Horizontal Categories Scrollbar (AliExpress style below search bar) */}
-          <div className={`flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1 snap-x snap-mandatory scroll-smooth select-none transition-all duration-300 origin-top overflow-hidden ${
-            isScrolled 
-              ? 'h-0 opacity-0 pointer-events-none mt-0 scale-y-95' 
-              : 'h-8 opacity-100 mt-1.5 scale-y-100'
-          }`}>
+ 
+          {/* Row 3: Horizontal Categories Scrollbar (AliExpress style, fixed below search bar) */}
+          <div className="flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1 snap-x snap-mandatory scroll-smooth select-none h-8 opacity-100 mt-1.5 scale-y-100 w-full">
             <button
               type="button"
               onClick={() => {
