@@ -29,6 +29,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const isWishlistPage = location.pathname === '/wishlist';
   const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
   const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
+  
+  const activeCat = categories.find(c => c.name?.toLowerCase() === selectedCategory?.toLowerCase());
+  const activeParentCat = activeCat && activeCat.parent_id 
+    ? categories.find(c => c.id === activeCat.parent_id) 
+    : activeCat;
+  const activeParentName = activeParentCat ? activeParentCat.name : null;
   const notifRef = useRef(null);
   const langRef = useRef(null);
   const headerRef = useRef(null);
@@ -749,16 +755,18 @@ const Header = ({ onMenuClick, onCartClick }) => {
                  setSearchQuery('');
                  navigate('/');
                }}
-               className="text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold"
+               className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
+                 !activeParentName 
+                   ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
+                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+               }`}
              >
-               {selectedCategory 
-                 ? (t_smart ? t_smart(selectedCategory) : selectedCategory)
-                 : (lang === 'fr' ? 'Tout' : 'All')
-               }
+               {lang === 'fr' ? 'Tout' : 'All'}
              </button>
              {categories
-               .filter((cat) => cat.name !== selectedCategory)
+               .filter((cat) => !cat.parent_id)
                .map((cat) => {
+                 const isSelected = activeParentName?.toLowerCase() === cat.name?.toLowerCase();
                  return (
                    <button
                      key={cat.id || cat.name}
@@ -769,7 +777,11 @@ const Header = ({ onMenuClick, onCartClick }) => {
                        setSearchQuery('');
                        navigate('/');
                      }}
-                     className="text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                     className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
+                       isSelected 
+                         ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
+                         : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                     }`}
                    >
                      {t_smart ? t_smart(cat.name) : cat.name}
                    </button>
