@@ -219,7 +219,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
             </div>
 
             {/* Right Column — Side A & Side B Bento Panels */}
-            <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-8 h-auto lg:h-full">
+            <div className="hidden lg:flex lg:col-span-4 flex-col gap-4 sm:gap-8 h-auto lg:h-full">
               
               {/* Side A Banner */}
               <div 
@@ -392,7 +392,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
           </div>
 
           {/* 2. Right Column — Side A & Side B Bento Panels */}
-          <div className="lg:col-span-4 flex flex-col gap-8 h-auto lg:h-full">
+          <div className="hidden lg:flex lg:col-span-4 flex-col gap-8 h-auto lg:h-full">
             
             {/* Side A Banner */}
             <div 
