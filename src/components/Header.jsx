@@ -741,7 +741,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           </form>
  
           {/* Row 3: Horizontal Categories Scrollbar (AliExpress style, fixed below search bar) */}
-          <div className="flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1 snap-x snap-mandatory scroll-smooth select-none h-8 opacity-100 mt-1.5 scale-y-100 w-full">
+          <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1.5 pt-1.5 snap-x snap-mandatory scroll-smooth select-none h-10 opacity-100 mt-2 scale-y-100 w-full items-center">
             <button
               type="button"
               onClick={() => {
@@ -750,10 +750,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 setSearchQuery('');
                 navigate('/');
               }}
-              className={`text-[12px] font-medium whitespace-nowrap px-1 py-0.5 transition-all duration-300 snap-start cursor-pointer capitalize ${
+              className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
                 !selectedCategory 
-                  ? 'text-[#e61e25] dark:text-red-500 font-bold scale-105' 
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                  ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
               }`}
             >
               {lang === 'fr' ? 'Tout' : 'All'}
@@ -770,10 +770,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     setSearchQuery('');
                     navigate('/');
                   }}
-                  className={`text-[12px] font-medium whitespace-nowrap px-1 py-0.5 transition-all duration-300 snap-start cursor-pointer capitalize ${
+                  className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
                     isSelected 
-                      ? 'text-[#e61e25] dark:text-red-500 font-bold scale-105' 
-                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                      ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
                   }`}
                 >
                   {t_smart ? t_smart(cat.name) : cat.name}
