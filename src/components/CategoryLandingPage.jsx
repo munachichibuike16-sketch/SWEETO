@@ -150,7 +150,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
                     className={`mr-1 shrink-0 ${isSelected ? 'text-[#ff3b30] fill-[#ff3b30]' : 'text-slate-400'}`} 
                   />
                 )}
-                {t_smart(pill)}
+                {pill === 'All' ? t_smart(categoryInfo?.name || categoryName) : t_smart(pill)}
               </button>
             );
           })}
