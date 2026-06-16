@@ -1558,6 +1558,15 @@ app.put('/api/categories/:id', authenticateAdmin, (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/categories/toggle-deals', authenticateAdmin, (req, res) => {
+  const { show_daily_deals } = req.body;
+  try {
+    const dailyDealsVal = show_daily_deals !== undefined ? Number(show_daily_deals) : 1;
+    db.prepare('UPDATE categories SET show_daily_deals = ?').run(dailyDealsVal);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.delete('/api/brands/:id', (req, res) => {
   try {
     db.prepare('DELETE FROM brands WHERE id = ?').run(req.params.id);

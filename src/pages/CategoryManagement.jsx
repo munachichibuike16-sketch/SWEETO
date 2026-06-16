@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, CheckCircle2, AlertCircle, X,
   Loader2, Tag, FileText, FolderOpen, Image as ImageIcon,
-  Search, ChevronRight, Grid
+  Search, ChevronRight, Grid, Flame
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { compressImage } from '../utils/imageCompressor';
@@ -32,6 +32,54 @@ const CategoryManagement = () => {
   const [success, setSuccess]         = useState('');
   const [search, setSearch]           = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name }
+  const [isBatchUpdating, setIsBatchUpdating] = useState(false);
+
+  const allDealsOff = categories.length > 0 && categories.every(c => Number(c.show_daily_deals) === 0);
+
+  const handleGlobalDealsToggle = async () => {
+    const nextValue = allDealsOff ? 1 : 0;
+    setIsBatchUpdating(true);
+    setError('');
+    setSuccess('');
+    try {
+      // 1. Update in Supabase (all rows)
+      const { data: allCats } = await supabase.from('categories').select('id');
+      if (allCats && allCats.length > 0) {
+        const ids = allCats.map(c => c.id);
+        const { error: sbErr } = await supabase
+          .from('categories')
+          .update({ show_daily_deals: nextValue })
+          .in('id', ids);
+        
+        // Gracefully ignore if Supabase doesn't have the column yet
+        if (sbErr && !sbErr.message?.includes('show_daily_deals')) {
+          throw sbErr;
+        }
+      }
+
+      // 2. Update in SQLite
+      const isLocalhost = isLocalHost();
+      if (isLocalhost) {
+        const res = await apiFetch('categories/toggle-deals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ show_daily_deals: nextValue })
+        });
+        if (!res.ok) {
+          throw new Error('Local SQLite batch update failed');
+        }
+      }
+
+      setSuccess(`All category daily deals turned ${nextValue === 1 ? 'ON' : 'OFF'}!`);
+      refreshData();
+    } catch (err) {
+      console.error('Failed to toggle global category deals:', err);
+      setError(err.message || 'Failed to update global settings.');
+    } finally {
+      setIsBatchUpdating(false);
+      setTimeout(() => { setError(''); setSuccess(''); }, 2050);
+    }
+  };
 
   /* ─── helpers ─── */
   const resetForm = () => {
@@ -248,12 +296,37 @@ const CategoryManagement = () => {
           </p>
         </div>
         {!showForm && (
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20"
-          >
-            <Plus size={16} /> New Category
-          </button>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Global Categories Deals Toggle Button */}
+            <button
+              type="button"
+              onClick={handleGlobalDealsToggle}
+              disabled={isBatchUpdating}
+              className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all shadow-xl disabled:opacity-50 ${
+                allDealsOff
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-500 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400 shadow-slate-200/20 dark:shadow-none border border-slate-200 dark:border-slate-700'
+                  : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 shadow-orange-500/20'
+              }`}
+            >
+              {isBatchUpdating ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : allDealsOff ? (
+                <AlertCircle size={16} className="text-slate-400 dark:text-slate-500" />
+              ) : (
+                <Flame size={16} className="text-amber-100 fill-amber-100 animate-pulse" />
+              )}
+              <span>
+                {isBatchUpdating ? 'Updating...' : allDealsOff ? 'All Deals: OFF' : 'All Deals: ON'}
+              </span>
+            </button>
+
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20"
+            >
+              <Plus size={16} /> New Category
+            </button>
+          </div>
         )}
       </div>
 
