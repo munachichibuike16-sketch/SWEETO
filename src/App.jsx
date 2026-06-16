@@ -208,12 +208,12 @@ const Storefront = ({ viewMode = 'home' }) => {
   const { t, t_smart, lang } = useLanguage();
 
   const getProductCountForCategory = (catName) => {
-    let count = liveProducts?.filter(p => p.category === catName && p.status === 'active').length || 0;
-    const cat = categories.find(c => c.name === catName);
+    let count = liveProducts?.filter(p => p.category?.toLowerCase() === catName?.toLowerCase() && p.status === 'active').length || 0;
+    const cat = categories.find(c => c.name?.toLowerCase() === catName?.toLowerCase());
     if (cat) {
       const subcats = categories.filter(c => c.parent_id === cat.id);
       subcats.forEach(sub => {
-        count += liveProducts?.filter(p => p.category === sub.name && p.status === 'active').length || 0;
+        count += liveProducts?.filter(p => p.category?.toLowerCase() === sub.name?.toLowerCase() && p.status === 'active').length || 0;
       });
     }
     return count;
@@ -363,7 +363,7 @@ const Storefront = ({ viewMode = 'home' }) => {
     : (Array.isArray(allProducts) ? allProducts : []);
 
   const categoryFilteredProducts = (activeCategory && Array.isArray(searchFilteredProducts))
-    ? searchFilteredProducts.filter(p => p.category === activeCategory)
+    ? searchFilteredProducts.filter(p => p.category?.toLowerCase() === activeCategory.toLowerCase())
     : searchFilteredProducts;
 
   const filteredProducts = (selectedBrand && Array.isArray(categoryFilteredProducts))

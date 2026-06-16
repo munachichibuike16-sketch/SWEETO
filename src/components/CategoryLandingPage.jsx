@@ -26,12 +26,12 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
   // Find dynamic category info
   const categoryInfo = useMemo(() => {
-    return categories.find(c => c.name === categoryName);
+    return categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
   }, [categories, categoryName]);
 
   // Filter products belonging to this category
   const categoryProducts = useMemo(() => {
-    return products.filter(p => p.category === categoryName && p.status === 'active');
+    return products.filter(p => p.category?.toLowerCase() === categoryName?.toLowerCase() && p.status === 'active');
   }, [products, categoryName]);
 
   // Find deals for this category (original_price > price or is_daily_deal)
@@ -41,7 +41,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
   // Get filter pills: either child categories, or unique brands
   const filterPills = useMemo(() => {
-    const parentCat = categories.find(c => c.name === categoryName);
+    const parentCat = categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
     const subcats = parentCat ? categories.filter(c => c.parent_id === parentCat.id) : [];
     
     if (subcats.length > 0) {
@@ -58,11 +58,11 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
     if (activePill === 'All') return categoryProducts;
     
     // Check if activePill matches a sub-category or a brand
-    const isBrand = !categories.some(c => c.name === activePill);
+    const isBrand = !categories.some(c => c.name?.toLowerCase() === activePill?.toLowerCase());
     if (isBrand) {
-      return categoryProducts.filter(p => p.brand === activePill);
+      return categoryProducts.filter(p => p.brand?.toLowerCase() === activePill?.toLowerCase());
     } else {
-      return categoryProducts.filter(p => p.category === activePill);
+      return categoryProducts.filter(p => p.category?.toLowerCase() === activePill?.toLowerCase());
     }
   }, [categoryProducts, activePill, categories]);
 
