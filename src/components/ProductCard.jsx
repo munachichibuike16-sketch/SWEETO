@@ -144,24 +144,16 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
         className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 hover:shadow-none"
       >
         {/* Image Container */}
-        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-900/20 mb-2.5 p-1.5">
-          {/* Top Badges */}
+        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-900/20 mb-2 p-1.5">
+          {/* Top-Left Elite Badge */}
           <div className="absolute top-2.5 left-2.5 z-10">
             <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
               {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
             </span>
           </div>
 
-          {discountPercent > 0 && (
-            <div className="absolute top-2.5 right-2.5 z-10">
-              <span className="bg-[#ff3b30] text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
-                -{discountPercent}%
-              </span>
-            </div>
-          )}
-
-          {/* Wishlist Button (Floating overlay inside image container bottom-right) */}
-          <div className="absolute bottom-2.5 right-2.5 z-20">
+          {/* Wishlist Button (Floating overlay inside image container top-right) */}
+          <div className="absolute top-2.5 right-2.5 z-20">
             <button 
               onClick={handleToggleWishlist}
               className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
@@ -171,6 +163,16 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
               }`}
             >
               <Heart size={13} fill={isWished ? "currentColor" : "none"} />
+            </button>
+          </div>
+
+          {/* Cart Button (Floating overlay inside image container bottom-right, AliExpress style) */}
+          <div className="absolute bottom-2.5 right-2.5 z-20">
+            <button 
+              onClick={handleAddToCart}
+              className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all text-slate-900 dark:text-white cursor-pointer"
+            >
+              <ShoppingCart size={13} className="text-slate-900 dark:text-white" />
             </button>
           </div>
 
@@ -186,43 +188,16 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 py-1">
-          {/* Price Section */}
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-baseline flex-wrap gap-1">
-              <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
-                {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
-              </span>
-              {product.original_price && (
-                <span className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono">
-                  {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
-                </span>
-              )}
-            </div>
-            {/* Quick Add to Cart Button */}
-            <button
-              onClick={handleAddToCart}
-              className="w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer shrink-0"
-            >
-              <ShoppingCart size={13} />
-            </button>
-          </div>
-
-          {/* Badges / Choice */}
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-              Choice
-            </span>
-          </div>
-
-          {/* Sold Count & Rating */}
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
-            <span className="font-medium">
-              {getSoldCount(product) > 0 ? `+${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
+        <div className="flex flex-col flex-1 py-0.5 text-start">
+          {/* Sold Count with Red Flame */}
+          <div className="flex items-center gap-1 text-[11px] text-[#ff3b30] font-bold mb-1">
+            <span>🔥</span>
+            <span>
+              {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
             </span>
             {reviews.length > 0 && (
               <>
-                <span>•</span>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
                 <div className="flex items-center gap-0.5 text-amber-500 font-bold">
                   <Star size={11} fill="currentColor" />
                   <span>{averageRating}</span>
@@ -231,13 +206,31 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
             )}
           </div>
 
+          {/* Price & Discount Section */}
+          <div className="flex items-center flex-wrap gap-2 mb-1">
+            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight leading-none">
+              {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
+            </span>
+            {discountPercent > 0 && (
+              <span className="bg-[#ff007a] text-white font-extrabold text-[8px] sm:text-[9.5px] px-1.5 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider shrink-0 leading-none">
+                -{discountPercent}%
+              </span>
+            )}
+          </div>
+
+          {product.original_price && (
+            <div className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono mb-1">
+              {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+            </div>
+          )}
+
           {/* Title */}
-          <h3 className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug line-clamp-2 uppercase">
+          <h3 className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug line-clamp-2 uppercase mb-1">
             {t_smart(product.name)}
           </h3>
 
           {/* Shipping Badge */}
-          <div className="flex items-center gap-1 text-[11px] text-[#e61e25] font-semibold mt-1.5">
+          <div className="flex items-center gap-1 text-[11px] text-[#e61e25] font-semibold mt-auto pt-1">
             <span>🚚</span>
             <span>{lang === 'fr' ? `Livraison: ${settings?.currency || 'XOF'} 1 500` : `Shipping: ${settings?.currency || 'XOF'} 1,500`}</span>
           </div>

@@ -13,6 +13,7 @@ import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
 import BrightRetailHome from './components/BrightRetailHome';
+import CategoryLandingPage from './components/CategoryLandingPage';
 import ShufflingProductPage from './components/ShufflingProductPage';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -911,10 +912,18 @@ const Storefront = ({ viewMode = 'home' }) => {
                           onProductClick={handleProductClick}
                         />
                       </div>
-                    ) : (activeCategory || selectedBrand) ? (
+                    ) : activeCategory ? (
+                      <CategoryLandingPage 
+                        categoryName={activeCategory} 
+                        products={liveProducts}
+                        categories={categories}
+                        settings={settings}
+                        onProductClick={handleProductClick}
+                      />
+                    ) : selectedBrand ? (
                       <ProductSection 
-                        title={activeCategory || selectedBrand} 
-                        subtitle={`${t('premium_selection')} ${activeCategory || selectedBrand}`} 
+                        title={selectedBrand} 
+                        subtitle={`${t('premium_selection')} ${selectedBrand}`} 
                         products={sortedProducts} 
                         type="category" 
                         hideHeader={true}
