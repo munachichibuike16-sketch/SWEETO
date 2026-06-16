@@ -740,47 +740,43 @@ const Header = ({ onMenuClick, onCartClick }) => {
             </AnimatePresence>
           </form>
  
-          {/* Row 3: Horizontal Categories Scrollbar (AliExpress style, fixed below search bar) */}
-          <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1.5 pt-1.5 snap-x snap-mandatory scroll-smooth select-none h-10 opacity-100 mt-2 scale-y-100 w-full items-center">
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCategory(null);
-                setSelectedBrand(null);
-                setSearchQuery('');
-                navigate('/');
-              }}
-              className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
-                !selectedCategory 
-                  ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-              }`}
-            >
-              {lang === 'fr' ? 'Tout' : 'All'}
-            </button>
-            {categories.map((cat) => {
-              const isSelected = selectedCategory === cat.name;
-              return (
-                <button
-                  key={cat.id || cat.name}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(cat.name);
-                    setSelectedBrand(null);
-                    setSearchQuery('');
-                    navigate('/');
-                  }}
-                  className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
-                    isSelected 
-                      ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
-                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                  }`}
-                >
-                  {t_smart ? t_smart(cat.name) : cat.name}
-                </button>
-              );
-            })}
-          </div>
+           <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1.5 pt-1.5 snap-x snap-mandatory scroll-smooth select-none h-10 opacity-100 mt-2 scale-y-100 w-full items-center">
+             <button
+               type="button"
+               onClick={() => {
+                 setSelectedCategory(null);
+                 setSelectedBrand(null);
+                 setSearchQuery('');
+                 navigate('/');
+               }}
+               className="text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold"
+             >
+               {selectedCategory 
+                 ? (t_smart ? t_smart(selectedCategory) : selectedCategory)
+                 : (lang === 'fr' ? 'Tout' : 'All')
+               }
+             </button>
+             {categories
+               .filter((cat) => cat.name !== selectedCategory)
+               .map((cat) => {
+                 return (
+                   <button
+                     key={cat.id || cat.name}
+                     type="button"
+                     onClick={() => {
+                       setSelectedCategory(cat.name);
+                       setSelectedBrand(null);
+                       setSearchQuery('');
+                       navigate('/');
+                     }}
+                     className="text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                   >
+                     {t_smart ? t_smart(cat.name) : cat.name}
+                   </button>
+                 );
+               })
+             }
+           </div>
         </div>
       </header>
 
