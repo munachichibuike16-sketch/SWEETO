@@ -364,10 +364,27 @@ export const StoreProvider = ({ children }) => {
       ]);
 
       if (catData) {
-        const formattedCats = catData.map(c => ({
-          ...c,
-          image_url: c.image_url || c.icon || ''
-        }));
+        // Fetch local SQLite categories in parallel if on localhost to merge show_daily_deals
+        let localCats = [];
+        if (isLocalHost()) {
+          try {
+            const res = await apiFetch('categories');
+            if (res.ok) {
+              localCats = await res.json();
+            }
+          } catch (e) {
+            console.warn('Failed to fetch local categories for merge:', e);
+          }
+        }
+
+        const formattedCats = catData.map(c => {
+          const localCat = localCats.find(lc => Number(lc.id) === Number(c.id));
+          return {
+            ...c,
+            image_url: c.image_url || c.icon || '',
+            show_daily_deals: localCat && localCat.show_daily_deals !== undefined ? Number(localCat.show_daily_deals) : (c.show_daily_deals !== undefined ? Number(c.show_daily_deals) : 1)
+          };
+        });
         setCategories(prev => {
           const isDifferent = JSON.stringify(prev) !== JSON.stringify(formattedCats);
           if (isDifferent) {
@@ -572,7 +589,8 @@ export const StoreProvider = ({ children }) => {
           if (catData) {
             const formattedCats = catData.map(c => ({
               ...c,
-              image_url: c.image_url || c.icon || ''
+              image_url: c.image_url || c.icon || '',
+              show_daily_deals: c.show_daily_deals !== undefined ? Number(c.show_daily_deals) : 1
             }));
             setCategories(formattedCats);
             localStorage.setItem('sweeto_cache_categories', JSON.stringify(formattedCats));
