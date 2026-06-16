@@ -11,7 +11,7 @@ import { uploadToStorage } from '../utils/storageHelper';
 import { supabase } from '../lib/supabase';
 import { apiFetch, isLocalHost } from '../utils/api';
 
-const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', is_subcategory: false };
+const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', is_subcategory: false, show_daily_deals: 1 };
 
 const inputClass =
   'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
@@ -50,7 +50,8 @@ const CategoryManagement = () => {
       parent_id: cat.parent_id || '',
       is_subcategory: !!cat.parent_id,
       image_url: cat.image_url || '',
-      slug: cat.slug || ''
+      slug: cat.slug || '',
+      show_daily_deals: cat.show_daily_deals !== undefined ? Number(cat.show_daily_deals) : 1
     });
     setEditingId(cat.id);
     setShowForm(true);
@@ -94,7 +95,8 @@ const CategoryManagement = () => {
         description: formData.description?.trim() || null,
         icon: formData.image_url || null,
         parent_id: parentVal,
-        position: 0
+        position: 0,
+        show_daily_deals: formData.show_daily_deals !== undefined ? Number(formData.show_daily_deals) : 1
       };
 
       const localPayload = {
@@ -102,17 +104,30 @@ const CategoryManagement = () => {
         slug: slugVal,
         description: formData.description?.trim() || null,
         image_url: formData.image_url || null,
-        parent_id: parentVal
+        parent_id: parentVal,
+        show_daily_deals: formData.show_daily_deals !== undefined ? Number(formData.show_daily_deals) : 1
       };
 
       const isLocalhost = isLocalHost();
 
       if (editingId) {
         // Update in Supabase
-        const { error: sbErr } = await supabase
+        let { error: sbErr } = await supabase
           .from('categories')
           .update(supabasePayload)
           .eq('id', editingId);
+
+        // Fallback if column show_daily_deals doesn't exist on Supabase
+        if (sbErr && (sbErr.message?.includes('column "show_daily_deals" of relation "categories" does not exist') || sbErr.code === 'P0002' || sbErr.message?.includes('show_daily_deals'))) {
+          const fallbackPayload = { ...supabasePayload };
+          delete fallbackPayload.show_daily_deals;
+          const { error: fallbackErr } = await supabase
+            .from('categories')
+            .update(fallbackPayload)
+            .eq('id', editingId);
+          sbErr = fallbackErr;
+        }
+
         if (sbErr) throw sbErr;
 
         // Update in SQLite
@@ -135,10 +150,20 @@ const CategoryManagement = () => {
         const nextId = maxId + 1;
 
         // Insert in Supabase
-        const { data: sbData, error: sbErr } = await supabase
+        let { error: sbErr } = await supabase
           .from('categories')
-          .insert([{ ...supabasePayload, id: nextId }])
-          .select();
+          .insert([{ ...supabasePayload, id: nextId }]);
+
+        // Fallback if column show_daily_deals doesn't exist on Supabase
+        if (sbErr && (sbErr.message?.includes('column "show_daily_deals" of relation "categories" does not exist') || sbErr.code === 'P0002' || sbErr.message?.includes('show_daily_deals'))) {
+          const fallbackPayload = { ...supabasePayload };
+          delete fallbackPayload.show_daily_deals;
+          const { error: fallbackErr } = await supabase
+            .from('categories')
+            .insert([{ ...fallbackPayload, id: nextId }]);
+          sbErr = fallbackErr;
+        }
+
         if (sbErr) throw sbErr;
 
         // Insert in SQLite
@@ -325,6 +350,27 @@ const CategoryManagement = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Show Daily Deals Toggle */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Show Daily Deals Section</span>
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500">Enable or disable the daily deals list on this category landing page</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, show_daily_deals: p.show_daily_deals === 1 ? 0 : 1 }))}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      formData.show_daily_deals === 1 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        formData.show_daily_deals === 1 ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
 
                 {/* Description */}
                 <div>

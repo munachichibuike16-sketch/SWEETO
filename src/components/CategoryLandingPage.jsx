@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ChevronRight, Package, ShoppingCart } from 'lucide-react';
+import { Zap, ChevronRight, Package, ShoppingCart, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
@@ -23,6 +23,11 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   const { lang, t, t_smart } = useLanguage();
   const navigate = useNavigate();
   const [activePill, setActivePill] = useState('All');
+
+  // Find dynamic category info
+  const categoryInfo = useMemo(() => {
+    return categories.find(c => c.name === categoryName);
+  }, [categories, categoryName]);
 
   // Filter products belonging to this category
   const categoryProducts = useMemo(() => {
@@ -61,8 +66,8 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
     }
   }, [categoryProducts, activePill, categories]);
 
-  // Get banner image url
-  const bannerImage = categoryBanners[categoryName.toLowerCase()] || categoryBanners.default;
+  // Get banner image url (prioritize custom uploaded category image)
+  const bannerImage = categoryInfo?.image_url || categoryInfo?.icon || categoryBanners[categoryName.toLowerCase()] || categoryBanners.default;
 
   return (
     <div className="w-full flex flex-col gap-5 px-3 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen">
@@ -96,7 +101,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       </div>
 
       {/* Daily Deals Section */}
-      {categoryDeals.length > 0 && (
+      {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
         <div className="w-full flex flex-col bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
           <div 
             onClick={() => navigate('/deals')}
@@ -133,12 +138,18 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
                 key={pill}
                 type="button"
                 onClick={() => setActivePill(pill)}
-                className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all shadow-sm cursor-pointer select-none ${
+                className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all shadow-sm cursor-pointer select-none flex items-center justify-center ${
                   isSelected 
                     ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold scale-105' 
                     : 'bg-white dark:bg-slate-900 text-slate-650 dark:text-slate-300 border border-slate-100 dark:border-slate-800 hover:bg-slate-50'
                 }`}
               >
+                {pill === 'All' && (
+                  <Heart 
+                    size={12} 
+                    className={`mr-1 shrink-0 ${isSelected ? 'text-[#ff3b30] fill-[#ff3b30]' : 'text-slate-400'}`} 
+                  />
+                )}
                 {t_smart(pill)}
               </button>
             );

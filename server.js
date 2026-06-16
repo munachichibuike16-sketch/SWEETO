@@ -149,6 +149,7 @@ db.exec(`
     seo_description TEXT,
     seo_keywords TEXT,
     image_url TEXT,
+    show_daily_deals INTEGER DEFAULT 1,
     FOREIGN KEY (parent_id) REFERENCES categories(id)
   );
 
@@ -328,6 +329,7 @@ try { db.exec('ALTER TABLE orders ADD COLUMN eta TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE orders ADD COLUMN tracking_note TEXT'); } catch(e) {}
 try { db.exec('ALTER TABLE products ADD COLUMN bought_price REAL DEFAULT 0'); } catch (e) {}
 try { db.exec('ALTER TABLE categories ADD COLUMN image_url TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE categories ADD COLUMN show_daily_deals INTEGER DEFAULT 1'); } catch (e) {}
 try { db.exec('ALTER TABLE sections ADD COLUMN isDual INTEGER DEFAULT 0'); } catch (e) {}
 try { db.exec('ALTER TABLE sections ADD COLUMN titleB TEXT'); } catch (e) {}
 try { db.exec('ALTER TABLE sections ADD COLUMN subtitleB TEXT'); } catch (e) {}
@@ -1280,17 +1282,18 @@ app.post('/api/video-ads', authenticateAdmin, upload.single('file'), (req, res) 
 
 // Create Category
 app.post('/api/categories', authenticateAdmin, (req, res) => {
-  const { id, name, slug, description, image_url, parent_id } = req.body;
+  const { id, name, slug, description, image_url, parent_id, show_daily_deals } = req.body;
   console.log('Adding category:', req.body);
   try {
     let info;
     const parentVal = parent_id ? Number(parent_id) : null;
+    const dailyDealsVal = show_daily_deals !== undefined ? Number(show_daily_deals) : 1;
     if (id) {
-      const stmt = db.prepare('INSERT INTO categories (id, name, slug, description, image_url, parent_id) VALUES (?, ?, ?, ?, ?, ?)');
-      info = stmt.run(id, name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null, parentVal);
+      const stmt = db.prepare('INSERT INTO categories (id, name, slug, description, image_url, parent_id, show_daily_deals) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      info = stmt.run(id, name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null, parentVal, dailyDealsVal);
     } else {
-      const stmt = db.prepare('INSERT INTO categories (name, slug, description, image_url, parent_id) VALUES (?, ?, ?, ?, ?)');
-      info = stmt.run(name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null, parentVal);
+      const stmt = db.prepare('INSERT INTO categories (name, slug, description, image_url, parent_id, show_daily_deals) VALUES (?, ?, ?, ?, ?, ?)');
+      info = stmt.run(name, slug || name.toLowerCase().replace(/ /g, '-'), description || null, image_url || null, parentVal, dailyDealsVal);
     }
     console.log('Category added:', info);
     res.json({ id: id || info.lastInsertRowid, success: true });
@@ -1546,10 +1549,11 @@ app.delete('/api/categories/:id', authenticateAdmin, (req, res) => {
 });
 
 app.put('/api/categories/:id', authenticateAdmin, (req, res) => {
-  const { name, description, image_url, parent_id } = req.body;
+  const { name, description, image_url, parent_id, show_daily_deals } = req.body;
   try {
     const parentVal = parent_id ? Number(parent_id) : null;
-    db.prepare('UPDATE categories SET name = ?, description = ?, image_url = ?, parent_id = ? WHERE id = ?').run(name, description, image_url, parentVal, req.params.id);
+    const dailyDealsVal = show_daily_deals !== undefined ? Number(show_daily_deals) : 1;
+    db.prepare('UPDATE categories SET name = ?, description = ?, image_url = ?, parent_id = ?, show_daily_deals = ? WHERE id = ?').run(name, description, image_url, parentVal, dailyDealsVal, req.params.id);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
