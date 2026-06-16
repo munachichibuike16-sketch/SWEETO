@@ -741,7 +741,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
           </form>
  
           {/* Row 3: Horizontal Categories Scrollbar (AliExpress style, fixed below search bar) */}
-          <div className={`flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1 snap-x snap-mandatory scroll-smooth select-none transition-all duration-300 origin-top overflow-hidden w-full ${isScrolled ? 'h-0 opacity-0 pointer-events-none mt-0 scale-y-95' : 'h-8 opacity-100 mt-1.5 scale-y-100'}`}>
+          <div className="flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1 snap-x snap-mandatory scroll-smooth select-none h-8 opacity-100 mt-1.5 scale-y-100 w-full">
             <button
               type="button"
               onClick={() => {
