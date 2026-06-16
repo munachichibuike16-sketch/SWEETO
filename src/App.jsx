@@ -639,6 +639,7 @@ const Storefront = ({ viewMode = 'home' }) => {
    const DiscoveryBar = () => {
     if (['wishlist', 'visit', 'privacy', 'terms', 'security'].includes(viewMode)) return null;
     if (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand) return null;
+    if (activeCategory) return null; // CategoryLandingPage renders its own themed banner, deals, and pills.
 
     const getIcon = () => {
       if (viewMode === 'new-arrivals') return <Sparkles className="text-amber-400" size={20} />;
