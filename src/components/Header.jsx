@@ -13,9 +13,9 @@ import SweetoLogo from './SweetoLogo';
 const Header = ({ onMenuClick, onCartClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
-  const { products, searchQuery, setSearchQuery, setSelectedCategory, setSelectedBrand, settings } = useStore();
+  const { products, categories = [], searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setSelectedBrand, settings } = useStore();
   const { isDarkMode, toggleTheme } = useTheme();
-  const { lang, changeLanguage, t, isRTL } = useLanguage();
+  const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -32,6 +32,23 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const notifRef = useRef(null);
   const langRef = useRef(null);
   const headerRef = useRef(null);
+
+  const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
+  const placeholders = [
+    "Slip Sans Trace",
+    t('search_placeholder') || "Search premium store...",
+    "Wireless Earbuds",
+    "Smart Watch",
+    "Gaming Mouse",
+    "Mechanical Keyboard"
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [placeholders.length]);
 
   useEffect(() => {
     const updateHeaderHeight = () => {
@@ -388,8 +405,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
               onChange={handleInputChange}
               onFocus={() => inputValue.length > 1 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder={t('search_placeholder')} 
-              className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-2"
+              placeholder={placeholders[currentPlaceholderIndex]} 
+              className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-2"
             />
 
             {inputValue && (
@@ -658,17 +675,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
           {/* Row 2: Pill-shaped Search Bar */}
           <form 
             onSubmit={handleSearchTrigger} 
-            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-900 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${
+            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${
               isScrolled ? 'mt-0' : 'mt-2.5'
             }`}
           >
             {/* Camera Icon */}
-            <button type="button" className="text-slate-450 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
+            <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
               <Camera size={19} strokeWidth={2} />
             </button>
             
             {/* Separator line */}
-            <div className="h-4 w-[1px] bg-slate-250 dark:bg-slate-800 shrink-0"></div>
+            <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
             
             {/* Input field */}
             <input 
@@ -677,8 +694,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
               onChange={handleInputChange}
               onFocus={() => inputValue.length > 1 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder={t('search_placeholder') || "Slip Sans Trace"} 
-              className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1.5"
+              placeholder={placeholders[currentPlaceholderIndex]} 
+              className="w-full bg-transparent border-none outline-none font-medium text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1.5"
             />
             
             {/* Clear button */}
@@ -695,7 +712,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             {/* Black Search Button */}
             <button 
               type="submit" 
-              className="bg-slate-950 dark:bg-slate-800 text-white rounded-full p-2 flex items-center justify-center transition-all hover:bg-slate-900 active:scale-95 shrink-0"
+              className="bg-slate-950 dark:bg-slate-800 text-white rounded-full h-8 px-5 flex items-center justify-center transition-all hover:bg-slate-900 active:scale-95 shrink-0"
             >
               <Search size={16} strokeWidth={2.5} />
             </button>
@@ -704,16 +721,16 @@ const Header = ({ onMenuClick, onCartClick }) => {
             <AnimatePresence>
               {showSuggestions && suggestions.length > 0 && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: 10 }}
+                   className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
                 >
                   {suggestions.map((product) => (
                     <div 
-                      key={product.id}
-                      onClick={() => handleSuggestionClick(product)}
-                      className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-none"
+                       key={product.id}
+                       onClick={() => handleSuggestionClick(product)}
+                       className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-none"
                     >
                       <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0">
                         <img src={product.image_url || product.image || '/hero-banner.png'} alt={product.name} className="w-full h-full object-cover" />
@@ -728,6 +745,52 @@ const Header = ({ onMenuClick, onCartClick }) => {
               )}
             </AnimatePresence>
           </form>
+
+          {/* Row 3: Horizontal Categories Scrollbar (AliExpress style below search bar) */}
+          <div className={`flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1 snap-x snap-mandatory scroll-smooth select-none transition-all duration-300 origin-top overflow-hidden ${
+            isScrolled 
+              ? 'h-0 opacity-0 pointer-events-none mt-0 scale-y-95' 
+              : 'h-8 opacity-100 mt-1.5 scale-y-100'
+          }`}>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedBrand(null);
+                setSearchQuery('');
+                navigate('/');
+              }}
+              className={`text-[12px] font-medium whitespace-nowrap px-1 py-0.5 transition-all duration-300 snap-start cursor-pointer capitalize ${
+                !selectedCategory 
+                  ? 'text-[#e61e25] dark:text-red-500 font-bold scale-105' 
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              {lang === 'fr' ? 'Tout' : 'All'}
+            </button>
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat.name;
+              return (
+                <button
+                  key={cat.id || cat.name}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat.name);
+                    setSelectedBrand(null);
+                    setSearchQuery('');
+                    navigate('/');
+                  }}
+                  className={`text-[12px] font-medium whitespace-nowrap px-1 py-0.5 transition-all duration-300 snap-start cursor-pointer capitalize ${
+                    isSelected 
+                      ? 'text-[#e61e25] dark:text-red-500 font-bold scale-105' 
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {t_smart ? t_smart(cat.name) : cat.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </header>
 
