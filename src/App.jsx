@@ -641,7 +641,7 @@ const Storefront = ({ viewMode = 'home' }) => {
 
     const getIcon = () => {
       if (viewMode === 'new-arrivals') return <Sparkles className="text-amber-400" size={20} />;
-      if (viewMode === 'deals') return <Zap className="text-eas-blue" size={20} />;
+      if (viewMode === 'deals') return <Zap className="text-[#e61e25] fill-[#e61e25]" size={20} />;
       return <Package className="text-slate-400" size={20} />;
     };
 
@@ -649,7 +649,7 @@ const Storefront = ({ viewMode = 'home' }) => {
       if (searchQuery) return searchQuery;
       if (activeCategory) return t_smart(activeCategory);
       if (selectedBrand) return t_smart(selectedBrand);
-      if (viewMode === 'deals') return t('deal_of_day');
+      if (viewMode === 'deals') return lang === 'fr' ? 'Super Offres' : 'Super Deals';
       if (viewMode === 'trending') return t('trending');
       if (viewMode === 'new-arrivals') return t('new_arrivals');
       if (viewMode === 'featured') return t('featured_items');

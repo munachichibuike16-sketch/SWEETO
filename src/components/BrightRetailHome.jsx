@@ -17,6 +17,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 const getImagesList = (prod) => {
   if (!prod) return [];
@@ -38,10 +39,11 @@ const getImagesList = (prod) => {
 };
 
 export default function BrightRetailHome({ onProductClick }) {
-  const { products, categories, settings, sections, openGlobalLightbox } = useStore();
+  const { products, categories, settings, sections, openGlobalLightbox, showToast } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { t, lang, t_smart } = useLanguage();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('new'); // 'new' or 'bestseller'
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -568,10 +570,9 @@ export default function BrightRetailHome({ onProductClick }) {
       </div>
     );
   };
-
   const renderDealOfDay = (section) => {
     const cat = section.category || 'All';
-    const maxProducts = section.maxProducts || 3;
+    const maxProducts = section.maxProducts || 4;
     const catDeals = cat !== 'All' 
       ? dailyDeals.filter(p => p.category === cat) 
       : dailyDeals;
@@ -579,42 +580,57 @@ export default function BrightRetailHome({ onProductClick }) {
     const displayDeals = catDeals.slice(0, maxProducts);
 
     return (
-      <div key="deal-of-the-day" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {renderBrightHeader(
-          section.title || 'Deal Of The Day',
-          section.subtitle || null,
-          section,
-          <div className="flex items-center gap-1.5 text-xs font-black text-white bg-slate-950 dark:bg-slate-800 px-3 py-1 rounded-lg">
-            <span className="text-[8px] text-slate-400 uppercase tracking-wider mr-1.5">Ends In :</span>
-            <span className="font-mono text-[#ffc200]">{String(timeLeft.hours).padStart(2, '0')}</span>
-            <span className="opacity-50">:</span>
-            <span className="font-mono text-[#ffc200]">{String(timeLeft.minutes).padStart(2, '0')}</span>
-            <span className="opacity-50">:</span>
-            <span className="font-mono text-[#ffc200]">{String(timeLeft.seconds).padStart(2, '0')}</span>
+      <div key="deal-of-the-day" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-4">
+        {/* AliExpress Style Super Deals Header Banner */}
+        <div className="bg-gradient-to-r from-[#e61e25] via-[#ff2a3b] to-[#ff5238] rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-red-500/10 border border-red-500/10">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/10 shadow-sm animate-pulse">
+              <Zap size={14} className="text-yellow-300 fill-yellow-300" />
+              <span className="font-extrabold text-xs uppercase tracking-widest text-white italic">SuperDeals</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] sm:text-xs font-black text-white/90 uppercase tracking-widest leading-none">Ends in:</span>
+              <div className="flex items-center gap-1">
+                <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-xs font-mono font-black px-2 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="text-white font-bold">:</span>
+                <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-xs font-mono font-black px-2 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="text-white font-bold">:</span>
+                <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-xs font-mono font-black px-2 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              </div>
+            </div>
           </div>
-        )}
+          
+          <button 
+            onClick={() => navigate('/deals')}
+            className="text-white hover:opacity-85 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-0.5 cursor-pointer self-start sm:self-auto transition-opacity"
+          >
+            View more <ChevronRight size={14} strokeWidth={2.5} />
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Swipeable List on Mobile, Grid on Desktop */}
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-3 pt-1 snap-x snap-mandatory scroll-smooth lg:grid lg:grid-cols-4 lg:gap-6">
           {displayDeals.map(product => {
             const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : 25;
             
-            // Mock progress bar parameters
-            const hashId = String(product.id).charCodeAt(0) || 0;
-            const totalLimit = 15 + (hashId % 10);
-            const soldCount = Math.max(2, totalLimit - (product.stock || 8));
-            const progressPercent = Math.min(100, Math.round((soldCount / totalLimit) * 100));
+            const soldCount = product.sold_count || 0;
+            const stock = product.stock || 5;
+            const totalLimit = soldCount + stock;
+            const progressPercent = totalLimit > 0 ? Math.min(100, Math.round((soldCount / totalLimit) * 100)) : 0;
 
             return (
               <div 
                 key={product.id}
                 onClick={() => onProductClick(product)}
-                className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl p-4 sm:p-5 flex items-center gap-4 group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 transition-all duration-300"
+                className="bg-white dark:bg-[#0b1329] border border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-4 flex flex-col justify-between relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#e61e25]/30 dark:hover:border-[#e61e25]/30 transition-all duration-300 w-[180px] sm:w-[240px] shrink-0 lg:w-auto lg:shrink snap-start select-none"
               >
-                {/* Left Column Image */}
-                <div className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-slate-50 dark:bg-[#020617] rounded-xl p-2 shrink-0 relative">
-                  <span className="absolute top-1.5 left-1.5 bg-[#ec5b5b] text-white text-[7px] font-black px-1 py-0.5 rounded-sm z-10 uppercase">
+                {/* Image Area */}
+                <div className="w-full aspect-square bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center p-3 mb-4 relative overflow-hidden border border-slate-100/50 dark:border-slate-800/20 group-hover:scale-[1.01] transition-transform">
+                  <span className="absolute top-2.5 left-2.5 bg-[#e61e25] text-white text-[9px] font-black px-2 py-0.5 rounded-lg z-10 shadow-sm uppercase tracking-wider scale-90 sm:scale-100">
                     -{discount}%
                   </span>
+                  
                   <img 
                     src={product.image_url || product.image || '/hero-banner.png'} 
                     alt={product.name} 
@@ -622,55 +638,48 @@ export default function BrightRetailHome({ onProductClick }) {
                   />
                 </div>
 
-                {/* Right Column Content */}
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate uppercase">
+                {/* Info & Details */}
+                <div className="space-y-3">
+                  <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-1 uppercase tracking-tight leading-tight">
                     {product.name}
                   </h4>
 
-                  {/* Ratings */}
-                  <div className="flex items-center gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        size={9} 
-                        className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
-                      />
-                    ))}
-                  </div>
-
                   {/* Prices */}
-                  <div className="flex items-baseline gap-2 pt-0.5">
-                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
-                      {product.price.toLocaleString()} <span className="text-[9px]">{settings.currency || 'FCFA'}</span>
+                  <div className="flex items-baseline flex-wrap gap-1.5">
+                    <span className="text-sm sm:text-base font-black text-[#e61e25] font-mono tracking-tight leading-none">
+                      {product.price?.toLocaleString()} <span className="text-[8px] sm:text-[9.5px] uppercase font-black italic">{settings.currency || 'FCFA'}</span>
                     </span>
                     {product.original_price && product.original_price > product.price && (
-                      <span className="text-[9px] font-bold text-slate-400 line-through font-mono">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 line-through font-mono leading-none">
                         {product.original_price.toLocaleString()}
                       </span>
                     )}
                   </div>
 
-                  {/* Sales Progress Indicator */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-[8px] font-black text-slate-450 uppercase tracking-wider leading-none">
-                      <span>Sold: {soldCount} / {totalLimit}</span>
-                      <span className="text-slate-600 dark:text-slate-350">{progressPercent}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden">
+                  {/* Urgency Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-[#ffc200] rounded-full transition-all duration-500" 
+                        className="h-full bg-gradient-to-r from-red-500 to-[#e61e25] rounded-full" 
                         style={{ width: `${progressPercent}%` }}
                       />
                     </div>
+                    <div className="flex justify-between items-center text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
+                      <span>{progressPercent}% claimed</span>
+                      <span className="text-[#e61e25] font-black">{stock} left</span>
+                    </div>
                   </div>
 
-                  {/* Action Button */}
+                  {/* AliExpress Style Buy now overlay button */}
                   <button 
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="w-full py-1.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-md transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(product);
+                      showToast("Added to cart! 🛒", "success");
+                    }}
+                    className="w-full py-2 bg-gradient-to-r from-[#e61e25] to-[#ff4f56] hover:brightness-110 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all shadow-md shadow-red-500/10 active:scale-95 cursor-pointer mt-1"
                   >
-                    Add To Cart
+                    Buy now
                   </button>
                 </div>
               </div>

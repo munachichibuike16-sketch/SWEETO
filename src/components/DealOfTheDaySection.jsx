@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Play, ChevronRight, ShoppingBag } from 'lucide-react';
+import { Zap, Play, ChevronRight, ShoppingBag, Star, ShoppingCart } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
@@ -11,11 +11,31 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick }) => {
   const navigate = useNavigate();
-  const { cartCount } = useCart();
-  const { videoAds } = useStore();
-  const { t } = useLanguage();
+  const { cartCount, addToCart } = useCart();
+  const { videoAds, settings, showToast } = useStore();
+  const { t, lang } = useLanguage();
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   
+  // Time remaining countdown for Deal of the Day
+  const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 22, seconds: 45 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        } else if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        } else if (prev.hours > 0) {
+          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        } else {
+          return { hours: 23, minutes: 59, seconds: 59 }; // reset loop
+        }
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const selectedAd = videoAdId && videoAdId !== 'All'
     ? videoAds.find(ad => String(ad.id) === String(videoAdId))
     : null;
@@ -43,12 +63,33 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
         {/* Left Column: Products Grid (3/5 on LG/XL) */}
         <div className="lg:col-span-3 bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative group/deals">
-          <MiniSectionHeader 
-            title={t('daily_deals')} 
-            subtitle={t('exclusive_daily_discounts') || "Exclusive Daily Discounts"} 
-            style={headerStyle || 'gradient'}
-            onViewAll={() => navigate('/deals')}
-          />
+          {/* AliExpress Style Super Deals Header Banner */}
+          <div className="bg-gradient-to-r from-[#e61e25] via-[#ff2a3b] to-[#ff5238] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-white/10 mb-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10 shadow-sm animate-pulse">
+                <Zap size={13} className="text-yellow-300 fill-yellow-300" />
+                <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-widest text-white italic">SuperDeals</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] sm:text-xs font-black text-white/90 uppercase tracking-widest leading-none">Ends in:</span>
+                <div className="flex items-center gap-1">
+                  <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="text-white font-bold text-xs">:</span>
+                  <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="text-white font-bold text-xs">:</span>
+                  <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => navigate('/deals')}
+              className="text-white hover:opacity-85 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-0.5 cursor-pointer self-start sm:self-auto transition-opacity"
+            >
+              View more <ChevronRight size={12} strokeWidth={2.5} />
+            </button>
+          </div>
           
           <div className="relative mt-2 flex-1 flex flex-col justify-center">
             {/* Slide Buttons */}
@@ -59,7 +100,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                     const el = document.getElementById('deals-carousel');
                     el.scrollBy({ left: -el.clientWidth, behavior: 'smooth' });
                   }}
-                  className="absolute -left-2 sm:-left-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-md shadow-lg text-slate-700 dark:text-slate-300 hover:bg-eas-blue hover:text-white transition-all duration-300 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/50 cursor-pointer shadow-black/5"
+                  className="absolute -left-2 sm:-left-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-md shadow-lg text-slate-700 dark:text-slate-300 hover:bg-[#e61e25] hover:text-white transition-all duration-300 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/50 cursor-pointer shadow-black/5"
                 >
                   <ChevronRight className="rotate-180 w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
                 </button>
@@ -68,7 +109,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                     const el = document.getElementById('deals-carousel');
                     el.scrollBy({ left: el.clientWidth, behavior: 'smooth' });
                   }}
-                  className="absolute -right-2 sm:-right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-md shadow-lg text-slate-700 dark:text-slate-300 hover:bg-eas-blue hover:text-white transition-all duration-300 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/50 cursor-pointer shadow-black/5"
+                  className="absolute -right-2 sm:-right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-md shadow-lg text-slate-700 dark:text-slate-300 hover:bg-[#e61e25] hover:text-white transition-all duration-300 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/50 cursor-pointer shadow-black/5"
                 >
                   <ChevronRight className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" />
                 </button>
@@ -79,19 +120,104 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               id="deals-carousel"
               className="flex overflow-x-auto gap-3 md:gap-6 no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
             >
-              {products.map((product, idx) => (
-                <div 
-                  key={product.id} 
-                  className="min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)] snap-start relative"
-                >
-                  <ProductCard 
-                    product={product} 
-                    index={idx} 
-                    onProductClick={onProductClick} 
-                    isDailyDeal={true}
-                  />
-                </div>
-              ))}
+              {products.map((product, idx) => {
+                const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : (product.discount || 25);
+                const soldCount = product.sold_count || 0;
+                const stock = product.stock || 5;
+                const totalLimit = soldCount + stock;
+                const progressPercent = totalLimit > 0 ? Math.min(100, Math.round((soldCount / totalLimit) * 100)) : 0;
+                
+                const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
+                const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : null;
+
+                return (
+                  <div 
+                    key={product.id} 
+                    className="min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)] snap-start relative h-full animate-fadeIn"
+                  >
+                    <div 
+                      onClick={() => onProductClick(product)}
+                      className="bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-4 flex flex-col justify-between relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#e61e25]/30 dark:hover:border-[#e61e25]/30 transition-all duration-300 select-none h-full"
+                    >
+                      {/* Image Area */}
+                      <div className="w-full aspect-square bg-slate-50 dark:bg-slate-900/40 rounded-2xl flex items-center justify-center p-3 mb-4 relative overflow-hidden border border-slate-100/50 dark:border-slate-800/20 group-hover:scale-[1.01] transition-transform">
+                        {discount > 0 && (
+                          <span className="absolute top-2.5 left-2.5 bg-[#e61e25] text-white text-[9px] font-black px-2 py-0.5 rounded-lg z-10 shadow-sm uppercase tracking-wider scale-90 sm:scale-100">
+                            -{discount}%
+                          </span>
+                        )}
+                        
+                        <img 
+                          src={product.image_url || product.image || '/hero-banner.png'} 
+                          alt={product.name} 
+                          onError={(e) => {
+                            e.target.onerror = null; 
+                            e.target.src = '/hero-banner.png';
+                          }}
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Info & Details */}
+                      <div className="space-y-3 flex-1 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-1 uppercase tracking-tight leading-tight">
+                            {product.name}
+                          </h4>
+
+                          {/* Rating if any */}
+                          {averageRating && (
+                            <div className="flex items-center gap-1 text-[9px] text-amber-500 font-bold">
+                              <Star size={10} fill="currentColor" />
+                              <span>{averageRating}</span>
+                            </div>
+                          )}
+
+                          {/* Prices */}
+                          <div className="flex items-baseline flex-wrap gap-1.5">
+                            <span className="text-sm sm:text-base font-mono font-black text-[#e61e25] tracking-tight leading-none">
+                              {product.price?.toLocaleString()} <span className="text-[8px] sm:text-[9px] uppercase font-black italic">{settings?.currency || 'FCFA'}</span>
+                            </span>
+                            {product.original_price && product.original_price > product.price && (
+                              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 line-through font-mono leading-none">
+                                {product.original_price.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          {/* Urgency Progress Bar */}
+                          <div className="space-y-1.5">
+                            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-red-500 to-[#e61e25] rounded-full" 
+                                style={{ width: `${progressPercent}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between items-center text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
+                              <span>{progressPercent}% claimed</span>
+                              <span className="text-[#e61e25] font-black">{stock} left</span>
+                            </div>
+                          </div>
+
+                          {/* AliExpress Style Buy now button */}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product);
+                              showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
+                            }}
+                            className="w-full py-2 bg-gradient-to-r from-[#e61e25] to-[#ff4f56] hover:brightness-110 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all shadow-md shadow-red-500/10 active:scale-95 cursor-pointer mt-1"
+                          >
+                            {lang === 'fr' ? 'Acheter' : 'Buy now'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
