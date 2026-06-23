@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -29,7 +29,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const { categoryName } = useParams();
   const isWishlistPage = location.pathname === '/wishlist';
   const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
-  const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
+  const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/settings';
   
   const activeCategoryName = categoryName ? decodeURIComponent(categoryName) : selectedCategory;
   const activeCat = categories.find(c => c.name?.toLowerCase() === activeCategoryName?.toLowerCase());
@@ -616,6 +616,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 </motion.div>
               )}
 
+              {/* Settings Icon */}
+              <motion.button 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                onClick={() => navigate('/settings')}
+                className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
+                title={t('settings') || 'Settings'}
+              >
+                <Settings size={20} />
+              </motion.button>
+
               {/* Notifications */}
               <div className="relative" ref={notifRef}>
                 <motion.button 
@@ -658,8 +669,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </span>
             </div>
  
-            {/* Action Icons: Only Notification bell */}
+            {/* Action Icons: Notification bell & Settings */}
             <div className="flex items-center gap-1">
+              {/* Settings gear */}
+              <button 
+                onClick={() => navigate('/settings')} 
+                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
+                title={t('settings') || 'Settings'}
+              >
+                <Settings size={22} strokeWidth={1.5} />
+              </button>
+
               {/* Notifications bell */}
               <button 
                 onClick={() => navigate('/notifications')} 

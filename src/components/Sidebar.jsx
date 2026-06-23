@@ -429,7 +429,8 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       { name: t('luxury_collection') || 'Shop', onClick: () => { onCategorySelect(null); navigate('/'); onClose(); } },
                       { name: t('corporate_location') || 'Our Store', onClick: () => { navigate('/visit'); onClose(); } },
                       { name: t('curated_wishlist') || 'Wishlist', onClick: () => { navigate('/wishlist'); onClose(); } },
-                      { name: t('global_account') || 'Account', onClick: () => { navigate('/login'); onClose(); } }
+                      { name: t('global_account') || 'Account', onClick: () => { navigate('/login'); onClose(); } },
+                      { name: t('settings') || 'Settings', onClick: () => { navigate('/settings'); onClose(); } }
                     ].map((item, i) => (
                       <div key={i} className="flex items-stretch justify-between bg-white dark:bg-slate-900 min-h-[52px]">
                         <button
