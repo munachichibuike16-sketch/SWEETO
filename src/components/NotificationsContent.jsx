@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
 
 const NotificationsContent = ({ onProductClick }) => {
   const navigate = useNavigate();
-  const { products, settings, showToast } = useStore();
+  const { products = [], settings, showToast } = useStore();
   const { lang, t } = useLanguage();
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [categoryFilter, setCategoryFilter] = useState('all'); // all, orders, promos, security
@@ -55,10 +55,14 @@ const NotificationsContent = ({ onProductClick }) => {
 
   // Fetch real-time orders linked to the logged-in user
   useEffect(() => {
-    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
-    if (session) {
-      setCurrentUser(session);
-      fetchUserOrders(session);
+    try {
+      const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+      if (session) {
+        setCurrentUser(session);
+        fetchUserOrders(session);
+      }
+    } catch (e) {
+      console.warn('Failed to parse session:', e);
     }
   }, []);
 
@@ -110,13 +114,21 @@ const NotificationsContent = ({ onProductClick }) => {
   };
   
   const [readNotifs, setReadNotifs] = useState(() => {
-    const saved = localStorage.getItem('read_notifications_timed');
-    return saved ? JSON.parse(saved) : {};
+    try {
+      const saved = localStorage.getItem('read_notifications_timed');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
   });
 
   const [deletedNotifs, setDeletedNotifs] = useState(() => {
-    const saved = localStorage.getItem('deleted_notifications');
-    return saved ? JSON.parse(saved) : {};
+    try {
+      const saved = localStorage.getItem('deleted_notifications');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
   });
 
   // Tick every 10 seconds to force-refresh the list for vanishing notifications
@@ -168,7 +180,10 @@ const NotificationsContent = ({ onProductClick }) => {
     } catch (e) {}
 
     const firstItemName = orderItems[0]?.name || '';
-    const product = products.find(p => p.name.toLowerCase().includes(firstItemName.toLowerCase())) || products[0];
+    const foundProduct = firstItemName 
+      ? (products || []).find(p => (p.name || '').toLowerCase().includes(firstItemName.toLowerCase())) 
+      : null;
+    const product = foundProduct || (products || [])[0] || null;
 
     const stage = order.tracking_stage || 'assigned';
     const status = order.status || 'pending';
@@ -231,7 +246,7 @@ const NotificationsContent = ({ onProductClick }) => {
     const seenIds = new Set();
 
     // Source 1: Products flagged as new arrivals in the database (same source as Header dropdown)
-    const newArrivalProducts = products.filter(p => p.is_new_arrival);
+    const newArrivalProducts = (products || []).filter(p => p.is_new_arrival);
     newArrivalProducts.forEach(p => {
       const id = `new-product-${p.id}`;
       if (seenIds.has(id)) return;
@@ -260,7 +275,7 @@ const NotificationsContent = ({ onProductClick }) => {
       stored.forEach(n => {
         if (seenIds.has(n.id)) return;
         seenIds.add(n.id);
-        const product = products.find(p => p.id === n.productId) || null;
+        const product = (products || []).find(p => p.id === n.productId) || null;
         notifs.push({
           id: n.id,
           type: n.type || 'promo',
@@ -331,8 +346,11 @@ const NotificationsContent = ({ onProductClick }) => {
       setReadNotifs(updated);
       localStorage.setItem('read_notifications_timed', JSON.stringify(updated));
       
-      const legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
-      if (!legacy.includes(id)) {
+      let legacy = [];
+      try {
+        legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+      } catch (e) {}
+      if (Array.isArray(legacy) && !legacy.includes(id)) {
         legacy.push(id);
         localStorage.setItem('read_notifications', JSON.stringify(legacy));
       }
@@ -341,7 +359,11 @@ const NotificationsContent = ({ onProductClick }) => {
 
   const handleMarkAllRead = () => {
     const updated = { ...readNotifs };
-    const legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+    let legacy = [];
+    try {
+      legacy = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+    } catch (e) {}
+    if (!Array.isArray(legacy)) legacy = [];
     const now = Date.now();
     filteredNotifs.forEach(n => {
       if (!updated[n.id]) {
@@ -513,9 +535,9 @@ const NotificationsContent = ({ onProductClick }) => {
 
           {/* Right Price & Actions */}
           <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
-            {notif.product && (
+            {notif.product && notif.product.price !== undefined && notif.product.price !== null && (
               <span className={`text-[13px] font-black sm:mb-2 ${notif.category === 'promos' ? 'text-amber-500 dark:text-amber-400' : 'text-eas-blue dark:text-blue-400'}`}>
-                {notif.product.price.toLocaleString()} {settings?.currency || 'FCFA'}
+                {(Number(notif.product.price) || 0).toLocaleString()} {settings?.currency || 'FCFA'}
               </span>
             )}
 
