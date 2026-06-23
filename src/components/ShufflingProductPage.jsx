@@ -99,112 +99,93 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
         <span className="text-[10px] uppercase tracking-widest font-black">{isFr ? 'Retour' : 'Back'}</span>
       </button>
 
-      {/* Dynamic Header / Dashboard */}
-      <div className="mb-6 md:mb-10 bg-white/75 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-100 dark:border-slate-800/60 p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] shadow-xl relative overflow-hidden transition-all duration-300 mx-3 md:mx-0 w-[calc(100%-24px)] md:w-full">
-        
-        {/* Progress Countdown Bar */}
-        {isPlaying && !isHovered && (
-          <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800/40">
-            <motion.div 
-              initial={{ width: '100%' }}
-              animate={{ width: `${(countdown / speed) * 100}%` }}
-              transition={{ duration: 1, ease: 'linear' }}
-              className="h-full bg-blue-600 dark:bg-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.5)]"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div>
-            {/* Live Indicator */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isPlaying && !isHovered ? 'bg-red-500' : 'bg-amber-500'}`}></span>
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isPlaying && !isHovered ? 'bg-red-600' : 'bg-amber-600'}`}></span>
-              </span>
-              <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                {isPlaying 
-                  ? (isHovered ? (isFr ? 'MÉLANGE EN PAUSE (SURVOL)' : 'MIX PAUSED (HOVER)') : (isFr ? 'MÉLANGE EN DIRECT' : 'LIVE FEED ACTIVE'))
-                  : (isFr ? 'MÉLANGE EN PAUSE' : 'MIX PAUSED')}
-              </span>
-            </div>
-
-            {/* Title & Subtitle */}
-            <h1 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-2.5">
-              {viewMode === 'trending' ? (
-                <Sparkles className="text-blue-600 dark:text-blue-400 w-6 h-6 md:w-10 md:h-10" />
-              ) : (
-                <TrendingUp className="text-blue-600 dark:text-blue-400 w-6 h-6 md:w-10 md:h-10" />
-              )}
-              {title}
-            </h1>
-            <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 md:mt-2">
-              {subtitle}
-            </p>
-          </div>
-
-          {/* Interactive Controls */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Play/Pause Button */}
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className={`px-4 py-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all active:scale-95 cursor-pointer ${
-                isPlaying
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent hover:bg-slate-800'
-                  : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'
-              }`}
-            >
-              {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-              <span>{isPlaying ? (isFr ? 'Pause' : 'Pause') : (isFr ? 'Activer' : 'Play')}</span>
-            </button>
-
-            {/* Manual Shuffle */}
-            <button
-              onClick={handleManualShuffle}
-              disabled={isRotating}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl flex items-center gap-2 text-xs font-bold transition-all active:scale-95 shadow-md shadow-blue-500/10 cursor-pointer"
-            >
-              <RefreshCw size={14} className={isRotating ? 'animate-spin' : ''} />
-              <span>{isFr ? 'Mélanger' : 'Shuffle'}</span>
-            </button>
-
-            {/* Speed Badges */}
-            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200/40 dark:border-slate-800">
-              <span className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 px-2">
-                {isFr ? 'VITESSE' : 'INTERVAL'}
-              </span>
-              {[
-                { label: '5s', value: 5 },
-                { label: '10s', value: 10 },
-                { label: '20s', value: 20 }
-              ].map((item) => (
-                <button
-                  key={item.value}
-                  onClick={() => setSpeed(item.value)}
-                  className={`px-2.5 py-1 text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${
-                    speed === item.value
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/60'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* AliExpress-Style Hero Banner */}
+      <div className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black mb-4">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=1000" 
+            alt={title} 
+            className="w-full h-full object-cover opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
         </div>
 
-        {/* Info Tip (Only shown when playing) */}
-        {isPlaying && (
-          <div className="mt-4 flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-900/30 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/40">
-            <Info size={12} className="text-blue-500 shrink-0" />
-            <span>
-              {isFr 
-                ? "Le mélange s'arrête automatiquement lorsque vous passez votre souris ou restez appuyé sur un produit pour vous permettre de naviguer sereinement." 
-                : "Shuffling pauses automatically when hovering over any card so you can browse without the grid shifting."}
-            </span>
+        {/* Banner Text Overlay */}
+        <div className="relative z-10 pl-6 md:pl-12 flex flex-col items-start gap-1">
+          {/* Angled "Viva" Badge */}
+          <div className="bg-[#00f2fe] text-slate-950 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded uppercase tracking-wider transform -rotate-12 select-none shadow-sm mb-1">
+            Viva
           </div>
-        )}
+          {/* Main Title */}
+          <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter drop-shadow-md leading-none">
+            {title} finds
+          </h1>
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-300 uppercase tracking-widest mt-1">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+
+      {/* Compact Live Mix Control Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm mb-6 mx-3 md:mx-0 w-[calc(100%-24px)] md:w-full">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isPlaying && !isHovered ? 'bg-red-500' : 'bg-amber-500'}`}></span>
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${isPlaying && !isHovered ? 'bg-red-600' : 'bg-amber-600'}`}></span>
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            {isPlaying 
+              ? (isHovered ? (isFr ? 'MÉLANGE EN PAUSE (SURVOL)' : 'MIX PAUSED (HOVER)') : (isFr ? 'MÉLANGE EN DIRECT' : 'LIVE FEED ACTIVE'))
+              : (isFr ? 'MÉLANGE EN PAUSE' : 'MIX PAUSED')}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          {/* Play/Pause Button */}
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 text-[11px] font-extrabold transition-all active:scale-95 cursor-pointer ${
+              isPlaying
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent hover:bg-slate-850'
+                : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+            <span>{isPlaying ? (isFr ? 'Pause' : 'Pause') : (isFr ? 'Activer' : 'Play')}</span>
+          </button>
+
+          {/* Shuffle Button */}
+          <button
+            onClick={handleManualShuffle}
+            disabled={isRotating}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg flex items-center gap-1.5 text-[11px] font-extrabold transition-all active:scale-95 cursor-pointer"
+          >
+            <RefreshCw size={12} className={isRotating ? 'animate-spin' : ''} />
+            <span>{isFr ? 'Mélanger' : 'Shuffle'}</span>
+          </button>
+
+          {/* Speed badge selectors */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200/40 dark:border-slate-800">
+            {[
+              { label: '5s', value: 5 },
+              { label: '10s', value: 10 },
+              { label: '20s', value: 20 }
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setSpeed(item.value)}
+                className={`px-2 py-0.5 text-[10px] font-extrabold rounded transition-all cursor-pointer ${
+                  speed === item.value
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Grid container with hover listeners to pause countdown */}

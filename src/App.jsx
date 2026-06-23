@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams, useLocation } from 'react-router-dom';
-import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon } from 'lucide-react';
+import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -646,17 +646,10 @@ const Storefront = ({ viewMode = 'home' }) => {
     }
   };
 
-
-   const DiscoveryBar = () => {
-    if (['wishlist', 'visit', 'privacy', 'terms', 'security'].includes(viewMode)) return null;
+  const DiscoveryBar = () => {
+    if (['wishlist', 'visit', 'privacy', 'terms', 'security', 'deals'].includes(viewMode)) return null;
     if (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand) return null;
     if (activeCategory) return null; // CategoryLandingPage renders its own themed banner, deals, and pills.
-
-    const getIcon = () => {
-      if (viewMode === 'new-arrivals') return <Sparkles className="text-amber-400" size={20} />;
-      if (viewMode === 'deals') return <Zap className="text-[#e61e25] fill-[#e61e25]" size={20} />;
-      return <Package className="text-slate-400" size={20} />;
-    };
 
     const getTitle = () => {
       if (searchQuery) return searchQuery;
@@ -669,85 +662,83 @@ const Storefront = ({ viewMode = 'home' }) => {
       return t('discovery');
     };
 
+    const bannerImage = viewMode === 'new-arrivals' 
+      ? "https://images.unsplash.com/photo-1504707748692-419802cf939d?auto=format&fit=crop&q=80&w=1000"
+      : "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1000";
+
     return (
-      <div className="sticky top-[var(--header-height,96px)] z-[90] bg-white/80 dark:bg-slate-950/80 backdrop-blur-3xl border-b border-slate-100 dark:border-slate-800 py-3 md:py-6 mb-6 md:mb-12">
-        <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex flex-col gap-4 md:gap-8">
-          <div className="flex flex-col md:grid md:grid-cols-3 items-start md:items-center gap-4 md:gap-8">
-            {/* Left: Back Button & Mobile Sort */}
-            <div className="flex items-center justify-between w-full md:justify-start">
-               <button 
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory(null);
-                  setSelectedBrand(null);
-                  navigate(-1);
-                }}
-                className="flex items-center gap-2 font-black text-slate-900 dark:text-white hover:text-eas-blue transition-colors group"
-              >
-                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                <span className="text-[10px] uppercase tracking-widest font-black">{t('back') || 'Back'}</span>
-              </button>
+      <div className="w-full max-w-[1600px] mx-auto px-0 py-2 flex flex-col gap-4">
+        {/* Back Button */}
+        <div className="px-3 md:px-12">
+          <button 
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedCategory(null);
+              setSelectedBrand(null);
+              navigate(-1);
+            }}
+            className="flex items-center gap-2 font-black text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors mb-2 group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-[10px] uppercase tracking-widest font-black">{t('back') || 'Back'}</span>
+          </button>
+        </div>
 
-              {/* Mobile Sort By (visible on mobile only) */}
-              <div className="flex md:hidden items-center gap-2">
-                <select 
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1.5 text-[9px] font-black text-slate-600 dark:text-slate-400 outline-none uppercase tracking-wider"
-                >
-                   <option value="name_az">{t('name_az') || 'A-Z'}</option>
-                   <option value="price_low_high">{t('price_low_high') || 'Price: Low'}</option>
-                   <option value="price_high_low">{t('price_high_low') || 'Price: High'}</option>
-                   <option value="latest_arrivals">{t('latest_arrivals') || 'Latest'}</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* Center: Title */}
-            <div className="flex items-center justify-start md:justify-center gap-3 md:gap-4 w-full">
-              {getIcon()}
-              <h1 className="text-xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic drop-shadow-sm">{getTitle()}</h1>
-            </div>
-
-            {/* Right: Sort By (Desktop only) */}
-            <div className="hidden md:flex items-center justify-end gap-5">
-              <span className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">{t('sort_by') || 'Sort'}</span>
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-2xl px-6 py-3 text-[10px] font-black text-slate-600 dark:text-slate-400 outline-none focus:ring-4 focus:ring-eas-blue/5 appearance-none cursor-pointer pr-12 uppercase tracking-widest shadow-inner"
-              >
-                 <option value="name_az">{t('name_az')}</option>
-                 <option value="price_low_high">{t('price_low_high')}</option>
-                 <option value="price_high_low">{t('price_high_low')}</option>
-                 <option value="latest_arrivals">{t('latest_arrivals')}</option>
-              </select>
-            </div>
+        {/* Hero Banner (AliExpress Style) */}
+        <div className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={bannerImage} 
+              alt={getTitle()} 
+              className="w-full h-full object-cover opacity-80"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
           </div>
 
-          {/* Refinement Pills */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 pt-3 md:pt-4 border-t border-slate-50 dark:border-slate-900 w-full">
-            <div className="flex items-center gap-3 shrink-0">
-               <div className="w-1.5 h-1.5 rounded-full bg-eas-blue animate-pulse"></div>
-               <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">{t('refine_selection') || 'Refine Selection'}</span>
+          {/* Banner Text Overlay */}
+          <div className="relative z-10 pl-6 md:pl-12 flex flex-col items-start gap-1">
+            {/* Angled "Viva" Badge */}
+            <div className="bg-[#00f2fe] text-slate-950 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded uppercase tracking-wider transform -rotate-12 select-none shadow-sm mb-1">
+              Viva
             </div>
-            <div className="flex overflow-x-auto md:flex-wrap gap-2.5 w-full no-scrollbar pb-1 -mx-6 px-6 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-              {filterList.map(item => (
-                <button
-                  key={item}
-                  onClick={() => setActiveSubCategory(item)}
-                  className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 ${
-                    activeSubCategory === item
-                      ? 'bg-eas-blue text-white border-eas-blue shadow-xl shadow-eas-blue/30 scale-105'
-                      : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-200'
-                  }`}
-                >
-                  {item === 'All' ? t('all') : t_smart(item)}
-                </button>
-              ))}
-            </div>
+            {/* Main Title */}
+            <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter drop-shadow-md leading-none">
+              {getTitle()} finds
+            </h1>
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-305 uppercase tracking-widest mt-1">
+              Discover {getTitle()} collection today
+            </p>
           </div>
         </div>
+
+        {/* Category Filter Pills (AliExpress style) */}
+        {filterList.length > 1 && (
+          <div className="w-full flex gap-2.5 overflow-x-auto no-scrollbar py-1 px-3 md:px-0 select-none">
+            {filterList.map(item => {
+              const isSelected = activeSubCategory === item;
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setActiveSubCategory(item)}
+                  className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 ${
+                    isSelected
+                      ? 'bg-slate-950 text-white border-slate-950 dark:bg-white dark:text-slate-950 dark:border-white shadow-md'
+                      : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-450 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {item === 'All' ? (
+                    <span className="flex items-center gap-1">
+                      <Heart size={10} className="fill-[#ff3b30] text-[#ff3b30]" />
+                      {lang === 'fr' ? 'Tout' : 'All'}
+                    </span>
+                  ) : t_smart(item)}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   };
