@@ -141,10 +141,10 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
       <motion.div 
         whileHover={{ y: -4 }}
         onClick={handleCardClick}
-        className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 hover:shadow-none"
+        className="group relative flex flex-col h-full cursor-pointer w-full bg-white dark:bg-slate-900/40 rounded-[20px] shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-800/40 overflow-hidden"
       >
         {/* Image Container */}
-        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-900/20 mb-2 p-1.5">
+        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden bg-white dark:bg-slate-900">
           {/* Top-Left Elite Badge */}
           <div className="absolute top-2.5 left-2.5 z-10">
             <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
@@ -183,12 +183,12 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
               e.target.onerror = null; 
               e.target.src = '/hero-banner.png';
             }}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 rounded-2xl" 
+            className="w-[90%] h-[90%] object-contain transition-transform duration-500 group-hover:scale-105" 
           />
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 py-0.5 text-start">
+        <div className="flex flex-col flex-1 p-3.5 text-start">
           {/* Sold Count with Red Flame */}
           <div className="flex items-center gap-1 text-[11px] text-[#ff3b30] font-bold mb-1">
             <span>🔥</span>
@@ -228,8 +228,6 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
           <h3 className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug line-clamp-2 uppercase mb-1">
             {t_smart(product.name)}
           </h3>
-
-
         </div>
       </motion.div>
 
