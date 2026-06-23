@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, ArrowRight, Clock, CheckCheck, Filter, Sparkles, Zap, ChevronLeft, CheckSquare } from 'lucide-react';
+import { Bell, ArrowRight, Clock, CheckCheck, Filter, Sparkles, Zap, ChevronLeft, CheckSquare, Settings, Shield, Truck, Gift, X } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import SweetoLogo from './SweetoLogo';
@@ -16,6 +16,40 @@ const NotificationsContent = ({ onProductClick }) => {
   
   const [userOrders, setUserOrders] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [prefPromos, setPrefPromos] = useState(() => localStorage.getItem('pref_notif_promos') !== 'false');
+  const [prefOrders, setPrefOrders] = useState(() => localStorage.getItem('pref_notif_orders') !== 'false');
+  const [prefSystem, setPrefSystem] = useState(() => localStorage.getItem('pref_notif_system') !== 'false');
+  const [prefSound, setPrefSound] = useState(() => localStorage.getItem('pref_notif_sound') !== 'false');
+  const [prefVib, setPrefVib] = useState(() => localStorage.getItem('pref_notif_vib') !== 'false');
+
+  const savePreferences = (key, val, setter) => {
+    setter(val);
+    localStorage.setItem(key, String(val));
+    
+    // Simulate haptic feedback if enabled
+    if (prefVib && window.navigator.vibrate) {
+      window.navigator.vibrate(40);
+    }
+    // Simulate tone if enabled
+    if (prefSound) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    showToast(lang === 'fr' ? 'Préférences enregistrées ✓' : 'Preferences saved ✓', 'success');
+  };
 
 
 
@@ -262,6 +296,11 @@ const NotificationsContent = ({ onProductClick }) => {
   const allNotifications = [...orderUpdates, ...promosAndStock, ...securityUpdates]
     .filter(n => !n.isDeleted)
     .filter(n => {
+      // Filter out disabled notification categories based on user preferences
+      if (n.category === 'orders' && !prefOrders) return false;
+      if (n.category === 'promos' && !prefPromos) return false;
+      if (n.category === 'security' && !prefSystem) return false;
+
       const readAt = readNotifs[n.id];
       if (readAt) {
         // Vanish read alerts after 10 minutes
@@ -543,143 +582,356 @@ const NotificationsContent = ({ onProductClick }) => {
   };
 
   return (
-    <div className="relative min-h-screen px-4 pt-0 pb-32 md:px-8 max-w-5xl mx-auto">
-      {/* Background Decorative Accents */}
-      <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
-      <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      
+      {/* 1. UP HEADER (Top Bar) - Sticky, fixed at top-0 */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 h-14 flex items-center px-4 justify-between shadow-sm">
+        {/* Left: Back Button */}
+        <button 
+          onClick={goBack} 
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors cursor-pointer animate-none"
+          aria-label="Back"
+        >
+          <ChevronLeft size={22} strokeWidth={2.5} />
+        </button>
 
-      {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
-      <div className="fixed z-30 left-0 right-0 bg-eas-light/95 dark:bg-eas-dark/95 backdrop-blur-md border-b border-eas-blue/10 py-4 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
-        <div className="max-w-5xl mx-auto flex flex-col gap-4 px-4 md:px-8">
-          
-          {/* Top Row: Back Button & Title */}
-          <div className="flex items-center justify-between w-full">
-            {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
-            <button 
-              onClick={goBack} 
-              className="active-tap group w-10 h-10 rounded-xl border border-eas-blue/20 dark:border-eas-blue/15 bg-eas-blue/10 dark:bg-eas-blue/20 flex items-center justify-center text-eas-blue dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:border-eas-blue/40 hover:shadow-[0_0_15px_rgba(0,82,255,0.25)] hover:-rotate-12 transition-all duration-300 flex-shrink-0 cursor-pointer"
-              aria-label="Retour"
+        {/* Center: Title */}
+        <h1 className="font-extrabold text-[15px] uppercase tracking-wide text-slate-805 dark:text-white">
+          {lang === 'fr' ? 'Centre de messages' : 'Message Center'}
+        </h1>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1.5">
+          {/* Mark all as read */}
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors cursor-pointer"
+              title={lang === 'fr' ? 'Tout marquer comme lu' : 'Mark all as read'}
             >
-              <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform duration-300"></i>
+              <CheckCheck size={18} />
             </button>
-
-            {/* Center Pill Badge */}
-            <div className="border border-eas-blue/20 bg-eas-blue/5 dark:bg-eas-blue/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(0,82,255,0.08)]">
-              <Bell className="w-4 h-4 text-eas-blue dark:text-blue-400" />
-              <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-eas-blue dark:text-blue-400">NOTIFICATIONS</span>
-            </div>
-
-            {/* Symmetric Spacer */}
-            <div className="w-10 h-10 flex-shrink-0"></div>
-          </div>
-
-          {/* Bottom Row: Read Status Filters and Mark All Read */}
-          <div className="flex items-center justify-between gap-4 px-1 w-full">
-            {/* Left Tabs */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all select-none ${
-                  filter === 'all'
-                    ? 'bg-white text-slate-950 shadow-sm border border-slate-150 dark:border-white/10'
-                    : 'text-slate-450 dark:text-slate-450 bg-slate-100 dark:bg-slate-900/40 border border-transparent'
-                }`}
-              >
-                {lang === 'fr' ? 'Tout' : 'All'}
-              </button>
-
-              <button
-                onClick={() => setFilter('unread')}
-                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 select-none ${
-                  filter === 'unread'
-                    ? 'bg-white text-slate-950 shadow-sm border border-slate-150 dark:border-white/10'
-                    : 'text-slate-450 dark:text-slate-450 bg-slate-100 dark:bg-slate-900/40 border border-transparent'
-                }`}
-              >
-                <span>{lang === 'fr' ? 'Non lus' : 'Unread'}</span>
-                {unreadCount > 0 && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                    filter === 'unread'
-                      ? 'bg-slate-950/10 text-slate-950 font-black'
-                      : 'bg-eas-blue/20 text-eas-blue dark:text-blue-400 font-black'
-                  }`}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Right Action Button */}
-            {filteredNotifs.length > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                disabled={unreadCount === 0}
-                className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider transition-colors bg-transparent border-none select-none ${
-                  unreadCount === 0
-                    ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50'
-                    : 'text-eas-blue dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 cursor-pointer'
-                }`}
-              >
-                <CheckSquare className="w-4 h-4" />
-                <span>{lang === 'fr' ? 'TOUT MARQUER COMME LU' : 'MARK ALL AS READ'}</span>
-              </button>
-            )}
-          </div>
+          )}
+          
+          {/* Settings gear */}
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors cursor-pointer"
+            title={lang === 'fr' ? 'Paramètres' : 'Settings'}
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </div>
 
-      {/* Spacer to push content down below the fixed sub-header */}
-      <div className="h-[128px] md:h-[136px] mb-8"></div>
+      {/* Main Content Area - padded to clear the sticky top-0 header (h-14) */}
+      <div className="max-w-xl mx-auto px-4 pt-18 pb-32">
 
-      {/* Swipeable Notifications Feed */}
-      <div className="space-y-6">
-        <AnimatePresence mode="popLayout">
-          {filteredNotifs.length > 0 ? (
-            <div className="space-y-8">
-              {/* Unread section */}
-              {unreadNotifs.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-450 dark:text-slate-500 px-1 mb-2">
-                    {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
-                  </h4>
-                  <div className="space-y-4">
-                    {unreadNotifs.map(renderNotificationCard)}
-                  </div>
-                </div>
-              )}
-
-              {/* Read section */}
-              {readNotifsList.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-450 dark:text-slate-550 px-1 mt-6 mb-2">
-                    {lang === 'fr' ? 'PLUS ANCIENS' : 'OLDER'}
-                  </h4>
-                  <div className="space-y-4">
-                    {readNotifsList.map(renderNotificationCard)}
-                  </div>
-                </div>
-              )}
+        {/* 2. CATEGORY FILTERS (Circular buttons) */}
+        <div className="grid grid-cols-3 gap-3 mb-6 mt-2">
+          {/* Logistics / Orders */}
+          <button
+            onClick={() => setCategoryFilter(categoryFilter === 'orders' ? 'all' : 'orders')}
+            className={`relative py-4 px-2 rounded-[24px] flex flex-col items-center justify-center transition-all duration-300 bg-white dark:bg-slate-900 border cursor-pointer ${
+              categoryFilter === 'orders'
+                ? 'border-blue-500 shadow-md scale-102 bg-blue-50/5 dark:bg-blue-950/10'
+                : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-white mb-2 shadow-md shadow-blue-500/20">
+              <Truck size={18} />
             </div>
-          ) : (
-            /* Watermarked Empty state */
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-24 bg-slate-50/50 dark:bg-slate-900/20 rounded-[2.5rem] border border-dashed border-slate-150 dark:border-slate-800 flex flex-col items-center justify-center p-8"
+            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 text-center truncate w-full select-none">
+              {lang === 'fr' ? 'Logistique' : 'Logistics'}
+            </span>
+            {ordersUnread > 0 && (
+              <span className="absolute top-2.5 right-2.5 bg-[#ff3b30] text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white dark:border-slate-900 select-none">
+                {ordersUnread}
+              </span>
+            )}
+          </button>
+
+          {/* Promotions / Offers */}
+          <button
+            onClick={() => setCategoryFilter(categoryFilter === 'promos' ? 'all' : 'promos')}
+            className={`relative py-4 px-2 rounded-[24px] flex flex-col items-center justify-center transition-all duration-300 bg-white dark:bg-slate-900 border cursor-pointer ${
+              categoryFilter === 'promos'
+                ? 'border-amber-500 shadow-md scale-102 bg-amber-50/5 dark:bg-amber-950/10'
+                : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="w-11 h-11 rounded-full bg-amber-500 flex items-center justify-center text-white mb-2 shadow-md shadow-amber-500/20">
+              <Gift size={18} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 text-center truncate w-full select-none">
+              {lang === 'fr' ? 'Promotions' : 'Promotions'}
+            </span>
+            {promosUnread > 0 && (
+              <span className="absolute top-2.5 right-2.5 bg-[#ff3b30] text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white dark:border-slate-900 select-none">
+                {promosUnread}
+              </span>
+            )}
+          </button>
+
+          {/* Security / System */}
+          <button
+            onClick={() => setCategoryFilter(categoryFilter === 'security' ? 'all' : 'security')}
+            className={`relative py-4 px-2 rounded-[24px] flex flex-col items-center justify-center transition-all duration-300 bg-white dark:bg-slate-900 border cursor-pointer ${
+              categoryFilter === 'security'
+                ? 'border-[#ff3b30] shadow-md scale-102 bg-red-50/5 dark:bg-red-950/10'
+                : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+            }`}
+          >
+            <div className="w-11 h-11 rounded-full bg-[#ff3b30] flex items-center justify-center text-white mb-2 shadow-md shadow-red-500/20">
+              <Shield size={18} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 text-center truncate w-full select-none">
+              {lang === 'fr' ? 'Système' : 'System'}
+            </span>
+            {securityUnread > 0 && (
+              <span className="absolute top-2.5 right-2.5 bg-[#ff3b30] text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white dark:border-slate-900 select-none">
+                {securityUnread}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* 3. INLINE SUB-TABS (All vs Unread selector & options) */}
+        <div className="flex items-center justify-between gap-4 px-1 mb-5">
+          <div className="flex items-center gap-1.5 bg-slate-150 dark:bg-slate-900/80 p-0.5 rounded-full">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all select-none cursor-pointer ${
+                filter === 'all'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-450 dark:text-slate-500 hover:text-slate-700'
+              }`}
             >
-              <div className="w-16 h-16 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 shadow-md mb-6 animate-bounce">
-                <Bell size={28} />
-              </div>
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase italic tracking-tighter mb-2">
-                {lang === 'fr' ? 'Boîte de réception vide' : 'All caught up!'}
-              </h3>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic max-w-xs leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
-                « Elite Local Commerce • Managed by @sweeto »
-              </p>
-            </motion.div>
+              {lang === 'fr' ? 'Tout' : 'All'}
+            </button>
+
+            <button
+              onClick={() => setFilter('unread')}
+              className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 select-none cursor-pointer ${
+                filter === 'unread'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-450 dark:text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <span>{lang === 'fr' ? 'Non lus' : 'Unread'}</span>
+              {unreadCount > 0 && (
+                <span className="bg-[#ff3b30] text-white font-extrabold text-[8px] px-1.5 py-0.5 rounded-full leading-none select-none">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Inbox History Clean button */}
+          {filteredNotifs.length > 0 && (
+            <button
+              onClick={handleClearHistory}
+              className="text-[9px] font-black tracking-widest text-slate-400 hover:text-red-500 dark:text-slate-500 transition-colors uppercase select-none cursor-pointer"
+            >
+              {lang === 'fr' ? 'Effacer tout' : 'Clear all'}
+            </button>
           )}
-        </AnimatePresence>
+        </div>
+
+        {/* 4. NOTIFICATIONS LIST */}
+        <div className="space-y-4">
+          <AnimatePresence mode="popLayout">
+            {filteredNotifs.length > 0 ? (
+              <div className="space-y-6">
+                {/* Unread section */}
+                {unreadNotifs.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-550 px-1">
+                      {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
+                    </h4>
+                    <div className="space-y-3.5">
+                      {unreadNotifs.map(renderNotificationCard)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Read section */}
+                {readNotifsList.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-550 px-1 mt-4">
+                      {lang === 'fr' ? 'PLUS ANCIENS' : 'OLDER'}
+                    </h4>
+                    <div className="space-y-3.5">
+                      {readNotifsList.map(renderNotificationCard)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Watermarked Empty state */
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-20 bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800/80 flex flex-col items-center justify-center p-6"
+              >
+                <div className="w-14 h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 shadow-sm mb-5">
+                  <Bell size={24} />
+                </div>
+                <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
+                  {lang === 'fr' ? 'Aucune notification' : 'No notifications'}
+                </h3>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-550 mt-1 max-w-[200px] leading-relaxed">
+                  {lang === 'fr' 
+                    ? 'Vous serez averti ici lorsqu\'il y aura des mises à jour.' 
+                    : 'We will notify you here when updates are available.'}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
       </div>
+
+      {/* 5. SETTINGS DRAWER */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSettingsOpen(false)}
+              className="fixed inset-0 bg-black/60 z-[998] cursor-pointer"
+            />
+
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-slate-900 rounded-t-[32px] border-t border-slate-100 dark:border-slate-800 p-6 z-[999] shadow-2xl pb-10"
+            >
+              <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-5" />
+
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-[15px] font-black uppercase tracking-wide text-slate-900 dark:text-white">
+                  {lang === 'fr' ? 'Paramètres Notifications' : 'Notification Settings'}
+                </h3>
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-450 dark:text-slate-400 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                {/* Logistics */}
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="pr-4">
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
+                      {lang === 'fr' ? 'Suivi de commande' : 'Order Tracking'}
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-normal">
+                      {lang === 'fr' ? 'Alertes de livraison et de préparation' : 'Shipment updates & preparation details'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => savePreferences('pref_notif_orders', !prefOrders, setPrefOrders)}
+                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefOrders ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    }`}
+                  >
+                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                  </button>
+                </div>
+
+                {/* Promotions */}
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="pr-4">
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
+                      {lang === 'fr' ? 'Offres & Promotions' : 'Promotions & Offers'}
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-normal">
+                      {lang === 'fr' ? 'Nouveaux arrivages, coupons, baisses de prix' : 'New arrivals, price drops, and store offers'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => savePreferences('pref_notif_promos', !prefPromos, setPrefPromos)}
+                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefPromos ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    }`}
+                  >
+                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                  </button>
+                </div>
+
+                {/* System */}
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="pr-4">
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
+                      {lang === 'fr' ? 'Alertes de sécurité' : 'Security Alerts'}
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-normal">
+                      {lang === 'fr' ? 'Sécurité de compte, modifications importantes' : 'Account security & critical system changes'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => savePreferences('pref_notif_system', !prefSystem, setPrefSystem)}
+                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefSystem ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    }`}
+                  >
+                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                  </button>
+                </div>
+
+                {/* Sound */}
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="pr-4">
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
+                      {lang === 'fr' ? 'Effets sonores' : 'App Sounds'}
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-normal">
+                      {lang === 'fr' ? 'Jouer un son lors des actions' : 'Play a subtle alert tone on operations'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => savePreferences('pref_notif_sound', !prefSound, setPrefSound)}
+                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefSound ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    }`}
+                  >
+                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                  </button>
+                </div>
+
+                {/* Vibration */}
+                <div className="flex items-center justify-between">
+                  <div className="pr-4">
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
+                      {lang === 'fr' ? 'Haptique (Vibration)' : 'Haptic Feedback'}
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-normal">
+                      {lang === 'fr' ? 'Simuler les retours haptiques' : 'Simulate physical device vibration on touch'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      savePreferences('pref_notif_vib', !prefVib, setPrefVib);
+                    }}
+                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefVib ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    }`}
+                  >
+                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </div>
   );

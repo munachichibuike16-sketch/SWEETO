@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, Package, ShoppingCart, User } from 'lucide-react';
+import { Home, ShoppingCart, User, Bell } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useStore } from '../contexts/StoreContext';
 
 export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   const { cartCount } = useCart();
   const { lang } = useLanguage();
+  const { products } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [bounce, setBounce] = useState(false);
@@ -15,8 +17,24 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   const currentPath = location.pathname;
   const isHome = currentPath === '/';
   const isShop = currentPath === '/products' || currentPath.startsWith('/category');
+  const isNotif = currentPath === '/notifications';
   const isCart = currentPath === '/checkout';
   const isProfile = ['/auth', '/login', '/register', '/settings'].includes(currentPath);
+
+  // Compute unread notification count
+  const unreadNotifCount = (() => {
+    try {
+      const readNotifs = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+      const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
+      const prodList = products || [];
+      return prodList.filter(p => p.is_new_arrival).filter(p => {
+        const id = `new-product-${p.id}`;
+        return !readNotifs.includes(id) && !readTimed[id];
+      }).length;
+    } catch (e) {
+      return (products || []).filter(p => p.is_new_arrival).length;
+    }
+  })();
 
   // Trigger bounce animation whenever cartCount changes
   useEffect(() => {
@@ -36,20 +54,12 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
     }
   };
 
-  const handleShopClick = () => {
-    if (setIsSidebarOpen && (currentPath === '/' || currentPath.startsWith('/category'))) {
-      setIsSidebarOpen(true);
-    } else {
-      navigate('/products');
-    }
-  };
 
   const handleCartClick = () => {
     if (isCart) {
-      // Already on cart/checkout page
       return;
     }
-    if (setIsCartOpen && (currentPath === '/' || currentPath.startsWith('/category') || currentPath === '/products' || isProfile)) {
+    if (setIsCartOpen && (currentPath === '/' || currentPath.startsWith('/category') || currentPath === '/products' || isProfile || isNotif)) {
       setIsCartOpen(true);
     } else {
       navigate('/checkout');
@@ -57,7 +67,7 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[90%] max-w-sm h-16 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl border border-slate-200/50 dark:border-eas-blue/15 rounded-3xl shadow-[0_20px_50px_rgba(0,82,255,0.05)] flex items-center justify-between px-6 overflow-hidden select-none">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[95%] max-w-md h-16 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl border border-slate-200/50 dark:border-eas-blue/15 rounded-3xl shadow-[0_20px_50px_rgba(0,82,255,0.05)] flex items-center justify-between px-5 overflow-hidden select-none">
       {/* Faint Watermark Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
         <span className="text-[2.2rem] font-black tracking-[0.2em] text-slate-900/5 dark:text-white/3 uppercase italic">
@@ -71,25 +81,32 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
         onClick={() => navigate('/')}
         className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
           isHome 
-            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-105 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
             : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
         }`}
       >
-        <Home size={18} strokeWidth={isHome ? 2.5 : 1.5} />
-        <span className="text-[8.5px] uppercase tracking-widest mt-1">Home</span>
+        <Home size={17} strokeWidth={isHome ? 2.5 : 1.5} />
+        <span className="text-[8px] uppercase tracking-widest mt-1">Home</span>
       </button>
 
-      {/* Shop tab */}
+
+
+      {/* Messages tab */}
       <button 
-        onClick={handleShopClick}
-        className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
-          isShop 
-            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+        onClick={() => navigate('/notifications')}
+        className={`relative flex flex-col items-center justify-center transition-all duration-300 z-10 ${
+          isNotif 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-105 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
             : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
         }`}
       >
-        <Package size={18} strokeWidth={isShop ? 2.5 : 1.5} />
-        <span className="text-[8.5px] uppercase tracking-widest mt-1">Shop</span>
+        <Bell size={17} strokeWidth={isNotif ? 2.5 : 1.5} />
+        {unreadNotifCount > 0 && (
+          <span className="absolute -top-1.5 -right-2 bg-[#ff3b30] text-white font-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-md leading-none">
+            {unreadNotifCount}
+          </span>
+        )}
+        <span className="text-[8px] uppercase tracking-widest mt-1">Messages</span>
       </button>
 
       {/* Cart tab */}
@@ -97,7 +114,7 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
         onClick={handleCartClick}
         className={`relative flex flex-col items-center justify-center transition-all duration-300 z-10 ${
           isCart 
-            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-105 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
             : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
         }`}
       >
@@ -105,14 +122,14 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
           animate={bounce ? { y: [0, -10, 0], scale: [1, 1.2, 1] } : {}}
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
-          <ShoppingCart size={18} strokeWidth={isCart ? 2.5 : 1.5} />
+          <ShoppingCart size={17} strokeWidth={isCart ? 2.5 : 1.5} />
         </motion.div>
         {cartCount > 0 && (
-          <span className="absolute -top-1.5 -right-2.5 bg-eas-blue text-white font-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-eas-blue/35 leading-none">
+          <span className="absolute -top-1.5 -right-2 bg-eas-blue text-white font-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-eas-blue/35 leading-none">
             {cartCount}
           </span>
         )}
-        <span className="text-[8.5px] uppercase tracking-widest mt-1">Cart</span>
+        <span className="text-[8px] uppercase tracking-widest mt-1">Cart</span>
       </button>
 
       {/* Profile tab */}
@@ -120,12 +137,12 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
         onClick={handleProfileClick}
         className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
           isProfile 
-            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-105 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
             : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
         }`}
       >
-        <User size={18} strokeWidth={isProfile ? 2.5 : 1.5} />
-        <span className="text-[8.5px] uppercase tracking-widest mt-1">Profile</span>
+        <User size={17} strokeWidth={isProfile ? 2.5 : 1.5} />
+        <span className="text-[8px] uppercase tracking-widest mt-1">Profile</span>
       </button>
     </div>
   );
