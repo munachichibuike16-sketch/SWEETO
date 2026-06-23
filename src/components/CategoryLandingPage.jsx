@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ChevronRight, Package, ShoppingCart, Heart } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
 
@@ -113,13 +113,13 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       {/* Daily Deals Section */}
       {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
         <div className="w-full flex flex-col bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
-          <div 
-            onClick={() => navigate('/deals')}
-            className="flex items-center gap-1 text-slate-900 dark:text-white font-extrabold text-sm sm:text-base uppercase tracking-tight mb-3 cursor-pointer group hover:text-[#ff3b30]"
+          <Link 
+            to="/deals"
+            className="flex items-center gap-1 text-slate-900 dark:text-white font-extrabold text-sm sm:text-base uppercase tracking-tight mb-3 cursor-pointer group hover:text-[#ff3b30] no-underline"
           >
             <span>Daily deals</span>
             <ChevronRight size={16} className="text-slate-400 group-hover:text-[#ff3b30] group-hover:translate-x-0.5 transition-transform" />
-          </div>
+          </Link>
 
           {/* Horizontally scrollable deals list */}
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1 snap-x snap-mandatory">
