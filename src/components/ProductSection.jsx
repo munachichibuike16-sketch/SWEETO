@@ -104,7 +104,7 @@ const ProductRow = ({ products, onProductClick }) => {
   };
 
   return (
-    <div className="relative group/row mb-8">
+    <div className="relative group/row mb-8 px-1 md:px-0">
       {products.length > 2 && (
         <>
           <button 
@@ -123,12 +123,12 @@ const ProductRow = ({ products, onProductClick }) => {
       )}
       <div 
         ref={scrollRef}
-        className="flex overflow-x-auto gap-3 sm:gap-8 no-scrollbar snap-x snap-mandatory scroll-smooth pb-4"
+        className="flex overflow-x-auto gap-1.5 sm:gap-8 no-scrollbar snap-x snap-mandatory scroll-smooth pb-4"
       >
         {products.map((product, idx) => (
           <div 
             key={`${product.id}-${idx}`} 
-            className="w-[calc(50%-6px)] min-w-[calc(50%-6px)] sm:w-[calc(50%-16px)] sm:min-w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)] lg:min-w-[calc(33.333%-22px)] xl:w-[calc(20%-26px)] xl:min-w-[calc(20%-26px)] shrink-0 snap-start"
+            className="w-[calc(50%-3px)] min-w-[calc(50%-3px)] sm:w-[calc(50%-16px)] sm:min-w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)] lg:min-w-[calc(33.333%-22px)] xl:w-[calc(20%-26px)] xl:min-w-[calc(20%-26px)] shrink-0 snap-start"
           >
             <ProductCard
               product={product}
@@ -234,22 +234,24 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
   const isCarousel = type !== 'category';
 
   return (
-    <section className="py-1 md:py-2 px-3 md:px-12">
+    <section className="py-1 md:py-2 px-0 md:px-12">
       {!hideHeader && (
-        <SectionHeader 
-          title={title} 
-          subtitle={subtitle} 
-          style={headerStyle || (hideBanner ? 'bold' : 'gradient')} 
-          viewAllLink={viewAllLink} 
-          bannerImage={bannerImage} 
-          onViewAllClick={onViewAllClick}
-        />
+        <div className="px-3 md:px-0">
+          <SectionHeader 
+            title={title} 
+            subtitle={subtitle} 
+            style={headerStyle || (hideBanner ? 'bold' : 'gradient')} 
+            viewAllLink={viewAllLink} 
+            bannerImage={bannerImage} 
+            onViewAllClick={onViewAllClick}
+          />
+        </div>
       )}
 
       {isCarousel ? (
         <ProductRow products={filteredProducts} onProductClick={onProductClick} />
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-8 w-full">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-8 px-1 md:px-0 w-full">
           {filteredProducts.map((product, idx) => (
             <ProductCard
               key={`${product.id}-${idx}`}

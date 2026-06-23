@@ -89,18 +89,18 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
     : (isFr ? 'Sélectionné spécialement selon vos préférences' : 'Selected especially based on your preferences');
 
   return (
-    <div className="px-3 md:px-12 py-2">
+    <div className="px-0 md:px-12 py-2">
       {/* Back Button */}
       <button 
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 font-black text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors mb-4 md:mb-6 group"
+        className="flex items-center gap-2 font-black text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors mb-4 md:mb-6 group mx-3 md:mx-0"
       >
         <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
         <span className="text-[10px] uppercase tracking-widest font-black">{isFr ? 'Retour' : 'Back'}</span>
       </button>
 
       {/* Dynamic Header / Dashboard */}
-      <div className="mb-6 md:mb-10 bg-white/75 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-100 dark:border-slate-800/60 p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] shadow-xl relative overflow-hidden transition-all duration-300">
+      <div className="mb-6 md:mb-10 bg-white/75 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-100 dark:border-slate-800/60 p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] shadow-xl relative overflow-hidden transition-all duration-300 mx-3 md:mx-0 w-[calc(100%-24px)] md:w-full">
         
         {/* Progress Countdown Bar */}
         {isPlaying && !isHovered && (
@@ -211,7 +211,7 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
       <div 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="w-full relative"
+        className="w-full relative px-1 md:px-0"
       >
         {shuffledList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -223,7 +223,7 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
         ) : (
           <motion.div 
             layout 
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-8 w-full"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-8 w-full"
           >
             <AnimatePresence mode="popLayout">
               {shuffledList.map((product, idx) => (

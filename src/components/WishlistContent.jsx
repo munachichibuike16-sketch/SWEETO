@@ -50,8 +50,8 @@ const WishlistContent = ({ onProductClick }) => {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-3 sm:px-6 md:px-12 py-6 sm:py-12 overflow-hidden">
-      <div className="relative mb-10 sm:mb-20">
+    <div className="max-w-[1400px] mx-auto px-0 md:px-12 py-6 sm:py-12 overflow-hidden">
+      <div className="relative mb-10 sm:mb-20 px-3 md:px-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 pb-6 sm:pb-10 border-b border-slate-100 dark:border-slate-900">
           <div className="flex items-center gap-3 sm:gap-6 min-w-0">
             <motion.div 
@@ -85,7 +85,7 @@ const WishlistContent = ({ onProductClick }) => {
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#ff3b30]/5 rounded-full blur-3xl -z-10" />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-x-8 sm:gap-y-16">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-x-8 sm:gap-y-16 px-1 md:px-0">
         {wishlistItems.map((product, idx) => (
           <ProductCard 
             key={`${product.id}-${idx}`} 

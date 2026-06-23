@@ -912,7 +912,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                 ) : (
                   <>
                     {searchQuery ? (
-                      <div className="px-6 md:px-12">
+                      <div className="px-0 md:px-12">
                         <ProductSection 
                           title={t('search_results')} 
                           subtitle={`${t('found_matches')} "${searchQuery}"`} 
@@ -943,7 +943,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                         onProductClick={handleProductClick}
                       />
                     ) : (
-                      <div className="px-6 md:px-12">
+                      <div className="px-0 md:px-12">
                         <ProductSection 
                           title={t('all_products')} 
                           subtitle={t('discover_full_range')} 
@@ -966,8 +966,8 @@ const Storefront = ({ viewMode = 'home' }) => {
                       if (!recommendedProducts || recommendedProducts.length === 0) return null;
 
                       return (
-                        <div className="px-6 md:px-12 mt-16 border-t border-slate-200/50 dark:border-white/5 pt-12 pb-8">
-                          <div className="flex items-center gap-2 mb-8">
+                        <div className="px-0 md:px-12 mt-16 border-t border-slate-200/50 dark:border-white/5 pt-12 pb-8">
+                          <div className="flex items-center gap-2 mb-8 px-4 md:px-0">
                             <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
                             <h2 className="text-xl font-bold uppercase tracking-tight text-slate-900 dark:text-white">
                               {lang === 'fr' ? 'Recommandé pour vous' : 'Recommended for you'}

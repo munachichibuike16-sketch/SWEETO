@@ -130,7 +130,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="w-full flex flex-col gap-5 px-3 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
+      className="w-full flex flex-col gap-5 px-0 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
     >
       {/* Pull-To-Refresh Indicator (AliExpress Style) */}
       <div 
@@ -153,7 +153,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       </div>
 
       {/* Category Hero Banner (AliExpress Style) */}
-      <div className="relative w-full h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black">
+      <div className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -182,7 +182,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
       {/* Daily Deals Section */}
       {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
-        <div className="w-full flex flex-col bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
           <Link 
             to="/deals"
             className="flex items-center gap-1 text-slate-900 dark:text-white font-extrabold text-sm sm:text-base uppercase tracking-tight mb-3 cursor-pointer group hover:text-[#ff3b30] no-underline"
@@ -210,7 +210,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
       {/* Subcategory / Brand Pills Filter Row */}
       {filterPills.length > 1 && (
-        <div className="w-full flex gap-2.5 overflow-x-auto no-scrollbar py-1 select-none">
+        <div className="w-full flex gap-2.5 overflow-x-auto no-scrollbar py-1 px-3 md:px-0 select-none">
           {filterPills.map((pill) => {
             const isSelected = activePill === pill;
             return (
@@ -238,9 +238,9 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       )}
 
       {/* Filtered Products Grid */}
-      <div className="w-full flex flex-col gap-3">
+      <div className="w-full flex flex-col gap-3 px-1 md:px-0">
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-6">
             {filteredProducts.map((prod) => (
               <ProductCard 
                 key={prod.id}
@@ -250,7 +250,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
             ))}
           </div>
         ) : (
-          <div className="w-full py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-400">
+          <div className="w-full py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-400 mx-3 md:mx-0 w-[calc(100%-24px)] md:w-full">
             <Package size={36} className="mb-2 opacity-60 animate-bounce" />
             <p className="text-sm font-bold uppercase tracking-wider">No items found</p>
             <p className="text-xs text-slate-400 mt-1 font-medium">Try checking another sub-category or filter</p>
