@@ -2,14 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Home, Package, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   const { cartCount } = useCart();
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [bounce, setBounce] = useState(false);
+
+  const currentPath = location.pathname;
+  const isHome = currentPath === '/';
+  const isShop = currentPath === '/products' || currentPath.startsWith('/category');
+  const isCart = currentPath === '/checkout';
+  const isProfile = ['/auth', '/login', '/register', '/settings'].includes(currentPath);
 
   // Trigger bounce animation whenever cartCount changes
   useEffect(() => {
@@ -29,6 +36,26 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
     }
   };
 
+  const handleShopClick = () => {
+    if (setIsSidebarOpen && (currentPath === '/' || currentPath.startsWith('/category'))) {
+      setIsSidebarOpen(true);
+    } else {
+      navigate('/products');
+    }
+  };
+
+  const handleCartClick = () => {
+    if (isCart) {
+      // Already on cart/checkout page
+      return;
+    }
+    if (setIsCartOpen && (currentPath === '/' || currentPath.startsWith('/category') || currentPath === '/products' || isProfile)) {
+      setIsCartOpen(true);
+    } else {
+      navigate('/checkout');
+    }
+  };
+
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[90%] max-w-sm h-16 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl border border-slate-200/50 dark:border-eas-blue/15 rounded-3xl shadow-[0_20px_50px_rgba(0,82,255,0.05)] flex items-center justify-between px-6 overflow-hidden select-none">
       {/* Faint Watermark Background */}
@@ -39,46 +66,66 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
       </div>
 
       {/* Navigation Items */}
+      {/* Home tab */}
       <button 
         onClick={() => navigate('/')}
-        className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-eas-blue dark:hover:text-eas-blue transition-colors z-10"
+        className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
+          isHome 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+        }`}
       >
-        <Home size={18} />
-        <span className="text-[8px] font-black uppercase tracking-widest mt-1">Home</span>
+        <Home size={18} strokeWidth={isHome ? 2.5 : 1.5} />
+        <span className="text-[8.5px] uppercase tracking-widest mt-1">Home</span>
       </button>
 
+      {/* Shop tab */}
       <button 
-        onClick={() => setIsSidebarOpen(true)}
-        className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-eas-blue dark:hover:text-eas-blue transition-colors z-10"
+        onClick={handleShopClick}
+        className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
+          isShop 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+        }`}
       >
-        <Package size={18} />
-        <span className="text-[8px] font-black uppercase tracking-widest mt-1">Shop</span>
+        <Package size={18} strokeWidth={isShop ? 2.5 : 1.5} />
+        <span className="text-[8.5px] uppercase tracking-widest mt-1">Shop</span>
       </button>
 
+      {/* Cart tab */}
       <button 
-        onClick={() => setIsCartOpen(true)}
-        className="relative flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-eas-blue dark:hover:text-eas-blue transition-colors z-10"
+        onClick={handleCartClick}
+        className={`relative flex flex-col items-center justify-center transition-all duration-300 z-10 ${
+          isCart 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+        }`}
       >
         <motion.div
           animate={bounce ? { y: [0, -10, 0], scale: [1, 1.2, 1] } : {}}
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
-          <ShoppingCart size={18} />
+          <ShoppingCart size={18} strokeWidth={isCart ? 2.5 : 1.5} />
         </motion.div>
         {cartCount > 0 && (
-          <span className="absolute -top-1.5 -right-2.5 bg-eas-blue text-white font-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-eas-blue/35 animate-pulse">
+          <span className="absolute -top-1.5 -right-2.5 bg-eas-blue text-white font-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg shadow-eas-blue/35 leading-none">
             {cartCount}
           </span>
         )}
-        <span className="text-[8px] font-black uppercase tracking-widest mt-1">Cart</span>
+        <span className="text-[8.5px] uppercase tracking-widest mt-1">Cart</span>
       </button>
 
+      {/* Profile tab */}
       <button 
         onClick={handleProfileClick}
-        className="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 hover:text-eas-blue dark:hover:text-eas-blue transition-colors z-10"
+        className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
+          isProfile 
+            ? 'text-eas-blue dark:text-blue-450 font-black scale-110 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
+            : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+        }`}
       >
-        <User size={18} />
-        <span className="text-[8px] font-black uppercase tracking-widest mt-1">Profile</span>
+        <User size={18} strokeWidth={isProfile ? 2.5 : 1.5} />
+        <span className="text-[8.5px] uppercase tracking-widest mt-1">Profile</span>
       </button>
     </div>
   );

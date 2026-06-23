@@ -12,6 +12,7 @@ import ProductModal from './components/ProductModal';
 import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
+import MobileDock from './components/MobileDock';
 import BrightRetailHome from './components/BrightRetailHome';
 import CategoryLandingPage from './components/CategoryLandingPage';
 import ShufflingProductPage from './components/ShufflingProductPage';
@@ -1025,6 +1026,13 @@ const Storefront = ({ viewMode = 'home' }) => {
         onClose={handleProductModalClose}
         onProductClick={handleProductClick}
       />
+
+      {!['privacy', 'terms', 'security', 'visit'].includes(viewMode) && (
+        <MobileDock 
+          setIsCartOpen={setIsCartOpen} 
+          setIsSidebarOpen={setIsSidebarOpen} 
+        />
+      )}
 
     </div>
   );
