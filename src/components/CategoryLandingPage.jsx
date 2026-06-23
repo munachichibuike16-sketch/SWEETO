@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ChevronRight, Package, ShoppingCart, Heart } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
 import ProductCard from './ProductCard';
@@ -24,6 +24,9 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   const { lang, t, t_smart } = useLanguage();
   const navigate = useNavigate();
   const [activePill, setActivePill] = useState('All');
+
+  const location = useLocation();
+  const swipeDir = location.state?.swipeDir || 'next';
 
   // Sibling Category navigation mapping
   const parentCategories = useMemo(() => {
@@ -60,7 +63,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       const nextCat = parentCategories[nextIndex];
       if (nextCat && nextCat.name) {
         if (navigator.vibrate) navigator.vibrate(15);
-        navigate(`/category/${encodeURIComponent(nextCat.name)}`);
+        navigate(`/category/${encodeURIComponent(nextCat.name)}`, { state: { swipeDir: direction } });
         window.scrollTo(0, 0);
       }
     } else if (currentSubcategoryIndex !== -1 && siblingSubcategories.length > 1) {
@@ -71,7 +74,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       const nextSubcat = siblingSubcategories[nextIndex];
       if (nextSubcat && nextSubcat.name) {
         if (navigator.vibrate) navigator.vibrate(15);
-        navigate(`/category/${encodeURIComponent(nextSubcat.name)}`);
+        navigate(`/category/${encodeURIComponent(nextSubcat.name)}`, { state: { swipeDir: direction } });
         window.scrollTo(0, 0);
       }
     }
@@ -217,12 +220,18 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   const bannerImage = categoryInfo?.image_url || categoryInfo?.icon || categoryBanners[categoryName.toLowerCase()] || categoryBanners.default;
 
   return (
-    <div 
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      className="w-full flex flex-col gap-5 px-0 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
-    >
+    <AnimatePresence mode="popLayout">
+      <motion.div 
+        key={categoryName}
+        initial={{ opacity: 0, x: swipeDir === 'next' ? 100 : -100 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: swipeDir === 'next' ? -100 : 100 }}
+        transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="w-full flex flex-col gap-5 px-0 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
+      >
       {/* Pull-To-Refresh Indicator (AliExpress Style) */}
       <div 
         style={{ height: `${pullDistance}px`, opacity: pullDistance > 0 ? 1 : 0 }}
@@ -349,6 +358,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         )}
       </div>
 
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
