@@ -25,13 +25,72 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   const navigate = useNavigate();
   const [activePill, setActivePill] = useState('All');
 
-  // Pull-to-refresh state & handlers (AliExpress Style)
+  // Sibling Category navigation mapping
+  const parentCategories = useMemo(() => {
+    if (!categories || categories.length === 0) return [];
+    return categories
+      .filter(c => !c.parent_id)
+      .sort((a, b) => (a.position || 0) - (b.position || 0) || String(a.id).localeCompare(String(b.id)));
+  }, [categories]);
+
+  const currentCategoryIndex = useMemo(() => {
+    return parentCategories.findIndex(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
+  }, [parentCategories, categoryName]);
+
+  const siblingSubcategories = useMemo(() => {
+    if (currentCategoryIndex !== -1) return [];
+    const currentCat = categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
+    if (!currentCat || !currentCat.parent_id) return [];
+    return categories
+      .filter(c => c.parent_id === currentCat.parent_id)
+      .sort((a, b) => (a.position || 0) - (b.position || 0) || String(a.id).localeCompare(String(b.id)));
+  }, [categories, categoryName, currentCategoryIndex]);
+
+  const currentSubcategoryIndex = useMemo(() => {
+    if (siblingSubcategories.length === 0) return -1;
+    return siblingSubcategories.findIndex(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
+  }, [siblingSubcategories, categoryName]);
+
+  const navigateToSiblingCategory = (direction) => {
+    if (currentCategoryIndex !== -1 && parentCategories.length > 1) {
+      let nextIndex = direction === 'next'
+        ? (currentCategoryIndex + 1) % parentCategories.length
+        : (currentCategoryIndex - 1 + parentCategories.length) % parentCategories.length;
+      
+      const nextCat = parentCategories[nextIndex];
+      if (nextCat && nextCat.name) {
+        if (navigator.vibrate) navigator.vibrate(15);
+        navigate(`/category/${encodeURIComponent(nextCat.name)}`);
+        window.scrollTo(0, 0);
+      }
+    } else if (currentSubcategoryIndex !== -1 && siblingSubcategories.length > 1) {
+      let nextIndex = direction === 'next'
+        ? (currentSubcategoryIndex + 1) % siblingSubcategories.length
+        : (currentSubcategoryIndex - 1 + siblingSubcategories.length) % siblingSubcategories.length;
+        
+      const nextSubcat = siblingSubcategories[nextIndex];
+      if (nextSubcat && nextSubcat.name) {
+        if (navigator.vibrate) navigator.vibrate(15);
+        navigate(`/category/${encodeURIComponent(nextSubcat.name)}`);
+        window.scrollTo(0, 0);
+      }
+    }
+  };
+
+  // Pull-to-refresh & Swipe Category Navigation State (AliExpress Style)
   const { refreshData } = useStore();
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [isSwipingHorizontal, setIsSwipingHorizontal] = useState(false);
 
   const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+    setIsSwipingHorizontal(false);
+    
     if (window.scrollY === 0) {
       setTouchStart(e.touches[0].clientY);
     } else {
@@ -40,34 +99,66 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   };
 
   const handleTouchMove = (e) => {
-    if (touchStart === 0 || refreshing) return;
+    if (refreshing) return;
+    const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
-    const diff = currentY - touchStart;
     
-    if (diff > 0) {
-      const pull = Math.min(diff * 0.45, 80);
-      setPullDistance(pull);
-      if (diff > 10) {
-        if (e.cancelable) e.preventDefault();
+    const diffX = currentX - touchStartX;
+    const diffY = currentY - touchStartY;
+
+    if (!isSwipingHorizontal && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+      setIsSwipingHorizontal(true);
+    }
+
+    if (isSwipingHorizontal || Math.abs(diffX) > Math.abs(diffY)) {
+      if (e.cancelable) e.preventDefault();
+    } else {
+      if (touchStart === 0) return;
+      const diff = currentY - touchStart;
+      if (diff > 0) {
+        const pull = Math.min(diff * 0.45, 80);
+        setPullDistance(pull);
+        if (diff > 10) {
+          if (e.cancelable) e.preventDefault();
+        }
       }
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     if (refreshing) return;
-    if (pullDistance > 50) {
+    const currentX = e.changedTouches[0].clientX;
+    const currentY = e.changedTouches[0].clientY;
+    const diffX = currentX - touchStartX;
+    const diffY = currentY - touchStartY;
+
+    if (isSwipingHorizontal || Math.abs(diffX) > Math.abs(diffY)) {
+      if (Math.abs(diffX) > 120) {
+        if (diffX < 0) {
+          navigateToSiblingCategory('next');
+        } else {
+          if (touchStartX > 45) {
+            navigateToSiblingCategory('prev');
+          }
+        }
+      }
+    } else if (pullDistance > 50) {
       setRefreshing(true);
       setPullDistance(55);
       refreshData().finally(() => {
         setTimeout(() => {
           setRefreshing(false);
           setPullDistance(0);
-        }, 800); // smooth indicator hide delay
+        }, 800);
       });
     } else {
       setPullDistance(0);
     }
+
     setTouchStart(0);
+    setTouchStartX(0);
+    setTouchStartY(0);
+    setIsSwipingHorizontal(false);
   };
 
   // Find dynamic category info
