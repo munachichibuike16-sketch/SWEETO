@@ -418,7 +418,7 @@ const NotificationsContent = ({ onProductClick }) => {
           }}
           className={`relative z-10 flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 cursor-pointer bg-white/70 dark:bg-slate-900/60 backdrop-blur-md ${
             notif.isRead 
-              ? 'border-slate-150 dark:border-slate-800/40 opacity-75 hover:opacity-100 hover:border-slate-200 dark:hover:border-slate-700/60' 
+              ? 'border-slate-100 dark:border-slate-800/40 opacity-75 hover:opacity-100 hover:border-slate-200 dark:hover:border-slate-700/60' 
               : 'border-blue-500/20 dark:border-blue-400/20 shadow-[0_4px_25px_rgba(0,82,255,0.02)] dark:shadow-[0_4px_25px_rgba(0,0,0,0.2)] hover:border-blue-500/40 dark:hover:border-blue-400/40'
           }`}
           style={{
@@ -589,14 +589,14 @@ const NotificationsContent = ({ onProductClick }) => {
         {/* Left: Back Button */}
         <button 
           onClick={goBack} 
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors cursor-pointer animate-none"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-none"
           aria-label="Back"
         >
           <ChevronLeft size={22} strokeWidth={2.5} />
         </button>
 
         {/* Center: Title */}
-        <h1 className="font-extrabold text-[15px] uppercase tracking-wide text-slate-805 dark:text-white">
+        <h1 className="font-extrabold text-[15px] uppercase tracking-wide text-slate-800 dark:text-white">
           {lang === 'fr' ? 'Centre de messages' : 'Message Center'}
         </h1>
 
@@ -606,7 +606,7 @@ const NotificationsContent = ({ onProductClick }) => {
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title={lang === 'fr' ? 'Tout marquer comme lu' : 'Mark all as read'}
             >
               <CheckCheck size={18} />
@@ -616,7 +616,7 @@ const NotificationsContent = ({ onProductClick }) => {
           {/* Settings gear */}
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title={lang === 'fr' ? 'Paramètres' : 'Settings'}
           >
             <Settings size={18} />
@@ -625,7 +625,7 @@ const NotificationsContent = ({ onProductClick }) => {
       </div>
 
       {/* Main Content Area - padded to clear the sticky top-0 header (h-14) */}
-      <div className="max-w-xl mx-auto px-4 pt-18 pb-32">
+      <div className="max-w-xl mx-auto px-4 pt-20 pb-32">
 
         {/* 2. CATEGORY FILTERS (Circular buttons) */}
         <div className="grid grid-cols-3 gap-3 mb-6 mt-2">
@@ -634,7 +634,7 @@ const NotificationsContent = ({ onProductClick }) => {
             onClick={() => setCategoryFilter(categoryFilter === 'orders' ? 'all' : 'orders')}
             className={`relative py-4 px-2 rounded-[24px] flex flex-col items-center justify-center transition-all duration-300 bg-white dark:bg-slate-900 border cursor-pointer ${
               categoryFilter === 'orders'
-                ? 'border-blue-500 shadow-md scale-102 bg-blue-50/5 dark:bg-blue-950/10'
+                ? 'border-blue-500 shadow-md scale-[1.02] bg-blue-50/5 dark:bg-blue-950/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
             }`}
           >
@@ -656,7 +656,7 @@ const NotificationsContent = ({ onProductClick }) => {
             onClick={() => setCategoryFilter(categoryFilter === 'promos' ? 'all' : 'promos')}
             className={`relative py-4 px-2 rounded-[24px] flex flex-col items-center justify-center transition-all duration-300 bg-white dark:bg-slate-900 border cursor-pointer ${
               categoryFilter === 'promos'
-                ? 'border-amber-500 shadow-md scale-102 bg-amber-50/5 dark:bg-amber-950/10'
+                ? 'border-amber-500 shadow-md scale-[1.02] bg-amber-50/5 dark:bg-amber-950/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
             }`}
           >
@@ -678,7 +678,7 @@ const NotificationsContent = ({ onProductClick }) => {
             onClick={() => setCategoryFilter(categoryFilter === 'security' ? 'all' : 'security')}
             className={`relative py-4 px-2 rounded-[24px] flex flex-col items-center justify-center transition-all duration-300 bg-white dark:bg-slate-900 border cursor-pointer ${
               categoryFilter === 'security'
-                ? 'border-[#ff3b30] shadow-md scale-102 bg-red-50/5 dark:bg-red-950/10'
+                ? 'border-[#ff3b30] shadow-md scale-[1.02] bg-red-50/5 dark:bg-red-950/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
             }`}
           >
@@ -698,7 +698,7 @@ const NotificationsContent = ({ onProductClick }) => {
 
         {/* 3. INLINE SUB-TABS (All vs Unread selector & options) */}
         <div className="flex items-center justify-between gap-4 px-1 mb-5">
-          <div className="flex items-center gap-1.5 bg-slate-150 dark:bg-slate-900/80 p-0.5 rounded-full">
+          <div className="flex items-center gap-1.5 bg-slate-200 dark:bg-slate-900/80 p-0.5 rounded-full">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all select-none cursor-pointer ${
@@ -819,7 +819,7 @@ const NotificationsContent = ({ onProductClick }) => {
                 </h3>
                 <button
                   onClick={() => setIsSettingsOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-450 dark:text-slate-400 cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-400 cursor-pointer"
                 >
                   <X size={16} />
                 </button>
@@ -838,11 +838,11 @@ const NotificationsContent = ({ onProductClick }) => {
                   </div>
                   <button
                     onClick={() => savePreferences('pref_notif_orders', !prefOrders, setPrefOrders)}
-                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
-                      prefOrders ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefOrders ? 'bg-blue-600 justify-end' : 'bg-slate-200 dark:bg-slate-800 justify-start'
                     }`}
                   >
-                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                    <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" />
                   </button>
                 </div>
 
@@ -858,11 +858,11 @@ const NotificationsContent = ({ onProductClick }) => {
                   </div>
                   <button
                     onClick={() => savePreferences('pref_notif_promos', !prefPromos, setPrefPromos)}
-                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
-                      prefPromos ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefPromos ? 'bg-blue-600 justify-end' : 'bg-slate-200 dark:bg-slate-800 justify-start'
                     }`}
                   >
-                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                    <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" />
                   </button>
                 </div>
 
@@ -878,11 +878,11 @@ const NotificationsContent = ({ onProductClick }) => {
                   </div>
                   <button
                     onClick={() => savePreferences('pref_notif_system', !prefSystem, setPrefSystem)}
-                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
-                      prefSystem ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefSystem ? 'bg-blue-600 justify-end' : 'bg-slate-200 dark:bg-slate-800 justify-start'
                     }`}
                   >
-                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                    <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" />
                   </button>
                 </div>
 
@@ -898,11 +898,11 @@ const NotificationsContent = ({ onProductClick }) => {
                   </div>
                   <button
                     onClick={() => savePreferences('pref_notif_sound', !prefSound, setPrefSound)}
-                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
-                      prefSound ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefSound ? 'bg-blue-600 justify-end' : 'bg-slate-200 dark:bg-slate-800 justify-start'
                     }`}
                   >
-                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                    <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" />
                   </button>
                 </div>
 
@@ -920,11 +920,11 @@ const NotificationsContent = ({ onProductClick }) => {
                     onClick={() => {
                       savePreferences('pref_notif_vib', !prefVib, setPrefVib);
                     }}
-                    className={`w-11 h-6.5 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
-                      prefVib ? 'bg-blue-600 justify-end' : 'bg-slate-150 dark:bg-slate-800 justify-start'
+                    className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 flex items-center shrink-0 cursor-pointer ${
+                      prefVib ? 'bg-blue-600 justify-end' : 'bg-slate-200 dark:bg-slate-800 justify-start'
                     }`}
                   >
-                    <motion.div layout className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
+                    <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-sm" />
                   </button>
                 </div>
               </div>

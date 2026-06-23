@@ -799,13 +799,11 @@ const Storefront = ({ viewMode = 'home' }) => {
   }, [settings?.homepageSections, settings?.hero_enabled, sections]);
 
   return (
-    <div className="min-h-screen bg-eas-light dark:bg-eas-dark relative">
-      {viewMode !== 'notifications' && (
-        <Header 
-          onMenuClick={() => setIsSidebarOpen(true)} 
-          onCartClick={() => setIsCartOpen(true)}
-        />
-      )}
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark relative">
+      <Header 
+        onMenuClick={() => setIsSidebarOpen(true)} 
+        onCartClick={() => setIsCartOpen(true)}
+      />
 
       <motion.div 
         animate={{ 
@@ -814,7 +812,7 @@ const Storefront = ({ viewMode = 'home' }) => {
           borderRadius: isProductModalOpen ? '40px' : '0px'
         }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="min-h-screen bg-eas-light dark:bg-eas-dark flex flex-col origin-center transition-colors duration-300"
+        className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark flex flex-col origin-center transition-colors duration-300"
         style={{ paddingTop: viewMode === 'notifications' ? '0px' : 'var(--header-height, 96px)' }}
       >
         

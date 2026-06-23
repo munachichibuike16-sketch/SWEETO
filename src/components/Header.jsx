@@ -361,7 +361,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 ${isScrolled ? 'py-2 px-4' : 'py-3.5 px-4 md:px-12'} ${isProfilePage || location.pathname.startsWith('/product/') ? 'hidden md:block' : ''}`}>
+      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 ${isScrolled ? 'py-2 px-4' : 'py-3.5 px-4 md:px-12'} ${isProfilePage || location.pathname.startsWith('/product/') ? 'hidden md:block' : ''} ${location.pathname === '/notifications' ? 'hidden' : ''}`}>
         {/* Desktop Header Layout */}
         <div className="hidden md:flex max-w-[1600px] mx-auto items-center justify-between gap-6 w-full">
           
