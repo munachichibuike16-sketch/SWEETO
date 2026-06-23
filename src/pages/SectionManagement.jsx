@@ -542,9 +542,11 @@ export default function SectionManagement() {
                   )}
                   {s.role === 'dealOfDay' && (
                     <p className="text-[10px] text-pink-500 font-bold uppercase tracking-widest mb-2">
-                      {s.categoryB && s.categoryB !== 'All' 
-                        ? `Side Ad: ${videoAds.find(ad => String(ad.id) === String(s.categoryB))?.title || `Ad #${s.categoryB}`}`
-                        : 'Side Ad: Rotating Active Ads'}
+                      {s.categoryB === 'none' 
+                        ? 'Side Ad: Hidden / No Video'
+                        : (s.categoryB && s.categoryB !== 'All' 
+                          ? `Side Ad: ${videoAds.find(ad => String(ad.id) === String(s.categoryB))?.title || `Ad #${s.categoryB}`}`
+                          : 'Side Ad: Rotating Active Ads')}
                     </p>
                   )}
                   {s.subtitle && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4 truncate">{s.subtitle}</p>}
@@ -687,6 +689,7 @@ export default function SectionManagement() {
                         <label className={lbl}>Choose Side Promo Video/Image Ad</label>
                         <select value={form.categoryB || 'All'} onChange={e => setForm(p => ({ ...p, categoryB: e.target.value }))} className={inp}>
                           <option value="All">Rotate Active Ads (Default)</option>
+                          <option value="none">No Video / Hide Side Promo</option>
                           {videoAds.filter(ad => ad.isActive).map(ad => (
                             <option key={ad.id} value={String(ad.id)}>{ad.title} ({ad.type})</option>
                           ))}

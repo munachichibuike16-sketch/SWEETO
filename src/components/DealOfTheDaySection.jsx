@@ -9,7 +9,7 @@ import { useStore } from '../contexts/StoreContext';
 import { SectionBanner, SectionHeader, MiniSectionHeader } from './ProductSection';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick }) => {
+const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick, title, subtitle }) => {
   const navigate = useNavigate();
   const { cartCount, addToCart } = useCart();
   const { videoAds, settings, showToast } = useStore();
@@ -36,7 +36,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
     return () => clearInterval(timer);
   }, []);
 
-  const selectedAd = videoAdId && videoAdId !== 'All'
+  const selectedAd = videoAdId && videoAdId !== 'All' && videoAdId !== 'none'
     ? videoAds.find(ad => String(ad.id) === String(videoAdId))
     : null;
 
@@ -58,38 +58,51 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
     imageUrl: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80"
   };
 
+  const showVideo = videoAdId !== 'none';
+  const isSimple = headerStyle === 'simple' || headerStyle === 'bright_simple';
+
   return (
     <section className="py-2 px-6 md:px-12">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-        {/* Left Column: Products Grid (3/5 on LG/XL) */}
-        <div className="lg:col-span-3 bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative group/deals">
-          {/* AliExpress Style Super Deals Header Banner */}
-          <div className="bg-gradient-to-r from-[#e61e25] via-[#ff2a3b] to-[#ff5238] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-white/10 mb-4">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-5">
-              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10 shadow-sm animate-pulse">
-                <Zap size={13} className="text-yellow-300 fill-yellow-300" />
-                <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-widest text-white italic">SuperDeals</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] sm:text-xs font-black text-white/90 uppercase tracking-widest leading-none">Ends in:</span>
-                <div className="flex items-center gap-1">
-                  <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.hours).padStart(2, '0')}</span>
-                  <span className="text-white font-bold text-xs">:</span>
-                  <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                  <span className="text-white font-bold text-xs">:</span>
-                  <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.seconds).padStart(2, '0')}</span>
+      <div className={`grid grid-cols-1 ${showVideo ? 'lg:grid-cols-5 gap-8 lg:gap-12' : 'grid-cols-1'}`}>
+        {/* Left Column: Products Grid */}
+        <div className={`lg:col-span-${showVideo ? '3' : '5'} bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative group/deals`}>
+          {isSimple ? (
+            <div className="mb-4 pl-2">
+              <SectionHeader 
+                title={title && title !== 'New Section' ? title : (lang === 'fr' ? 'Offres du Jour' : 'Daily Deals')} 
+                style="simple" 
+                onViewAllClick={() => navigate('/deals')} 
+              />
+            </div>
+          ) : (
+            /* AliExpress Style Super Deals Header Banner */
+            <div className="bg-gradient-to-r from-[#e61e25] via-[#ff2a3b] to-[#ff5238] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-white/10 mb-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+                <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-1 rounded-xl border border-white/10 shadow-sm animate-pulse">
+                  <Zap size={13} className="text-yellow-300 fill-yellow-300" />
+                  <span className="font-extrabold text-[10px] sm:text-xs uppercase tracking-widest text-white italic">SuperDeals</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] sm:text-xs font-black text-white/90 uppercase tracking-widest leading-none">Ends in:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.hours).padStart(2, '0')}</span>
+                    <span className="text-white font-bold text-xs">:</span>
+                    <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                    <span className="text-white font-bold text-xs">:</span>
+                    <span className="bg-black/35 backdrop-blur-md text-yellow-300 text-[10px] sm:text-xs font-mono font-black px-1.5 py-0.5 rounded border border-white/5 shadow-inner">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  </div>
                 </div>
               </div>
+              
+              <button 
+                onClick={() => navigate('/deals')}
+                className="text-white hover:opacity-85 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-0.5 cursor-pointer self-start sm:self-auto transition-opacity"
+              >
+                View more <ChevronRight size={12} strokeWidth={2.5} />
+              </button>
             </div>
-            
-            <button 
-              onClick={() => navigate('/deals')}
-              className="text-white hover:opacity-85 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-0.5 cursor-pointer self-start sm:self-auto transition-opacity"
-            >
-              View more <ChevronRight size={12} strokeWidth={2.5} />
-            </button>
-          </div>
+          )}
           
           <div className="relative mt-2 flex-1 flex flex-col justify-center">
             {/* Slide Buttons */}
@@ -130,10 +143,14 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                 const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
                 const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : null;
 
+                const widthClass = showVideo
+                  ? "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)]"
+                  : "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-12px)] xl:min-w-[calc(20%-18px)]";
+
                 return (
                   <div 
                     key={product.id} 
-                    className="min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)] snap-start relative h-full animate-fadeIn"
+                    className={`${widthClass} snap-start relative h-full animate-fadeIn`}
                   >
                     <div 
                       onClick={() => onProductClick(product)}
@@ -223,98 +240,100 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
         </div>
 
         {/* Right Column: Video Promo Card (2/5 on LG/XL) */}
-        <div className="lg:col-span-2 bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative">
-          <MiniSectionHeader 
-            title={t('video_promo')} 
-            subtitle={t('exclusive_tech_deals') || "Live Tech Demo"} 
-            style="bold"
-            onViewAll={() => navigate('/deals')}
-          />
-          <div className="relative rounded-[2rem] overflow-hidden group shadow-2xl flex-1 min-h-[320px] sm:min-h-[400px]">
-            {/* Background */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeAd.id || 'default'}
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.8 }}
-                className="absolute inset-0 w-full h-full"
-              >
-                {activeAd.type === 'video' ? (
-                  <video 
-                    src={activeAd.videoUrl ? `${activeAd.videoUrl}?v=1` : ''} 
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline
-                    preload="metadata"
-                    className="w-full h-full object-cover transition-transform duration-[10s] group-hover:scale-110"
-                  />
-                ) : (
-                  <img 
-                    src={activeAd.imageUrl} 
-                    alt={activeAd.title} 
-                    className="w-full h-full object-cover transition-transform duration-[10s] group-hover:scale-110"
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Overlays */}
-            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-500"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent"></div>
-
-            {/* Content */}
-            <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
-              <div className="space-y-4 sm:space-y-6">
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  className="bg-eas-blue text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 sm:gap-2 self-start shadow-lg shadow-eas-blue/30"
+        {showVideo && (
+          <div className="lg:col-span-2 bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative">
+            <MiniSectionHeader 
+              title={t('video_promo')} 
+              subtitle={t('exclusive_tech_deals') || "Live Tech Demo"} 
+              style="bold"
+              onViewAll={() => navigate('/deals')}
+            />
+            <div className="relative rounded-[2rem] overflow-hidden group shadow-2xl flex-1 min-h-[320px] sm:min-h-[400px]">
+              {/* Background */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeAd.id || 'default'}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.8 }}
+                  className="absolute inset-0 w-full h-full"
                 >
-                  <Zap size={12} className="fill-white" />
-                  {t('video_promo')}
+                  {activeAd.type === 'video' ? (
+                    <video 
+                      src={activeAd.videoUrl ? `${activeAd.videoUrl}?v=1` : ''} 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline
+                      preload="metadata"
+                      className="w-full h-full object-cover transition-transform duration-[10s] group-hover:scale-110"
+                    />
+                  ) : (
+                    <img 
+                      src={activeAd.imageUrl} 
+                      alt={activeAd.title} 
+                      className="w-full h-full object-cover transition-transform duration-[10s] group-hover:scale-110"
+                    />
+                  )}
                 </motion.div>
+              </AnimatePresence>
 
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter uppercase italic leading-none">
-                  {activeAd.title}
-                </h2>
+              {/* Overlays */}
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent"></div>
 
-                <button 
-                  onClick={() => navigate('/deals')}
-                  className="bg-white text-slate-900 px-4 py-3.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest hover:bg-eas-blue hover:text-white transition-all shadow-xl flex items-center gap-2 sm:gap-3 w-full justify-center"
-                >
-                  {t('explore_all')} <Play size={14} className="fill-current" />
-                </button>
+              {/* Content */}
+              <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
+                <div className="space-y-4 sm:space-y-6">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    className="bg-eas-blue text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 sm:gap-2 self-start shadow-lg shadow-eas-blue/30"
+                  >
+                    <Zap size={12} className="fill-white" />
+                    {t('video_promo')}
+                  </motion.div>
+
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    {activeAd.title}
+                  </h2>
+
+                  <button 
+                    onClick={() => navigate('/deals')}
+                    className="bg-white text-slate-900 px-4 py-3.5 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest hover:bg-eas-blue hover:text-white transition-all shadow-xl flex items-center gap-2 sm:gap-3 w-full justify-center"
+                  >
+                    {t('explore_all')} <Play size={14} className="fill-current" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Floating Cart (Bottom Right) */}
-            <motion.div 
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              className="absolute bottom-4 right-4 z-20 md:hidden cursor-pointer" // Only show on mobile as a float, or hide if we want it like the screenshot
-              onClick={onCartClick || (() => navigate('/checkout'))}
-              whileTap={{ scale: 0.95 }}
-            >
-               <div className="bg-[#007aff] hover:bg-[#0062cc] active:scale-95 transition-all text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/20 backdrop-blur-xl">
-                  <div className="relative">
-                     <ShoppingBag size={24} />
-                     {cartCount > 0 && (
-                       <span className="absolute -top-2 -right-2 bg-eas-blue text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black ring-4 ring-[#007aff]">
-                         {cartCount}
-                       </span>
-                     )}
-                  </div>
-                  <div className="flex flex-col">
-                     <span className="text-[10px] font-black opacity-60 uppercase tracking-widest leading-none">{t('view_cart')}</span>
-                     <span className="text-sm font-black flex items-center gap-1">{t('checkout_now')} <ChevronRight size={14} /></span>
-                  </div>
-               </div>
-            </motion.div>
+              {/* Floating Cart (Bottom Right) */}
+              <motion.div 
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                className="absolute bottom-4 right-4 z-20 md:hidden cursor-pointer" // Only show on mobile as a float, or hide if we want it like the screenshot
+                onClick={onCartClick || (() => navigate('/checkout'))}
+                whileTap={{ scale: 0.95 }}
+              >
+                 <div className="bg-[#007aff] hover:bg-[#0062cc] active:scale-95 transition-all text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/20 backdrop-blur-xl">
+                    <div className="relative">
+                       <ShoppingBag size={24} />
+                       {cartCount > 0 && (
+                         <span className="absolute -top-2 -right-2 bg-eas-blue text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black ring-4 ring-[#007aff]">
+                           {cartCount}
+                         </span>
+                       )}
+                    </div>
+                    <div className="flex flex-col">
+                       <span className="text-[10px] font-black opacity-60 uppercase tracking-widest leading-none">{t('view_cart')}</span>
+                       <span className="text-sm font-black flex items-center gap-1">{t('checkout_now')} <ChevronRight size={14} /></span>
+                    </div>
+                 </div>
+              </motion.div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

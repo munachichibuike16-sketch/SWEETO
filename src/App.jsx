@@ -484,6 +484,8 @@ const Storefront = ({ viewMode = 'home' }) => {
             onProductClick={handleProductClick}
             videoAdId={section.categoryB}
             onCartClick={() => setIsCartOpen(true)}
+            title={title}
+            subtitle={subtitle}
           />
         );
       case 'newArrival':
