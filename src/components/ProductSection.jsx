@@ -319,7 +319,7 @@ export const MiniSectionHeader = ({ title, subtitle, style = 'bold', sideLabel =
 
 export const DualProductSection = ({ section, liveProducts = [], onProductClick }) => {
   const { t_smart } = useLanguage();
-  const { setSelectedCategory, setSelectedBrand, setSearchQuery } = useStore();
+  const { setSelectedCategory, setSelectedBrand, setSearchQuery, categories = [] } = useStore();
   const navigate = useNavigate();
 
   const handleViewAll = (role, category) => {
@@ -381,7 +381,14 @@ export const DualProductSection = ({ section, liveProducts = [], onProductClick 
     
     // Category Filter
     if (category && category !== 'All') {
-      filtered = filtered.filter(p => p.category === category);
+      const parentCat = categories.find(c => c.name?.toLowerCase() === category.toLowerCase());
+      const subcatNames = parentCat 
+        ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
+        : [];
+      filtered = filtered.filter(p => {
+        const pCat = p.category?.toLowerCase();
+        return pCat === category.toLowerCase() || subcatNames.includes(pCat);
+      });
     }
 
     // Role Filter / Sorting

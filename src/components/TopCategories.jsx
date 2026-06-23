@@ -102,12 +102,12 @@ export default function TopCategories() {
   };
 
   const getProductCountForCategory = (catName) => {
-    let count = products?.filter(p => p.category === catName && p.status === 'active').length || 0;
-    const cat = categories.find(c => c.name === catName);
+    let count = products?.filter(p => p.category?.toLowerCase() === catName?.toLowerCase() && p.status === 'active').length || 0;
+    const cat = categories.find(c => c.name?.toLowerCase() === catName?.toLowerCase());
     if (cat) {
       const subcats = categories.filter(c => c.parent_id === cat.id);
       subcats.forEach(sub => {
-        count += products?.filter(p => p.category === sub.name && p.status === 'active').length || 0;
+        count += products?.filter(p => p.category?.toLowerCase() === sub.name?.toLowerCase() && p.status === 'active').length || 0;
       });
     }
     return count;
@@ -173,7 +173,7 @@ export default function TopCategories() {
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {list.map((cat, idx) => {
-            const productCount = products.filter(p => p.category === cat.name && p.status !== 'draft').length;
+            const productCount = getProductCountForCategory(cat.name);
             const imageUrl = getCategoryImage(cat.name, cat.image_url);
             const colorClass = getCategoryColor(cat.name);
             const colorsArray = colorClass.split(' ');

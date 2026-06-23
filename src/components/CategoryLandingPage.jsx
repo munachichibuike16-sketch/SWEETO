@@ -29,10 +29,20 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
     return categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
   }, [categories, categoryName]);
 
-  // Filter products belonging to this category
+  // Filter products belonging to this category or its subcategories
   const categoryProducts = useMemo(() => {
-    return products.filter(p => p.category?.toLowerCase() === categoryName?.toLowerCase() && p.status === 'active');
-  }, [products, categoryName]);
+    const parentCat = categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
+    const subcatNames = parentCat 
+      ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
+      : [];
+    
+    return products.filter(p => {
+      const pCat = p.category?.toLowerCase();
+      const matchesMain = pCat === categoryName?.toLowerCase();
+      const matchesSub = subcatNames.includes(pCat);
+      return (matchesMain || matchesSub) && p.status === 'active';
+    });
+  }, [products, categoryName, categories]);
 
   // Find deals for this category (original_price > price or is_daily_deal)
   const categoryDeals = useMemo(() => {

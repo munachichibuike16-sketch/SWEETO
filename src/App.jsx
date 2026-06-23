@@ -362,9 +362,19 @@ const Storefront = ({ viewMode = 'home' }) => {
       )
     : (Array.isArray(allProducts) ? allProducts : []);
 
-  const categoryFilteredProducts = (activeCategory && Array.isArray(searchFilteredProducts))
-    ? searchFilteredProducts.filter(p => p.category?.toLowerCase() === activeCategory.toLowerCase())
-    : searchFilteredProducts;
+  const categoryFilteredProducts = (() => {
+    if (!activeCategory || !Array.isArray(searchFilteredProducts)) {
+      return searchFilteredProducts;
+    }
+    const parentCat = categories.find(c => c.name?.toLowerCase() === activeCategory.toLowerCase());
+    const subcatNames = parentCat 
+      ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
+      : [];
+    return searchFilteredProducts.filter(p => {
+      const pCat = p.category?.toLowerCase();
+      return pCat === activeCategory.toLowerCase() || subcatNames.includes(pCat);
+    });
+  })();
 
   const filteredProducts = (selectedBrand && Array.isArray(categoryFilteredProducts))
     ? categoryFilteredProducts.filter(p => p.brand === selectedBrand)
