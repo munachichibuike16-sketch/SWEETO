@@ -47,6 +47,7 @@ const HEADER_STYLES = [
   { key: 'accent',    label: 'Accent',    preview: 'bg-gradient-to-r from-eas-blue to-purple-600' },
   { key: 'neon',      label: 'Neon',      preview: 'bg-black border border-emerald-500' },
   { key: 'glass',     label: 'Glass',     preview: 'bg-white/30 backdrop-blur-md border border-white/20' },
+  { key: 'simple',    label: 'Simple Chevron', preview: 'border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between px-4' },
 ];
 
 const BRIGHT_HEADER_STYLES = [
@@ -56,6 +57,7 @@ const BRIGHT_HEADER_STYLES = [
   { key: 'bright_outlined', label: 'Outlined Card', preview: 'border-2 border-[#ffc200]' },
   { key: 'bright_accent',   label: 'Accent Line',   preview: 'border-l-4 border-[#ffc200]' },
   { key: 'bright_glass',    label: 'Glassmorphic',  preview: 'bg-white/10 border border-white/20' },
+  { key: 'bright_simple',   label: 'Simple Chevron', preview: 'border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between px-4' },
 ];
 
 const ROLE_COLORS = {
@@ -778,7 +780,7 @@ export default function SectionManagement() {
                   <div>
                     <label className={`${lbl} mb-3`}>Side A Header Style / Color</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {currentHeaderStyles.slice(0, 6).map(({ key, label }) => (
+                      {currentHeaderStyles.slice(0, 8).map(({ key, label }) => (
                         <button key={key} type="button" onClick={() => setForm(p => ({ ...p, headerStyle: key }))}
                           className={`py-2 px-1 rounded-xl border text-[9px] font-black uppercase tracking-widest text-center transition-all ${form.headerStyle === key ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400'}`}>
                           {label}
@@ -815,7 +817,7 @@ export default function SectionManagement() {
                   <div>
                     <label className={`${lbl} mb-3`}>Side B Header Style / Color</label>
                     <div className="grid grid-cols-3 gap-2">
-                      {currentHeaderStyles.slice(0, 6).map(({ key, label }) => (
+                      {currentHeaderStyles.slice(0, 8).map(({ key, label }) => (
                         <button key={key} type="button" onClick={() => setForm(p => ({ ...p, headerStyleB: key }))}
                           className={`py-2 px-1 rounded-xl border text-[9px] font-black uppercase tracking-widest text-center transition-all ${form.headerStyleB === key ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400'}`}>
                           {label}
@@ -866,6 +868,17 @@ export default function SectionManagement() {
                   : isYellowBackground
                     ? "text-slate-900/70"
                     : "text-slate-500 dark:text-slate-400";
+                if (style.key === 'simple' || style.key === 'bright_simple') {
+                  return (
+                    <div className="w-full p-6 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base uppercase tracking-tight select-none">
+                        <span>{form.title || 'Section Title'}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-black ml-0.5">&gt;</span>
+                      </div>
+                      <span className="text-[9px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700/60 uppercase tracking-widest">Simple Style</span>
+                    </div>
+                  );
+                }
                 return (
                   <div className={`w-full px-8 py-5 rounded-2xl flex items-center justify-between ${style.preview}`}>
                     <div>

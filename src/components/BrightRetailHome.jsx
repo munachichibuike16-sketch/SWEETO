@@ -130,6 +130,21 @@ export default function BrightRetailHome({ onProductClick }) {
       window.dispatchEvent(event);
     };
 
+    if (styleKey === 'bright_simple') {
+      return (
+        <div 
+          onClick={handleViewAll}
+          className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
+        >
+          <span>{t_smart(title)}</span>
+          <ChevronRight 
+            size={18} 
+            className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
+          />
+        </div>
+      );
+    }
+
     // Style-specific containers
     const containers = isMini ? {
       bright_banner: "w-full p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-[#4a8bf5] text-white shadow-sm flex items-center justify-between gap-3",

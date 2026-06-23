@@ -146,6 +146,28 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
 
+  if (style === 'simple') {
+    const handleHeaderClick = () => {
+      if (onViewAllClick) {
+        onViewAllClick();
+      } else if (viewAllLink) {
+        navigate(viewAllLink);
+      }
+    };
+    return (
+      <div 
+        onClick={handleHeaderClick}
+        className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
+      >
+        <span>{title}</span>
+        <ChevronRight 
+          size={18} 
+          className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
+        />
+      </div>
+    );
+  }
+
   if (style === 'gradient') {
     return <SectionBanner title={title} subtitle={subtitle} viewAllLink={viewAllLink} bannerImage={bannerImage} onViewAllClick={onViewAllClick} />;
   }
@@ -267,6 +289,21 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
 };
 
 export const MiniSectionHeader = ({ title, subtitle, style = 'bold', sideLabel = 'A', onViewAll }) => {
+  if (style === 'simple') {
+    return (
+      <div 
+        onClick={onViewAll}
+        className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
+      >
+        <span>{title}</span>
+        <ChevronRight 
+          size={18} 
+          className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
+        />
+      </div>
+    );
+  }
+
   const styles = {
     gradient: "bg-gradient-to-tr from-[#020617] via-[#020617]/90 to-eas-blue/20 text-white border border-eas-blue/15",
     bold: "bg-white dark:bg-slate-900 border-l-[6px] md:border-l-8 border-slate-900 dark:border-blue-500 text-slate-900 dark:text-white",
