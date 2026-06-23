@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Search, Share2, Package } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -7,8 +7,10 @@ import ProductCard from './ProductCard';
 
 export default function DealsContent({ onProductClick }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
   const { products = [], settings } = useStore();
-  const { lang, t } = useLanguage();
+  const { lang, t, t_smart } = useLanguage();
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -25,12 +27,16 @@ export default function DealsContent({ onProductClick }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Filter daily deals products
+  // Filter daily deals products (optionally by category)
   const dealProducts = useMemo(() => {
-    return Array.isArray(products)
+    let list = Array.isArray(products)
       ? products.filter(p => p.status === 'active' && (Number(p.is_daily_deal) === 1 || (p.original_price && p.original_price > p.price)))
       : [];
-  }, [products]);
+    if (categoryParam) {
+      list = list.filter(p => p.category?.toLowerCase() === categoryParam.toLowerCase());
+    }
+    return list;
+  }, [products, categoryParam]);
 
   // Share handler
   const handleShare = () => {
@@ -74,7 +80,7 @@ export default function DealsContent({ onProductClick }) {
         <span className={`font-black text-sm uppercase tracking-widest transition-opacity duration-300 ${
           scrolled ? 'opacity-100 text-slate-900 dark:text-white' : 'opacity-0'
         }`}>
-          {lang === 'fr' ? 'Super Offres' : 'Super Deals'}
+          {categoryParam ? `${t_smart(categoryParam)} ${lang === 'fr' ? 'Offres' : 'Deals'}` : (lang === 'fr' ? 'Super Offres' : 'Super Deals')}
         </span>
 
         <div className="flex items-center gap-2">
@@ -121,7 +127,7 @@ export default function DealsContent({ onProductClick }) {
           <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#e0f2fe] dark:bg-slate-900 z-10" />
           <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#e0f2fe] dark:bg-slate-900 z-10" />
           
-          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-white/90 mb-1">Today's special offers</p>
+          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-white/90 mb-1">{categoryParam ? `${t_smart(categoryParam)} ${lang === 'fr' ? 'offres spéciales' : 'special offers'}` : (lang === 'fr' ? "Offres spéciales d'aujourd'hui" : "Today's special offers")}</p>
           
           <div className="flex items-center justify-center gap-1.5 sm:gap-2">
             <span className="text-lg sm:text-2xl font-black uppercase tracking-tight leading-none">UP TO</span>

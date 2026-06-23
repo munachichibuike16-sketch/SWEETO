@@ -284,7 +284,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
         <div className="w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
           <Link 
-            to="/deals"
+            to={`/deals?category=${encodeURIComponent(categoryName)}`}
             className="flex items-center gap-1 text-slate-900 dark:text-white font-extrabold text-sm sm:text-base uppercase tracking-tight mb-3 cursor-pointer group hover:text-[#ff3b30] no-underline"
           >
             <span>Daily deals</span>
