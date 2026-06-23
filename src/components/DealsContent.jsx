@@ -9,7 +9,7 @@ export default function DealsContent({ onProductClick }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
-  const { products = [], settings } = useStore();
+  const { products = [], categories = [], settings } = useStore();
   const { lang, t, t_smart } = useLanguage();
 
   const [scrolled, setScrolled] = useState(false);
@@ -27,16 +27,27 @@ export default function DealsContent({ onProductClick }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Filter daily deals products (optionally by category)
+  // Filter daily deals products (optionally by category and its subcategories)
   const dealProducts = useMemo(() => {
     let list = Array.isArray(products)
       ? products.filter(p => p.status === 'active' && (Number(p.is_daily_deal) === 1 || (p.original_price && p.original_price > p.price)))
       : [];
     if (categoryParam) {
-      list = list.filter(p => p.category?.toLowerCase() === categoryParam.toLowerCase());
+      // Find parent category and its subcategory names
+      const parentCat = categories.find(c => c.name?.toLowerCase() === categoryParam.toLowerCase());
+      const subcatNames = parentCat 
+        ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
+        : [];
+      
+      list = list.filter(p => {
+        const pCat = p.category?.toLowerCase();
+        const matchesMain = pCat === categoryParam.toLowerCase();
+        const matchesSub = subcatNames.includes(pCat);
+        return matchesMain || matchesSub;
+      });
     }
     return list;
-  }, [products, categoryParam]);
+  }, [products, categoryParam, categories]);
 
   // Share handler
   const handleShare = () => {
