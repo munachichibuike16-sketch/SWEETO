@@ -679,7 +679,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                   setSearchQuery('');
                   setSelectedCategory(null);
                   setSelectedBrand(null);
-                  navigate('/');
+                  navigate(-1);
                 }}
                 className="flex items-center gap-2 font-black text-slate-900 dark:text-white hover:text-eas-blue transition-colors group"
               >

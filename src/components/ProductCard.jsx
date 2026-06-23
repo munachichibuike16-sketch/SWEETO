@@ -229,11 +229,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
             {t_smart(product.name)}
           </h3>
 
-          {/* Shipping Badge */}
-          <div className="flex items-center gap-1 text-[11px] text-[#e61e25] font-semibold mt-auto pt-1">
-            <span>🚚</span>
-            <span>{lang === 'fr' ? `Livraison: ${settings?.currency || 'XOF'} 1 500` : `Shipping: ${settings?.currency || 'XOF'} 1,500`}</span>
-          </div>
+
         </div>
       </motion.div>
 
