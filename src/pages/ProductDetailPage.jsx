@@ -349,10 +349,10 @@ const ProductDetailPage = () => {
 
   const handleDiscoverClick = (categoryName) => {
     setSearchQuery('');
-    setSelectedCategory(categoryName);
+    setSelectedCategory(null);
     setSelectedBrand(null);
     setIsSearchOverlayOpen(false);
-    navigate('/');
+    navigate(`/category/${encodeURIComponent(categoryName)}`);
   };
 
   const handleSearchSubmit = (e) => {

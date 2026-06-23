@@ -980,9 +980,9 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                         onClick={() => {
                           onClose();
                           if (product?.category) {
+                            setSelectedCategory(null);
+                            navigate(`/category/${encodeURIComponent(product.category)}`);
                             if (window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
-                            setSelectedCategory(product.category);
-                            navigate('/');
                           } else {
                             navigate('/');
                           }

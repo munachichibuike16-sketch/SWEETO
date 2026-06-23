@@ -1069,7 +1069,10 @@ const Storefront = ({ viewMode = 'home' }) => {
                           href="#" 
                           onClick={(e) => {
                             e.preventDefault();
-                            setSelectedCategory(cat.name);
+                            setSelectedCategory(null);
+                            setSelectedBrand(null);
+                            setSearchQuery('');
+                            navigate(`/category/${encodeURIComponent(cat.name)}`);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                           whileHover={{ x: 8, color: '#3B82F6' }}

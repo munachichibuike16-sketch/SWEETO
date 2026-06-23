@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useStore } from '../contexts/StoreContext';
@@ -26,11 +26,13 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { categoryName } = useParams();
   const isWishlistPage = location.pathname === '/wishlist';
   const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
   const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
   
-  const activeCat = categories.find(c => c.name?.toLowerCase() === selectedCategory?.toLowerCase());
+  const activeCategoryName = categoryName ? decodeURIComponent(categoryName) : selectedCategory;
+  const activeCat = categories.find(c => c.name?.toLowerCase() === activeCategoryName?.toLowerCase());
   const activeParentCat = activeCat && activeCat.parent_id 
     ? categories.find(c => c.id === activeCat.parent_id) 
     : activeCat;
@@ -772,10 +774,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
                      key={cat.id || cat.name}
                      type="button"
                      onClick={() => {
-                       setSelectedCategory(cat.name);
+                       setSelectedCategory(null);
                        setSelectedBrand(null);
                        setSearchQuery('');
-                       navigate('/');
+                       navigate(`/category/${encodeURIComponent(cat.name)}`);
                      }}
                      className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
                        isSelected 
