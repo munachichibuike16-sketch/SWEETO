@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, ShoppingCart, User, Bell } from 'lucide-react';
+import { Home, Package, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -21,20 +21,7 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   const isCart = currentPath === '/checkout';
   const isProfile = ['/auth', '/login', '/register', '/settings'].includes(currentPath);
 
-  // Compute unread notification count
-  const unreadNotifCount = (() => {
-    try {
-      const readNotifs = JSON.parse(localStorage.getItem('read_notifications') || '[]');
-      const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
-      const prodList = products || [];
-      return prodList.filter(p => p.is_new_arrival).filter(p => {
-        const id = `new-product-${p.id}`;
-        return !readNotifs.includes(id) && !readTimed[id];
-      }).length;
-    } catch (e) {
-      return (products || []).filter(p => p.is_new_arrival).length;
-    }
-  })();
+
 
   // Trigger bounce animation whenever cartCount changes
   useEffect(() => {
@@ -54,6 +41,14 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
     }
   };
 
+
+  const handleShopClick = () => {
+    if (setIsSidebarOpen && (currentPath === '/' || currentPath.startsWith('/category'))) {
+      setIsSidebarOpen(true);
+    } else {
+      navigate('/products');
+    }
+  };
 
   const handleCartClick = () => {
     if (isCart) {
@@ -91,22 +86,17 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
 
 
 
-      {/* Messages tab */}
+      {/* Shop tab */}
       <button 
-        onClick={() => navigate('/notifications')}
-        className={`relative flex flex-col items-center justify-center transition-all duration-300 z-10 ${
-          isNotif 
+        onClick={handleShopClick}
+        className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
+          isShop 
             ? 'text-eas-blue dark:text-blue-450 font-black scale-105 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 
             : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
         }`}
       >
-        <Bell size={17} strokeWidth={isNotif ? 2.5 : 1.5} />
-        {unreadNotifCount > 0 && (
-          <span className="absolute -top-1.5 -right-2 bg-[#ff3b30] text-white font-black text-[8px] w-4 h-4 rounded-full flex items-center justify-center shadow-md leading-none">
-            {unreadNotifCount}
-          </span>
-        )}
-        <span className="text-[8px] uppercase tracking-widest mt-1">Messages</span>
+        <Package size={17} strokeWidth={isShop ? 2.5 : 1.5} />
+        <span className="text-[8px] uppercase tracking-widest mt-1">Shop</span>
       </button>
 
       {/* Cart tab */}
