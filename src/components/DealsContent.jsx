@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Search, Share2, Package } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
@@ -13,6 +14,35 @@ export default function DealsContent({ onProductClick }) {
   const { lang, t, t_smart } = useLanguage();
 
   const [scrolled, setScrolled] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  // AliExpress-style 8-hour block ticking countdown timer
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const nextMark = new Date();
+      const currentHour = now.getHours();
+      const nextHour = Math.ceil((currentHour + 0.1) / 8) * 8;
+      
+      if (nextHour >= 24) {
+        nextMark.setDate(now.getDate() + 1);
+        nextMark.setHours(0, 0, 0, 0);
+      } else {
+        nextMark.setHours(nextHour, 0, 0, 0);
+      }
+
+      const diff = nextMark - now;
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / 1000 / 60) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Scroll listener to toggle header background opacity
   useEffect(() => {
@@ -71,6 +101,14 @@ export default function DealsContent({ onProductClick }) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 relative overflow-x-hidden">
       
+      <style>{`
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
+      
       {/* AliExpress-Style Floating Sticky Header */}
       <div className={`fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 transition-all duration-300 ${
         scrolled 
@@ -118,38 +156,95 @@ export default function DealsContent({ onProductClick }) {
         </div>
       </div>
 
-      {/* AliExpress-Style Red Ticket Envelope Banner */}
-      <div className="relative w-full aspect-[375/170] sm:aspect-[2.2/1] bg-[#e0f2fe] dark:bg-slate-900 flex items-center justify-center overflow-hidden pt-12">
+      {/* Premium AliExpress-Style Ticket Envelope Banner */}
+      <div className="relative w-full aspect-[375/170] sm:aspect-[2.2/1] bg-gradient-to-tr from-sky-100 via-sky-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center overflow-hidden pt-12">
         {/* Envelope back container */}
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-200/40 via-sky-50/10 to-white dark:to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-200/20 via-sky-50/5 to-white dark:to-slate-950" />
         
         {/* Envelope flap visual */}
         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-white dark:bg-slate-950 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] border-t border-slate-100/50 dark:border-slate-850" 
              style={{ clipPath: 'polygon(0 100%, 50% 0, 100% 100%)' }} />
         
         {/* Sparkle details */}
-        <div className="absolute top-16 right-[15%] text-sky-200 dark:text-sky-800 select-none animate-pulse text-2xl font-black">✦</div>
-        <div className="absolute bottom-4 left-[10%] text-sky-200 dark:text-sky-800 select-none text-xl font-black">⚡</div>
+        <div className="absolute top-16 right-[15%] text-sky-200 dark:text-sky-850 select-none animate-pulse text-2xl font-black">✦</div>
+        <div className="absolute bottom-4 left-[10%] text-sky-200 dark:text-sky-850 select-none text-xl font-black">⚡</div>
 
-        {/* Tilted Coupon Ticket */}
-        <div className="relative w-[88%] max-w-md bg-gradient-to-r from-[#e63946] to-[#d90429] text-white py-4 px-6 rounded-2xl shadow-2xl border-2 border-dashed border-white/20 transform -rotate-2 hover:rotate-0 transition-transform duration-500 flex flex-col items-center justify-center z-10">
+        {/* Tilted Holographic Coupon Ticket */}
+        <motion.div 
+          initial={{ scale: 0.9, rotate: -6, opacity: 0 }}
+          animate={{ scale: 1, rotate: -2, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 100, damping: 15 }}
+          whileHover={{ scale: 1.03, rotate: 0 }}
+          className="relative w-[88%] max-w-md bg-gradient-to-r from-[#d90429] via-[#ef233c] to-[#d90429] text-white py-5 px-7 rounded-3xl shadow-[0_20px_50px_rgba(217,4,41,0.3)] border border-white/20 transform z-10 overflow-hidden group cursor-pointer"
+        >
+          {/* Holographic Shimmer Effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
           
-          {/* Circular punch hole details */}
-          <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#e0f2fe] dark:bg-slate-900 z-10" />
-          <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#e0f2fe] dark:bg-slate-900 z-10" />
-          
-          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-white/90 mb-1">{categoryParam ? `${t_smart(categoryParam)} ${lang === 'fr' ? 'offres spéciales' : 'special offers'}` : (lang === 'fr' ? "Offres spéciales d'aujourd'hui" : "Today's special offers")}</p>
-          
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-            <span className="text-lg sm:text-2xl font-black uppercase tracking-tight leading-none">UP TO</span>
-            <span className="text-4xl sm:text-6xl font-black tracking-tighter leading-none font-mono">70%</span>
-            <div className="flex flex-col justify-center items-start leading-none">
-              <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none">%</span>
-              <span className="text-[10px] sm:text-xs font-black tracking-tight leading-none">OFF</span>
+          {/* Ticket punch hole details */}
+          <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f1f5f9] dark:bg-[#020617] z-10 shadow-inner" />
+          <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f1f5f9] dark:bg-[#020617] z-10 shadow-inner" />
+
+          {/* Dashed Golden Divider */}
+          <div className="absolute left-[70%] top-0 bottom-0 border-l border-dashed border-white/25 z-0" />
+
+          <div className="relative z-10 flex items-center justify-between w-full h-full pr-[30%]">
+            <div className="flex flex-col items-start text-left">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-amber-300 mb-1">
+                {categoryParam ? `${t_smart(categoryParam)} VIP DEAL` : "Today's special offers"}
+              </p>
+              
+              <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg font-black uppercase tracking-tight leading-none text-white/90">UP TO</span>
+                <span className="text-4xl sm:text-6xl font-black tracking-tighter leading-none font-mono text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]">70%</span>
+                <div className="flex flex-col justify-center items-start leading-none">
+                  <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-amber-300">%</span>
+                  <span className="text-[10px] sm:text-xs font-black tracking-tight leading-none text-white/90">OFF</span>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="absolute bottom-1 right-4 text-[7px] font-black uppercase tracking-widest text-white/40">Limited Slots Only</div>
+
+          {/* Golden text on the right side of the divider */}
+          <div className="absolute right-0 top-0 bottom-0 w-[30%] flex flex-col items-center justify-center text-center z-10 select-none px-1">
+            <span className="text-[12px] sm:text-sm font-black uppercase tracking-wider text-amber-300 transform rotate-90 leading-none">
+              VIP
+            </span>
+            <span className="text-[7px] font-black uppercase tracking-widest text-white/70 mt-4 leading-none">
+              SUPER
+            </span>
+          </div>
+
+          <div className="absolute bottom-1.5 left-7 text-[7px] font-black uppercase tracking-widest text-white/40">Limited Slots Only</div>
+        </motion.div>
+      </div>
+
+      {/* AliExpress-Style Countdown Flash Deals Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 md:px-12 py-4 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900 mx-3 md:mx-0 w-[calc(100%-24px)] md:w-full rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-4 md:mb-0 mt-4 md:mt-0">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
+          <h2 className="text-base sm:text-lg font-black uppercase italic tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+            <span>⚡</span>
+            <span>{categoryParam ? `${t_smart(categoryParam)} Super Deals` : (lang === 'fr' ? 'Super Offres' : 'Super Deals')}</span>
+          </h2>
+        </div>
+        
+        <div className="flex items-center gap-2 select-none">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {lang === 'fr' ? 'SE TERMINE DANS' : 'ENDS IN'}
+          </span>
+          <div className="flex items-center gap-1 font-mono text-xs sm:text-sm font-black">
+            <span className="bg-slate-900 dark:bg-slate-800 text-white dark:text-slate-100 px-2 py-1 rounded-md shadow-sm min-w-[28px] text-center">
+              {String(timeLeft.hours).padStart(2, '0')}
+            </span>
+            <span className="text-slate-900 dark:text-white">:</span>
+            <span className="bg-slate-900 dark:bg-slate-800 text-white dark:text-slate-100 px-2 py-1 rounded-md shadow-sm min-w-[28px] text-center">
+              {String(timeLeft.minutes).padStart(2, '0')}
+            </span>
+            <span className="text-slate-900 dark:text-white">:</span>
+            <span className="bg-slate-900 dark:bg-slate-800 text-white dark:text-slate-100 px-2 py-1 rounded-md shadow-sm min-w-[28px] text-center text-red-500 dark:text-red-400">
+              {String(timeLeft.seconds).padStart(2, '0')}
+            </span>
+          </div>
         </div>
       </div>
 
