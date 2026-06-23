@@ -12,6 +12,7 @@ import ProductModal from './components/ProductModal';
 import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
+import DealsContent from './components/DealsContent';
 import BrightRetailHome from './components/BrightRetailHome';
 import CategoryLandingPage from './components/CategoryLandingPage';
 import ShufflingProductPage from './components/ShufflingProductPage';
@@ -800,10 +801,12 @@ const Storefront = ({ viewMode = 'home' }) => {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark relative">
-      <Header 
-        onMenuClick={() => setIsSidebarOpen(true)} 
-        onCartClick={() => setIsCartOpen(true)}
-      />
+      {viewMode !== 'notifications' && viewMode !== 'deals' && (
+        <Header 
+          onMenuClick={() => setIsSidebarOpen(true)} 
+          onCartClick={() => setIsCartOpen(true)}
+        />
+      )}
 
       <motion.div 
         animate={{ 
@@ -813,11 +816,11 @@ const Storefront = ({ viewMode = 'home' }) => {
         }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark flex flex-col origin-center transition-colors duration-300"
-        style={{ paddingTop: viewMode === 'notifications' ? '0px' : 'var(--header-height, 96px)' }}
+        style={{ paddingTop: (viewMode === 'notifications' || viewMode === 'deals') ? '0px' : 'var(--header-height, 96px)' }}
       >
         
         <main className="flex-1 pb-20">
-          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup'].includes(viewMode) && <DiscoveryBar />}
+          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1600px] mx-auto ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
@@ -826,6 +829,8 @@ const Storefront = ({ viewMode = 'home' }) => {
           }`}>
             {viewMode === 'wishlist' ? (
               <WishlistContent onProductClick={handleProductClick} />
+            ) : viewMode === 'deals' ? (
+              <DealsContent onProductClick={handleProductClick} />
             ) : viewMode === 'notifications' ? (
               <NotificationsContent onProductClick={handleProductClick} />
             ) : viewMode === 'visit' ? (

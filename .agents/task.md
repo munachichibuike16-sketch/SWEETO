@@ -1,0 +1,5 @@
+- [x] Create and integrate custom DealsContent component for AliExpress Deals design.
+- [x] Add `layout="aliexpress"` layout mode to `ProductCard.jsx` with custom styling (Title first, then Prices Row, then Discount Badge at the bottom, without unwanted badges).
+- [x] Configure global storefront padding, hide header on Deals page, and exclude DiscoveryBar on Deals page.
+- [x] Remove mobile padding (`px-0`) from the grid container in Deals page for a full-bleed display on phones.
+- [x] Build and verify compilation with `npm run build`.

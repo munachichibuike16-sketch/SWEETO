@@ -47,7 +47,7 @@ const getSoldCount = (product) => {
   return product.sold_count || 0;
 };
 
-const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }) => {
+const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
   const { settings, openGlobalLightbox } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
@@ -144,27 +144,33 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
         className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none"
       >
         {/* Image Container */}
-        <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden bg-transparent mb-2 rounded-2xl">
-          {/* Top-Left Elite Badge */}
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
-              {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
-            </span>
-          </div>
+        <div className={`relative aspect-square w-full flex items-center justify-center overflow-hidden mb-2 rounded-2xl ${
+          layout === 'aliexpress' ? 'bg-[#f4f4f4] dark:bg-slate-900/50' : 'bg-transparent'
+        }`}>
+          {/* Top-Left Elite Badge (hidden in aliexpress layout) */}
+          {layout !== 'aliexpress' && (
+            <div className="absolute top-2.5 left-2.5 z-10">
+              <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
+                {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
+              </span>
+            </div>
+          )}
 
-          {/* Wishlist Button (Floating overlay inside image container top-right) */}
-          <div className="absolute top-2.5 right-2.5 z-20">
-            <button 
-              onClick={handleToggleWishlist}
-              className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
-                isWished 
-                  ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
-                  : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
-              }`}
-            >
-              <Heart size={13} fill={isWished ? "currentColor" : "none"} />
-            </button>
-          </div>
+          {/* Wishlist Button (Floating overlay inside image container top-right, hidden in aliexpress layout) */}
+          {layout !== 'aliexpress' && (
+            <div className="absolute top-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleToggleWishlist}
+                className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
+                  isWished 
+                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
+                    : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
+                }`}
+              >
+                <Heart size={13} fill={isWished ? "currentColor" : "none"} />
+              </button>
+            </div>
+          )}
 
           {/* Cart Button (Floating overlay inside image container bottom-right, AliExpress style) */}
           <div className="absolute bottom-2.5 right-2.5 z-20">
@@ -183,52 +189,84 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false }
               e.target.onerror = null; 
               e.target.src = '/hero-banner.png';
             }}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" 
+            className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${
+              layout === 'aliexpress' ? 'object-cover' : 'object-contain'
+            }`} 
           />
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 py-0.5 text-start">
-          {/* Sold Count with Red Flame */}
-          <div className="flex items-center gap-1 text-[11px] text-[#ff3b30] font-bold mb-1">
-            <span>🔥</span>
-            <span>
-              {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
-            </span>
-            {reviews.length > 0 && (
-              <>
-                <span className="text-slate-300 dark:text-slate-700">•</span>
-                <div className="flex items-center gap-0.5 text-amber-500 font-bold">
-                  <Star size={11} fill="currentColor" />
-                  <span>{averageRating}</span>
-                </div>
-              </>
-            )}
-          </div>
+        {layout === 'aliexpress' ? (
+          <div className="flex flex-col flex-1 py-0.5 text-start px-0.5">
+            {/* Title at the top */}
+            <h3 className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug line-clamp-2 mb-1.5">
+              {t_smart(product.name)}
+            </h3>
 
-          {/* Price & Discount Section */}
-          <div className="flex items-center flex-wrap gap-2 mb-1">
-            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight leading-none">
-              {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
-            </span>
-            {discountPercent > 0 && (
-              <span className="bg-[#ff007a] text-white font-extrabold text-[8px] sm:text-[9.5px] px-1.5 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider shrink-0 leading-none">
-                -{discountPercent}%
+            {/* Prices Row: Current Price & Original Price */}
+            <div className="flex items-baseline flex-wrap gap-1.5 mb-1.5">
+              <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white font-mono tracking-tight leading-none">
+                {settings?.currency || 'XOF'}{product.price?.toLocaleString()}
               </span>
+              {product.original_price && (
+                <span className="text-[10.5px] sm:text-xs text-slate-400 dark:text-slate-500 line-through font-semibold font-mono">
+                  {settings?.currency || 'XOF'}{product.original_price.toLocaleString()}
+                </span>
+              )}
+            </div>
+
+            {/* Pink Discount Badge at the bottom */}
+            {discountPercent > 0 && (
+              <div className="mt-auto">
+                <span className="bg-[#fff0f3] dark:bg-[#2b0811] text-[#ff007a] dark:text-[#ff4d94] font-black text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider leading-none">
+                  -{discountPercent}%
+                </span>
+              </div>
             )}
           </div>
-
-          {product.original_price && (
-            <div className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono mb-1">
-              {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+        ) : (
+          <div className="flex flex-col flex-1 py-0.5 text-start">
+            {/* Sold Count with Red Flame */}
+            <div className="flex items-center gap-1 text-[11px] text-[#ff3b30] font-bold mb-1">
+              <span>🔥</span>
+              <span>
+                {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
+              </span>
+              {reviews.length > 0 && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                    <Star size={11} fill="currentColor" />
+                    <span>{averageRating}</span>
+                  </div>
+                </>
+              )}
             </div>
-          )}
 
-          {/* Title */}
-          <h3 className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug line-clamp-2 uppercase mb-1">
-            {t_smart(product.name)}
-          </h3>
-        </div>
+            {/* Price & Discount Section */}
+            <div className="flex items-center flex-wrap gap-2 mb-1">
+              <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight leading-none">
+                {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
+              </span>
+              {discountPercent > 0 && (
+                <span className="bg-[#ff007a] text-white font-extrabold text-[8px] sm:text-[9.5px] px-1.5 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider shrink-0 leading-none">
+                  -{discountPercent}%
+                </span>
+              )}
+            </div>
+
+            {product.original_price && (
+              <div className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono mb-1">
+                {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+              </div>
+            )}
+
+            {/* Title */}
+            <h3 className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug line-clamp-2 uppercase mb-1">
+              {t_smart(product.name)}
+            </h3>
+          </div>
+        )}
       </motion.div>
 
       <QuickViewModal 
