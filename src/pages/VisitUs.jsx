@@ -104,13 +104,13 @@ const VisitUs = () => {
           <motion.button
             whileHover={{ scale: 1.05, x: -5 }}
             whileActive={{ scale: 0.95 }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 rounded-2xl shadow-xl shadow-eas-blue/5 dark:shadow-black/40 group transition-all"
           >
             <div className="w-8 h-8 rounded-xl bg-eas-blue/10 flex items-center justify-center text-eas-blue group-hover:bg-eas-blue group-hover:text-white transition-all">
               <ArrowLeft size={18} />
             </div>
-            <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white italic">Back Home</span>
+            <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white italic">Back</span>
           </motion.button>
 
           <div className="flex items-center gap-4 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">

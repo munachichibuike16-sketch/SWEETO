@@ -92,7 +92,7 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
     <div className="px-3 md:px-12 py-2">
       {/* Back Button */}
       <button 
-        onClick={() => navigate('/')}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 font-black text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors mb-4 md:mb-6 group"
       >
         <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />

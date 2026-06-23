@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ChevronRight, Package, ShoppingCart, Heart } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useStore } from '../contexts/StoreContext';
 import ProductCard from './ProductCard';
 
 const categoryBanners = {
@@ -23,6 +24,51 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   const { lang, t, t_smart } = useLanguage();
   const navigate = useNavigate();
   const [activePill, setActivePill] = useState('All');
+
+  // Pull-to-refresh state & handlers (AliExpress Style)
+  const { refreshData } = useStore();
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      setTouchStart(e.touches[0].clientY);
+    } else {
+      setTouchStart(0);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (touchStart === 0 || refreshing) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStart;
+    
+    if (diff > 0) {
+      const pull = Math.min(diff * 0.45, 80);
+      setPullDistance(pull);
+      if (diff > 10) {
+        if (e.cancelable) e.preventDefault();
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (refreshing) return;
+    if (pullDistance > 50) {
+      setRefreshing(true);
+      setPullDistance(55);
+      refreshData().finally(() => {
+        setTimeout(() => {
+          setRefreshing(false);
+          setPullDistance(0);
+        }, 800); // smooth indicator hide delay
+      });
+    } else {
+      setPullDistance(0);
+    }
+    setTouchStart(0);
+  };
 
   // Find dynamic category info
   const categoryInfo = useMemo(() => {
@@ -80,8 +126,32 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   const bannerImage = categoryInfo?.image_url || categoryInfo?.icon || categoryBanners[categoryName.toLowerCase()] || categoryBanners.default;
 
   return (
-    <div className="w-full flex flex-col gap-5 px-3 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen">
-      
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="w-full flex flex-col gap-5 px-3 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
+    >
+      {/* Pull-To-Refresh Indicator (AliExpress Style) */}
+      <div 
+        style={{ height: `${pullDistance}px`, opacity: pullDistance > 0 ? 1 : 0 }}
+        className="w-full overflow-hidden transition-all duration-150 flex items-center justify-center bg-transparent shrink-0"
+      >
+        <div className="flex items-center gap-2 text-eas-blue dark:text-blue-400 font-extrabold text-[10px] uppercase tracking-widest bg-slate-100/50 dark:bg-slate-900/30 px-4 py-2 rounded-full border border-slate-200/20 dark:border-white/5 shadow-sm">
+          {refreshing ? (
+            <>
+              <div className="w-3.5 h-3.5 border-2 border-eas-blue dark:border-blue-450 border-t-transparent rounded-full animate-spin"></div>
+              <span>{lang === 'fr' ? 'Mise à jour...' : 'Refreshing...'}</span>
+            </>
+          ) : (
+            <>
+              <i className={`fa-solid fa-arrow-down transition-transform duration-200 ${pullDistance > 50 ? 'rotate-180' : ''}`}></i>
+              <span>{pullDistance > 50 ? (lang === 'fr' ? 'Relâchez pour actualiser' : 'Release to Refresh') : (lang === 'fr' ? 'Glissez pour actualiser' : 'Pull to Refresh')}</span>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Category Hero Banner (AliExpress Style) */}
       <div className="relative w-full h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black">
         {/* Background Image */}

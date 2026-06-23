@@ -939,7 +939,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors relative"
               >
                 <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
               </button>
             </div>
           </div>
@@ -1327,7 +1327,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
                   {/* Privacy Policy */}
                   <div 
-                    onClick={() => { navigate('/privacy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { navigate('/privacy'); window.scrollTo(0, 0); }}
                     className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
                   >
                     <div className="flex items-center gap-3">
@@ -1401,7 +1401,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 <div className="space-y-3.5 text-left animate-fade-in">
                   {/* Terms of Service */}
                   <div 
-                    onClick={() => { navigate('/terms'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { navigate('/terms'); window.scrollTo(0, 0); }}
                     className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
                   >
                     <div className="flex items-center gap-3">
@@ -1415,7 +1415,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
                   {/* Security Policy */}
                   <div 
-                    onClick={() => { navigate('/security'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { navigate('/security'); window.scrollTo(0, 0); }}
                     className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
                   >
                     <div className="flex items-center gap-3">
@@ -1429,7 +1429,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
                   {/* Location & Schedule */}
                   <div 
-                    onClick={() => { navigate('/visit'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { navigate('/visit'); window.scrollTo(0, 0); }}
                     className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
                   >
                     <div className="flex items-center gap-3">

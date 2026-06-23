@@ -354,39 +354,37 @@ const NotificationsContent = ({ onProductClick }) => {
 
   const renderNotificationCard = (notif) => {
     return (
-      <div key={notif.id} className="relative overflow-hidden rounded-3xl group">
-        {/* Swipe Action Background Indicator */}
-        <div className="absolute inset-0 bg-eas-blue rounded-3xl flex items-center justify-end px-6 text-white font-black text-xs uppercase tracking-widest pointer-events-none z-0">
+      <div key={notif.id} className="relative overflow-hidden rounded-[24px] group">
+        {/* Swipe Action Background Indicator (for mobile swipe) */}
+        <div className="absolute inset-0 bg-red-500/10 dark:bg-red-500/5 rounded-[24px] flex items-center justify-end px-6 text-red-500 font-extrabold text-[11px] uppercase tracking-widest pointer-events-none z-0">
           <div className="flex items-center gap-2">
-            <span>{lang === 'fr' ? 'Fermer' : 'Dismiss'}</span>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <span>{lang === 'fr' ? 'Supprimer' : 'Dismiss'}</span>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </div>
         </div>
 
-        {/* Main Notification Card Item with horizontal swipe drag gesture */}
+        {/* Main Card */}
         <motion.div
           layout
           drag="x"
           dragDirectionLock
-          dragConstraints={{ left: -140, right: 0 }}
-          dragElastic={{ left: 0.15, right: 0 }}
+          dragConstraints={{ left: -120, right: 0 }}
+          dragElastic={{ left: 0.1, right: 0 }}
           onDragEnd={(e, info) => {
-            if (info.offset.x < -80) {
+            if (info.offset.x < -70) {
               handleDelete(notif.id);
             }
           }}
-          className={`relative z-10 flex items-center gap-4 p-5 rounded-3xl border transition-all duration-300 cursor-pointer select-none bg-white dark:bg-slate-800 ${
+          className={`relative z-10 flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-[24px] border transition-all duration-300 cursor-pointer bg-white/70 dark:bg-slate-900/60 backdrop-blur-md ${
             notif.isRead 
-              ? 'border-slate-100 dark:border-slate-700/50 opacity-80' 
-              : 'border-eas-blue/20 shadow-xl shadow-eas-blue/5'
-          } ${
-            !notif.isRead ? 'bg-blue-500/[0.04] dark:bg-blue-500/[0.02]' : ''
+              ? 'border-slate-150 dark:border-slate-800/40 opacity-75 hover:opacity-100 hover:border-slate-200 dark:hover:border-slate-700/60' 
+              : 'border-blue-500/20 dark:border-blue-400/20 shadow-[0_4px_25px_rgba(0,82,255,0.02)] dark:shadow-[0_4px_25px_rgba(0,0,0,0.2)] hover:border-blue-500/40 dark:hover:border-blue-400/40'
           }`}
           style={{
-            borderLeftWidth: '4px',
-            borderLeftColor: notif.isRead ? 'transparent' : notif.accentColor
+            borderLeftWidth: '5px',
+            borderLeftColor: notif.isRead ? 'transparent' : notif.accentColor || '#0052ff'
           }}
           onClick={() => {
             handleMarkAsRead(notif.id);
@@ -397,55 +395,63 @@ const NotificationsContent = ({ onProductClick }) => {
             }
           }}
         >
-          {/* Glowing unread dot indicator */}
+          {/* Unread Status Dot Indicator */}
           {!notif.isRead && (
             <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex h-2 w-2 z-20">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600 dark:bg-blue-400 shadow-[0_0_8px_#0052ff]"></span>
             </div>
           )}
 
-          {/* Thumbnail / Product image float */}
-          {notif.product ? (
-            <div className="relative w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden flex-shrink-0 shadow-inner border border-slate-100 dark:border-slate-700/50 p-1 flex items-center justify-center">
-              <img src={notif.product.image_url} alt="" className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute top-0.5 right-0.5 w-5 h-5 rounded-md text-[10px] bg-slate-950/65 flex items-center justify-center text-white select-none">
+          {/* Product Thumbnail or Icon */}
+          <div className="relative w-16 h-16 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center p-1.5 shadow-sm">
+            {notif.product ? (
+              <img 
+                src={notif.product.image_url || notif.product.image} 
+                alt="" 
+                className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" 
+              />
+            ) : (
+              <span className="text-2xl select-none">{notif.icon}</span>
+            )}
+            {notif.product && (
+              <div className="absolute bottom-1 right-1 bg-slate-900/85 dark:bg-slate-950/85 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] text-white select-none">
                 {notif.icon}
               </div>
-            </div>
-          ) : (
-            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-inner border border-slate-100 dark:border-slate-700/50 select-none">
-              {notif.icon}
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Content Stack */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className={`font-black truncate text-sm uppercase tracking-tight ${notif.isRead ? 'text-slate-650 dark:text-slate-350' : 'text-slate-900 dark:text-white'}`}>
-                {notif.title}
-              </h3>
-              <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap ml-2 flex items-center gap-1">
-                <Clock size={10} />
+          {/* Text Content */}
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mb-1.5">
+              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider ${notif.isRead ? 'bg-slate-100 dark:bg-slate-800 text-slate-500' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
+                {notif.type === 'new_arrival' ? (lang === 'fr' ? 'Nouveau' : 'New') : (lang === 'fr' ? 'Alerte' : 'Alert')}
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                <Clock size={11} className="text-slate-300 dark:text-slate-600" />
                 {notif.time}
               </span>
             </div>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-normal pr-4">
+
+            <h3 className={`font-extrabold text-sm uppercase tracking-tight mb-1 truncate ${notif.isRead ? 'text-slate-700 dark:text-slate-350' : 'text-slate-900 dark:text-white'}`}>
+              {notif.title}
+            </h3>
+            
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-450 leading-relaxed pr-2">
               {notif.message}
             </p>
 
-            {/* Specifications Chips Tagging inside Promos */}
+            {/* Specifications Badges */}
             {notif.category === 'promos' && notif.product && (
-              <div className="flex gap-1 mt-2">
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
                 {getProductSpecs(notif.product).map((spec, i) => (
-                  <span key={i} className="text-[8px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-900 text-slate-450 dark:text-slate-550 px-2 py-0.5 rounded">
+                  <span key={i} className="text-[8px] font-extrabold uppercase tracking-wider bg-slate-100/80 dark:bg-slate-950/60 text-slate-550 dark:text-slate-400 px-2 py-0.5 rounded-[4px] border border-slate-200/20 dark:border-white/5">
                     {spec}
                   </span>
                 ))}
               </div>
             )}
 
-            {/* Direct interactive order link inside Tracker card */}
+            {/* CTA action Label */}
             {notif.actionLabel && (
               <span 
                 onClick={(e) => {
@@ -459,21 +465,23 @@ const NotificationsContent = ({ onProductClick }) => {
                     handleWhatsAppOrderTrack(notif);
                   }
                 }}
-                className="inline-block text-[10px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 mt-2.5 hover:underline"
+                className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 mt-3.5 hover:text-teal-500 dark:hover:text-teal-300 transition-colors"
               >
                 {notif.actionLabel}
               </span>
             )}
           </div>
 
-          {/* Price Tagging / Jump button */}
-          <div className="flex flex-col items-end gap-2 shrink-0">
+          {/* Right Price & Actions */}
+          <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
             {notif.product && (
-              <span className={`text-xs font-black ${notif.category === 'promos' ? 'text-amber-500' : 'text-eas-blue'}`}>
+              <span className={`text-[13px] font-black sm:mb-2 ${notif.category === 'promos' ? 'text-amber-500 dark:text-amber-400' : 'text-eas-blue dark:text-blue-400'}`}>
                 {notif.product.price.toLocaleString()} {settings?.currency || 'FCFA'}
               </span>
             )}
+
             <div className="flex gap-2">
+              {/* Mark Read button */}
               {!notif.isRead && (
                 <button 
                   type="button"
@@ -481,12 +489,14 @@ const NotificationsContent = ({ onProductClick }) => {
                     e.stopPropagation();
                     handleMarkAsRead(notif.id);
                   }}
-                  className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white border border-emerald-500/20 dark:border-emerald-500/30 transition-all cursor-pointer flex items-center justify-center"
+                  className="w-8 h-8 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white border border-emerald-500/20 dark:border-emerald-500/30 transition-all cursor-pointer flex items-center justify-center"
                   title={lang === 'fr' ? 'Marquer comme lu' : 'Mark as read'}
                 >
-                  <CheckCheck size={14} />
+                  <CheckCheck size={15} />
                 </button>
               )}
+
+              {/* Action Button */}
               <button 
                 type="button"
                 onClick={(e) => {
@@ -499,16 +509,31 @@ const NotificationsContent = ({ onProductClick }) => {
                   } else if (notif.category === 'orders') {
                     handleWhatsAppOrderTrack(notif);
                   } else {
-                    showToast(lang === 'fr' ? 'Alerte de sécurité validée ✓' : 'Security alert verified ✓', 'success');
+                    showToast(lang === 'fr' ? 'Alerte validée ✓' : 'Alert verified ✓', 'success');
                   }
                 }}
-                className={`p-2 rounded-xl transition-all ${
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
                   notif.isRead
-                    ? 'bg-slate-50 dark:bg-slate-700/50 text-slate-400'
-                    : 'bg-eas-blue text-white shadow-md shadow-eas-blue/15'
+                    ? 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 border border-slate-100 dark:border-slate-800'
+                    : 'bg-eas-blue text-white shadow-md shadow-eas-blue/15 hover:bg-blue-600 hover:shadow-lg'
                 }`}
               >
-                <ArrowRight size={14} />
+                <ArrowRight size={15} />
+              </button>
+
+              {/* Quick Dismiss Button (Desktop convenience) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(notif.id);
+                }}
+                className="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-650 hover:text-white dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500 dark:hover:text-white border border-red-500/20 dark:border-red-500/30 transition-all cursor-pointer flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100"
+                title={lang === 'fr' ? 'Supprimer' : 'Dismiss'}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -518,14 +543,14 @@ const NotificationsContent = ({ onProductClick }) => {
   };
 
   return (
-    <div className="relative min-h-screen px-4 pt-0 pb-32 md:px-8 max-w-4xl mx-auto">
+    <div className="relative min-h-screen px-4 pt-0 pb-32 md:px-8 max-w-5xl mx-auto">
       {/* Background Decorative Accents */}
       <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-eas-blue/5 blur-3xl rounded-full" />
 
       {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
       <div className="fixed z-30 left-0 right-0 bg-eas-light/95 dark:bg-eas-dark/95 backdrop-blur-md border-b border-eas-blue/10 py-4 shadow-md dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
-        <div className="max-w-4xl mx-auto flex flex-col gap-4 px-4 md:px-8">
+        <div className="max-w-5xl mx-auto flex flex-col gap-4 px-4 md:px-8">
           
           {/* Top Row: Back Button & Title */}
           <div className="flex items-center justify-between w-full">
@@ -540,7 +565,7 @@ const NotificationsContent = ({ onProductClick }) => {
 
             {/* Center Pill Badge */}
             <div className="border border-eas-blue/20 bg-eas-blue/5 dark:bg-eas-blue/10 px-8 py-3 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(0,82,255,0.08)]">
-              <Bell className="w-4 h-4 text-eas-blue dark:text-blue-400 animate-pulse" />
+              <Bell className="w-4 h-4 text-eas-blue dark:text-blue-400" />
               <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-eas-blue dark:text-blue-400">NOTIFICATIONS</span>
             </div>
 

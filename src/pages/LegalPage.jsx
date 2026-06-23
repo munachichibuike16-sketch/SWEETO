@@ -86,7 +86,7 @@ const LegalPage = ({ type = 'privacy' }) => {
             className="flex items-center gap-6"
            >
               <button 
-                onClick={() => navigate('/')}
+                onClick={() => navigate(-1)}
                 className="w-14 h-14 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 flex items-center justify-center text-slate-400 hover:text-eas-blue hover:border-eas-blue hover:shadow-xl transition-all group"
               >
                 <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />

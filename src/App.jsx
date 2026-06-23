@@ -269,7 +269,7 @@ const Storefront = ({ viewMode = 'home' }) => {
 
   // 2. Scroll to top on navigation/filter change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, [activeCategory, selectedBrand, viewMode, searchQuery]);
 
   // 3. Clear Modal / Navigation logic
@@ -550,7 +550,7 @@ const Storefront = ({ viewMode = 'home' }) => {
               setSelectedBrand(null);
               setSearchQuery('');
               navigate(`/category/${encodeURIComponent('Smartphones')}`);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo(0, 0);
             }}
           />
         );
@@ -569,7 +569,7 @@ const Storefront = ({ viewMode = 'home' }) => {
               setSelectedBrand(null);
               setSearchQuery('');
               navigate(`/category/${encodeURIComponent('TV & Video')}`);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo(0, 0);
             }}
           />
         );
@@ -590,7 +590,7 @@ const Storefront = ({ viewMode = 'home' }) => {
               setSelectedBrand(null);
               setSearchQuery('');
               navigate(`/category/${encodeURIComponent(catName)}`);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo(0, 0);
             }}
           />
         );
@@ -615,7 +615,7 @@ const Storefront = ({ viewMode = 'home' }) => {
               setSelectedBrand(null);
               setSearchQuery('');
               navigate(`/category/${encodeURIComponent(section.category)}`);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo(0, 0);
             } : undefined}
           />
         );

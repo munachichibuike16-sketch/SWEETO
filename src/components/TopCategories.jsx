@@ -122,7 +122,7 @@ export default function TopCategories() {
     setSelectedBrand(null);
     setSearchQuery('');
     navigate(`/category/${encodeURIComponent(categoryName)}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   };
 
   const scroll = (direction) => {

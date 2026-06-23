@@ -212,7 +212,7 @@ const StoreContent = () => {
 
       {/* BRAND SUB-BAR: Fixed top, remains stationary below the global web header when scrolling */}
       <div className="fixed z-30 left-0 right-0 bg-eas-light/95 dark:bg-eas-dark/95 backdrop-blur-md border-b border-eas-blue/10 py-4 px-4 md:px-8 shadow-sm dark:shadow-none" style={{ top: 'var(--header-height, 96px)' }}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between w-full">
+        <div className="max-w-5xl mx-auto flex items-center justify-between w-full">
           {/* Back Button: Cool & chilling rounded-xl custom back arrow with hover rotate/slide animation */}
           <button 
             onClick={goBack} 
@@ -240,7 +240,7 @@ const StoreContent = () => {
 
       <header className="w-full pt-4 px-4 flex flex-col items-center">
         {/* Clickable Customer Stats Grid from image_3147e4.png */}
-        <div className="w-full max-w-md grid grid-cols-3 gap-3 mt-4 px-1">
+        <div className="w-full max-w-2xl grid grid-cols-3 gap-4 mt-4 px-1">
           {/* Card 1: Active Orders */}
           <div 
             id="btn-stat-orders" 
@@ -273,7 +273,7 @@ const StoreContent = () => {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 mt-6">
+      <main className="max-w-5xl mx-auto px-4 mt-8">
 
         {/* ================= VIEW 1: ACTIVE ORDERS PAGE ================= */}
         {activeView === 'active-orders' && (
@@ -430,31 +430,41 @@ const StoreContent = () => {
 
             {/* Liked / Saved Interactive Grid */}
             {likedItemsCount > 0 ? (
-              <div id="liked-items-grid" className="grid grid-cols-2 gap-3">
+              <div id="liked-items-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                 {/* Real items from WishlistContext */}
                 {wishlistItems.map((item) => (
-                  <div key={item.id} className="bg-white dark:bg-eas-dark/95 border border-slate-200 dark:border-white/5 p-3 rounded-xl flex flex-col justify-between h-44 relative text-left shadow-sm dark:shadow-none">
-                    {/* Floating Heart Unlike Trigger */}
-                    <button 
-                      onClick={() => handleUnlike(item.id)}
-                      className="absolute top-2.5 right-2.5 text-rose-500 dark:text-rose-400 hover:text-slate-400 dark:hover:text-gray-400 transition-colors text-xs p-1 cursor-pointer"
-                    >
-                      <i className="fa-solid fa-heart"></i>
-                    </button>
+                  <div key={item.id} className="group bg-white dark:bg-[#0b1329]/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/5 p-3.5 rounded-[22px] flex flex-col justify-between relative text-left shadow-sm hover:shadow-md transition-all duration-300">
+                    <div>
+                      {/* Thumbnail Image Container */}
+                      <div className="relative aspect-square w-full rounded-[16px] bg-slate-50 dark:bg-slate-900/60 overflow-hidden mb-3">
+                        <img 
+                          src={item.image_url || item.image || '/hero-banner.png'} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        {/* Floating Heart Unlike Trigger */}
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleUnlike(item.id); }}
+                          className="absolute top-2.5 right-2.5 bg-white/90 dark:bg-black/60 backdrop-blur-md text-rose-500 hover:text-slate-400 dark:hover:text-gray-400 transition-colors w-7 h-7 rounded-full flex items-center justify-center shadow-sm cursor-pointer z-10"
+                        >
+                          <i className="fa-solid fa-heart"></i>
+                        </button>
+                      </div>
 
-                    <div className="mt-2">
-                      <span className="text-[8px] font-black bg-eas-blue/10 text-eas-blue dark:text-blue-400 px-1.5 py-0.5 rounded uppercase">{item.category || 'TECH'}</span>
-                      <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-1 line-clamp-1">{item.name}</h5>
-                      <p className="text-[9px] text-slate-400 dark:text-gray-500 leading-normal mt-1 line-clamp-2">Authentic local product from SWEETO-HUB.</p>
+                      <div className="mt-1">
+                        <span className="text-[8px] font-black bg-eas-blue/10 text-eas-blue dark:text-blue-400 px-1.5 py-0.5 rounded uppercase">{item.category || 'TECH'}</span>
+                        <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-1.5 line-clamp-1">{item.name}</h5>
+                        <p className="text-[9px] text-slate-400 dark:text-gray-500 leading-normal mt-0.5 line-clamp-2">Authentic local product from SWEETO-HUB.</p>
+                      </div>
                     </div>
 
-                    <div className="flex justify-between items-center mt-3">
+                    <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5">
                       <span className="text-xs font-extrabold text-eas-blue dark:text-blue-400">{item.price?.toLocaleString()} F</span>
                       <button 
                         onClick={() => orderViaWhatsApp(item.name, item.price)}
-                        className="active-tap w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-[11px] shadow-lg shadow-teal-500/20 cursor-pointer"
+                        className="active-tap w-7 h-7 rounded-full bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center text-[11px] shadow-lg shadow-teal-500/20 cursor-pointer transition-colors"
                       >
-                        <i className="fa-brands fa-whatsapp"></i>
+                        <i className="fa-brands fa-whatsapp font-bold"></i>
                       </button>
                     </div>
                   </div>

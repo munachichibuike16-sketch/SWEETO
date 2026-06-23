@@ -324,8 +324,38 @@ const Header = ({ onMenuClick, onCartClick }) => {
   };
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    let lastScrollY = window.scrollY;
+    let accumulatedDiff = 0;
+    const threshold = 15; // minimum scroll delta in px to trigger direction change
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const diff = currentScrollY - lastScrollY;
+
+      if (currentScrollY <= 15) {
+        // Always show header at the very top
+        setIsScrolled(false);
+        accumulatedDiff = 0;
+      } else {
+        // Reset accumulation if scroll direction changes
+        if ((diff > 0 && accumulatedDiff < 0) || (diff < 0 && accumulatedDiff > 0)) {
+          accumulatedDiff = diff;
+        } else {
+          accumulatedDiff += diff;
+        }
+
+        if (accumulatedDiff > threshold) {
+          // Scrolling down: hide the header logo row
+          setIsScrolled(true);
+        } else if (accumulatedDiff < -threshold) {
+          // Scrolling up: reveal the header logo row immediately
+          setIsScrolled(false);
+        }
+      }
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -628,16 +658,16 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </motion.button>
 
               {/* Notifications */}
-              <div className="relative" ref={notifRef}>
+              <div className="relative">
                 <motion.button 
                   whileHover={{ scale: 1.1 }} 
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  onClick={() => navigate('/notifications')}
                   className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors relative"
                 >
                   <Bell size={20} />
-                  {unreadNotifCount > 0 && !isNotifOpen && (
-                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-eas-blue rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-eas-blue/30 animate-pulse">
+                  {unreadNotifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-eas-blue rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-eas-blue/30">
                       {unreadNotifCount}
                     </span>
                   )}
@@ -688,7 +718,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               >
                 <Bell size={22} strokeWidth={1.5} />
                 {unreadNotifCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 min-w-4.5 h-4.5 px-1 bg-[#ff3b30] rounded-full flex items-center justify-center text-white text-[8px] font-black shadow-md animate-pulse leading-none">
+                  <span className="absolute top-1.5 right-1.5 min-w-4.5 h-4.5 px-1 bg-[#ff3b30] rounded-full flex items-center justify-center text-white text-[8px] font-black shadow-md leading-none">
                     {unreadNotifCount}
                   </span>
                 )}

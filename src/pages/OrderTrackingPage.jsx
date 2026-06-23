@@ -304,13 +304,13 @@ const OrderTrackingPage = () => {
       
       <div className="max-w-[1000px] mx-auto px-6 pt-32">
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-3 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-12 group"
         >
           <div className="w-10 h-10 rounded-xl bg-white dark:bg-eas-dark border border-slate-100 dark:border-white/5 flex items-center justify-center group-hover:shadow-lg transition-all">
             <ArrowLeft size={18} />
           </div>
-          <span className="text-xs font-black uppercase tracking-widest">{t('return_to_store') || 'Return to Store'}</span>
+          <span className="text-xs font-black uppercase tracking-widest">{t('back') || 'Back'}</span>
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
