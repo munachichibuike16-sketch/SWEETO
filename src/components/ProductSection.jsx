@@ -142,7 +142,19 @@ const ProductRow = ({ products, onProductClick }) => {
   );
 };
 
-export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink, bannerImage, onViewAllClick, isExpanded, isMobile, isCarousel = true, productsCount = 0 }) => {
+export const SectionHeader = ({ 
+  title, 
+  subtitle, 
+  style = 'gradient', 
+  viewAllLink, 
+  bannerImage, 
+  onViewAllClick, 
+  onHeaderClick, 
+  isExpanded, 
+  isMobile, 
+  isCarousel = true, 
+  productsCount = 0 
+}) => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
 
@@ -150,24 +162,20 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
     const showChevron = isCarousel && productsCount > 2;
 
     const handleHeaderClick = () => {
-      if (isMobile) {
-        if (showChevron && onViewAllClick) {
-          onViewAllClick();
-        } else if (viewAllLink) {
-          navigate(viewAllLink);
-        }
-      } else {
-        if (onViewAllClick) {
-          onViewAllClick();
-        } else if (viewAllLink) {
-          navigate(viewAllLink);
-        }
+      if (onHeaderClick) {
+        onHeaderClick();
+      } else if (onViewAllClick) {
+        onViewAllClick();
+      } else if (viewAllLink) {
+        navigate(viewAllLink);
       }
     };
 
     const handleViewAllClick = (e) => {
       e.stopPropagation();
-      if (viewAllLink) {
+      if (onViewAllClick) {
+        onViewAllClick();
+      } else if (viewAllLink) {
         navigate(viewAllLink);
       }
     };
@@ -189,12 +197,12 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
           )}
         </div>
 
-        {viewAllLink && (
+        {(viewAllLink || onViewAllClick) && (
           <button 
             onClick={handleViewAllClick}
             className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-0.5 uppercase tracking-wider"
           >
-            <span>{t('view_all') || (t('voir_tout') || (lang === 'fr' ? 'Voir tout' : 'View all'))}</span>
+            <span>{t('view_all') || 'View All'}</span>
             <ChevronRight size={14} className="stroke-[2.5]" />
           </button>
         )}
@@ -300,15 +308,19 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
 
   const isCarousel = type !== 'category';
 
+  const handleRightViewAllClick = () => {
+    if (onViewAllClick) {
+      onViewAllClick();
+    } else if (viewAllLink) {
+      navigate(viewAllLink);
+    }
+  };
+
   const handleHeaderClick = () => {
     if (isMobile) {
       setIsExpanded(prev => !prev);
     } else {
-      if (onViewAllClick) {
-        onViewAllClick();
-      } else if (viewAllLink) {
-        navigate(viewAllLink);
-      }
+      handleRightViewAllClick();
     }
   };
 
@@ -322,7 +334,8 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
             style={headerStyle || (hideBanner ? 'bold' : 'gradient')} 
             viewAllLink={viewAllLink} 
             bannerImage={bannerImage} 
-            onViewAllClick={handleHeaderClick}
+            onViewAllClick={handleRightViewAllClick}
+            onHeaderClick={handleHeaderClick}
             isExpanded={isExpanded}
             isMobile={isMobile}
             isCarousel={isCarousel}
@@ -370,10 +383,6 @@ export const MiniSectionHeader = ({ title, subtitle, style = 'bold', sideLabel =
         className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
       >
         <span>{title}</span>
-        <ChevronRight 
-          size={18} 
-          className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
-        />
       </div>
     );
   }
