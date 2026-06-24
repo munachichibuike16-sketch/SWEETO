@@ -159,7 +159,7 @@ export const SectionHeader = ({
   const navigate = useNavigate();
 
   if (style === 'simple') {
-    const showChevron = isCarousel && productsCount > 2;
+    const showChevron = isCarousel && productsCount > 0;
 
     const handleHeaderClick = () => {
       if (onHeaderClick) {
