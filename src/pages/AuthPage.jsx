@@ -1092,71 +1092,65 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   if (currentTab === 'settings') {
     return (
-      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
-        <button 
-          onClick={() => {
-            if (activeSettingsSection !== 'menu' && activeSettingsSection !== 'legal') {
-              setActiveSettingsSection('menu');
-            } else if (activeSettingsSection === 'legal') {
-              setActiveSettingsSection('menu');
-            } else {
-              if (sessionUser) {
-                setCurrentTab('overview');
-              } else {
-                navigate(-1);
-              }
-            }
-          }} 
-          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <span className="candy-decoration">⚡</span>
-        <span className="candy-decoration">💻</span>
-        <span className="candy-decoration">✨</span>
-        <span className="candy-decoration" style={{ top: '20%', left: '15%' }}>💖</span>
-        <span className="candy-decoration" style={{ bottom: '20%', right: '15%' }}>🚀</span>
+      <div className="profile-body dark:bg-[#020617] transition-colors duration-500 pb-20">
         
         <div className="main-container" style={{ maxWidth: '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-          <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl animate-fade-in" style={{ width: '100%' }}>
-            <div className="card-content">
+          
+          {/* AliExpress-Style Premium Header Bar */}
+          <div className="md:relative fixed md:top-auto top-0 left-0 right-0 z-30 h-14 bg-white/95 dark:bg-[#020617]/95 md:bg-transparent dark:md:bg-transparent border-b border-slate-100 dark:border-slate-800/60 md:border-none flex items-center justify-between px-4 md:px-0 w-full shadow-sm md:shadow-none">
+            <button 
+              onClick={() => {
+                if (activeSettingsSection !== 'menu' && activeSettingsSection !== 'legal') {
+                  setActiveSettingsSection('menu');
+                } else if (activeSettingsSection === 'legal') {
+                  setActiveSettingsSection('menu');
+                } else {
+                  if (sessionUser) {
+                    setCurrentTab('overview');
+                  } else {
+                    navigate(-1);
+                  }
+                }
+              }} 
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            
+            <h2 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider text-center select-none">
+              {activeSettingsSection === 'menu' && 'Settings'}
+              {activeSettingsSection === 'profile' && 'Profile Details'}
+              {activeSettingsSection === 'address' && 'Shipping Address'}
+              {activeSettingsSection === 'security' && 'Account Security'}
+              {activeSettingsSection === 'about' && 'About SWEETO Hub'}
+              {activeSettingsSection === 'legal' && 'Legal Information'}
+            </h2>
+            
+            <div className="w-10 h-10"></div>
+          </div>
 
-              {/* Title Header */}
-              <div className="mb-6 border-b border-slate-100 dark:border-white/5 pb-4 text-left">
-                <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
-                  {activeSettingsSection === 'menu' && 'Settings'}
-                  {activeSettingsSection === 'profile' && 'Profile Details'}
-                  {activeSettingsSection === 'address' && 'Shipping Address'}
-                  {activeSettingsSection === 'security' && 'Account Security'}
-                  {activeSettingsSection === 'about' && 'About SWEETO Hub'}
-                  {activeSettingsSection === 'legal' && 'Legal Information'}
-                </h2>
-                <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                  {activeSettingsSection === 'menu' && 'Configure your user preferences'}
-                  {activeSettingsSection === 'profile' && 'Update photo, name, and phone'}
-                  {activeSettingsSection === 'address' && 'Modify default shipping location'}
-                  {activeSettingsSection === 'security' && 'Update authentication settings'}
-                  {activeSettingsSection === 'about' && 'Application information and details'}
-                  {activeSettingsSection === 'legal' && 'Terms, policies, and store details'}
-                </p>
-              </div>
+          {/* Mobile Spacer to push content below fixed header */}
+          <div className="h-14 md:hidden block shrink-0 w-full"></div>
+
+          <div className="auth-card dark:bg-[#020617]/40 dark:border-white/5 backdrop-blur-xl animate-fade-in" style={{ width: '100%' }}>
+            <div className="card-content">
 
               {/* SETTINGS MENU LIST */}
               {activeSettingsSection === 'menu' && (
-                <div className="space-y-3.5 text-left">
-                  {/* Personal Group (Only for signed in user) */}
+                <div className="space-y-4 text-left">
+                  {/* GROUP 1: Personal Profile (Only for signed in user) */}
                   {sessionUser && (
-                    <>
+                    <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5">
                       {/* Profile Info */}
                       <div 
                         onClick={() => setActiveSettingsSection('profile')}
-                        className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                        className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                          <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500 shrink-0">
                             <User size={16} />
                           </div>
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Profile Info</span>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-slate-200">Profile Info</span>
                         </div>
                         <div className="flex items-center gap-3">
                           {(settingsForm.avatarUrl || sessionUser?.picture) ? (
@@ -1166,7 +1160,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                               className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800 shrink-0"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xs">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xs shrink-0">
                               {sessionUser?.name?.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -1177,13 +1171,13 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       {/* Shipping Address */}
                       <div 
                         onClick={() => setActiveSettingsSection('address')}
-                        className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                        className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-red-500/10 rounded-xl text-red-500">
+                          <div className="p-2 bg-red-500/10 rounded-xl text-red-500 shrink-0">
                             <MapPin size={16} />
                           </div>
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Shipping Address</span>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Shipping Address</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-400 font-bold max-w-[150px] truncate">
@@ -1196,13 +1190,13 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       {/* Security / Password */}
                       <div 
                         onClick={() => setActiveSettingsSection('security')}
-                        className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
+                        className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
+                          <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500 shrink-0">
                             <Lock size={16} />
                           </div>
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Account Security</span>
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Account Security</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-400 font-bold">
@@ -1211,161 +1205,165 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                           <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                         </div>
                       </div>
-                    </>
+                    </div>
                   )}
 
-                  {/* App Preferences */}
-                  {/* Ship to / Destination country */}
-                  <div 
-                    onClick={() => showToast("Shipping country is locked to Côte d'Ivoire 🇨🇮", "info")}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
-                        <Globe size={16} />
+                  {/* GROUP 2: Preferences */}
+                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5">
+                    {/* Ship to */}
+                    <div 
+                      onClick={() => showToast("Shipping country is locked to Côte d'Ivoire 🇨🇮", "info")}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0">
+                          <Globe size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Ship to</span>
                       </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Ship to</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-black uppercase">Cote D'Ivoire</span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-black uppercase">Cote D'Ivoire</span>
+
+                    {/* Currency */}
+                    <div 
+                      onClick={() => showToast(`Store currency is locked to ${settings?.currency || 'XOF'} 💵`, "info")}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500 shrink-0">
+                          <Tag size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Currency</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-black uppercase">{settings?.currency || 'XOF'}</span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
+                    </div>
+
+                    {/* Language */}
+                    <div 
+                      onClick={() => showToast("Language settings coming soon! 🌍", "info")}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
+                          <Globe size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Language</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-black uppercase">English (US)</span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
+                    </div>
+
+                    {/* Theme */}
+                    <div 
+                      onClick={toggleTheme}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-yellow-500/10 rounded-xl text-yellow-500 shrink-0">
+                          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Theme</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-black uppercase">{isDarkMode ? 'Dark' : 'Light'}</span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
+                    </div>
+
+                    {/* Clear Cache */}
+                    <div 
+                      onClick={() => {
+                        if (cacheSize === '0.0 KB') {
+                          showToast("Cache is already clean! 🧹", "info");
+                          return;
+                        }
+                        showToast("Clearing temporary image cache...", "info");
+                        setTimeout(() => {
+                          setCacheSize('0.0 KB');
+                          showToast("Cache cleared successfully! 🧹", "success");
+                        }, 1200);
+                      }}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-pink-500/10 rounded-xl text-pink-500 shrink-0">
+                          <RotateCcw size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Clear Cache</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold">{cacheSize}</span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GROUP 3: About & Legal */}
+                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5">
+                    {/* Rate Sweeto Hub */}
+                    <div 
+                      onClick={() => showToast("Thank you for your rating! ⭐⭐⭐⭐⭐", "success")}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-450/10 rounded-xl text-amber-500 shrink-0">
+                          <Star size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Rate Sweeto Hub</span>
+                      </div>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
-                  </div>
 
-                  {/* Currency */}
-                  <div 
-                    onClick={() => showToast(`Store currency is locked to ${settings?.currency || 'XOF'} 💵`, "info")}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
-                        <Tag size={16} />
+                    {/* Privacy Policy */}
+                    <div 
+                      onClick={() => { navigate('/privacy'); window.scrollTo(0, 0); }}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-teal-500/10 rounded-xl text-teal-655 dark:text-teal-400 shrink-0">
+                          <Shield size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Privacy Policy</span>
                       </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Currency</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-black uppercase">{settings?.currency || 'XOF'}</span>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
-                  </div>
 
-                  {/* Language */}
-                  <div 
-                    onClick={() => showToast("Language settings coming soon! 🌍", "info")}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
-                        <Globe size={16} />
+                    {/* Legal Information */}
+                    <div 
+                      onClick={() => setActiveSettingsSection('legal')}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
+                          <Scale size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Legal Information</span>
                       </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Language</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-black uppercase">English (US)</span>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
-                  </div>
 
-                  {/* Theme Settings */}
-                  <div 
-                    onClick={toggleTheme}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-yellow-500/10 rounded-xl text-yellow-500">
-                        {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                    {/* Version */}
+                    <div className="flex items-center justify-between p-4 text-slate-800 dark:text-slate-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-500/10 rounded-xl text-slate-500 shrink-0">
+                          <Info size={16} />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider">Version</span>
                       </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Theme</span>
+                      <span className="text-[10px] text-slate-400 font-bold">v2.0.1</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-black uppercase">{isDarkMode ? 'Dark' : 'Light'}</span>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-                  </div>
-
-                  {/* Clear Cache */}
-                  <div 
-                    onClick={() => {
-                      if (cacheSize === '0.0 KB') {
-                        showToast("Cache is already clean! 🧹", "info");
-                        return;
-                      }
-                      showToast("Clearing temporary image cache...", "info");
-                      setTimeout(() => {
-                        setCacheSize('0.0 KB');
-                        showToast("Cache cleared successfully! 🧹", "success");
-                      }, 1200);
-                    }}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-pink-500/10 rounded-xl text-pink-500">
-                        <RotateCcw size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Clear Cache</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-bold">{cacheSize}</span>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-                  </div>
-
-                  {/* Legal & Feedback Section */}
-                  {/* Rate Sweeto Hub */}
-                  <div 
-                    onClick={() => showToast("Thank you for your rating! ⭐⭐⭐⭐⭐", "success")}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-amber-400/10 rounded-xl text-amber-500">
-                        <Star size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Rate Sweeto Hub</span>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
-
-                  {/* Privacy Policy */}
-                  <div 
-                    onClick={() => { navigate('/privacy'); window.scrollTo(0, 0); }}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-teal-500/10 rounded-xl text-teal-600 dark:text-teal-400">
-                        <Shield size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Privacy Policy</span>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
-
-                  {/* Legal Information */}
-                  <div 
-                    onClick={() => setActiveSettingsSection('legal')}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
-                        <Scale size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Legal Information</span>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
-
-                  {/* Version Info Row */}
-                  <div className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 shadow-sm text-slate-800 dark:text-slate-200">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-500/10 rounded-xl text-slate-500">
-                        <Info size={16} />
-                      </div>
-                      <span className="text-xs font-bold uppercase tracking-wider">Version</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-bold">v2.0.1</span>
                   </div>
 
                   {/* Log Out/In Option at Bottom */}
-                  <div className="pt-6">
+                  <div className="pt-2">
                     {sessionUser ? (
                       <button 
                         onClick={handleLogout}
@@ -1387,7 +1385,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                   </div>
 
                   {/* Copyright Notice */}
-                  <div className="text-center pt-8 pb-4">
+                  <div className="text-center pt-8 pb-4 select-none">
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed text-center w-full block">
                       © {new Date().getFullYear()} {settings?.shopName || 'SWEETO HUB'} <br/>
                       {settings?.footer_copyright || 'ELITE LOCAL COMMERCE'}
@@ -1398,69 +1396,71 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
               {/* LEGAL INFORMATION SECTION SUBMENU */}
               {activeSettingsSection === 'legal' && (
-                <div className="space-y-3.5 text-left animate-fade-in">
-                  {/* Terms of Service */}
-                  <div 
-                    onClick={() => { navigate('/terms'); window.scrollTo(0, 0); }}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
-                        <Scale size={16} />
+                <div className="animate-fade-in text-left">
+                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5 mb-5">
+                    {/* Terms of Service */}
+                    <div 
+                      onClick={() => { navigate('/terms'); window.scrollTo(0, 0); }}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0">
+                          <Scale size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Terms of Service</span>
                       </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Terms of Service</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+
+                    {/* Security Policy */}
+                    <div 
+                      onClick={() => { navigate('/security'); window.scrollTo(0, 0); }}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-rose-500/10 rounded-xl text-rose-500 shrink-0">
+                          <Lock size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-slate-200">Security Policy</span>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+
+                    {/* Location & Schedule */}
+                    <div 
+                      onClick={() => { navigate('/visit'); window.scrollTo(0, 0); }}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500 shrink-0">
+                          <MapPin size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-slate-200">Location & Schedule</span>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+
+                    {/* About Sweeto Hub */}
+                    <div 
+                      onClick={() => setActiveSettingsSection('about')}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
+                          <Store size={16} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">About Sweeto Hub</span>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
                   </div>
 
-                  {/* Security Policy */}
-                  <div 
-                    onClick={() => { navigate('/security'); window.scrollTo(0, 0); }}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-rose-500/10 rounded-xl text-rose-500">
-                        <Lock size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Security Policy</span>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
-
-                  {/* Location & Schedule */}
-                  <div 
-                    onClick={() => { navigate('/visit'); window.scrollTo(0, 0); }}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
-                        <MapPin size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Location & Schedule</span>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
-
-                  {/* About Sweeto Hub */}
-                  <div 
-                    onClick={() => setActiveSettingsSection('about')}
-                    className="flex items-center justify-between p-4 bg-white/40 dark:bg-eas-dark/30 rounded-2.5xl border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer shadow-sm group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
-                        <Store size={16} />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">About Sweeto Hub</span>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
-
-                  <div className="pt-4">
+                  <div className="pt-2">
                     <button 
                       onClick={() => setActiveSettingsSection('menu')}
-                      className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                      className="w-full py-4 rounded-3xl border border-slate-200 dark:border-white/5 text-slate-655 dark:text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center shadow-sm"
                     >
-                      Back
+                      Back to Menu
                     </button>
                   </div>
                 </div>
