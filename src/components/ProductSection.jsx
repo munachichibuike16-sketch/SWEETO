@@ -142,7 +142,7 @@ const ProductRow = ({ products, onProductClick }) => {
   );
 };
 
-export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink, bannerImage, onViewAllClick }) => {
+export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink, bannerImage, onViewAllClick, isExpanded, isMobile }) => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
 
@@ -162,7 +162,9 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
         <span>{title}</span>
         <ChevronRight 
           size={18} 
-          className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
+          className={`text-slate-400 dark:text-slate-500 group-hover:text-eas-blue transition-transform duration-300 ${
+            isMobile && isExpanded ? 'rotate-90 text-eas-blue' : 'group-hover:translate-x-0.5'
+          }`} 
         />
       </div>
     );
@@ -245,6 +247,17 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
 const ProductSection = ({ title, subtitle, products, type, settings, onProductClick, viewAllLink, bannerImage, hideBanner, headerStyle, hideHeader, cols, onViewAllClick }) => {
   const navigate = useNavigate();
   const [activeSubCategory, setActiveSubCategory] = useState('All');
+  const [isMobile, setIsMobile] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Limit to 100 products for sections
   const displayProducts = (type === 'category') ? products : products.slice(0, 100);
@@ -254,6 +267,18 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
     : displayProducts.filter(p => p.category === activeSubCategory);
 
   const isCarousel = type !== 'category';
+
+  const handleHeaderClick = () => {
+    if (isMobile) {
+      setIsExpanded(prev => !prev);
+    } else {
+      if (onViewAllClick) {
+        onViewAllClick();
+      } else if (viewAllLink) {
+        navigate(viewAllLink);
+      }
+    }
+  };
 
   return (
     <section className="py-1 md:py-2 px-0 md:px-12">
@@ -265,13 +290,28 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
             style={headerStyle || (hideBanner ? 'bold' : 'gradient')} 
             viewAllLink={viewAllLink} 
             bannerImage={bannerImage} 
-            onViewAllClick={onViewAllClick}
+            onViewAllClick={handleHeaderClick}
+            isExpanded={isExpanded}
+            isMobile={isMobile}
           />
         </div>
       )}
 
       {isCarousel ? (
-        <ProductRow products={filteredProducts} onProductClick={onProductClick} />
+        isMobile && isExpanded ? (
+          <div className="grid grid-cols-2 gap-1.5 px-1 w-full pb-4 animate-fadeIn">
+            {filteredProducts.slice(0, 4).map((product, idx) => (
+              <ProductCard
+                key={`${product.id}-${idx}`}
+                product={product}
+                index={idx}
+                onProductClick={onProductClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <ProductRow products={filteredProducts} onProductClick={onProductClick} />
+        )
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-8 px-1 md:px-0 w-full">
           {filteredProducts.map((product, idx) => (

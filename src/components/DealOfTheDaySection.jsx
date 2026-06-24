@@ -18,6 +18,17 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
   const { videoAds, settings, showToast } = useStore();
   const { t, lang, t_smart } = useLanguage();
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Time remaining countdown for Deal of the Day
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 22, seconds: 45 });
@@ -77,7 +88,9 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               <SectionHeader 
                 title={title && title !== 'New Section' ? title : (lang === 'fr' ? 'Offres du Jour' : 'Daily Deals')} 
                 style="simple" 
-                onViewAllClick={() => navigate('/deals')} 
+                onViewAllClick={isMobile ? () => setIsExpanded(!isExpanded) : () => navigate('/deals')} 
+                isExpanded={isExpanded}
+                isMobile={isMobile}
               />
             </div>
           ) : (
@@ -112,7 +125,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
           
           <div className="relative mt-2 flex-1 flex flex-col justify-center">
             {/* Slide Buttons */}
-            {products.length > 2 && (
+            {products.length > 2 && !(isMobile && isExpanded) && (
               <>
                 <button 
                   onClick={() => {
@@ -137,9 +150,12 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
 
             <div 
               id="deals-carousel"
-              className="flex overflow-x-auto gap-3 md:gap-6 no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
+              className={isMobile && isExpanded 
+                ? "grid grid-cols-2 gap-3 px-1 pb-2 animate-fadeIn"
+                : "flex overflow-x-auto gap-3 md:gap-6 no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
+              }
             >
-              {products.map((product, idx) => {
+              {(isMobile && isExpanded ? products.slice(0, 4) : products).map((product, idx) => {
                 const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : (product.discount || 25);
                 const soldCount = product.sold_count || 0;
                 const stock = product.stock || 5;
@@ -149,9 +165,11 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                 const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
                 const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : null;
 
-                const widthClass = showVideo
-                  ? "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)]"
-                  : "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-12px)] xl:min-w-[calc(20%-18px)]";
+                const widthClass = isMobile && isExpanded
+                  ? "w-full"
+                  : (showVideo
+                    ? "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)]"
+                    : "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-12px)] xl:min-w-[calc(20%-18px)]");
 
                 const isWished = isInWishlist(product.id);
 
