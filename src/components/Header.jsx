@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -24,12 +24,26 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { categoryName } = useParams();
   const isWishlistPage = location.pathname === '/wishlist';
   const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
   const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/settings';
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setInputValue(searchQuery || '');
+  }, [searchQuery]);
   
   const activeCategoryName = categoryName ? decodeURIComponent(categoryName) : selectedCategory;
   const activeCat = categories.find(c => c.name?.toLowerCase() === activeCategoryName?.toLowerCase());
@@ -725,78 +739,45 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </button>
             </div>
           </div>
- 
-          {/* Row 2: Pill-shaped Search Bar (fixed, persistent) */}
-          <form 
-            onSubmit={handleSearchTrigger} 
-            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${isScrolled ? 'mt-0' : 'mt-2.5'}`}
+
+          {/* Row 2: Pill-shaped Search Bar (fixed, persistent click-trigger) */}
+          <div 
+            onClick={() => setIsSearchOpen(true)}
+            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${isScrolled ? 'mt-0' : 'mt-2.5'} cursor-pointer`}
           >
             {/* Camera Icon */}
-            <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
+            <div className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
               <Camera size={19} strokeWidth={2} />
-            </button>
+            </div>
             
             {/* Separator line */}
             <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
             
-            {/* Input field */}
-            <input 
-              type="text" 
-              value={inputValue}
-              onChange={handleInputChange}
-              onFocus={() => inputValue.length > 1 && setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder={placeholders[currentPlaceholderIndex]} 
-              className="w-full bg-transparent border-none outline-none font-medium text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1.5"
-            />
+            {/* Input field (readonly visual display) */}
+            <div className="w-full bg-transparent border-none outline-none font-medium text-sm text-slate-400 dark:text-slate-500 px-0 py-1.5 select-none truncate text-start">
+              {inputValue || placeholders[currentPlaceholderIndex]}
+            </div>
             
             {/* Clear button */}
             {inputValue && (
               <button 
                 type="button" 
-                onClick={() => setInputValue('')} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInputValue('');
+                  setSearchQuery('');
+                }} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 p-1 shrink-0 cursor-pointer"
               >
                 <X size={15} />
               </button>
             )}
  
             {/* Black Search Button */}
-            <button 
-              type="submit" 
-              className="bg-slate-950 dark:bg-slate-800 text-white rounded-full h-8 px-5 flex items-center justify-center transition-all hover:bg-slate-900 active:scale-95 shrink-0"
-            >
+            <div className="bg-slate-950 dark:bg-slate-800 text-white rounded-full h-8 px-5 flex items-center justify-center transition-all shrink-0">
               <Search size={16} strokeWidth={2.5} />
-            </button>
- 
-            {/* Mobile Suggestions */}
-            <AnimatePresence>
-              {showSuggestions && suggestions.length > 0 && (
-                <motion.div 
-                   initial={{ opacity: 0, y: 10 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   exit={{ opacity: 0, y: 10 }}
-                   className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
-                >
-                  {suggestions.map((product) => (
-                    <div 
-                       key={product.id}
-                       onClick={() => handleSuggestionClick(product)}
-                       className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-none"
-                    >
-                      <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={product.image_url || product.image || '/hero-banner.png'} alt={product.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex flex-col text-start">
-                        <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{product.name}</span>
-                        <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{product.category}</span>
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </form>
+            </div>
+          </div>
  
            <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1.5 pt-1.5 snap-x snap-mandatory scroll-smooth select-none h-10 opacity-100 mt-2 scale-y-100 w-full items-center">
              <button
@@ -1001,6 +982,192 @@ const Header = ({ onMenuClick, onCartClick }) => {
         </motion.button>
       </nav>
       )}
+
+      {/* AliExpress Style Full-screen Search Overlay for Mobile */}
+      <AnimatePresence>
+        {isSearchOpen && isMobile && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed inset-0 bg-white dark:bg-[#020617] z-[999] overflow-y-auto flex flex-col"
+          >
+            {/* Top Row: Back button, Search input, Search icon */}
+            <div className="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-[#020617] shrink-0">
+              <button 
+                type="button" 
+                onClick={() => setIsSearchOpen(false)}
+                className="text-slate-700 dark:text-slate-300 p-1 cursor-pointer"
+              >
+                <ArrowLeft size={22} strokeWidth={2.5} />
+              </button>
+
+              <form 
+                onSubmit={handleSearchTrigger}
+                className="flex-1 flex items-center bg-[#f4f4f4] dark:bg-slate-900/60 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative"
+              >
+                {/* Camera Icon */}
+                <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 cursor-pointer">
+                  <Camera size={19} strokeWidth={2} />
+                </button>
+                
+                {/* Separator line */}
+                <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-850 shrink-0"></div>
+
+                <input 
+                  type="text"
+                  autoFocus
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  placeholder={placeholders[currentPlaceholderIndex]}
+                  className="w-full bg-transparent border-none outline-none font-semibold text-sm text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1"
+                />
+
+                {inputValue && (
+                  <button 
+                    type="button" 
+                    onClick={() => setInputValue('')} 
+                    className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 p-1 shrink-0 cursor-pointer"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+
+                <button 
+                  type="submit" 
+                  className="bg-slate-950 dark:bg-slate-800 text-white rounded-full h-8 px-4 flex items-center justify-center transition-all hover:bg-slate-900 active:scale-95 shrink-0 cursor-pointer"
+                >
+                  <Search size={16} strokeWidth={2.5} />
+                </button>
+              </form>
+            </div>
+
+            {/* Content Container */}
+            <div className="flex-1 flex flex-col w-full">
+              {/* Blue Promo Banner */}
+              <div className="w-full bg-gradient-to-r from-blue-600 to-[#007aff] px-4 py-2.5 flex items-center justify-between text-white text-[11px] font-black uppercase tracking-wider shadow-sm select-none shrink-0">
+                <span>Brand Day Sale</span>
+                <span className="text-yellow-350 font-mono font-black">Ends: {(() => {
+                  const promoDate = new Date();
+                  promoDate.setDate(promoDate.getDate() + 3);
+                  return promoDate.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' });
+                })()}, 06:59 GMT+00:00</span>
+              </div>
+
+              {/* Suggestions list (if user has typed something) */}
+              {inputValue && suggestions.length > 0 ? (
+                <div className="flex flex-col w-full divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#020617]">
+                  {suggestions.map((product) => (
+                    <div 
+                      key={product.id}
+                      onClick={() => {
+                        handleSuggestionClick(product);
+                        setIsSearchOpen(false);
+                      }}
+                      className="flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-900/50"
+                    >
+                      <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                        <img src={product.image_url || product.image || '/hero-banner.png'} alt={product.name} className="max-h-full max-w-full object-contain" />
+                      </div>
+                      <div className="flex flex-col text-start">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{product.name}</span>
+                        <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{product.category}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Discover More grid (when input is empty or no suggestions) */
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <Search size={14} className="text-slate-400" />
+                      {t('discover_more') || 'Discover more'}
+                    </h3>
+
+                    {/* 2-Column Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      {[
+                        { 
+                          keyword: "Free Gift", 
+                          count: lang === 'fr' ? "Plus de 117k articles" : "117k+ items", 
+                          imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Life Size Figures", 
+                          count: lang === 'fr' ? "Populaire" : "Popular", 
+                          imageUrl: "https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Phone", 
+                          count: lang === 'fr' ? "Coupons applicables" : "Coupons applicable", 
+                          imageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Laptop", 
+                          count: lang === 'fr' ? "Plus de 3400 articles" : "3400+ items", 
+                          imageUrl: "https://images.unsplash.com/photo-1496181130204-7552cc14f1d0?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Unusual Products", 
+                          count: lang === 'fr' ? "Nouveautés" : "New Arrivals", 
+                          imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Mobile Phones", 
+                          count: lang === 'fr' ? "Coupons applicables" : "Coupons applicable", 
+                          imageUrl: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Mini PC", 
+                          count: lang === 'fr' ? "Tendances" : "Trending", 
+                          imageUrl: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=150" 
+                        },
+                        { 
+                          keyword: "Robot", 
+                          count: lang === 'fr' ? "Plus de 10k articles" : "10k+ items", 
+                          imageUrl: "https://images.unsplash.com/photo-1531746790731-6c087fecd7c3?auto=format&fit=crop&q=80&w=150" 
+                        }
+                      ].map((item, idx) => (
+                        <div 
+                          key={idx}
+                          onClick={() => {
+                            setInputValue(item.keyword);
+                            setSearchQuery(item.keyword);
+                            logSearch(item.keyword);
+                            setIsSearchOpen(false);
+                          }}
+                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl cursor-pointer transition-all border border-slate-100/50 dark:border-slate-800/40 select-none group"
+                        >
+                          <div className="flex-1 flex flex-col items-start text-start">
+                            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight group-hover:text-eas-blue line-clamp-1">{item.keyword}</span>
+                            <span className="text-[8px] font-bold text-[#ff3b30] mt-0.5 tracking-wider uppercase leading-none">{item.count}</span>
+                          </div>
+                          <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-sm border border-slate-100/50 dark:border-slate-800/20">
+                            <img src={item.imageUrl} alt={item.keyword} className="max-h-full max-w-full object-contain" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Floating camera / Search by image button at the bottom */}
+                  <div className="w-full flex justify-center pb-8 pt-4">
+                    <button 
+                      type="button"
+                      className="px-5 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <Camera size={14} className="text-slate-500" />
+                      <span>{lang === 'fr' ? 'Recherche par image' : 'Search by image'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
