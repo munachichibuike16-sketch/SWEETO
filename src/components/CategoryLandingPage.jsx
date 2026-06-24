@@ -5,6 +5,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
 import ProductCard from './ProductCard';
+import { SectionHeader } from './ProductSection';
 
 const categoryBanners = {
   "smartphones": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=1000",
@@ -27,6 +28,18 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
   const location = useLocation();
   const swipeDir = location.state?.swipeDir || 'next';
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Sibling Category navigation mapping
   const parentCategories = useMemo(() => {
@@ -282,29 +295,47 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
       {/* Daily Deals Section */}
       {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
-        <div className="w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
-          <Link 
-            to={`/deals?category=${encodeURIComponent(categoryName)}`}
-            className="flex items-center gap-1 text-slate-900 dark:text-white font-extrabold text-sm sm:text-base uppercase tracking-tight mb-3 cursor-pointer group hover:text-[#ff3b30] no-underline"
-          >
-            <span>Daily deals</span>
-            <ChevronRight size={16} className="text-slate-400 group-hover:text-[#ff3b30] group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+        <div className="w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 flex flex-col bg-transparent p-0 shadow-none border-0">
+          <div className="px-1.5 md:px-0">
+            <SectionHeader 
+              title={lang === 'fr' ? 'Offres du Jour' : 'Daily Deals'} 
+              style="simple" 
+              viewAllLink={`/deals?category=${encodeURIComponent(categoryName)}`}
+              onHeaderClick={isMobile ? () => setIsExpanded(!isExpanded) : () => navigate(`/deals?category=${encodeURIComponent(categoryName)}`)}
+              onViewAllClick={() => navigate(`/deals?category=${encodeURIComponent(categoryName)}`)}
+              isExpanded={isExpanded}
+              isMobile={isMobile}
+              isCarousel={true}
+              productsCount={categoryDeals.length}
+            />
+          </div>
 
-          {/* Horizontally scrollable deals list */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1 snap-x snap-mandatory">
-            {categoryDeals.map((prod) => (
-              <div 
-                key={`deal-${prod.id}`}
-                className="w-32 min-w-32 sm:w-40 sm:min-w-40 snap-start"
-              >
+          {isMobile && isExpanded ? (
+            <div className="grid grid-cols-2 gap-1.5 px-0.5 w-full pb-4 animate-fadeIn">
+              {categoryDeals.slice(0, 4).map((prod) => (
                 <ProductCard 
+                  key={`deal-${prod.id}`}
                   product={prod}
                   onProductClick={onProductClick}
                 />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            /* Horizontally scrollable deals list */
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1.5 snap-x snap-mandatory">
+              {categoryDeals.map((prod) => (
+                <div 
+                  key={`deal-${prod.id}`}
+                  className="w-32 min-w-32 sm:w-40 sm:min-w-40 snap-start"
+                >
+                  <ProductCard 
+                    product={prod}
+                    onProductClick={onProductClick}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
