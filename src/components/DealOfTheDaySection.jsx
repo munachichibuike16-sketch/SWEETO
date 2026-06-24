@@ -73,7 +73,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
   };
 
   const showVideo = videoAdId !== 'none';
-  const isSimple = headerStyle === 'simple' || headerStyle === 'bright_simple';
+  const isSimple = true;
 
   return (
     <section className="py-2 px-6 md:px-12">
