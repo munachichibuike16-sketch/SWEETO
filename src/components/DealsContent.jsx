@@ -79,6 +79,14 @@ export default function DealsContent({ onProductClick }) {
     return list;
   }, [products, categoryParam, categories]);
 
+  // Get recommendation products for "More to Love" section (active products not in deals, prioritized by features)
+  const moreToLoveProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+    const dealIds = new Set(dealProducts.map(p => p.id));
+    const list = products.filter(p => p.status === 'active' && !dealIds.has(p.id));
+    return [...list].sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)).slice(0, 20);
+  }, [products, dealProducts]);
+
   // Share handler
   const handleShare = () => {
     if (navigator.share) {
@@ -270,6 +278,37 @@ export default function DealsContent({ onProductClick }) {
           </div>
         )}
       </div>
+
+      {/* AliExpress-Style "More To Love" Section */}
+      {moreToLoveProducts.length > 0 && (
+        <div className="mt-8 px-0 md:px-12 bg-slate-50 dark:bg-slate-950">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 mx-3 md:mx-0 w-[calc(100%-24px)] md:w-full rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-red-500 text-lg">❤️</span>
+              <h2 className="text-base sm:text-lg font-black uppercase italic tracking-tight text-slate-900 dark:text-white">
+                {lang === 'fr' ? "Plus d'articles à adorer" : "More to Love"}
+              </h2>
+            </div>
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {lang === 'fr' ? "RECOMMANDÉ POUR VOUS" : "RECOMMENDED FOR YOU"}
+            </span>
+          </div>
+
+          <div className="w-full px-0 md:px-0 py-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-6">
+              {moreToLoveProducts.map((prod, idx) => (
+                <ProductCard 
+                  key={prod.id}
+                  product={prod}
+                  index={idx}
+                  onProductClick={onProductClick}
+                  layout="aliexpress"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
