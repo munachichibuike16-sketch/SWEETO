@@ -154,18 +154,38 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
         navigate(viewAllLink);
       }
     };
+
+    const handleViewAllClick = (e) => {
+      e.stopPropagation();
+      if (viewAllLink) {
+        navigate(viewAllLink);
+      }
+    };
+
     return (
-      <div 
-        onClick={handleHeaderClick}
-        className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
-      >
-        <span>{title}</span>
-        <ChevronRight 
-          size={18} 
-          className={`text-slate-400 dark:text-slate-500 group-hover:text-eas-blue transition-transform duration-300 ${
-            isMobile && isExpanded ? 'rotate-90 text-eas-blue' : 'group-hover:translate-x-0.5'
-          }`} 
-        />
+      <div className="flex items-center justify-between w-full mb-4 select-none">
+        <div 
+          onClick={handleHeaderClick}
+          className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight group cursor-pointer"
+        >
+          <span>{title}</span>
+          <ChevronRight 
+            size={18} 
+            className={`text-slate-400 dark:text-slate-500 group-hover:text-eas-blue transition-transform duration-300 ${
+              isMobile && isExpanded ? 'rotate-90 text-eas-blue' : 'group-hover:translate-x-0.5'
+            }`} 
+          />
+        </div>
+
+        {viewAllLink && (
+          <button 
+            onClick={handleViewAllClick}
+            className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-0.5 uppercase tracking-wider"
+          >
+            <span>{t('view_all') || (t('voir_tout') || (lang === 'fr' ? 'Voir tout' : 'View all'))}</span>
+            <ChevronRight size={14} className="stroke-[2.5]" />
+          </button>
+        )}
       </div>
     );
   }

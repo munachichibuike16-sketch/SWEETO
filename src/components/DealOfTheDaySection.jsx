@@ -88,6 +88,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               <SectionHeader 
                 title={title && title !== 'New Section' ? title : (lang === 'fr' ? 'Offres du Jour' : 'Daily Deals')} 
                 style="simple" 
+                viewAllLink="/deals"
                 onViewAllClick={isMobile ? () => setIsExpanded(!isExpanded) : () => navigate('/deals')} 
                 isExpanded={isExpanded}
                 isMobile={isMobile}

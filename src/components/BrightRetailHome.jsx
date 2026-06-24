@@ -132,15 +132,26 @@ export default function BrightRetailHome({ onProductClick }) {
 
     if (styleKey === 'bright_simple') {
       return (
-        <div 
-          onClick={handleViewAll}
-          className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
-        >
-          <span>{t_smart(title)}</span>
-          <ChevronRight 
-            size={18} 
-            className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
-          />
+        <div className="flex items-center justify-between w-full mb-4 select-none">
+          <div 
+            onClick={handleViewAll}
+            className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight group cursor-pointer"
+          >
+            <span>{t_smart(title)}</span>
+            <ChevronRight 
+              size={18} 
+              className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
+            />
+          </div>
+          {showViewAll && (
+            <button 
+              onClick={handleViewAll}
+              className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-0.5 uppercase tracking-wider"
+            >
+              <span>{lang === 'fr' ? 'Voir tout' : 'View all'}</span>
+              <ChevronRight size={14} className="stroke-[2.5]" />
+            </button>
+          )}
         </div>
       );
     }
