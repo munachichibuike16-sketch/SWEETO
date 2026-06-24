@@ -142,16 +142,26 @@ const ProductRow = ({ products, onProductClick }) => {
   );
 };
 
-export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink, bannerImage, onViewAllClick, isExpanded, isMobile }) => {
+export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink, bannerImage, onViewAllClick, isExpanded, isMobile, isCarousel = true, productsCount = 0 }) => {
   const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
 
   if (style === 'simple') {
+    const showChevron = isCarousel && productsCount > 2;
+
     const handleHeaderClick = () => {
-      if (onViewAllClick) {
-        onViewAllClick();
-      } else if (viewAllLink) {
-        navigate(viewAllLink);
+      if (isMobile) {
+        if (showChevron && onViewAllClick) {
+          onViewAllClick();
+        } else if (viewAllLink) {
+          navigate(viewAllLink);
+        }
+      } else {
+        if (onViewAllClick) {
+          onViewAllClick();
+        } else if (viewAllLink) {
+          navigate(viewAllLink);
+        }
       }
     };
 
@@ -169,12 +179,14 @@ export const SectionHeader = ({ title, subtitle, style = 'gradient', viewAllLink
           className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight group cursor-pointer"
         >
           <span>{title}</span>
-          <ChevronRight 
-            size={18} 
-            className={`text-slate-400 dark:text-slate-500 group-hover:text-eas-blue transition-transform duration-300 ${
-              isMobile && isExpanded ? 'rotate-90 text-eas-blue' : 'group-hover:translate-x-0.5'
-            }`} 
-          />
+          {showChevron && (
+            <ChevronRight 
+              size={18} 
+              className={`text-slate-400 dark:text-slate-500 group-hover:text-eas-blue transition-transform duration-300 ${
+                isMobile && isExpanded ? 'rotate-90 text-eas-blue' : 'group-hover:translate-x-0.5'
+              }`} 
+            />
+          )}
         </div>
 
         {viewAllLink && (
@@ -313,6 +325,8 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
             onViewAllClick={handleHeaderClick}
             isExpanded={isExpanded}
             isMobile={isMobile}
+            isCarousel={isCarousel}
+            productsCount={filteredProducts.length}
           />
         </div>
       )}

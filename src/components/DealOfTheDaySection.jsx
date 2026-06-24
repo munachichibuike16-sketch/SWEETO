@@ -92,6 +92,8 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                 onViewAllClick={isMobile ? () => setIsExpanded(!isExpanded) : () => navigate('/deals')} 
                 isExpanded={isExpanded}
                 isMobile={isMobile}
+                isCarousel={true}
+                productsCount={products.length}
               />
             </div>
           ) : (
