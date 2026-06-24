@@ -42,6 +42,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
   }, []);
 
   useEffect(() => {
+    const handleOpenSearch = (e) => {
+      if (e.detail?.defaultValue) {
+        setInputValue(e.detail.defaultValue);
+      }
+      setIsSearchOpen(true);
+    };
+    window.addEventListener('open-search-modal', handleOpenSearch);
+    return () => window.removeEventListener('open-search-modal', handleOpenSearch);
+  }, []);
+
+  useEffect(() => {
     setInputValue(searchQuery || '');
   }, [searchQuery]);
   

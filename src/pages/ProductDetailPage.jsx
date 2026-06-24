@@ -46,10 +46,7 @@ const ProductDetailPage = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [sheetScrollY, setSheetScrollY] = useState(0);
 
-  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  const [searchInputValue, setSearchInputValue] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+
 
   const [reviews, setReviews] = useState([]);
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
@@ -322,49 +319,7 @@ const ProductDetailPage = () => {
     setSheetScrollY(e.currentTarget.scrollTop);
   };
 
-  const handleSearchInputValueChange = (value) => {
-    setSearchInputValue(value);
-    if (value.trim().length > 1) {
-      const filtered = liveProducts.filter(p => 
-        p.name.toLowerCase().includes(value.toLowerCase()) || 
-        p.category.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 5);
-      setSuggestions(filtered);
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
 
-  const handleSuggestionClick = (prod) => {
-    setSearchInputValue('');
-    setShowSuggestions(false);
-    setIsSearchOverlayOpen(false);
-    navigate(`/product/${prod.id}`);
-  };
-
-  // Extract unique categories dynamically from products list
-  const categories = Array.from(new Set(liveProducts.map(p => p.category).filter(Boolean))).slice(0, 12);
-
-  const handleDiscoverClick = (categoryName) => {
-    setSearchQuery('');
-    setSelectedCategory(null);
-    setSelectedBrand(null);
-    setIsSearchOverlayOpen(false);
-    navigate(`/category/${encodeURIComponent(categoryName)}`);
-  };
-
-  const handleSearchSubmit = (e) => {
-    if (e) e.preventDefault();
-    if (searchInputValue.trim()) {
-      setSearchQuery(searchInputValue);
-      setSelectedCategory(null);
-      setSelectedBrand(null);
-      setIsSearchOverlayOpen(false);
-      navigate('/');
-    }
-  };
 
   // Recommendations feed
   const recommendedProducts = liveProducts
@@ -505,8 +460,10 @@ const ProductDetailPage = () => {
               {/* Search Bar Input Container */}
               <div 
                 onClick={() => {
-                  setSearchInputValue(product.category || '');
-                  setIsSearchOverlayOpen(true);
+                  const event = new CustomEvent('open-search-modal', {
+                    detail: { defaultValue: product.category || '' }
+                  });
+                  window.dispatchEvent(event);
                 }}
                 className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full py-1 pl-4 pr-1 flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
               >
@@ -1351,118 +1308,7 @@ const ProductDetailPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Mobile Search Overlay Modal */}
-      <AnimatePresence>
-        {isSearchOverlayOpen && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="fixed inset-0 z-[1000] bg-slate-50 dark:bg-[#0b1324] md:hidden flex flex-col"
-          >
-            {/* Search Top Bar */}
-            <div className="flex items-center justify-between px-4 pt-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0c1527] gap-3">
-              {/* Close/Back Chevron */}
-              <button 
-                onClick={() => setIsSearchOverlayOpen(false)}
-                className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-75"
-              >
-                <ChevronLeft size={24} strokeWidth={2.5} />
-              </button>
 
-              {/* Form Input Container */}
-              <form 
-                onSubmit={handleSearchSubmit}
-                className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full py-1 pl-3.5 pr-1 flex items-center gap-2 border border-slate-200/50 dark:border-slate-700/50 relative"
-              >
-                {/* Camera Icon */}
-                <button 
-                  type="button" 
-                  onClick={() => showToast("Visual image search coming soon! 📸", "info")}
-                  className="text-slate-400 dark:text-slate-500 hover:text-slate-650 cursor-pointer"
-                >
-                  <Camera size={16} strokeWidth={2.5} />
-                </button>
-                
-                {/* Divider */}
-                <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700" />
- 
-                {/* Input Text */}
-                <input 
-                  type="text" 
-                  value={searchInputValue}
-                  onChange={(e) => handleSearchInputValueChange(e.target.value)}
-                  onFocus={() => searchInputValue.length > 1 && setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  placeholder={lang === 'fr' ? "Rechercher des produits..." : "Search products..."}
-                  className="flex-1 bg-transparent border-none outline-none text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 py-1"
-                  autoFocus
-                />
-
-                {/* Clear button */}
-                {searchInputValue && (
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setSearchInputValue('');
-                      setSuggestions([]);
-                      setShowSuggestions(false);
-                    }} 
-                    className="text-slate-405 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1 shrink-0 cursor-pointer"
-                  >
-                    <X size={15} />
-                  </button>
-                )}
- 
-                {/* Rounded Black Search Button */}
-                <button 
-                  type="submit"
-                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-950 rounded-full flex items-center justify-center text-white cursor-pointer active:scale-95 transition-all scale-90"
-                >
-                  <Search size={12} strokeWidth={3} />
-                </button>
-
-                {/* Mobile Suggestions */}
-                <AnimatePresence>
-                  {showSuggestions && suggestions.length > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
-                    >
-                      {suggestions.map((prod) => (
-                        <div 
-                          key={prod.id}
-                          onClick={() => handleSuggestionClick(prod)}
-                          className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-none"
-                        >
-                          <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0">
-                            <img src={prod.image_url || prod.image || '/hero-banner.png'} alt={prod.name} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex flex-col text-start">
-                            <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{prod.name}</span>
-                            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{prod.category}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </form>
-            </div>
-
-            {/* Clean empty search overlay layout */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none opacity-40">
-              <Search size={48} className="text-slate-350 dark:text-slate-600 mb-3" strokeWidth={1.5} />
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {lang === 'fr' ? 'Saisissez un mot-clé pour commencer...' : 'Type a keyword to start searching...'}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Global Sidebar & Cart overlay drawers */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
