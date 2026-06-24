@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Play, ChevronRight, ShoppingBag, Star, ShoppingCart } from 'lucide-react';
+import { Zap, Play, ChevronRight, ShoppingBag, Star, ShoppingCart, Heart } from 'lucide-react';
 import ProductCard from './ProductCard';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useWishlist } from '../contexts/WishlistContext';
 import VideoAdSection from './VideoAdSection';
 import { useStore } from '../contexts/StoreContext';
 import { SectionBanner, SectionHeader, MiniSectionHeader } from './ProductSection';
 import { useLanguage } from '../contexts/LanguageContext';
+import confetti from 'canvas-confetti';
 
 const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick, title, subtitle }) => {
   const navigate = useNavigate();
   const { cartCount, addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const { videoAds, settings, showToast } = useStore();
-  const { t, lang } = useLanguage();
+  const { t, lang, t_smart } = useLanguage();
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   
   // Time remaining countdown for Deal of the Day
@@ -64,8 +67,11 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
   return (
     <section className="py-2 px-6 md:px-12">
       <div className={`grid grid-cols-1 ${showVideo ? 'lg:grid-cols-5 gap-8 lg:gap-12' : 'grid-cols-1'}`}>
-        {/* Left Column: Products Grid */}
-        <div className={`lg:col-span-${showVideo ? '3' : '5'} bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm flex flex-col relative group/deals`}>
+        <div className={`lg:col-span-${showVideo ? '3' : '5'} ${
+          isSimple 
+            ? 'bg-transparent border-0 p-0 shadow-none' 
+            : 'bg-slate-50/50 dark:bg-slate-900/10 backdrop-blur-sm p-4 sm:p-8 rounded-xl sm:rounded-[3rem] border border-slate-100 dark:border-slate-800/40 shadow-sm'
+        } flex flex-col relative group/deals`}>
           {isSimple ? (
             <div className="mb-4 pl-2">
               <SectionHeader 
@@ -147,91 +153,208 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                   ? "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(50%-12px)] xl:min-w-[calc(33.333%-16px)]"
                   : "min-w-[calc(50%-6px)] md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-12px)] xl:min-w-[calc(20%-18px)]";
 
+                const isWished = isInWishlist(product.id);
+
+                const handleToggleWishlist = (e) => {
+                  e.stopPropagation();
+                  
+                  if (!isWished) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = (rect.left + rect.width / 2) / window.innerWidth;
+                    const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+                    confetti({
+                      particleCount: 120,
+                      spread: 100,
+                      origin: { x, y },
+                      startVelocity: 35,
+                      gravity: 0.7,
+                      ticks: 250,
+                      colors: ['#ff0000', '#ff4081', '#ffea00', '#ffffff'],
+                      shapes: ['star', 'circle']
+                    });
+                  }
+
+                  toggleWishlist(product);
+                };
+
                 return (
                   <div 
                     key={product.id} 
                     className={`${widthClass} snap-start relative h-full animate-fadeIn`}
                   >
-                    <div 
-                      onClick={() => onProductClick(product)}
-                      className="bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-4 flex flex-col justify-between relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#e61e25]/30 dark:hover:border-[#e61e25]/30 transition-all duration-300 select-none h-full"
-                    >
-                      {/* Image Area */}
-                      <div className="w-full aspect-square bg-slate-50 dark:bg-slate-900/40 rounded-2xl flex items-center justify-center p-3 mb-4 relative overflow-hidden border border-slate-100/50 dark:border-slate-800/20 group-hover:scale-[1.01] transition-transform">
-                        {discount > 0 && (
-                          <span className="absolute top-2.5 left-2.5 bg-[#e61e25] text-white text-[9px] font-black px-2 py-0.5 rounded-lg z-10 shadow-sm uppercase tracking-wider scale-90 sm:scale-100">
-                            -{discount}%
+                    {isSimple ? (
+                      /* Clean white/transparent card matching the user's screenshot exactly */
+                      <div 
+                        onClick={() => onProductClick(product)}
+                        className="bg-transparent border-0 p-0 flex flex-col justify-between relative group cursor-pointer select-none h-full"
+                      >
+                        {/* Image Area */}
+                        <div className="w-full aspect-square bg-[#f4f4f4] dark:bg-slate-900/50 rounded-2xl flex items-center justify-center p-3 mb-3 relative overflow-hidden group-hover:scale-[1.01] transition-transform">
+                          {/* Top-Left Elite Badge */}
+                          <span className="absolute top-2.5 left-2.5 bg-[#1e5cff] text-white text-[8px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
+                            {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
                           </span>
-                        )}
-                        
-                        <img 
-                          src={product.image_url || product.image || '/hero-banner.png'} 
-                          alt={product.name} 
-                          onError={(e) => {
-                            e.target.onerror = null; 
-                            e.target.src = '/hero-banner.png';
-                          }}
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-xl"
-                        />
-                      </div>
+                          
+                          {/* Wishlist Button (Floating overlay top-right) */}
+                          <div className="absolute top-2.5 right-2.5 z-20">
+                            <button 
+                              onClick={handleToggleWishlist}
+                              className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
+                                isWished 
+                                  ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
+                                  : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
+                              }`}
+                            >
+                              <Heart size={13} fill={isWished ? "currentColor" : "none"} />
+                            </button>
+                          </div>
 
-                      {/* Info & Details */}
-                      <div className="space-y-3 flex-1 flex flex-col justify-between">
-                        <div className="space-y-2">
-                          <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-1 uppercase tracking-tight leading-tight">
-                            {product.name}
-                          </h4>
+                          {/* Cart Button (Floating overlay bottom-right) */}
+                          <div className="absolute bottom-2.5 right-2.5 z-20">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                                showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
+                              }}
+                              className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all text-slate-900 dark:text-white cursor-pointer"
+                            >
+                              <ShoppingCart size={13} className="text-slate-900 dark:text-white" />
+                            </button>
+                          </div>
 
-                          {/* Rating if any */}
-                          {averageRating && (
-                            <div className="flex items-center gap-1 text-[9px] text-amber-500 font-bold">
-                              <Star size={10} fill="currentColor" />
-                              <span>{averageRating}</span>
+                          <img 
+                            src={product.image_url || product.image || '/hero-banner.png'} 
+                            alt={product.name} 
+                            onError={(e) => {
+                              e.target.onerror = null; 
+                              e.target.src = '/hero-banner.png';
+                            }}
+                            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-xl"
+                          />
+                        </div>
+
+                        {/* Info & Details */}
+                        <div className="flex flex-col text-start space-y-1">
+                          {/* Sold Count with Red Flame */}
+                          <div className="flex items-center gap-1 text-[11px] text-[#ff3b30] font-bold">
+                            <span>🔥</span>
+                            <span>
+                              {soldCount} {lang === 'fr' ? 'vendus' : 'sold'}
+                            </span>
+                          </div>
+
+                          {/* Price */}
+                          <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-none">
+                            {product.price?.toLocaleString()} <span className="text-[10px] sm:text-[11px] uppercase font-black">{settings?.currency || 'FCFA'}</span>
+                          </div>
+
+                          {/* Discount Tag */}
+                          {discount > 0 && (
+                            <div>
+                              <span className="bg-[#ff0055] text-white font-black text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider leading-none">
+                                -{discount}%
+                              </span>
                             </div>
                           )}
 
-                          {/* Prices */}
-                          <div className="flex items-baseline flex-wrap gap-1.5">
-                            <span className="text-sm sm:text-base font-mono font-black text-[#e61e25] tracking-tight leading-none">
-                              {product.price?.toLocaleString()} <span className="text-[8px] sm:text-[9px] uppercase font-black italic">{settings?.currency || 'FCFA'}</span>
-                            </span>
-                            {product.original_price && product.original_price > product.price && (
-                              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 line-through font-mono leading-none">
-                                {product.original_price.toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          {/* Urgency Progress Bar */}
-                          <div className="space-y-1.5">
-                            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-red-500 to-[#e61e25] rounded-full" 
-                                style={{ width: `${progressPercent}%` }}
-                              />
+                          {/* Original Price */}
+                          {product.original_price && product.original_price > product.price && (
+                            <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 line-through font-mono leading-none">
+                              {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
                             </div>
-                            <div className="flex justify-between items-center text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
-                              <span>{progressPercent}% claimed</span>
-                              <span className="text-[#e61e25] font-black">{stock} left</span>
-                            </div>
-                          </div>
+                          )}
 
-                          {/* AliExpress Style Buy now button */}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(product);
-                              showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
-                            }}
-                            className="w-full py-2 bg-gradient-to-r from-[#e61e25] to-[#ff4f56] hover:brightness-110 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all shadow-md shadow-red-500/10 active:scale-95 cursor-pointer mt-1"
-                          >
-                            {lang === 'fr' ? 'Acheter' : 'Buy now'}
-                          </button>
+                          {/* Product Name in Uppercase */}
+                          <h4 className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-400 uppercase tracking-tight leading-tight line-clamp-1">
+                            {t_smart(product.name)}
+                          </h4>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* Classic red AliExpress timer banner card style with Buy Now button */
+                      <div 
+                        onClick={() => onProductClick(product)}
+                        className="bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-4 flex flex-col justify-between relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#e61e25]/30 dark:hover:border-[#e61e25]/30 transition-all duration-300 select-none h-full"
+                      >
+                        {/* Image Area */}
+                        <div className="w-full aspect-square bg-slate-50 dark:bg-slate-900/40 rounded-2xl flex items-center justify-center p-3 mb-4 relative overflow-hidden border border-slate-100/50 dark:border-slate-800/20 group-hover:scale-[1.01] transition-transform">
+                          {discount > 0 && (
+                            <span className="absolute top-2.5 left-2.5 bg-[#e61e25] text-white text-[9px] font-black px-2 py-0.5 rounded-lg z-10 shadow-sm uppercase tracking-wider scale-90 sm:scale-100">
+                              -{discount}%
+                            </span>
+                          )}
+                          
+                          <img 
+                            src={product.image_url || product.image || '/hero-banner.png'} 
+                            alt={product.name} 
+                            onError={(e) => {
+                              e.target.onerror = null; 
+                              e.target.src = '/hero-banner.png';
+                            }}
+                            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-xl"
+                          />
+                        </div>
+
+                        {/* Info & Details */}
+                        <div className="space-y-3 flex-1 flex flex-col justify-between">
+                          <div className="space-y-2">
+                            <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-1 uppercase tracking-tight leading-tight">
+                              {product.name}
+                            </h4>
+
+                            {/* Rating if any */}
+                            {averageRating && (
+                              <div className="flex items-center gap-1 text-[9px] text-amber-500 font-bold">
+                                <Star size={10} fill="currentColor" />
+                                <span>{averageRating}</span>
+                              </div>
+                            )}
+
+                            {/* Prices */}
+                            <div className="flex items-baseline flex-wrap gap-1.5">
+                              <span className="text-sm sm:text-base font-mono font-black text-[#e61e25] tracking-tight leading-none">
+                                {product.price?.toLocaleString()} <span className="text-[8px] sm:text-[9px] uppercase font-black italic">{settings?.currency || 'FCFA'}</span>
+                              </span>
+                              {product.original_price && product.original_price > product.price && (
+                                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 line-through font-mono leading-none">
+                                  {product.original_price.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Urgency Progress Bar */}
+                            <div className="space-y-1.5">
+                              <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-red-500 to-[#e61e25] rounded-full" 
+                                  style={{ width: `${progressPercent}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between items-center text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
+                                <span>{progressPercent}% claimed</span>
+                                <span className="text-[#e61e25] font-black">{stock} left</span>
+                              </div>
+                            </div>
+
+                            {/* AliExpress Style Buy now button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                                showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
+                              }}
+                              className="w-full py-2 bg-gradient-to-r from-[#e61e25] to-[#ff4f56] hover:brightness-110 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all shadow-md shadow-red-500/10 active:scale-95 cursor-pointer mt-1"
+                            >
+                              {lang === 'fr' ? 'Acheter' : 'Buy now'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
