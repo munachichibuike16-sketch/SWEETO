@@ -138,10 +138,12 @@ export default function BrightRetailHome({ onProductClick }) {
             className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight group cursor-pointer"
           >
             <span>{t_smart(title)}</span>
-            <ChevronRight 
-              size={18} 
-              className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
-            />
+            {!isMini && (
+              <ChevronRight 
+                size={18} 
+                className="text-slate-400 dark:text-slate-500 group-hover:text-eas-blue group-hover:translate-x-0.5 transition-transform" 
+              />
+            )}
           </div>
           {showViewAll && (
             <button 

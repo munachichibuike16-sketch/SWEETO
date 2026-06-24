@@ -613,13 +613,21 @@ const Storefront = ({ viewMode = 'home' }) => {
             type="category" 
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
-            onViewAllClick={section.category && section.category !== 'All' ? () => {
+            onViewAllClick={() => {
               setSelectedCategory(null);
               setSelectedBrand(null);
               setSearchQuery('');
-              navigate(`/category/${encodeURIComponent(section.category)}`);
+              if (section.category && section.category !== 'All') {
+                navigate(`/category/${encodeURIComponent(section.category)}`);
+              } else if (type === 'flashSale') {
+                navigate('/deals');
+              } else if (type === 'giftIdeas') {
+                navigate('/featured');
+              } else {
+                navigate('/new-arrivals');
+              }
               window.scrollTo(0, 0);
-            } : undefined}
+            }}
           />
         );
       case 'shop_by_category':

@@ -376,13 +376,27 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
 };
 
 export const MiniSectionHeader = ({ title, subtitle, style = 'bold', sideLabel = 'A', onViewAll }) => {
+  const { t } = useLanguage();
+
   if (style === 'simple') {
     return (
-      <div 
-        onClick={onViewAll}
-        className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight mb-4 group cursor-pointer w-fit select-none"
-      >
-        <span>{title}</span>
+      <div className="flex items-center justify-between w-full mb-4 select-none">
+        <div 
+          onClick={onViewAll}
+          className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight group cursor-pointer"
+        >
+          <span>{title}</span>
+        </div>
+
+        {onViewAll && (
+          <button 
+            onClick={onViewAll}
+            className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-0.5 uppercase tracking-wider"
+          >
+            <span>{t('view_all') || 'View All'}</span>
+            <ChevronRight size={14} className="stroke-[2.5]" />
+          </button>
+        )}
       </div>
     );
   }
