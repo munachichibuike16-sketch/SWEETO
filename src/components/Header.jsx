@@ -30,7 +30,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const { categoryName } = useParams();
   const isWishlistPage = location.pathname === '/wishlist';
   const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
-  const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/settings';
+  const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/settings' || location.pathname === '/wishlist';
+  const isHomeOrCategory = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/category/');
+  const showBottomNav = !location.pathname.startsWith('/product/') && 
+                        !['/deals', '/notifications', '/settings', '/privacy', '/terms', '/security', '/visit'].includes(location.pathname);
 
   useEffect(() => {
     const handleResize = () => {
@@ -386,7 +389,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 ${isScrolled ? 'py-2 px-4' : 'py-3.5 px-4 md:px-12'} ${isProfilePage || location.pathname.startsWith('/product/') ? 'hidden md:block' : ''} ${location.pathname === '/notifications' ? 'hidden' : ''}`}>
+      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 ${isScrolled ? 'py-2 px-4' : 'py-3.5 px-4 md:px-12'} ${isHomeOrCategory ? '' : 'hidden md:block'}`}>
         {/* Desktop Header Layout */}
         <div className="hidden md:flex max-w-[1600px] mx-auto items-center justify-between gap-6 w-full">
           
@@ -837,7 +840,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
       </header>
 
       {/* --- Mobile Bottom Navigation --- */}
-      {!location.pathname.startsWith('/product/') && (
+      {showBottomNav && (
         <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
         {/* Accueil */}
         <motion.button 
