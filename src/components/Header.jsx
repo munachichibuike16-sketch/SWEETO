@@ -1045,16 +1045,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
             {/* Content Container */}
             <div className="flex-1 flex flex-col w-full">
-              {/* Blue Promo Banner */}
-              <div className="w-full bg-gradient-to-r from-blue-600 to-[#007aff] px-4 py-2.5 flex items-center justify-between text-white text-[11px] font-black uppercase tracking-wider shadow-sm select-none shrink-0">
-                <span>Brand Day Sale</span>
-                <span className="text-yellow-350 font-mono font-black">Ends: {(() => {
-                  const promoDate = new Date();
-                  promoDate.setDate(promoDate.getDate() + 3);
-                  return promoDate.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' });
-                })()}, 06:59 GMT+00:00</span>
-              </div>
-
               {/* Suggestions list (if user has typed something) */}
               {inputValue && suggestions.length > 0 ? (
                 <div className="flex flex-col w-full divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#020617]">
@@ -1086,69 +1076,53 @@ const Header = ({ onMenuClick, onCartClick }) => {
                       {t('discover_more') || 'Discover more'}
                     </h3>
 
-                    {/* 2-Column Grid */}
+                    {/* 2-Column Grid of Actual Categories */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
-                      {[
-                        { 
-                          keyword: "Free Gift", 
-                          count: lang === 'fr' ? "Plus de 117k articles" : "117k+ items", 
-                          imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Life Size Figures", 
-                          count: lang === 'fr' ? "Populaire" : "Popular", 
-                          imageUrl: "https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Phone", 
-                          count: lang === 'fr' ? "Coupons applicables" : "Coupons applicable", 
-                          imageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Laptop", 
-                          count: lang === 'fr' ? "Plus de 3400 articles" : "3400+ items", 
-                          imageUrl: "https://images.unsplash.com/photo-1496181130204-7552cc14f1d0?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Unusual Products", 
-                          count: lang === 'fr' ? "Nouveautés" : "New Arrivals", 
-                          imageUrl: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Mobile Phones", 
-                          count: lang === 'fr' ? "Coupons applicables" : "Coupons applicable", 
-                          imageUrl: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Mini PC", 
-                          count: lang === 'fr' ? "Tendances" : "Trending", 
-                          imageUrl: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=150" 
-                        },
-                        { 
-                          keyword: "Robot", 
-                          count: lang === 'fr' ? "Plus de 10k articles" : "10k+ items", 
-                          imageUrl: "https://images.unsplash.com/photo-1531746790731-6c087fecd7c3?auto=format&fit=crop&q=80&w=150" 
-                        }
-                      ].map((item, idx) => (
-                        <div 
-                          key={idx}
-                          onClick={() => {
-                            setInputValue(item.keyword);
-                            setSearchQuery(item.keyword);
-                            logSearch(item.keyword);
-                            setIsSearchOpen(false);
-                          }}
-                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl cursor-pointer transition-all border border-slate-100/50 dark:border-slate-800/40 select-none group"
-                        >
-                          <div className="flex-1 flex flex-col items-start text-start">
-                            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight group-hover:text-eas-blue line-clamp-1">{item.keyword}</span>
-                            <span className="text-[8px] font-bold text-[#ff3b30] mt-0.5 tracking-wider uppercase leading-none">{item.count}</span>
-                          </div>
-                          <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-sm border border-slate-100/50 dark:border-slate-800/20">
-                            <img src={item.imageUrl} alt={item.keyword} className="max-h-full max-w-full object-contain" />
-                          </div>
-                        </div>
-                      ))}
+                      {(() => {
+                        const parentCats = categories
+                          .filter(c => !c.parent_id)
+                          .slice(0, 8); // Limit to 8 categories
+
+                        return parentCats.map((cat, idx) => {
+                          const subcatNames = categories.filter(c => c.parent_id === cat.id).map(c => c.name?.toLowerCase());
+                          const count = products.filter(p => {
+                            const pCat = p.category?.toLowerCase();
+                            return (pCat === cat.name?.toLowerCase() || subcatNames.includes(pCat)) && p.status === 'active';
+                          }).length;
+
+                          const label = lang === 'fr' 
+                            ? `Plus de ${count} articles` 
+                            : `${count}+ items`;
+
+                          const imageUrl = cat.image_url || cat.icon || "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=150";
+
+                          return (
+                            <div 
+                              key={cat.id || idx}
+                              onClick={() => {
+                                setSelectedCategory(null);
+                                setSelectedBrand(null);
+                                setSearchQuery('');
+                                navigate(`/category/${encodeURIComponent(cat.name)}`);
+                                setIsSearchOpen(false);
+                              }}
+                              className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl cursor-pointer transition-all border border-slate-100/50 dark:border-slate-800/40 select-none group"
+                            >
+                              <div className="flex-1 flex flex-col items-start text-start">
+                                <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight group-hover:text-eas-blue line-clamp-1">
+                                  {t_smart ? t_smart(cat.name) : cat.name}
+                                </span>
+                                <span className="text-[8px] font-bold text-[#ff3b30] mt-0.5 tracking-wider uppercase leading-none">
+                                  {label}
+                                </span>
+                              </div>
+                              <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-sm border border-slate-100/50 dark:border-slate-800/20">
+                                <img src={imageUrl} alt={cat.name} className="max-h-full max-w-full object-contain" />
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
 
