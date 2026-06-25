@@ -871,9 +871,9 @@ const Storefront = ({ viewMode = 'home' }) => {
                       {(() => {
                         const activeProducts = liveProducts?.filter(p => p.status === 'active' && p.stock > 0) || [];
                         
-                        // Filter out hero sections from content sections
+                        // Filter out hero and inactive/disabled sections from content sections
                         const contentSections = homepageSections.length > 0
-                          ? homepageSections.filter(s => getSectionType(s) !== 'hero')
+                          ? homepageSections.filter(s => getSectionType(s) !== 'hero' && s.isActive !== false && s.enabled !== false)
                           : [
                               { type: 'featured_grid', name: 'Featured Gear' },
                               { type: 'just_arrived', name: 'New Arrivals' },
