@@ -943,7 +943,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                             const pair = activeProducts.slice(productIndex, productIndex + 2);
                             elements.push(
                               <div key={`pair-before-${sec.id}`} className="my-8 px-4 md:px-0">
-                                <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                                <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
                                   {pair.map(product => (
                                     <ProductCard 
                                       key={product.id} 
@@ -969,7 +969,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 uppercase tracking-wider">
                                 {lang === 'fr' ? 'Plus de produits' : 'More Products'}
                               </h3>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                              <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
                                 {remaining.map(product => (
                                   <ProductCard 
                                     key={product.id} 
