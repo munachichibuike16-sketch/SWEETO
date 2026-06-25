@@ -482,10 +482,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
   // We use the custom wide banner layout for all slider styles as requested by the user
   return (
-    <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-2 select-none">
+    <section className="max-w-[1600px] mx-auto md:px-6 pt-3 pb-2 select-none">
       <div 
         onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
-        className="relative w-full h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black cursor-pointer group"
+        className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black cursor-pointer group"
       >
         {/* Background Image */}
         {displayBanners[currentSlide]?.image && (
@@ -502,14 +502,14 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-[1200ms] ease-out"
               />
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
           </div>
         )}
 
         {/* Banner Text Overlay */}
-        <div className="relative z-10 pl-6 md:pl-12 flex flex-col items-start gap-0.5 max-w-lg md:max-w-2xl">
+        <div className="relative z-10 pl-6 md:pl-12 flex flex-col items-start gap-1 max-w-lg md:max-w-2xl">
           {/* Angled "Viva" Badge */}
-          <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs px-2.5 py-0.5 rounded uppercase tracking-wider transform -rotate-12 select-none shadow-sm mb-1.5 w-fit">
+          <div className="bg-[#00f2fe] text-slate-950 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded uppercase tracking-wider transform -rotate-12 select-none shadow-sm mb-1.5 w-fit">
             Viva
           </div>
           {/* Main Title */}
@@ -520,7 +520,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -15, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="text-lg sm:text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-md leading-none"
+              className="text-xl sm:text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter drop-shadow-md leading-none"
             >
               {displayBanners[currentSlide]?.title}
             </motion.h1>
@@ -534,7 +534,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="text-[9px] sm:text-xs font-semibold text-slate-300 uppercase tracking-widest mt-1 line-clamp-1"
+              className="text-[10px] sm:text-xs font-semibold text-slate-300 uppercase tracking-widest mt-1 line-clamp-1"
             >
               {displayBanners[currentSlide]?.subtitle}
             </motion.p>
