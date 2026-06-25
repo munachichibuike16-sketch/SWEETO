@@ -1122,9 +1122,25 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     {/* 2-Column Grid of Actual Categories */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
                       {(() => {
-                        const parentCats = categories
-                          .filter(c => !c.parent_id)
-                          .slice(0, 8); // Limit to 8 categories
+                        let displayCats = categories;
+                        if (settings?.visible_homepage_categories) {
+                          try {
+                            let visibleIds = settings.visible_homepage_categories;
+                            if (typeof visibleIds === 'string') {
+                              visibleIds = JSON.parse(visibleIds);
+                            }
+                            if (Array.isArray(visibleIds) && visibleIds.length > 0) {
+                              displayCats = categories.filter(cat => visibleIds.includes(cat.id) || visibleIds.includes(String(cat.id)) || visibleIds.includes(Number(cat.id)));
+                            } else {
+                              displayCats = categories.filter(c => !c.parent_id);
+                            }
+                          } catch (e) {
+                            displayCats = categories.filter(c => !c.parent_id);
+                          }
+                        } else {
+                          displayCats = categories.filter(c => !c.parent_id);
+                        }
+                        const parentCats = displayCats.slice(0, 8); // Limit to 8 categories
 
                         return parentCats.map((cat, idx) => {
                           const descendants = getCategoryDescendants(cat.name, categories);
