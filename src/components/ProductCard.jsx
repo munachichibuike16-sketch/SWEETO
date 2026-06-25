@@ -147,14 +147,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
         <div className={`relative aspect-square w-full flex items-center justify-center overflow-hidden mb-2 rounded-2xl ${
           layout === 'aliexpress' ? 'bg-[#f4f4f4] dark:bg-slate-900/50' : 'bg-transparent'
         }`}>
-          {/* Top-Left Elite Badge (hidden in aliexpress layout) */}
-          {layout !== 'aliexpress' && (
-            <div className="absolute top-2.5 left-2.5 z-10">
-              <span className="bg-blue-600 text-white font-extrabold text-[8px] sm:text-[9.5px] px-2 py-0.5 rounded-[4px] shadow-sm uppercase tracking-wider">
-                {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE DEAL'}
-              </span>
-            </div>
-          )}
+
 
           {/* Wishlist Button (Floating overlay inside image container top-right, hidden in aliexpress layout) */}
           {layout !== 'aliexpress' && (
