@@ -7,6 +7,7 @@ import Hero from './components/Hero';
 import TopCategories from './components/TopCategories';
 import Sidebar from './components/Sidebar';
 import ProductSection, { SectionBanner, DualProductSection } from './components/ProductSection';
+import ProductCard from './components/ProductCard';
 import CartDrawer from './components/CartDrawer';
 import ProductModal from './components/ProductModal';
 import WishlistContent from './components/WishlistContent';
@@ -846,31 +847,94 @@ const Storefront = ({ viewMode = 'home' }) => {
                     <BrightRetailHome onProductClick={handleProductClick} />
                   ) : (
                     <>
-                      {/* Main Sections */}
-                      {homepageSections.length > 0 ? (
-                        homepageSections.map((section, idx) => {
-                          const rendered = renderSection(section, idx);
-                          if (getSectionType(section) === 'hero' && rendered) {
-                            return (
-                              <React.Fragment key={section.id || `hero-wrap-${idx}`}>
-                                {rendered}
-                                <TopCategories />
-                              </React.Fragment>
+                      {/* Header Block: Hero and Top Categories */}
+                      {(() => {
+                        const heroSection = homepageSections.find(s => getSectionType(s) === 'hero');
+                        if (homepageSections.length > 0) {
+                          return (
+                            <>
+                              {heroSection && renderSection(heroSection, homepageSections.indexOf(heroSection))}
+                              <TopCategories />
+                            </>
+                          );
+                        } else {
+                          return (
+                            <>
+                              {renderSection({ type: 'hero' }, 0)}
+                              <TopCategories />
+                            </>
+                          );
+                        }
+                      })()}
+
+                      {/* Interleaved Content Sections & Products */}
+                      {(() => {
+                        const activeProducts = liveProducts?.filter(p => p.status === 'active' && p.stock > 0) || [];
+                        
+                        // Filter out hero sections from content sections
+                        const contentSections = homepageSections.length > 0
+                          ? homepageSections.filter(s => getSectionType(s) !== 'hero')
+                          : [
+                              { type: 'featured_grid', name: 'Featured Gear' },
+                              { type: 'just_arrived', name: 'New Arrivals' },
+                              { type: 'trending', name: 'Trending Now' },
+                              { type: 'deal_of_the_day' }
+                            ];
+
+                        const elements = [];
+                        let productIndex = 0;
+
+                        contentSections.forEach((section, idx) => {
+                          // First, show 2 products before this section (starts right under Top Categories)
+                          if (productIndex < activeProducts.length) {
+                            const pair = activeProducts.slice(productIndex, productIndex + 2);
+                            elements.push(
+                              <div key={`pair-before-${section.id || idx}`} className="my-8 px-4 md:px-0">
+                                <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                                  {pair.map(product => (
+                                    <ProductCard 
+                                      key={product.id} 
+                                      product={product} 
+                                      onProductClick={handleProductClick} 
+                                    />
+                                  ))}
+                                </div>
+                              </div>
                             );
+                            productIndex += 2;
                           }
-                          return rendered;
-                        })
-                      ) : (
-                        // Fallback Premium Default Layout
-                        <>
-                          {renderSection({ type: 'hero' }, 0)}
-                          <TopCategories />
-                          {renderSection({ type: 'featured_grid', name: 'Featured Gear' }, 1)}
-                          {renderSection({ type: 'just_arrived', name: 'New Arrivals' }, 2)}
-                          {renderSection({ type: 'trending', name: 'Trending Now' }, 3)}
-                          {renderSection({ type: 'deal_of_the_day' }, 4)}
-                        </>
-                      )}
+
+                          // Then show the section itself
+                          const originalIdx = homepageSections.length > 0 ? homepageSections.indexOf(section) : idx + 1;
+                          const rendered = renderSection(section, originalIdx);
+                          if (rendered) {
+                            elements.push(<React.Fragment key={section.id || `section-frag-${idx}`}>{rendered}</React.Fragment>);
+                          }
+                        });
+
+                        // Finally, show all remaining products constantly until the end
+                        if (productIndex < activeProducts.length) {
+                          const remaining = activeProducts.slice(productIndex);
+                          elements.push(
+                            <div key="remaining-products" className="mt-12 pt-8 border-t border-slate-100 dark:border-white/5 px-4 md:px-0">
+                              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 uppercase tracking-wider">
+                                {lang === 'fr' ? 'Plus de produits' : 'More Products'}
+                              </h3>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                                {remaining.map(product => (
+                                  <ProductCard 
+                                    key={product.id} 
+                                    product={product} 
+                                    onProductClick={handleProductClick} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return elements;
+                      })()}
                       
                       {/* Permanent Recommended for You - Removed from home page per user request */}
                       {/*
