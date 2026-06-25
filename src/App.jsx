@@ -445,6 +445,13 @@ const Storefront = ({ viewMode = 'home' }) => {
                    section.isdual === true || section.isdual === 1 || section.isdual === 'true';
 
     if (isDual) {
+      // Check if dual section actually has products
+      const sideACat = section.category || 'All';
+      const sideBCat = section.categoryB || 'All';
+      const sideAProducts = sideACat === 'All' ? liveProducts : liveProducts.filter(p => p.category === sideACat);
+      const sideBProducts = sideBCat === 'All' ? liveProducts : liveProducts.filter(p => p.category === sideBCat);
+      if (sideAProducts.length === 0 && sideBProducts.length === 0) return null;
+
       return (
         <DualProductSection 
           key={section.id || `dual-section-${idx}`}
@@ -460,6 +467,39 @@ const Storefront = ({ viewMode = 'home' }) => {
     const title = section.title || section.name;
     const subtitle = section.subtitle || section.tagline;
     const maxProducts = section.maxProducts || 8;
+
+    // Check if product-based section has 0 products
+    const isProductBased = ['dealOfDay', 'deal_of_the_day', 'newArrival', 'products', 'just_arrived', 'trending', 'featured', 'featured_grid', 'smartphonesPlacement', 'homeCinemaPlacement', 'speakersPlacement', 'refrigeratorsPlacement', 'flashSale', 'giftIdeas', 'custom'].includes(type);
+    
+    if (isProductBased) {
+      let prods = [];
+      if (type === 'dealOfDay' || type === 'deal_of_the_day') {
+        prods = section.category && section.category !== 'All' ? dealProducts.filter(p => p.category === section.category) : dealProducts;
+      } else if (type === 'newArrival' || type === 'products' || type === 'just_arrived') {
+        prods = (section.category && section.category !== 'All' ? newProducts.filter(p => p.category === section.category) : newProducts).slice(0, maxProducts);
+      } else if (type === 'trending') {
+        prods = (section.category && section.category !== 'All' ? trendingProducts.filter(p => p.category === section.category) : trendingProducts).slice(0, maxProducts);
+      } else if (type === 'featured' || type === 'featured_grid') {
+        prods = (section.category && section.category !== 'All' 
+          ? liveProducts.filter(p => p.is_featured && p.category === section.category) 
+          : liveProducts.filter(p => p.is_featured)).slice(0, maxProducts);
+      } else if (type === 'smartphonesPlacement') {
+        prods = liveProducts.filter(p => p.category === 'Smartphones').slice(0, maxProducts);
+      } else if (type === 'homeCinemaPlacement') {
+        prods = liveProducts.filter(p => p.category === 'TV & Video').slice(0, maxProducts);
+      } else if (type === 'speakersPlacement' || type === 'refrigeratorsPlacement') {
+        const catName = type === 'speakersPlacement' ? 'Speakers' : 'Refrigerators';
+        prods = liveProducts.filter(p => p.category === catName).slice(0, maxProducts);
+      } else if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
+        prods = liveProducts.filter(p => {
+          if (section.category && section.category !== 'All' && p.category === section.category) return true;
+          const plist = p.placements || [];
+          return plist.includes(section.id) || plist.includes(String(section.id));
+        }).slice(0, maxProducts);
+      }
+      
+      if (!prods || prods.length === 0) return null;
+    }
 
     switch (type) {
       case 'hero':
@@ -881,15 +921,28 @@ const Storefront = ({ viewMode = 'home' }) => {
                               { type: 'deal_of_the_day' }
                             ];
 
+                        // Pre-render sections to filter out empty/disabled ones
+                        const renderedSections = [];
+                        contentSections.forEach((section, idx) => {
+                          const originalIdx = homepageSections.length > 0 ? homepageSections.indexOf(section) : idx + 1;
+                          const rendered = renderSection(section, originalIdx);
+                          if (rendered) {
+                            renderedSections.push({
+                              id: section.id || idx,
+                              element: rendered
+                            });
+                          }
+                        });
+
                         const elements = [];
                         let productIndex = 0;
 
-                        contentSections.forEach((section, idx) => {
+                        renderedSections.forEach((sec) => {
                           // First, show 2 products before this section (starts right under Top Categories)
                           if (productIndex < activeProducts.length) {
                             const pair = activeProducts.slice(productIndex, productIndex + 2);
                             elements.push(
-                              <div key={`pair-before-${section.id || idx}`} className="my-8 px-4 md:px-0">
+                              <div key={`pair-before-${sec.id}`} className="my-8 px-4 md:px-0">
                                 <div className="grid grid-cols-2 gap-4 sm:gap-6">
                                   {pair.map(product => (
                                     <ProductCard 
@@ -905,11 +958,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                           }
 
                           // Then show the section itself
-                          const originalIdx = homepageSections.length > 0 ? homepageSections.indexOf(section) : idx + 1;
-                          const rendered = renderSection(section, originalIdx);
-                          if (rendered) {
-                            elements.push(<React.Fragment key={section.id || `section-frag-${idx}`}>{rendered}</React.Fragment>);
-                          }
+                          elements.push(<React.Fragment key={`section-frag-${sec.id}`}>{sec.element}</React.Fragment>);
                         });
 
                         // Finally, show all remaining products constantly until the end
