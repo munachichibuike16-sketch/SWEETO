@@ -830,7 +830,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   // Otherwise, default to showing Level 1 parent categories.
                   if (settings?.visible_homepage_categories) {
                     try {
-                      const visibleIds = JSON.parse(settings.visible_homepage_categories);
+                      let visibleIds = settings.visible_homepage_categories;
+                      if (typeof visibleIds === 'string') {
+                        visibleIds = JSON.parse(visibleIds);
+                      }
                       if (Array.isArray(visibleIds) && visibleIds.length > 0) {
                         return visibleIds.includes(cat.id) || visibleIds.includes(String(cat.id)) || visibleIds.includes(Number(cat.id));
                       }

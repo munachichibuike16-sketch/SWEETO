@@ -49,7 +49,10 @@ export default function SWTO() {
   useEffect(() => {
     if (settings) {
       try {
-        const ids = JSON.parse(settings.visible_homepage_categories || '[]');
+        let ids = settings.visible_homepage_categories || [];
+        if (typeof ids === 'string') {
+          ids = JSON.parse(ids);
+        }
         if (Array.isArray(ids)) {
           setVisibleIds(ids.map(id => Number(id)));
         }
