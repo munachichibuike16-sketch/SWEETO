@@ -11,6 +11,7 @@ import HeroManagement from './HeroManagement';
 import SocialsManagement from './SocialsManagement';
 import StoreSettings from './StoreSettings';
 import Sweeto from './sweeto';
+import SWTO from './swto';
 import OrdersManagement from './OrdersManagement';
 import CustomersManagement from './CustomersManagement';
 import TransportManagement from './TransportManagement';
@@ -736,7 +737,7 @@ const Dashboard = () => {
     { name: 'Customers', icon: Icons.Users }, { name: 'Reviews', icon: Icons.Star },
     { name: 'Logistics', icon: Icons.Truck }, { name: 'Sections', icon: Icons.Layers },
     { name: 'Hero', icon: Icons.Monitor }, { name: 'Ads', icon: Icons.Film },
-    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Sweeto', icon: Icons.Sparkles }, { name: 'Settings', icon: Icons.Settings },
+    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Sweeto', icon: Icons.Sparkles }, { name: 'SWTO', icon: Icons.ToggleLeft }, { name: 'Settings', icon: Icons.Settings },
   ];
 
   const stats = [
@@ -1015,6 +1016,7 @@ const Dashboard = () => {
           {activeTab === 'Socials' && <div className="max-w-7xl mx-auto"><SocialsManagement /></div>}
           {activeTab === 'Settings' && <div className="max-w-7xl mx-auto"><StoreSettings /></div>}
           {activeTab === 'Sweeto' && <div className="max-w-7xl mx-auto"><Sweeto /></div>}
+          {activeTab === 'SWTO' && <div className="max-w-7xl mx-auto"><SWTO /></div>}
           {activeTab === 'Promos' && <div className="max-w-7xl mx-auto"><PromoCode /></div>}
           {activeTab === 'Sales' && <div className="max-w-7xl mx-auto"><SalesManagement /></div>}
           {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
