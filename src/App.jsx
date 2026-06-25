@@ -887,23 +887,13 @@ const Storefront = ({ viewMode = 'home' }) => {
                     <BrightRetailHome onProductClick={handleProductClick} />
                   ) : (
                     <>
-                      {/* Header Block: Hero and Top Categories */}
+                      {/* Header Block: Hero */}
                       {(() => {
                         const heroSection = homepageSections.find(s => getSectionType(s) === 'hero');
                         if (homepageSections.length > 0) {
-                          return (
-                            <>
-                              {heroSection && renderSection(heroSection, homepageSections.indexOf(heroSection))}
-                              <TopCategories />
-                            </>
-                          );
+                          return heroSection && renderSection(heroSection, homepageSections.indexOf(heroSection));
                         } else {
-                          return (
-                            <>
-                              {renderSection({ type: 'hero' }, 0)}
-                              <TopCategories />
-                            </>
-                          );
+                          return renderSection({ type: 'hero' }, 0);
                         }
                       })()}
 
