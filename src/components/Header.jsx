@@ -362,39 +362,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
   };
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let accumulatedDiff = 0;
-    const threshold = 15; // minimum scroll delta in px to trigger direction change
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const diff = currentScrollY - lastScrollY;
-
-      if (currentScrollY <= 15) {
-        // Always show header at the very top
-        setIsScrolled(false);
-        accumulatedDiff = 0;
-      } else {
-        // Reset accumulation if scroll direction changes
-        if ((diff > 0 && accumulatedDiff < 0) || (diff < 0 && accumulatedDiff > 0)) {
-          accumulatedDiff = diff;
-        } else {
-          accumulatedDiff += diff;
-        }
-
-        if (accumulatedDiff > threshold) {
-          // Scrolling down: hide the header logo row
-          setIsScrolled(true);
-        } else if (accumulatedDiff < -threshold) {
-          // Scrolling up: reveal the header logo row immediately
-          setIsScrolled(false);
-        }
-      }
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Keep header fully visible and stable at all times to prevent layout shifts on scroll
+    setIsScrolled(false);
   }, []);
 
   return (
