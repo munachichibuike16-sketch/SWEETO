@@ -480,262 +480,85 @@ const Hero = ({ banners, layout = 'slider' }) => {
     );
   }
 
-  const sliderStyle = settings?.hero_slider_style || 'glass';
-
-  if (sliderStyle === 'cover') {
-    return (
-      <section 
-        onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
-        className="relative h-[480px] sm:h-[650px] w-full overflow-hidden bg-slate-950 transition-colors duration-1000 cursor-pointer"
-      >
-        
-        {/* Full-Bleed Cover Image */}
-        <AnimatePresence mode="sync">
-          <motion.img 
-            key={currentSlide}
-            src={displayBanners[currentSlide]?.image} 
-            alt=""
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform duration-[1200ms] ease-out"
-          />
-        </AnimatePresence>
-
-        {/* Left Dark Gradient Overlay for perfect text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent z-10 pointer-events-none" />
-
-        <div className="relative z-20 h-full max-w-[1600px] mx-auto px-4 sm:px-12 md:px-24 flex items-center">
-          <div className="max-w-2xl text-left space-y-4 sm:space-y-6">
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={`sub-${currentSlide}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em]">
-                  {displayBanners[currentSlide]?.subtitle || t('exclusive_showcase')}
-                </span>
-              </motion.div>
-            </AnimatePresence>
-
-            <AnimatePresence mode="wait">
-              <motion.h1 
-                key={`title-${currentSlide}`}
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -30, opacity: 0 }}
-                transition={{ delay: 0.1, duration: 0.4 }}
-                className="text-3xl sm:text-5xl md:text-8xl font-extrabold text-white tracking-tighter uppercase leading-none"
-              >
-                {displayBanners[currentSlide]?.title}
-              </motion.h1>
-            </AnimatePresence>
-
-            <AnimatePresence mode="wait">
-              <motion.p 
-                key={`desc-${currentSlide}`}
-                initial={{ y: 15, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -15, opacity: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-                className="text-xs sm:text-sm md:text-lg text-slate-200 font-medium max-w-md leading-relaxed line-clamp-2"
-              >
-                {displayBanners[currentSlide]?.subtitle}
-              </motion.p>
-            </AnimatePresence>
-            
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center gap-4 sm:gap-6 pt-2 sm:pt-4"
-            >
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleBannerClick(displayBanners[currentSlide]?.link); }}
-                className="px-6 py-3 sm:px-10 sm:py-3.5 bg-white text-black rounded-md font-black text-[10px] sm:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all shadow-2xl active:scale-95"
-              >
-                {t('shop_now')}
-              </button>
-              {displayBanners[currentSlide]?.price && (
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('starting_at')}</span>
-                  <span className="text-base sm:text-xl font-black text-white italic tracking-tighter">
-                    {settings?.currency || 'FCFA'} {displayBanners[currentSlide]?.price?.toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Modern Side Navigation Arrows */}
-        <div 
-          onClick={(e) => e.stopPropagation()}
-          className={`hidden md:flex absolute ${isRTL ? 'left-12' : 'right-12'} bottom-12 items-center gap-4 z-40`}
-        >
-          <button 
-            onClick={prevSlide}
-            className="w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-black transition-all group"
-          >
-            <ArrowRight className={`${isRTL ? '' : 'rotate-180'} group-hover:${isRTL ? 'translate-x-1' : '-translate-x-1'} transition-transform`} size={24} />
-          </button>
-          <button 
-            onClick={nextSlide}
-            className="w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-black transition-all group"
-          >
-            <ArrowRight className={`${isRTL ? 'rotate-180' : ''} group-hover:${isRTL ? '-translate-x-1' : 'translate-x-1'} transition-transform`} size={24} />
-          </button>
-        </div>
-   
-        {/* Progress Dots Removed */}
-      </section>
-    );
-  }
-
-  // Default: Classic 'glass' split style with side-by-side elements
+  // We use the custom wide banner layout for all slider styles as requested by the user
   return (
-    <section 
-      onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
-      className="relative h-[520px] sm:h-[650px] w-full overflow-hidden bg-slate-50 dark:bg-[#020617] transition-colors duration-1000 cursor-pointer"
-    >
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden opacity-30 dark:opacity-20 pointer-events-none">
-        {[...Array(8)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{ 
-              x: [0, Math.random() * 100 - 50, 0],
-              y: [0, Math.random() * 100 - 50, 0],
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.3, 0.1]
-            }}
-            transition={{ duration: 15 + i * 3, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute rounded-full bg-eas-blue/30 blur-[120px]"
-            style={{
-              width: `${400 + i * 100}px`,
-              height: `${400 + i * 100}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-          />
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={currentSlide}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-          className="relative z-10 h-full max-w-[1600px] mx-auto px-4 sm:px-12 flex items-center"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 w-full items-center gap-6 md:gap-16">
-            {/* Left Side: Content */}
-            <div className={`text-center ${isRTL ? 'md:text-right' : 'md:text-left'} space-y-4 sm:space-y-8 z-20`}>
-              <motion.div initial={{ x: isRTL ? 20 : -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className={`flex items-center gap-4 justify-center ${isRTL ? 'md:justify-end' : 'md:justify-start'}`}>
-                 <div className="h-[2px] w-12 bg-eas-blue rounded-full"></div>
-                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em]">{t('exclusive_showcase')}</span>
-              </motion.div>
-              <motion.h1 
-                initial={{ y: 40, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ type: "spring", damping: 12, delay: 0.2 }}
-                className="text-3xl sm:text-7xl md:text-9xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic leading-[0.9]"
-              >
-                {displayBanners[currentSlide]?.title}
-              </motion.h1>
-              <motion.p 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-sm sm:text-xl md:text-2xl text-slate-500 dark:text-slate-400 font-medium max-w-lg leading-relaxed line-clamp-2 sm:line-clamp-none"
-              >
-                {displayBanners[currentSlide]?.subtitle}
-              </motion.p>
-              
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className={`flex items-center gap-4 sm:gap-6 justify-center ${isRTL ? 'md:justify-end' : 'md:justify-start'} pt-2 sm:pt-4`}
-              >
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleBannerClick(displayBanners[currentSlide]?.link); }}
-                  className="px-6 py-3.5 sm:px-12 sm:py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl sm:rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-eas-blue dark:hover:bg-eas-blue dark:hover:text-white transition-all shadow-2xl shadow-slate-900/20"
-                >
-                  {t('shop_now')}
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('starting_at')}</span>
-                  <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white italic tracking-tighter">
-                    {settings?.currency || 'FCFA'} {displayBanners[currentSlide]?.price?.toLocaleString()}
-                  </span>
-                </div>
-              </motion.div>
-            </div>
-
-             {/* Right Side: Image */}
-            <div className="relative flex justify-center items-center h-full perspective-1000">
-              <motion.div
-                initial={{ x: isRTL ? -100 : 100, opacity: 0, rotateY: isRTL ? -30 : 30, scale: 0.8 }}
-                animate={{ x: 0, opacity: 1, rotateY: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 40, damping: 15, delay: 0.3 }}
-                className="relative z-10"
-              >
-                <img 
-                  src={displayBanners[currentSlide]?.image} 
-                  alt={displayBanners[currentSlide]?.title}
-                  className="max-h-[180px] sm:max-h-[500px] w-auto drop-shadow-[0_50_80_rgba(0,0,0,0.3)] filter contrast-[1.05] brightness-[1.05]"
-                />
-                
-                {/* Floating Meta Details */}
-                 <motion.div
-                    animate={{ y: [0, -20, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className={`absolute -top-10 ${isRTL ? '-left-10' : '-right-10'} bg-white/10 dark:bg-slate-800/10 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 p-6 rounded-[2rem] shadow-2xl hidden lg:block`}
-                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#ff3b30] rounded-full flex items-center justify-center text-white font-black text-xs shadow-lg shadow-red-500/20">
-                      {displayBanners[currentSlide]?.discount || 15}%
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('discount')}</span>
-                      <span className="text-xs font-black text-slate-900 dark:text-white">{t('active_now')}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-       {/* Modern Side Navigation Arrows */}
+    <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-2 select-none">
       <div 
-        onClick={(e) => e.stopPropagation()}
-        className={`hidden md:flex absolute ${isRTL ? 'left-12' : 'right-12'} bottom-12 items-center gap-4 z-40`}
+        onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
+        className="relative w-full h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black cursor-pointer group"
       >
-        <button 
-          onClick={prevSlide}
-          className="w-16 h-16 bg-white/5 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center hover:bg-eas-blue hover:text-white dark:hover:bg-eas-blue dark:hover:text-white transition-all group"
-        >
-          <ArrowRight className={`${isRTL ? '' : 'rotate-180'} group-hover:${isRTL ? 'translate-x-1' : '-translate-x-1'} transition-transform`} size={24} />
-        </button>
-        <button 
-          onClick={nextSlide}
-          className="w-16 h-16 bg-white/5 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center hover:bg-eas-blue hover:text-white dark:hover:bg-eas-blue dark:hover:text-white transition-all group"
-        >
-          <ArrowRight className={`${isRTL ? 'rotate-180' : ''} group-hover:${isRTL ? '-translate-x-1' : 'translate-x-1'} transition-transform`} size={24} />
-        </button>
+        {/* Background Image */}
+        {displayBanners[currentSlide]?.image && (
+          <div className="absolute inset-0 z-0">
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={currentSlide}
+                src={displayBanners[currentSlide]?.image} 
+                alt=""
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.8 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-[1200ms] ease-out"
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent"></div>
+          </div>
+        )}
+
+        {/* Banner Text Overlay */}
+        <div className="relative z-10 pl-6 md:pl-12 flex flex-col items-start gap-0.5 max-w-lg md:max-w-2xl">
+          {/* Angled "Viva" Badge */}
+          <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs px-2.5 py-0.5 rounded uppercase tracking-wider transform -rotate-12 select-none shadow-sm mb-1.5 w-fit">
+            Viva
+          </div>
+          {/* Main Title */}
+          <AnimatePresence mode="wait">
+            <motion.h1 
+              key={`title-${currentSlide}`}
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -15, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="text-lg sm:text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-md leading-none"
+            >
+              {displayBanners[currentSlide]?.title}
+            </motion.h1>
+          </AnimatePresence>
+          
+          {/* Subtitle */}
+          <AnimatePresence mode="wait">
+            <motion.p 
+              key={`desc-${currentSlide}`}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="text-[9px] sm:text-xs font-semibold text-slate-300 uppercase tracking-widest mt-1 line-clamp-1"
+            >
+              {displayBanners[currentSlide]?.subtitle}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        {/* Navigation arrows (floating overlay) */}
+        {displayBanners.length > 1 && (
+          <div className="absolute right-4 bottom-4 z-20 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={prevSlide}
+              className="w-7 h-7 rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer border border-white/5 active:scale-95"
+            >
+              <ChevronLeft size={14} strokeWidth={2.5} />
+            </button>
+            <button 
+              onClick={nextSlide}
+              className="w-7 h-7 rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer border border-white/5 active:scale-95"
+            >
+              <ChevronRight size={14} strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
       </div>
- 
-       {/* Progress Dots Removed */}
     </section>
   );
 };
