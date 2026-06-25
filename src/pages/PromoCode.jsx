@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, X, Loader2, CheckCircle2, AlertCircle, Search, Ticket, ArrowLeft, RefreshCw, Key } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { apiFetch, isLocalHost } from '../utils/api';
+import { formatDbError } from '../utils/errorHelper';
 
 const EMPTY = { code: '', discount_percent: 5, code_type: 'first_time' };
 const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
@@ -132,7 +133,7 @@ export default function PromoCode() {
       setTimeout(() => backToList(), 1500);
     } catch (err) {
       console.error('Error saving promo code:', err);
-      setError(err.message || 'Failed to save promo code.');
+      setError(formatDbError(err, 'Failed to save promo code.'));
     } finally {
       setIsSubmitting(false);
     }

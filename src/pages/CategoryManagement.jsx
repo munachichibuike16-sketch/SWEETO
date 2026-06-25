@@ -3,15 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, CheckCircle2, AlertCircle, X,
   Loader2, Tag, FileText, FolderOpen, Image as ImageIcon,
-  Search, ChevronRight, Grid, Flame
+  Search, ChevronRight, ChevronDown, Grid, Flame
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 import { supabase } from '../lib/supabase';
 import { apiFetch, isLocalHost } from '../utils/api';
+import { getCategoryLevel } from '../utils/categoryHelpers';
+import { formatDbError } from '../utils/errorHelper';
 
-const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', is_subcategory: false, show_daily_deals: 1 };
+const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', level: 1, parent_level1_id: '', show_daily_deals: 1 };
 
 const inputClass =
   'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
@@ -33,6 +35,7 @@ const CategoryManagement = () => {
   const [search, setSearch]           = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name }
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
+  const [expandedIds, setExpandedIds] = useState({});
 
   const allDealsOff = categories.length > 0 && categories.every(c => Number(c.show_daily_deals) === 0);
 
@@ -92,11 +95,29 @@ const CategoryManagement = () => {
   const openAdd = () => { resetForm(); setShowForm(true); };
 
   const openEdit = (cat) => {
+    let lvl = 1;
+    let parent1Id = '';
+    let parentId = cat.parent_id || '';
+
+    if (parentId) {
+      const parent = categories.find(c => Number(c.id) === Number(parentId));
+      if (parent && parent.parent_id) {
+        // Parent has a parent, so cat is Level 3!
+        lvl = 3;
+        parent1Id = parent.parent_id;
+      } else {
+        // Parent has no parent, so cat is Level 2!
+        lvl = 2;
+        parent1Id = parentId;
+      }
+    }
+
     setFormData({
       name: cat.name || '',
       description: cat.description || '',
-      parent_id: cat.parent_id || '',
-      is_subcategory: !!cat.parent_id,
+      level: lvl,
+      parent_id: parentId,
+      parent_level1_id: parent1Id,
       image_url: cat.image_url || '',
       slug: cat.slug || '',
       show_daily_deals: cat.show_daily_deals !== undefined ? Number(cat.show_daily_deals) : 1
@@ -130,12 +151,13 @@ const CategoryManagement = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!formData.name.trim()) { setError('Category name is required.'); return; }
-    if (formData.is_subcategory && !formData.parent_id) { setError('Please select a parent category for this subcategory.'); return; }
+    if (formData.level === 2 && !formData.parent_id) { setError('Please select a parent category for this subcategory.'); return; }
+    if (formData.level === 3 && !formData.parent_id) { setError('Please select a subcategory for this mid-subcategory.'); return; }
 
     setIsSubmitting(true);
     try {
       const slugVal = formData.slug?.trim() || formData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const parentVal = formData.is_subcategory && formData.parent_id ? Number(formData.parent_id) : null;
+      const parentVal = formData.level > 1 && formData.parent_id ? Number(formData.parent_id) : null;
       
       const supabasePayload = {
         name: formData.name.trim(),
@@ -234,7 +256,7 @@ const CategoryManagement = () => {
       setTimeout(() => { closeForm(); setSuccess(''); }, 1500);
     } catch (err) {
       console.error('Error saving category:', err);
-      setError(err.message || 'Failed to save. Please try again.');
+      setError(formatDbError(err, 'Failed to save. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -276,8 +298,117 @@ const CategoryManagement = () => {
     c.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  /* ─── parent category options (only list top-level parent categories, exclude self) ─── */
-  const parentOptions = (categories || []).filter(c => !c.parent_id && c.id !== editingId);
+  /* ─── recursive category tree renderer ─── */
+  const renderCategoryRow = (cat, level) => {
+    const children = (categories || []).filter(c => Number(c.parent_id) === Number(cat.id));
+    const hasChildren = children.length > 0;
+    const isExpanded = !!expandedIds[cat.id];
+
+    // Indentation and styling based on level
+    const indentClass = level === 1 ? '' : level === 2 ? 'ml-6 md:ml-10' : 'ml-12 md:ml-20';
+    const borderColors = level === 1 
+      ? 'border-l-4 border-l-emerald-500' 
+      : level === 2 
+        ? 'border-l-4 border-l-blue-500' 
+        : 'border-l-4 border-l-purple-500';
+    
+    const levelBadge = level === 1 
+      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+      : level === 2 
+        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
+        : 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+    
+    const levelLabel = level === 1 ? 'Parent' : level === 2 ? 'Subcategory' : 'Midsub';
+
+    return (
+      <div key={cat.id} className="space-y-2">
+        <div className={`group relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-3xl p-4 md:p-6 transition-all duration-300 hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 ${indentClass} ${borderColors}`}>
+          
+          {/* Left side: Icon, Name, Desc */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            {/* Thumbnail / Icon */}
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 overflow-hidden flex items-center justify-center shrink-0">
+              {cat.image_url ? (
+                <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+              ) : (
+                <FolderOpen className="text-slate-400" size={20} />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-sm md:text-base truncate">
+                   {cat.name}
+                </h4>
+                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${levelBadge}`}>
+                  {levelLabel}
+                </span>
+              </div>
+              {cat.description && (
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
+                  {cat.description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Right side: Actions / Chevron */}
+          <div className="flex items-center gap-3 self-end md:self-center shrink-0">
+            {/* Show Daily Deals Badge */}
+            {Number(cat.show_daily_deals) === 1 && (
+              <div className="flex items-center gap-1 text-amber-550 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-3 py-1 rounded-xl border border-amber-100 dark:border-amber-900/10">
+                <Flame size={12} className="fill-current animate-pulse text-amber-500" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Deals</span>
+              </div>
+            )}
+
+            {/* Edit / Delete Buttons */}
+            <div className="flex items-center gap-1.5">
+              <button 
+                type="button"
+                onClick={() => openEdit(cat)} 
+                className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-xl transition-colors cursor-pointer"
+                title="Edit"
+              >
+                <Edit size={14} />
+              </button>
+              <button 
+                type="button"
+                onClick={() => setConfirmDelete({ id: cat.id, name: cat.name })} 
+                disabled={deletingId === cat.id} 
+                className="p-2 bg-red-55 hover:bg-red-100 text-red-650 dark:bg-red-950/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                title="Delete"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+
+            {/* Chevron Expand/Collapse (Only for levels 1 & 2 if they have children) */}
+            {hasChildren && (
+              <button
+                type="button"
+                onClick={() => toggleExpand(cat.id)}
+                className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                  isExpanded 
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-400 dark:bg-slate-800 dark:hover:bg-slate-700'
+                }`}
+              >
+                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Render children recursively if expanded */}
+        {hasChildren && isExpanded && (
+          <div className="space-y-2">
+            {children.map(child => renderCategoryRow(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -372,54 +503,111 @@ const CategoryManagement = () => {
                 {/* Category Type Choice */}
                 <div>
                   <label className={labelClass}><Grid size={12} /> Category Type</label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => setFormData(p => ({ ...p, is_subcategory: false, parent_id: '' }))}
-                      className={`p-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all text-center flex flex-col items-center gap-2 cursor-pointer ${
-                        !formData.is_subcategory
+                      onClick={() => setFormData(p => ({ ...p, level: 1, parent_id: '', parent_level1_id: '' }))}
+                      className={`p-3 rounded-2xl border-2 font-black uppercase tracking-widest text-[8px] sm:text-[9px] transition-all text-center flex flex-col items-center gap-1.5 cursor-pointer ${
+                        formData.level === 1
                           ? 'border-emerald-500 bg-emerald-50/50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-305'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-300'
                       }`}
                     >
-                      <FolderOpen size={18} />
-                      <span>Parent Category</span>
+                      <FolderOpen size={16} />
+                      <span>Parent (L1)</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFormData(p => ({ ...p, is_subcategory: true }))}
-                      className={`p-4 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all text-center flex flex-col items-center gap-2 cursor-pointer ${
-                        formData.is_subcategory
+                      onClick={() => setFormData(p => ({ ...p, level: 2, parent_id: '', parent_level1_id: '' }))}
+                      className={`p-3 rounded-2xl border-2 font-black uppercase tracking-widest text-[8px] sm:text-[9px] transition-all text-center flex flex-col items-center gap-1.5 cursor-pointer ${
+                        formData.level === 2
                           ? 'border-emerald-500 bg-emerald-50/50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-305'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-300'
                       }`}
                     >
-                      <ChevronRight size={18} />
-                      <span>Subcategory</span>
+                      <ChevronRight size={16} />
+                      <span>Subcat (L2)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(p => ({ ...p, level: 3, parent_id: '', parent_level1_id: '' }))}
+                      className={`p-3 rounded-2xl border-2 font-black uppercase tracking-widest text-[8px] sm:text-[9px] transition-all text-center flex flex-col items-center gap-1.5 cursor-pointer ${
+                        formData.level === 3
+                          ? 'border-emerald-500 bg-emerald-50/50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400'
+                          : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      <Grid size={16} />
+                      <span>Midsub (L3)</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Parent Category Selector */}
+                {/* Parent / Subcategory Selectors */}
                 <AnimatePresence>
-                  {formData.is_subcategory && (
+                  {formData.level === 2 && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <label className={labelClass}><FolderOpen size={12} /> Select Parent Category *</label>
+                      <label className={labelClass}><FolderOpen size={12} /> Select Parent Category (L1) *</label>
                       <select
                         value={formData.parent_id}
                         onChange={e => setFormData(p => ({ ...p, parent_id: e.target.value }))}
                         className={`${inputClass} appearance-none`}
                       >
                         <option value="">-- Choose Parent --</option>
-                        {parentOptions.map(c => (
+                        {categories.filter(c => !c.parent_id && c.id !== editingId).map(c => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                       </select>
+                    </motion.div>
+                  )}
+
+                  {formData.level === 3 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div>
+                        <label className={labelClass}><FolderOpen size={12} /> Select Parent Category (L1) *</label>
+                        <select
+                          value={formData.parent_level1_id}
+                          onChange={e => setFormData(p => ({ ...p, parent_level1_id: e.target.value, parent_id: '' }))}
+                          className={`${inputClass} appearance-none`}
+                        >
+                          <option value="">-- Choose Parent --</option>
+                          {categories.filter(c => !c.parent_id && c.id !== editingId).map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {formData.parent_level1_id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="overflow-hidden"
+                        >
+                          <label className={labelClass}><ChevronRight size={12} /> Select Subcategory (L2) *</label>
+                          <select
+                            value={formData.parent_id}
+                            onChange={e => setFormData(p => ({ ...p, parent_id: e.target.value }))}
+                            className={`${inputClass} appearance-none`}
+                          >
+                            <option value="">-- Choose Subcategory --</option>
+                            {categories
+                              .filter(c => Number(c.parent_id) === Number(formData.parent_level1_id) && c.id !== editingId)
+                              .map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                          </select>
+                        </motion.div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -547,7 +735,7 @@ const CategoryManagement = () => {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* List */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center px-6">
             <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl flex items-center justify-center mb-6 -rotate-3"><FolderOpen className="text-emerald-400" size={40}/></div>
@@ -555,7 +743,7 @@ const CategoryManagement = () => {
             {!search && <><p className="text-slate-500 text-sm mb-10 max-w-xs">Organize your products by creating your first store category.</p>
             <button onClick={openAdd} className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20"><Plus size={18}/>Initialize Catalog</button></>}
           </div>
-        ) : (
+        ) : search ? (
           <div className="p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filtered.map((cat, i) => (
               <motion.div key={cat.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
@@ -616,6 +804,12 @@ const CategoryManagement = () => {
                 <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
               </motion.div>
             ))}
+          </div>
+        ) : (
+          <div className="p-6 md:p-10 space-y-4">
+            {categories
+              .filter(c => !c.parent_id || !categories.some(parent => parent.id === Number(c.parent_id)))
+              .map(rootCat => renderCategoryRow(rootCat, 1))}
           </div>
         )}
       </div>

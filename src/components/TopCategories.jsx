@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getCategoryDescendants } from '../utils/categoryHelpers';
 
 export default function TopCategories() {
   const navigate = useNavigate();
@@ -102,15 +103,10 @@ export default function TopCategories() {
   };
 
   const getProductCountForCategory = (catName) => {
-    let count = products?.filter(p => p.category?.toLowerCase() === catName?.toLowerCase() && p.status === 'active').length || 0;
-    const cat = categories.find(c => c.name?.toLowerCase() === catName?.toLowerCase());
-    if (cat) {
-      const subcats = categories.filter(c => c.parent_id === cat.id);
-      subcats.forEach(sub => {
-        count += products?.filter(p => p.category?.toLowerCase() === sub.name?.toLowerCase() && p.status === 'active').length || 0;
-      });
-    }
-    return count;
+    if (!catName) return 0;
+    const descendants = getCategoryDescendants(catName, categories);
+    const matchNames = [catName.toLowerCase(), ...descendants];
+    return products?.filter(p => p.category && matchNames.includes(p.category.toLowerCase()) && p.status === 'active').length || 0;
   };
 
   const list = (categories.length > 0 ? categories : defaultCategories).filter(cat => getProductCountForCategory(cat.name) > 0);

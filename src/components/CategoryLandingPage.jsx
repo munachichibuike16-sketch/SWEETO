@@ -4,6 +4,7 @@ import { Zap, ChevronRight, Package, ShoppingCart, Heart } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
+import { getCategoryDescendants } from '../utils/categoryHelpers';
 import ProductCard from './ProductCard';
 import { SectionHeader } from './ProductSection';
 
@@ -182,18 +183,15 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
     return categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
   }, [categories, categoryName]);
 
-  // Filter products belonging to this category or its subcategories
+  // Filter products belonging to this category or its subcategories recursively
   const categoryProducts = useMemo(() => {
-    const parentCat = categories.find(c => c.name?.toLowerCase() === categoryName?.toLowerCase());
-    const subcatNames = parentCat 
-      ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
-      : [];
+    if (!categoryName) return [];
+    const descendants = getCategoryDescendants(categoryName, categories);
+    const matchNames = [categoryName.toLowerCase(), ...descendants];
     
     return products.filter(p => {
       const pCat = p.category?.toLowerCase();
-      const matchesMain = pCat === categoryName?.toLowerCase();
-      const matchesSub = subcatNames.includes(pCat);
-      return (matchesMain || matchesSub) && p.status === 'active';
+      return pCat && matchNames.includes(pCat) && p.status === 'active';
     });
   }, [products, categoryName, categories]);
 
@@ -225,7 +223,9 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
     if (isBrand) {
       return categoryProducts.filter(p => p.brand?.toLowerCase() === activePill?.toLowerCase());
     } else {
-      return categoryProducts.filter(p => p.category?.toLowerCase() === activePill?.toLowerCase());
+      const descendants = getCategoryDescendants(activePill, categories);
+      const matchNames = [activePill.toLowerCase(), ...descendants];
+      return categoryProducts.filter(p => p.category && matchNames.includes(p.category.toLowerCase()));
     }
   }, [categoryProducts, activePill, categories]);
 

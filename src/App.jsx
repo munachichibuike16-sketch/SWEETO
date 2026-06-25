@@ -23,6 +23,7 @@ import DeliverPage from './pages/DeliverPage';
 import Dashboard from './pages/Dashboard';
 import VisitUs from './pages/VisitUs';
 import LegalPage from './pages/LegalPage';
+import { getCategoryDescendants } from './utils/categoryHelpers';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -209,15 +210,10 @@ const Storefront = ({ viewMode = 'home' }) => {
   const { t, t_smart, lang } = useLanguage();
 
   const getProductCountForCategory = (catName) => {
-    let count = liveProducts?.filter(p => p.category?.toLowerCase() === catName?.toLowerCase() && p.status === 'active').length || 0;
-    const cat = categories.find(c => c.name?.toLowerCase() === catName?.toLowerCase());
-    if (cat) {
-      const subcats = categories.filter(c => c.parent_id === cat.id);
-      subcats.forEach(sub => {
-        count += liveProducts?.filter(p => p.category?.toLowerCase() === sub.name?.toLowerCase() && p.status === 'active').length || 0;
-      });
-    }
-    return count;
+    if (!catName) return 0;
+    const descendants = getCategoryDescendants(catName, categories);
+    const matchNames = [catName.toLowerCase(), ...descendants];
+    return liveProducts?.filter(p => p.category && matchNames.includes(p.category.toLowerCase()) && p.status === 'active').length || 0;
   };
 
   const [activeSubCategory, setActiveSubCategory] = useState('All');
@@ -367,13 +363,11 @@ const Storefront = ({ viewMode = 'home' }) => {
     if (!activeCategory || !Array.isArray(searchFilteredProducts)) {
       return searchFilteredProducts;
     }
-    const parentCat = categories.find(c => c.name?.toLowerCase() === activeCategory.toLowerCase());
-    const subcatNames = parentCat 
-      ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
-      : [];
+    const descendants = getCategoryDescendants(activeCategory, categories);
+    const matchNames = [activeCategory.toLowerCase(), ...descendants];
     return searchFilteredProducts.filter(p => {
       const pCat = p.category?.toLowerCase();
-      return pCat === activeCategory.toLowerCase() || subcatNames.includes(pCat);
+      return pCat && matchNames.includes(pCat);
     });
   })();
 
@@ -878,7 +872,8 @@ const Storefront = ({ viewMode = 'home' }) => {
                         </>
                       )}
                       
-                      {/* Permanent Recommended for You */}
+                      {/* Permanent Recommended for You - Removed from home page per user request */}
+                      {/*
                       {(() => {
                         const recommendedProducts = liveProducts
                           ?.filter(p => p.is_featured || p.is_trending)
@@ -898,6 +893,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                           </div>
                         );
                       })()}
+                      */}
 
                       {/* Permanent Recently Viewed (Always at the bottom) */}
                       {recentlyViewed.length > 0 && (

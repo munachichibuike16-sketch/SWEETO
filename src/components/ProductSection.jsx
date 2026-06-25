@@ -7,6 +7,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
+import { getCategoryDescendants } from '../utils/categoryHelpers';
 import ProductCard from './ProductCard';
 
 export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/hero-banner.png", onViewAllClick }) => {
@@ -517,13 +518,11 @@ export const DualProductSection = ({ section, liveProducts = [], onProductClick 
     
     // Category Filter
     if (category && category !== 'All') {
-      const parentCat = categories.find(c => c.name?.toLowerCase() === category.toLowerCase());
-      const subcatNames = parentCat 
-        ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
-        : [];
+      const descendants = getCategoryDescendants(category, categories);
+      const matchNames = [category.toLowerCase(), ...descendants];
       filtered = filtered.filter(p => {
         const pCat = p.category?.toLowerCase();
-        return pCat === category.toLowerCase() || subcatNames.includes(pCat);
+        return pCat && matchNames.includes(pCat);
       });
     }
 

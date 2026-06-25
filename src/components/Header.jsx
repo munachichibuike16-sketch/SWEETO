@@ -8,6 +8,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
+import { getCategoryDescendants } from '../utils/categoryHelpers';
 import SweetoLogo from './SweetoLogo';
 
 const Header = ({ onMenuClick, onCartClick }) => {
@@ -30,6 +31,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const { categoryName } = useParams();
   const isWishlistPage = location.pathname === '/wishlist';
   const isHomePage = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/product/');
+  const isActualHomePage = location.pathname === '/' || location.pathname === '';
   const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/settings' || location.pathname === '/wishlist';
   const isHomeOrCategory = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/category/');
   const showBottomNav = !location.pathname.startsWith('/product/') && 
@@ -61,9 +63,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
   
   const activeCategoryName = categoryName ? decodeURIComponent(categoryName) : selectedCategory;
   const activeCat = categories.find(c => c.name?.toLowerCase() === activeCategoryName?.toLowerCase());
-  const activeParentCat = activeCat && activeCat.parent_id 
-    ? categories.find(c => c.id === activeCat.parent_id) 
-    : activeCat;
+  const activeParentCat = (() => {
+    if (!activeCat) return null;
+    let current = activeCat;
+    for (let i = 0; i < 5; i++) { // Max depth fallback to prevent loop lock
+      if (!current.parent_id) break;
+      const parent = categories.find(c => c.id === current.parent_id);
+      if (!parent) break;
+      current = parent;
+    }
+    return current;
+  })();
   const activeParentName = activeParentCat ? activeParentCat.name : null;
   const notifRef = useRef(null);
   const langRef = useRef(null);
@@ -675,15 +685,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
               )}
 
               {/* Settings Icon */}
-              <motion.button 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate('/settings')}
-                className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
-                title={t('settings') || 'Settings'}
-              >
-                <Settings size={20} />
-              </motion.button>
+              {!isActualHomePage && (
+                <motion.button 
+                  whileHover={{ scale: 1.1 }} 
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate('/settings')}
+                  className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
+                  title={t('settings') || 'Settings'}
+                >
+                  <Settings size={20} />
+                </motion.button>
+              )}
 
               {/* Notifications */}
               <div className="relative">
@@ -730,13 +742,15 @@ const Header = ({ onMenuClick, onCartClick }) => {
             {/* Action Icons: Notification bell & Settings */}
             <div className="flex items-center gap-1">
               {/* Settings gear */}
-              <button 
-                onClick={() => navigate('/settings')} 
-                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
-                title={t('settings') || 'Settings'}
-              >
-                <Settings size={22} strokeWidth={1.5} />
-              </button>
+              {!isActualHomePage && (
+                <button 
+                  onClick={() => navigate('/settings')} 
+                  className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
+                  title={t('settings') || 'Settings'}
+                >
+                  <Settings size={22} strokeWidth={1.5} />
+                </button>
+              )}
 
               {/* Notifications bell */}
               <button 
@@ -1098,10 +1112,11 @@ const Header = ({ onMenuClick, onCartClick }) => {
                           .slice(0, 8); // Limit to 8 categories
 
                         return parentCats.map((cat, idx) => {
-                          const subcatNames = categories.filter(c => c.parent_id === cat.id).map(c => c.name?.toLowerCase());
+                          const descendants = getCategoryDescendants(cat.name, categories);
+                          const matchNames = [cat.name?.toLowerCase(), ...descendants];
                           const count = products.filter(p => {
                             const pCat = p.category?.toLowerCase();
-                            return (pCat === cat.name?.toLowerCase() || subcatNames.includes(pCat)) && p.status === 'active';
+                            return pCat && matchNames.includes(pCat) && p.status === 'active';
                           }).length;
 
                           const label = lang === 'fr' 

@@ -6,6 +6,7 @@ import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 import { supabase } from '../lib/supabase';
 import { apiFetch, isLocalHost } from '../utils/api';
+import { formatDbError } from '../utils/errorHelper';
 
 const EMPTY = { name: '', description: '', logo_url: '', website: '' };
 const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
@@ -103,7 +104,7 @@ export default function BrandManagement() {
       setTimeout(() => backToList(), 1500);
     } catch (err) {
       console.error('Error saving brand:', err);
-      setError(err.message || 'Failed to save brand.');
+      setError(formatDbError(err, 'Failed to save brand.'));
     } finally {
       setIsSubmitting(false);
     }

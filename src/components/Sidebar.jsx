@@ -10,6 +10,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { playSound } from '../utils/sound';
+import { getCategoryDescendants } from '../utils/categoryHelpers';
 
 const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded = false, products = [] }) => {
   const navigate = useNavigate();
@@ -103,22 +104,17 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
   };
 
   const getProductCountForCategory = (catName) => {
+    if (!catName) return 0;
     const activeProds = products?.length > 0 ? products : storeProducts;
-    let count = activeProds.filter(p => p.category?.toLowerCase() === catName?.toLowerCase() && p.status === 'active').length;
-    const cat = categories.find(c => c.name?.toLowerCase() === catName?.toLowerCase());
-    if (cat) {
-      const subcats = categories.filter(c => c.parent_id === cat.id);
-      subcats.forEach(sub => {
-        count += activeProds.filter(p => p.category?.toLowerCase() === sub.name?.toLowerCase() && p.status === 'active').length;
-      });
-    }
-    return count;
+    const descendants = getCategoryDescendants(catName, categories);
+    const matchNames = [catName.toLowerCase(), ...descendants];
+    return activeProds.filter(p => p.category && matchNames.includes(p.category.toLowerCase()) && p.status === 'active').length;
   };
 
   // Group categories into parent-child hierarchy
   const parentCategories = categories.filter(cat => !cat.parent_id && getProductCountForCategory(cat.name) > 0);
   const getSubcategories = (parentId) => {
-    return categories.filter(cat => cat.parent_id === parentId && (products?.length > 0 ? products : storeProducts).filter(p => p.category?.toLowerCase() === cat.name?.toLowerCase() && p.status === 'active').length > 0);
+    return categories.filter(cat => cat.parent_id === parentId && getProductCountForCategory(cat.name) > 0);
   };
 
   // Embedded view for Homepage grid cards ("Shop by Department")
@@ -360,19 +356,67 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                 transition={{ duration: 0.25, ease: 'easeInOut' }}
                                 className="overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 divide-y divide-slate-100/50 dark:divide-slate-800/30"
                               >
-                                {subs.map((sub, subIdx) => (
-                                  <div key={sub.id || subIdx} className="flex items-stretch justify-between pl-12 pr-6 min-h-[48px]">
-                                    <button
-                                      onClick={() => {
-                                        onCategorySelect(sub.name);
-                                        onClose();
-                                      }}
-                                      className="flex-1 text-left py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-eas-blue transition-colors cursor-pointer"
-                                    >
-                                      {t_smart(sub.name)}
-                                    </button>
-                                  </div>
-                                ))}
+                                {subs.map((sub, subIdx) => {
+                                  const midSubs = getSubcategories(sub.id);
+                                  const hasMidSubs = midSubs.length > 0;
+                                  const isSubExpanded = !!expandedCategories[sub.id];
+
+                                  return (
+                                    <div key={sub.id || subIdx} className="flex flex-col">
+                                      {/* Subcategory Row */}
+                                      <div className="flex items-stretch justify-between min-h-[48px] pl-12 pr-6">
+                                        <button
+                                          onClick={() => {
+                                            onCategorySelect(sub.name);
+                                            onClose();
+                                          }}
+                                          className="flex-1 text-left py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:text-eas-blue transition-colors cursor-pointer"
+                                        >
+                                          {t_smart(sub.name)}
+                                        </button>
+                                        {hasMidSubs && (
+                                          <button
+                                            onClick={() => toggleExpand(sub.id)}
+                                            className={`w-10 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                                              isSubExpanded 
+                                                ? 'text-eas-blue' 
+                                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                                            }`}
+                                          >
+                                            <ChevronRight className={`w-3.5 h-3.5 stroke-[3] transition-transform duration-300 ${isSubExpanded ? 'rotate-90' : ''}`} />
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Level 3 Midsub Categories (Nested Accordion) */}
+                                      <AnimatePresence initial={false}>
+                                        {hasMidSubs && isSubExpanded && (
+                                          <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                            className="overflow-hidden bg-slate-100/30 dark:bg-slate-950/40 divide-y divide-slate-100/30 dark:divide-slate-800/20 pl-6"
+                                          >
+                                            {midSubs.map((midSub, midIdx) => (
+                                              <div key={midSub.id || midIdx} className="flex items-stretch justify-between pl-12 pr-6 min-h-[44px]">
+                                                <button
+                                                  onClick={() => {
+                                                    onCategorySelect(midSub.name);
+                                                    onClose();
+                                                  }}
+                                                  className="flex-1 text-left py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors cursor-pointer"
+                                                >
+                                                  {t_smart(midSub.name)}
+                                                </button>
+                                              </div>
+                                            ))}
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  );
+                                })}
                               </motion.div>
                             )}
                           </AnimatePresence>

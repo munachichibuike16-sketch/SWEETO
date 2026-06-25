@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 import { apiFetch } from '../utils/api';
+import { formatDbError } from '../utils/errorHelper';
 
 const EMPTY = { 
   name:'', price:'', originalPrice:'', categoryId:'', brandId:'', description:'', image_url:'', additional_images:[], status:'active', 
@@ -187,7 +188,7 @@ export default function ProductsManagement() {
       setTimeout(()=>backToList(), 1500);
     } catch (err) {
       console.error(err);
-      setError('Failed to save product: ' + (err.message || 'Unknown error'));
+      setError(formatDbError(err, 'Failed to save product.'));
     } finally {
       setIsSubmitting(false);
     }

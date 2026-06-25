@@ -22,6 +22,7 @@ import AnalysisManagement from './AnalysisManagement';
 import PromoCode from './PromoCode';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
+import { formatDbError } from '../utils/errorHelper';
 import SweetoLogo from '../components/SweetoLogo';
 import { useNavigate } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
@@ -347,7 +348,7 @@ const Dashboard = () => {
       setQuickProductForm({ name: '', price: '', stock: '10', categoryId: '', image_url: '' });
     } catch (err) {
       console.error(err);
-      showToast('Failed to add product: ' + err.message, 'error');
+      showToast('Failed to add product: ' + formatDbError(err), 'error');
     } finally {
       setIsQuickProductSubmitting(false);
     }

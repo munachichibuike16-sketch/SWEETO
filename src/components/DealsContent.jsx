@@ -4,6 +4,7 @@ import { ChevronLeft, Search, Share2, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getCategoryDescendants } from '../utils/categoryHelpers';
 import ProductCard from './ProductCard';
 
 export default function DealsContent({ onProductClick }) {
@@ -63,17 +64,12 @@ export default function DealsContent({ onProductClick }) {
       ? products.filter(p => p.status === 'active' && (Number(p.is_daily_deal) === 1 || (p.original_price && p.original_price > p.price)))
       : [];
     if (categoryParam) {
-      // Find parent category and its subcategory names
-      const parentCat = categories.find(c => c.name?.toLowerCase() === categoryParam.toLowerCase());
-      const subcatNames = parentCat 
-        ? categories.filter(c => c.parent_id === parentCat.id).map(c => c.name?.toLowerCase())
-        : [];
+      const descendants = getCategoryDescendants(categoryParam, categories);
+      const matchNames = [categoryParam.toLowerCase(), ...descendants];
       
       list = list.filter(p => {
         const pCat = p.category?.toLowerCase();
-        const matchesMain = pCat === categoryParam.toLowerCase();
-        const matchesSub = subcatNames.includes(pCat);
-        return matchesMain || matchesSub;
+        return pCat && matchNames.includes(pCat);
       });
     }
     return list;
