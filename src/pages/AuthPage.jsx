@@ -929,7 +929,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} />}
               </button>
               <button 
-                onClick={() => setCurrentTab('settings')} 
+                onClick={() => navigate('/settings')} 
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
               >
                 <SettingsIcon size={20} />
@@ -1092,12 +1092,12 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   if (currentTab === 'settings') {
     return (
-      <div className="profile-body dark:bg-[#020617] transition-colors duration-500 pb-20">
+      <div className="settings-body dark:bg-[#020617] transition-colors duration-500 pb-20">
         
-        <div className="main-container" style={{ maxWidth: '560px', transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div className="w-full max-w-[560px] flex flex-col relative" style={{ transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           
           {/* AliExpress-Style Premium Header Bar */}
-          <div className="md:relative fixed md:top-auto top-0 left-0 right-0 z-30 h-14 bg-white/95 dark:bg-[#020617]/95 md:bg-transparent dark:md:bg-transparent border-b border-slate-100 dark:border-slate-800/60 md:border-none flex items-center justify-between px-4 md:px-0 w-full shadow-sm md:shadow-none">
+          <div className="sticky top-0 z-40 h-14 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between px-4 w-full shadow-sm">
             <button 
               onClick={() => {
                 if (activeSettingsSection !== 'menu' && activeSettingsSection !== 'legal') {
@@ -1106,18 +1106,18 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                   setActiveSettingsSection('menu');
                 } else {
                   if (sessionUser) {
-                    setCurrentTab('overview');
+                    navigate('/auth');
                   } else {
                     navigate(-1);
                   }
                 }
               }} 
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
             >
               <ArrowLeft size={20} />
             </button>
             
-            <h2 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider text-center select-none">
+            <h2 className="text-sm font-bold text-slate-950 dark:text-white uppercase tracking-wider text-center select-none absolute left-1/2 -translate-x-1/2">
               {activeSettingsSection === 'menu' && 'Settings'}
               {activeSettingsSection === 'profile' && 'Profile Details'}
               {activeSettingsSection === 'address' && 'Shipping Address'}
@@ -1129,416 +1129,404 @@ const AuthPage = ({ initialTab, onCartClick }) => {
             <div className="w-10 h-10"></div>
           </div>
 
-          {/* Mobile Spacer to push content below fixed header */}
-          <div className="h-14 md:hidden block shrink-0 w-full"></div>
+          <div className="w-full px-4 py-4 space-y-4 animate-fade-in">
 
-          <div className="auth-card dark:bg-[#020617]/40 dark:border-white/5 backdrop-blur-xl animate-fade-in" style={{ width: '100%' }}>
-            <div className="card-content">
-
-              {/* SETTINGS MENU LIST */}
-              {activeSettingsSection === 'menu' && (
-                <div className="space-y-4 text-left">
-                  {/* GROUP 1: Personal Profile (Only for signed in user) */}
-                  {sessionUser && (
-                    <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5">
-                      {/* Profile Info */}
-                      <div 
-                        onClick={() => setActiveSettingsSection('profile')}
-                        className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500 shrink-0">
-                            <User size={16} />
-                          </div>
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-slate-200">Profile Info</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {(settingsForm.avatarUrl || sessionUser?.picture) ? (
-                            <img 
-                              src={settingsForm.avatarUrl || sessionUser?.picture} 
-                              alt="" 
-                              className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800 shrink-0"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xs shrink-0">
-                              {sessionUser?.name?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                        </div>
-                      </div>
-
-                      {/* Shipping Address */}
-                      <div 
-                        onClick={() => setActiveSettingsSection('address')}
-                        className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-red-500/10 rounded-xl text-red-500 shrink-0">
-                            <MapPin size={16} />
-                          </div>
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Shipping Address</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold max-w-[150px] truncate">
-                            {settingsForm.city ? `${settingsForm.city}, ${settingsForm.address || ''}` : 'Not set'}
-                          </span>
-                          <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                        </div>
-                      </div>
-
-                      {/* Security / Password */}
-                      <div 
-                        onClick={() => setActiveSettingsSection('security')}
-                        className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500 shrink-0">
-                            <Lock size={16} />
-                          </div>
-                          <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Account Security</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold">
-                            {isGoogleUser ? 'Google Login' : 'Password Protection'}
-                          </span>
-                          <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* GROUP 2: Preferences */}
-                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5">
-                    {/* Ship to */}
+            {/* SETTINGS MENU LIST */}
+            {activeSettingsSection === 'menu' && (
+              <div className="space-y-4 text-left">
+                {/* GROUP 1: Personal Profile (Only for signed in user) */}
+                {sessionUser && (
+                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/45">
+                    {/* Profile Info */}
                     <div 
-                      onClick={() => showToast("Shipping country is locked to Côte d'Ivoire 🇨🇮", "info")}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0">
-                          <Globe size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Ship to</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-black uppercase">Cote D'Ivoire</span>
-                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                      </div>
-                    </div>
-
-                    {/* Currency */}
-                    <div 
-                      onClick={() => showToast(`Store currency is locked to ${settings?.currency || 'XOF'} 💵`, "info")}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500 shrink-0">
-                          <Tag size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Currency</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-black uppercase">{settings?.currency || 'XOF'}</span>
-                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                      </div>
-                    </div>
-
-                    {/* Language */}
-                    <div 
-                      onClick={() => showToast("Language settings coming soon! 🌍", "info")}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
-                          <Globe size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Language</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-black uppercase">English (US)</span>
-                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                      </div>
-                    </div>
-
-                    {/* Theme */}
-                    <div 
-                      onClick={toggleTheme}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-500/10 rounded-xl text-yellow-500 shrink-0">
-                          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Theme</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-black uppercase">{isDarkMode ? 'Dark' : 'Light'}</span>
-                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                      </div>
-                    </div>
-
-                    {/* Clear Cache */}
-                    <div 
-                      onClick={() => {
-                        if (cacheSize === '0.0 KB') {
-                          showToast("Cache is already clean! 🧹", "info");
-                          return;
-                        }
-                        showToast("Clearing temporary image cache...", "info");
-                        setTimeout(() => {
-                          setCacheSize('0.0 KB');
-                          showToast("Cache cleared successfully! 🧹", "success");
-                        }, 1200);
-                      }}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-pink-500/10 rounded-xl text-pink-500 shrink-0">
-                          <RotateCcw size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Clear Cache</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 font-bold">{cacheSize}</span>
-                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* GROUP 3: About & Legal */}
-                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5">
-                    {/* Rate Sweeto Hub */}
-                    <div 
-                      onClick={() => showToast("Thank you for your rating! ⭐⭐⭐⭐⭐", "success")}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-450/10 rounded-xl text-amber-500 shrink-0">
-                          <Star size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Rate Sweeto Hub</span>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-
-                    {/* Privacy Policy */}
-                    <div 
-                      onClick={() => { navigate('/privacy'); window.scrollTo(0, 0); }}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-teal-500/10 rounded-xl text-teal-655 dark:text-teal-400 shrink-0">
-                          <Shield size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Privacy Policy</span>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-
-                    {/* Legal Information */}
-                    <div 
-                      onClick={() => setActiveSettingsSection('legal')}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
-                          <Scale size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">Legal Information</span>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-
-                    {/* Version */}
-                    <div className="flex items-center justify-between p-4 text-slate-800 dark:text-slate-200">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-500/10 rounded-xl text-slate-500 shrink-0">
-                          <Info size={16} />
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-wider">Version</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-bold">v2.0.1</span>
-                    </div>
-                  </div>
-
-                  {/* Log Out/In Option at Bottom */}
-                  <div className="pt-2">
-                    {sessionUser ? (
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full py-4 rounded-3xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-500 font-black text-xs uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <LogOut size={16} /> Sign Out of Account
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => {
-                          setCurrentTab('login');
-                          setShowAuthForm(true);
-                        }}
-                        className="w-full py-4 rounded-3xl text-white font-black text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer bg-[#ff3b30] hover:bg-red-650"
-                      >
-                        <User size={16} /> Sign In to Account
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Copyright Notice */}
-                  <div className="text-center pt-8 pb-4 select-none">
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed text-center w-full block">
-                      © {new Date().getFullYear()} {settings?.shopName || 'SWEETO HUB'} <br/>
-                      {settings?.footer_copyright || 'ELITE LOCAL COMMERCE'}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* LEGAL INFORMATION SECTION SUBMENU */}
-              {activeSettingsSection === 'legal' && (
-                <div className="animate-fade-in text-left">
-                  <div className="bg-white dark:bg-[#0b0f19] border border-slate-150 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-white/5 mb-5">
-                    {/* Terms of Service */}
-                    <div 
-                      onClick={() => { navigate('/terms'); window.scrollTo(0, 0); }}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0">
-                          <Scale size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Terms of Service</span>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-
-                    {/* Security Policy */}
-                    <div 
-                      onClick={() => { navigate('/security'); window.scrollTo(0, 0); }}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-rose-500/10 rounded-xl text-rose-500 shrink-0">
-                          <Lock size={16} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-slate-200">Security Policy</span>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-
-                    {/* Location & Schedule */}
-                    <div 
-                      onClick={() => { navigate('/visit'); window.scrollTo(0, 0); }}
+                      onClick={() => setActiveSettingsSection('profile')}
                       className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500 shrink-0">
-                          <MapPin size={16} />
+                          <User size={16} />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-slate-200">Location & Schedule</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Profile Info</span>
                       </div>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      <div className="flex items-center gap-3">
+                        {(settingsForm.avatarUrl || sessionUser?.picture) ? (
+                          <img 
+                            src={settingsForm.avatarUrl || sessionUser?.picture} 
+                            alt="" 
+                            className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-850 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            {sessionUser?.name?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
                     </div>
 
-                    {/* About Sweeto Hub */}
+                    {/* Shipping Address */}
                     <div 
-                      onClick={() => setActiveSettingsSection('about')}
+                      onClick={() => setActiveSettingsSection('address')}
                       className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
-                          <Store size={16} />
+                        <div className="p-2 bg-red-500/10 rounded-xl text-red-500 shrink-0">
+                          <MapPin size={16} />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-855 dark:text-slate-200">About Sweeto Hub</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Shipping Address</span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold max-w-[150px] truncate">
+                          {settingsForm.city ? `${settingsForm.city}, ${settingsForm.address || ''}` : 'Not set'}
+                        </span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
+                    </div>
+
+                    {/* Security / Password */}
+                    <div 
+                      onClick={() => setActiveSettingsSection('security')}
+                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500 shrink-0">
+                          <Lock size={16} />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Account Security</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-bold">
+                          {isGoogleUser ? 'Google Login' : 'Password Protection'}
+                        </span>
+                        <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* GROUP 2: Preferences */}
+                <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/45">
+                  {/* Ship to */}
+                  <div 
+                    onClick={() => showToast("Shipping country is locked to Côte d'Ivoire 🇨🇮", "info")}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0">
+                        <Globe size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Ship to</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">Cote D'Ivoire</span>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
 
-                  <div className="pt-2">
-                    <button 
-                      onClick={() => setActiveSettingsSection('menu')}
-                      className="w-full py-4 rounded-3xl border border-slate-200 dark:border-white/5 text-slate-655 dark:text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center shadow-sm"
-                    >
-                      Back to Menu
-                    </button>
+                  {/* Currency */}
+                  <div 
+                    onClick={() => showToast(`Store currency is locked to ${settings?.currency || 'XOF'} 💵`, "info")}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500 shrink-0">
+                        <Tag size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Currency</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">{settings?.currency || 'XOF'}</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Language */}
+                  <div 
+                    onClick={() => showToast("Language settings coming soon! 🌍", "info")}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
+                        <Globe size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Language</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">English (US)</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Theme */}
+                  <div 
+                    onClick={toggleTheme}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-yellow-500/10 rounded-xl text-yellow-500 shrink-0">
+                        {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Theme</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">{isDarkMode ? 'Dark' : 'Light'}</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+
+                  {/* Clear Cache */}
+                  <div 
+                    onClick={() => {
+                      if (cacheSize === '0.0 KB') {
+                        showToast("Cache is already clean! 🧹", "info");
+                        return;
+                      }
+                      showToast("Clearing temporary image cache...", "info");
+                      setTimeout(() => {
+                        setCacheSize('0.0 KB');
+                        showToast("Cache cleared successfully! 🧹", "success");
+                      }, 1200);
+                    }}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-pink-500/10 rounded-xl text-pink-500 shrink-0">
+                        <RotateCcw size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Clear Cache</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold">{cacheSize}</span>
+                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* PROFILE SECTION EDIT */}
-              {activeSettingsSection === 'profile' && (
-                <div className="space-y-5 text-left animate-fade-in">
-                  <div className="input-group">
-                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Profile Photo</label>
-                    <div className="flex items-center gap-4 mt-2">
-                      {isUploadingAvatar ? (
-                        <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-white/5 flex items-center justify-center bg-eas-light dark:bg-eas-dark">
-                          <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      ) : (settingsForm.avatarUrl || sessionUser?.picture) ? (
-                        <img 
-                          src={settingsForm.avatarUrl || sessionUser?.picture} 
-                          alt="Avatar Preview" 
-                          className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-white/5"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-black text-xl shadow-md">
-                          {sessionUser?.name?.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="flex flex-col gap-1">
-                        <input type="file" id="avatar-upload-settings" className="hidden" onChange={handleAvatarChange} />
-                        <label 
-                          htmlFor="avatar-upload-settings"
-                          className="px-4 py-2.5 bg-eas-dark dark:bg-white/5 hover:bg-eas-dark/80 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
-                        >
-                          Upload New Photo
-                        </label>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">JPG, PNG or WEBP. Max 5MB.</span>
+                {/* GROUP 3: About & Legal */}
+                <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/45">
+                  {/* Rate Sweeto Hub */}
+                  <div 
+                    onClick={() => showToast("Thank you for your rating! ⭐⭐⭐⭐⭐", "success")}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-400/10 rounded-xl text-amber-500 shrink-0">
+                        <Star size={16} />
                       </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Rate Sweeto Hub</span>
                     </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                   </div>
 
-                  <div className="input-group">
-                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
-                    <div className="input-wrapper mt-1">
-                      <User className="input-icon" size={18} />
-                       <input 
-                        type="text" 
-                        placeholder="Name" 
-                        value={settingsForm.name}
-                        onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
-                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                  {/* Privacy Policy */}
+                  <div 
+                    onClick={() => { navigate('/privacy'); window.scrollTo(0, 0); }}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-teal-500/10 rounded-xl text-teal-600 dark:text-teal-400 shrink-0">
+                        <Shield size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Privacy Policy</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+
+                  {/* Legal Information */}
+                  <div 
+                    onClick={() => setActiveSettingsSection('legal')}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
+                        <Scale size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Legal Information</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+
+                  {/* Version */}
+                  <div className="flex items-center justify-between p-4 text-slate-800 dark:text-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-500/10 rounded-xl text-slate-500 shrink-0">
+                        <Info size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider">Version</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold">v2.0.1</span>
+                  </div>
+                </div>
+
+                {/* Log Out/In Option at Bottom */}
+                <div className="pt-2">
+                  {sessionUser ? (
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full py-4 rounded-2xl bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 text-red-500 hover:text-red-650 hover:bg-red-50/50 dark:hover:bg-red-950/10 font-bold text-xs uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        setCurrentTab('login');
+                        setShowAuthForm(true);
+                      }}
+                      className="w-full py-4 rounded-2xl text-white font-bold text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer bg-[#ff3b30] hover:bg-red-600"
+                    >
+                      <User size={16} /> Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* LEGAL INFORMATION SECTION SUBMENU */}
+            {activeSettingsSection === 'legal' && (
+              <div className="animate-fade-in text-left space-y-4">
+                <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/45">
+                  {/* Terms of Service */}
+                  <div 
+                    onClick={() => { navigate('/terms'); window.scrollTo(0, 0); }}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 shrink-0">
+                        <Scale size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Terms of Service</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+
+                  {/* Security Policy */}
+                  <div 
+                    onClick={() => { navigate('/security'); window.scrollTo(0, 0); }}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-rose-500/10 rounded-xl text-rose-500 shrink-0">
+                        <Lock size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-850 dark:text-slate-200">Security Policy</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+
+                  {/* Location & Schedule */}
+                  <div 
+                    onClick={() => { navigate('/visit'); window.scrollTo(0, 0); }}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500 shrink-0">
+                        <MapPin size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-850 dark:text-slate-200">Location & Schedule</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+
+                  {/* About Sweeto Hub */}
+                  <div 
+                    onClick={() => setActiveSettingsSection('about')}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
+                        <Store size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-855 dark:text-slate-200">About Sweeto Hub</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    onClick={() => setActiveSettingsSection('menu')}
+                    className="w-full py-4 rounded-2xl bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 text-slate-655 dark:text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center shadow-sm"
+                  >
+                    Back to Menu
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* PROFILE SECTION EDIT */}
+            {activeSettingsSection === 'profile' && (
+              <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 text-left animate-fade-in shadow-sm">
+                <div className="input-group">
+                  <label className="text-xs font-bold text-slate-400 tracking-wider dark:text-slate-500">Profile Photo</label>
+                  <div className="flex items-center gap-4 mt-2">
+                    {isUploadingAvatar ? (
+                      <div className="w-16 h-16 rounded-2xl border border-slate-200 dark:border-white/5 flex items-center justify-center bg-eas-light dark:bg-eas-dark">
+                        <span className="w-5 h-5 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (settingsForm.avatarUrl || sessionUser?.picture) ? (
+                      <img 
+                        src={settingsForm.avatarUrl || sessionUser?.picture} 
+                        alt="Avatar Preview" 
+                        className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-slate-800/40"
                       />
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-eas-blue to-eas-blue/80 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                        {sessionUser?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-1">
+                      <input type="file" id="avatar-upload-settings" className="hidden" onChange={handleAvatarChange} />
+                      <label 
+                        htmlFor="avatar-upload-settings"
+                        className="px-4 py-2.5 bg-eas-dark dark:bg-white/5 hover:bg-eas-dark/80 text-white font-bold text-[9px] uppercase tracking-widest rounded-xl transition-all text-center cursor-pointer shadow-sm"
+                      >
+                        Upload New Photo
+                      </label>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">JPG, PNG or WEBP. Max 5MB.</span>
                     </div>
                   </div>
+                </div>
 
-                  <div className="input-group">
-                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
-                    <div className="phone-row mt-1 flex gap-2 relative">
-                      {/* Custom Country Code Dropdown */}
-                      <div className="relative" style={{ width: '130px', flexShrink: 0 }}>
-                        <button
-                          type="button"
-                          onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                          className="w-full h-full min-h-[50px] bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/5 rounded-xl px-3 text-xs font-bold text-slate-800 dark:text-white flex justify-between items-center cursor-pointer"
-                        >
-                          <span>{settingsForm.countryCode || 'Code'}</span>
-                          <ChevronDown size={14} className="text-slate-400" />
-                        </button>
-                        
-                        <AnimatePresence>
-                          {showCountryDropdown && (
-                            <>
-                              <div className="fixed inset-0 z-40" onClick={() => setShowCountryDropdown(false)} />
-                              <motion.div
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 5 }}
-                                className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
-                              >
-                                <div className="p-1 space-y-0.5">
+                <div className="input-group">
+                  <label className="text-xs font-bold text-slate-400 tracking-wider dark:text-slate-500">Full Name</label>
+                  <div className="input-wrapper mt-1">
+                    <User className="input-icon" size={18} />
+                    <input 
+                      type="text" 
+                      placeholder="Name" 
+                      value={settingsForm.name}
+                      onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
+                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label className="text-xs font-bold text-slate-400 tracking-wider dark:text-slate-500">Phone Number</label>
+                  <div className="phone-row mt-1 flex gap-2 relative">
+                    {/* Custom Country Code Dropdown */}
+                    <div className="relative" style={{ width: '130px', flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                        className="w-full h-full min-h-[50px] bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/5 rounded-xl px-3 text-xs font-bold text-slate-800 dark:text-white flex justify-between items-center cursor-pointer"
+                      >
+                        <span>{settingsForm.countryCode || 'Code'}</span>
+                        <ChevronDown size={14} className="text-slate-400" />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {showCountryDropdown && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowCountryDropdown(false)} />
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-eas-dark border border-slate-155 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
+                            >
+                              <div className="p-1 space-y-0.5">
                                   {africanCountries.map((c) => {
                                     const isSelected = settingsForm.countryCode === c.code;
                                     return (
@@ -1560,260 +1548,267 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                                       </button>
                                     );
                                   })}
-                                </div>
-                              </motion.div>
-                            </>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      <input 
-                        type="tel" 
-                        inputMode="numeric"
-                        placeholder="Phone number" 
-                        value={settingsForm.phone}
-                        onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white flex-1"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex gap-3">
-                    <button 
-                      onClick={() => setActiveSettingsSection('menu')}
-                      className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
-                    >
-                      Back
-                    </button>
-                    <button 
-                      onClick={async () => {
-                        await handleSaveSettings();
-                        setActiveSettingsSection('menu');
-                      }}
-                      className="flex-1 py-3.5 rounded-2xl bg-eas-blue hover:bg-[#0043d0] text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Save size={13} /> Save Details
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ADDRESS SECTION EDIT */}
-              {activeSettingsSection === 'address' && (
-                <div className="space-y-5 text-left animate-fade-in">
-                  <div className="input-group">
-                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Shipping City</label>
-                    <div className="phone-row mt-1 relative">
-                      <button
-                        type="button"
-                        onClick={() => setShowCityDropdown(!showCityDropdown)}
-                        className="w-full bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/5 rounded-xl px-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white text-left outline-none flex justify-between items-center cursor-pointer"
-                      >
-                        <span>{settingsForm.city || 'Select City'}</span>
-                        <ChevronDown size={14} className="text-slate-400" />
-                      </button>
-                      
-                      <AnimatePresence>
-                        {showCityDropdown && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setShowCityDropdown(false)} />
-                            <motion.div
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 5 }}
-                              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
-                            >
-                              <div className="p-1 space-y-0.5">
-                                {(shippingZones.length > 0 
-                                  ? shippingZones 
-                                  : [
-                                      { id: 'abidjan', name: 'Abidjan', price: 1500 },
-                                      { id: 'bouake', name: 'Bouake', price: 2500 },
-                                      { id: 'yamoussoukro', name: 'Yamoussoukro', price: 2500 },
-                                      { id: 'sanpedro', name: 'San Pedro', price: 3000 }
-                                    ]
-                                ).map((z) => {
-                                  const isSelected = settingsForm.city === z.name;
-                                  return (
-                                    <button
-                                      key={z.id}
-                                      type="button"
-                                      onClick={() => {
-                                        setSettingsForm({ ...settingsForm, city: z.name });
-                                        setShowCityDropdown(false);
-                                      }}
-                                      className={`w-full text-left px-3 py-2.5 text-xs font-bold rounded-lg transition-all flex justify-between items-center cursor-pointer ${
-                                        isSelected 
-                                          ? 'bg-eas-blue/10 text-eas-blue' 
-                                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
-                                      }`}
-                                    >
-                                      <span>{z.name} (Shipping: {settings?.currency || 'XOF'} {z.price?.toLocaleString()})</span>
-                                      {isSelected && <Check size={12} strokeWidth={3} className="text-eas-blue" />}
-                                    </button>
-                                  );
-                                })}
                               </div>
                             </motion.div>
                           </>
                         )}
                       </AnimatePresence>
                     </div>
-                  </div>
 
-                  <div className="input-group">
-                    <label className="text-xs font-black text-slate-400 tracking-wider dark:text-slate-500">Street / Delivery Address</label>
-                    <div className="input-wrapper mt-1">
-                      <MapPin className="input-icon" size={18} />
-                       <input 
-                        type="text" 
-                        placeholder="e.g. Rue des Jardins, Marcory" 
-                        value={settingsForm.address}
-                        onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
-                        className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex gap-3">
-                    <button 
-                      onClick={() => setActiveSettingsSection('menu')}
-                      className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
-                    >
-                      Back
-                    </button>
-                    <button 
-                      onClick={async () => {
-                        await handleSaveSettings();
-                        setActiveSettingsSection('menu');
-                      }}
-                      className="flex-1 py-3.5 rounded-2xl bg-eas-blue hover:bg-[#0043d0] text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Save size={13} /> Save Address
-                    </button>
+                    <input 
+                      type="tel" 
+                      inputMode="numeric"
+                      placeholder="Phone number" 
+                      value={settingsForm.phone}
+                      onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
+                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white flex-1"
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* SECURITY SECTION EDIT */}
-              {activeSettingsSection === 'security' && (
-                <div className="space-y-5 text-left animate-fade-in">
-                  {isGoogleUser ? (
-                    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-5 flex flex-col items-center text-center space-y-2.5">
-                      <CheckCircle2 className="text-emerald-500" size={30} />
-                      <span className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
-                        Google Account Active
-                      </span>
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 max-w-[280px]">
-                        Your account is signed in with Google Authentication. Passwords cannot be set or modified manually.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="input-group">
-                        <label className="text-[10px] font-black text-slate-400 tracking-wider">Current Password</label>
-                        <div className="input-wrapper mt-1">
-                          <Lock className="input-icon" size={18} />
-                          <input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            value={passwordForm.oldPassword}
-                            onChange={(e) => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
-                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="input-group">
-                        <label className="text-[10px] font-black text-slate-400 tracking-wider">New Password</label>
-                        <div className="input-wrapper mt-1">
-                          <Lock className="input-icon" size={18} />
-                          <input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
-                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="input-group">
-                        <label className="text-[10px] font-black text-slate-400 tracking-wider">Confirm New Password</label>
-                        <div className="input-wrapper mt-1">
-                          <Lock className="input-icon" size={18} />
-                          <input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            value={passwordForm.confirmNewPassword}
-                            onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
-                            className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
-                          />
-                        </div>
-                      </div>
-
-                      <button 
-                        type="button"
-                        onClick={async () => {
-                          const success = await handlePasswordChange();
-                          if (success) {
-                            setActiveSettingsSection('menu');
-                          }
-                        }}
-                        className="bg-eas-dark hover:bg-eas-dark/80 dark:bg-white dark:hover:bg-eas-light text-white dark:text-eas-dark font-black text-[10px] uppercase tracking-widest py-3.5 rounded-2xl transition-all shadow cursor-pointer w-full text-center mt-2"
-                      >
-                        Update Security Password
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="pt-2">
-                    <button 
-                      onClick={() => setActiveSettingsSection('menu')}
-                      className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
-                    >
-                      Back
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ABOUT SECTION */}
-              {activeSettingsSection === 'about' && (
-                <div className="space-y-5 text-left animate-fade-in">
-                  <div className="p-5 bg-white/40 dark:bg-eas-dark/30 rounded-3xl border border-slate-100 dark:border-white/5 space-y-4">
-                    <div className="text-center pb-2 border-b border-slate-100 dark:border-white/5 flex flex-col items-center">
-                      <div className="w-12 h-12 bg-eas-blue rounded-2xl flex items-center justify-center text-white font-black text-lg mb-2 shadow-md">SW</div>
-                      <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">SWEETO HUB App</span>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Version v2.0.1</span>
-                    </div>
-
-                    <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed space-y-2.5">
-                      <p>
-                        <strong>SWEETO HUB</strong> is a premium, state-of-the-art e-commerce gateway built to simulate the absolute best shopping mechanics.
-                      </p>
-                      <p>
-                        Our platform features real-time notifications, local currency settings, offline fallback capabilities, fully interactive coupon rules, dynamic pricing, and optimized order tracing.
-                      </p>
-                      <p className="text-[9px] text-slate-400 uppercase tracking-wide text-center">
-                        © 2026 Sweeto Corp. All Rights Reserved.
-                      </p>
-                    </div>
-                  </div>
-
+                <div className="pt-4 flex gap-3">
                   <button 
                     onClick={() => setActiveSettingsSection('menu')}
-                    className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                    className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      await handleSaveSettings();
+                      setActiveSettingsSection('menu');
+                    }}
+                    className="flex-1 py-3.5 rounded-2xl bg-eas-blue hover:bg-[#0043d0] text-white font-bold text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Save size={13} /> Save Details
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ADDRESS SECTION EDIT */}
+            {activeSettingsSection === 'address' && (
+              <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 text-left animate-fade-in shadow-sm">
+                <div className="input-group">
+                  <label className="text-xs font-bold text-slate-400 tracking-wider dark:text-slate-500">Shipping City</label>
+                  <div className="phone-row mt-1 relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowCityDropdown(!showCityDropdown)}
+                      className="w-full bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/5 rounded-xl px-4 py-3.5 text-xs font-bold text-slate-800 dark:text-white text-left outline-none flex justify-between items-center cursor-pointer"
+                    >
+                      <span>{settingsForm.city || 'Select City'}</span>
+                      <ChevronDown size={14} className="text-slate-400" />
+                    </button>
+                    
+                    <AnimatePresence>
+                      {showCityDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowCityDropdown(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 5 }}
+                            className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-eas-dark border border-slate-150 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
+                          >
+                            <div className="p-1 space-y-0.5">
+                              {(shippingZones.length > 0 
+                                ? shippingZones 
+                                : [
+                                    { id: 'abidjan', name: 'Abidjan', price: 1500 },
+                                    { id: 'bouake', name: 'Bouake', price: 2500 },
+                                    { id: 'yamoussoukro', name: 'Yamoussoukro', price: 2500 },
+                                    { id: 'sanpedro', name: 'San Pedro', price: 3000 }
+                                  ]
+                              ).map((z) => {
+                                const isSelected = settingsForm.city === z.name;
+                                return (
+                                  <button
+                                    key={z.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSettingsForm({ ...settingsForm, city: z.name });
+                                      setShowCityDropdown(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2.5 text-xs font-bold rounded-lg transition-all flex justify-between items-center cursor-pointer ${
+                                      isSelected 
+                                        ? 'bg-eas-blue/10 text-eas-blue' 
+                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
+                                    }`}
+                                  >
+                                    <span>{z.name} (Shipping: {settings?.currency || 'XOF'} {z.price?.toLocaleString()})</span>
+                                    {isSelected && <Check size={12} strokeWidth={3} className="text-eas-blue" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label className="text-xs font-bold text-slate-400 tracking-wider dark:text-slate-500">Street / Delivery Address</label>
+                  <div className="input-wrapper mt-1">
+                    <MapPin className="input-icon" size={18} />
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Rue des Jardins, Marcory" 
+                      value={settingsForm.address}
+                      onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
+                      className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button 
+                    onClick={() => setActiveSettingsSection('menu')}
+                    className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      await handleSaveSettings();
+                      setActiveSettingsSection('menu');
+                    }}
+                    className="flex-1 py-3.5 rounded-2xl bg-eas-blue hover:bg-[#0043d0] text-white font-bold text-xs uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Save size={13} /> Save Address
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SECURITY SECTION EDIT */}
+            {activeSettingsSection === 'security' && (
+              <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 text-left animate-fade-in shadow-sm">
+                {isGoogleUser ? (
+                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-5 flex flex-col items-center text-center space-y-2.5">
+                    <CheckCircle2 className="text-emerald-500" size={30} />
+                    <span className="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">
+                      Google Account Active
+                    </span>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 max-w-[280px]">
+                      Your account is signed in with Google Authentication. Passwords cannot be set or modified manually.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="input-group">
+                      <label className="text-[10px] font-bold text-slate-400 tracking-wider">Current Password</label>
+                      <div className="input-wrapper mt-1">
+                        <Lock className="input-icon" size={18} />
+                        <input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          value={passwordForm.oldPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, oldPassword: e.target.value})}
+                          className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="text-[10px] font-bold text-slate-400 tracking-wider">New Password</label>
+                      <div className="input-wrapper mt-1">
+                        <Lock className="input-icon" size={18} />
+                        <input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                          className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="input-group">
+                      <label className="text-[10px] font-bold text-slate-400 tracking-wider">Confirm New Password</label>
+                      <div className="input-wrapper mt-1">
+                        <Lock className="input-icon" size={18} />
+                        <input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          value={passwordForm.confirmNewPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
+                          className="dark:bg-eas-dark dark:border-white/5 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={async () => {
+                        const success = await handlePasswordChange();
+                        if (success) {
+                          setActiveSettingsSection('menu');
+                        }
+                      }}
+                      className="bg-eas-dark hover:bg-eas-dark/80 dark:bg-white dark:hover:bg-eas-light text-white dark:text-eas-dark font-bold text-xs uppercase tracking-widest py-3.5 rounded-2xl transition-all shadow cursor-pointer w-full text-center mt-2"
+                    >
+                      Update Security Password
+                    </button>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <button 
+                    onClick={() => setActiveSettingsSection('menu')}
+                    className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
                   >
                     Back
                   </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              <div className="auth-footer-text dark:text-slate-500" style={{ marginTop: '2rem', opacity: 0.7 }}>
+            {/* ABOUT SECTION */}
+            {activeSettingsSection === 'about' && (
+              <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 text-left animate-fade-in shadow-sm">
+                <div className="space-y-4">
+                  <div className="text-center pb-2 border-b border-slate-100 dark:border-slate-800/50 flex flex-col items-center">
+                    <div className="w-12 h-12 bg-eas-blue rounded-2xl flex items-center justify-center text-white font-bold text-lg mb-2 shadow-md">SW</div>
+                    <span className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">SWEETO HUB App</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Version v2.0.1</span>
+                  </div>
+
+                  <div className="text-[11px] text-slate-655 dark:text-slate-400 leading-relaxed space-y-2.5">
+                    <p>
+                      <strong>SWEETO HUB</strong> is a premium, state-of-the-art e-commerce gateway built to simulate the absolute best shopping mechanics.
+                    </p>
+                    <p>
+                      Our platform features real-time notifications, local currency settings, offline fallback capabilities, fully interactive coupon rules, dynamic pricing, and optimized order tracing.
+                    </p>
+                    <p className="text-[9px] text-slate-400 uppercase tracking-wide text-center">
+                      © 2026 Sweeto Corp. All Rights Reserved.
+                    </p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setActiveSettingsSection('menu')}
+                  className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                >
+                  Back
+                </button>
+              </div>
+            )}
+
+            {/* Copyright & Info Footer */}
+            <div className="text-center dark:text-slate-500 pt-8 pb-4 select-none" style={{ opacity: 0.7 }}>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em] leading-relaxed text-center w-full block">
+                © {new Date().getFullYear()} {settings?.shopName || 'SWEETO HUB'} <br/>
+                {settings?.footer_copyright || 'ELITE LOCAL COMMERCE'}
+              </p>
+              <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-2">
                 {t('premium_experience_by') || 'Premium Experience by'} <strong>SWEETO-HUB</strong>
               </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -1847,10 +1842,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} />}
               </button>
               <button 
-                onClick={() => { 
-                  setCurrentTab('settings');
-                  setShowAuthForm(true); 
-                }} 
+                onClick={() => navigate('/settings')} 
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
               >
                 <SettingsIcon size={20} />
