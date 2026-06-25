@@ -60,7 +60,7 @@ const InputWrapper = ({ label, icon: Icon, children }) => {
 };
 
 export default function Sweeto() {
-  const { settings, refreshData, showToast } = useStore();
+  const { settings, categories = [], refreshData, showToast } = useStore();
   const [formData, setFormData] = useState({
     bright_hero_title: 'SUMMER 10% SALE',
     bright_hero_subtitle: 'Under Favorable Smart Gadgets',
@@ -78,7 +78,8 @@ export default function Sweeto() {
     bright_promo3_image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400',
     bright_wide_banner_title: 'Get Up To 85% OFF on big billion day 2021',
     bright_wide_banner_subtitle: 'Big Saving on Top selling Smartphone',
-    bright_wide_banner_image: 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200'
+    bright_wide_banner_image: 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200',
+    visible_homepage_categories: '[]'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -104,7 +105,8 @@ export default function Sweeto() {
         bright_promo3_image: settings.bright_promo3_image || 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400',
         bright_wide_banner_title: settings.bright_wide_banner_title || 'Get Up To 85% OFF on big billion day 2021',
         bright_wide_banner_subtitle: settings.bright_wide_banner_subtitle || 'Big Saving on Top selling Smartphone',
-        bright_wide_banner_image: settings.bright_wide_banner_image || 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200'
+        bright_wide_banner_image: settings.bright_wide_banner_image || 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200',
+        visible_homepage_categories: settings.visible_homepage_categories || '[]'
       });
     }
   }, [settings, isDirty]);
@@ -242,6 +244,70 @@ export default function Sweeto() {
               <InputWrapper label="Billboard Image URL" icon={ImageIcon}>
                 <input type="text" name="bright_wide_banner_image" value={formData.bright_wide_banner_image} onChange={handleInputChange} className={inputStyle} />
               </InputWrapper>
+            </div>
+          </div>
+
+          {/* Homepage Categories Ribbon Settings */}
+          <div className="backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-blue-400/45 before:to-transparent animate-fade-in">
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-40 h-16 bg-blue-500/5 blur-[40px] rounded-full pointer-events-none" />
+            <SectionHeader 
+              icon={Tag} 
+              title="Homepage Categories Ribbon" 
+              color="blue" 
+              subtitle="Choose which categories appear under the search box"
+            />
+            <div className="space-y-4 relative z-10">
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Select Categories to Display (Default: Shows all parent categories if none selected)
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto no-scrollbar p-1">
+                {categories.map((cat) => {
+                  let visibleIds = [];
+                  try {
+                    visibleIds = JSON.parse(formData.visible_homepage_categories || '[]');
+                  } catch (e) {}
+                  
+                  const isChecked = visibleIds.includes(cat.id);
+
+                  const handleCheckboxChange = (checked) => {
+                    let nextIds = [...visibleIds];
+                    if (checked) {
+                      if (!nextIds.includes(cat.id)) nextIds.push(cat.id);
+                    } else {
+                      nextIds = nextIds.filter(id => id !== cat.id);
+                    }
+                    setIsDirty(true);
+                    setFormData(prev => ({
+                      ...prev,
+                      visible_homepage_categories: JSON.stringify(nextIds)
+                    }));
+                  };
+
+                  return (
+                    <label 
+                      key={cat.id} 
+                      className="flex items-center gap-3 p-3.5 bg-slate-50/50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 rounded-2xl cursor-pointer hover:border-blue-500/30 dark:hover:border-cyan-500/30 transition-all select-none"
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked} 
+                        onChange={(e) => handleCheckboxChange(e.target.checked)}
+                        className="rounded border-slate-200 dark:border-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-opacity-25 w-4 h-4 cursor-pointer"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-black text-slate-850 dark:text-slate-250 capitalize">
+                          {cat.name}
+                        </span>
+                        {cat.parent_id && (
+                          <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mt-0.5">
+                            Subcategory
+                          </span>
+                        )}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

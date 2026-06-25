@@ -824,31 +824,43 @@ const Header = ({ onMenuClick, onCartClick }) => {
              >
                {lang === 'fr' ? 'Tout' : 'All'}
              </button>
-             {categories
-               .filter((cat) => !cat.parent_id)
-               .map((cat) => {
-                 const isSelected = activeParentName?.toLowerCase() === cat.name?.toLowerCase();
-                 return (
-                   <button
-                     key={cat.id || cat.name}
-                     type="button"
-                     onClick={() => {
-                       setSelectedCategory(null);
-                       setSelectedBrand(null);
-                       setSearchQuery('');
-                       navigate(`/category/${encodeURIComponent(cat.name)}`);
-                     }}
-                     className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
-                       isSelected 
-                         ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
-                         : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                     }`}
-                   >
-                     {t_smart ? t_smart(cat.name) : cat.name}
-                   </button>
-                 );
-               })
-             }
+              {categories
+                .filter((cat) => {
+                  // If custom visible categories are set, render only those.
+                  // Otherwise, default to showing Level 1 parent categories.
+                  if (settings?.visible_homepage_categories) {
+                    try {
+                      const visibleIds = JSON.parse(settings.visible_homepage_categories);
+                      if (Array.isArray(visibleIds) && visibleIds.length > 0) {
+                        return visibleIds.includes(cat.id) || visibleIds.includes(String(cat.id)) || visibleIds.includes(Number(cat.id));
+                      }
+                    } catch (e) {}
+                  }
+                  return !cat.parent_id;
+                })
+                .map((cat) => {
+                  const isSelected = activeParentName?.toLowerCase() === cat.name?.toLowerCase() || selectedCategory?.toLowerCase() === cat.name?.toLowerCase();
+                  return (
+                    <button
+                      key={cat.id || cat.name}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(null);
+                        setSelectedBrand(null);
+                        setSearchQuery('');
+                        navigate(`/category/${encodeURIComponent(cat.name)}`);
+                      }}
+                      className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
+                        isSelected 
+                          ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                      }`}
+                    >
+                      {t_smart ? t_smart(cat.name) : cat.name}
+                    </button>
+                  );
+                })
+              }
            </div>
         </div>
       </header>
