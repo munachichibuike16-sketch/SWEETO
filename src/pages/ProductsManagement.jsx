@@ -47,7 +47,9 @@ export default function ProductsManagement() {
 
   const openAdd = () => { setForm(EMPTY); setEditingProduct(null); setError(''); setSuccess(''); setView('form'); };
   const openEdit = (p) => {
-    const cat = categories.find(c => c.name === p.category);
+    const cat = categories.find(c => c.name?.toLowerCase() === p.category?.toLowerCase());
+    const br = brands.find(b => b.name?.toLowerCase() === p.brand?.toLowerCase());
+    
     let placements = [];
     try {
       placements = typeof p.placements === 'string' ? JSON.parse(p.placements) : (p.placements || []);
@@ -63,28 +65,28 @@ export default function ProductsManagement() {
     }
 
     setForm({ 
-      name:p.name||'', 
-      price:p.price||'', 
-      originalPrice:p.originalPrice||'', 
-      categoryId:cat?.id?.toString()||'', 
-      brandId:p.brand_id?.toString()||'', 
-      description:p.description||'', 
-      image_url:p.image_url||'', 
+      name: p.name ?? '', 
+      price: p.price ?? '', 
+      originalPrice: p.original_price ?? p.originalPrice ?? '', 
+      categoryId: cat?.id?.toString() || p.categoryId?.toString() || '', 
+      brandId: br?.id?.toString() || p.brand_id?.toString() || '', 
+      description: p.description ?? '', 
+      image_url: p.image_url ?? '', 
       additional_images: additionalImages,
-      status:p.status||'active', 
-      featured:Boolean(p.is_featured)||false, 
-      trending:Boolean(p.is_trending)||false, 
-      dealOfDay:Boolean(p.is_daily_deal)||false, 
-      newArrival:Boolean(p.is_new_arrival)||false, 
-      smartphonesPlacement:Boolean(p.smartphones_placement)||false, 
-      homeCinemaPlacement:Boolean(p.home_cinema_placement)||false, 
-      speakersPlacement:Boolean(p.speakers_placement)||false, 
-      refrigeratorsPlacement:Boolean(p.refrigerators_placement)||false, 
+      status: p.status || (p.is_active ? 'active' : 'inactive') || 'active', 
+      featured: Boolean(p.is_featured) || false, 
+      trending: Boolean(p.is_trending) || false, 
+      dealOfDay: Boolean(p.is_deal || p.is_daily_deal) || false, 
+      newArrival: Boolean(p.is_new_arrival) || false, 
+      smartphonesPlacement: Boolean(p.smartphones_placement) || false, 
+      homeCinemaPlacement: Boolean(p.home_cinema_placement) || false, 
+      speakersPlacement: Boolean(p.speakers_placement) || false, 
+      refrigeratorsPlacement: Boolean(p.refrigerators_placement) || false, 
       colors: typeof p.colors === 'string' ? JSON.parse(p.colors) : (p.colors || []),
       placements: placements,
       condition: p.condition || 'new',
-      stock: p.stock_quantity !== undefined ? p.stock_quantity : (p.stock !== undefined ? p.stock : 10),
-      costPrice: p.cost_price !== undefined ? p.cost_price : (p.bought_price !== undefined ? p.bought_price : '')
+      stock: p.stock ?? p.stock_quantity ?? 10,
+      costPrice: p.cost_price ?? p.bought_price ?? p.costPrice ?? ''
     });
     setEditingProduct(p);
     setError(''); setSuccess('');
