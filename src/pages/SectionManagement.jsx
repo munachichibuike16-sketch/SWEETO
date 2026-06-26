@@ -89,6 +89,7 @@ export default function SectionManagement() {
   const { sections = [], refreshData, categories = [], videoAds = [], settings } = useStore();
   const [view, setView] = useState('list');
   const [templateMode, setTemplateMode] = useState('chilling');
+  const [optimisticActiveStates, setOptimisticActiveStates] = useState({});
 
   useEffect(() => {
     if (settings?.active_template) {
@@ -409,12 +410,16 @@ export default function SectionManagement() {
 
   const toggleActive = async (s) => {
     const nextActive = !s.isActive;
+    
+    // 1. Optimistic UI Update (instant toggle feedback)
+    setOptimisticActiveStates(prev => ({ ...prev, [s.id]: nextActive }));
+    
     const isLocalhost = isLocalHost();
     try {
-      // Toggle in Supabase
+      // 2. Toggle in Supabase
       await supabase.from('sections').update({ is_active: nextActive ? 1 : 0 }).eq('id', s.id);
 
-      // Toggle in local SQLite
+      // 3. Toggle in local SQLite
       if (isLocalhost) {
         try {
           const res = await apiFetch(`sections/${s.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...s, isActive: nextActive }) });
@@ -424,9 +429,23 @@ export default function SectionManagement() {
         }
       }
 
-      refreshData();
+      // 4. Refresh global store context data
+      await refreshData();
+      
+      // 5. Clean up optimistic state once global context is updated
+      setOptimisticActiveStates(prev => {
+        const next = { ...prev };
+        delete next[s.id];
+        return next;
+      });
     } catch (e) {
       console.error(e);
+      // Revert optimistic update on failure
+      setOptimisticActiveStates(prev => {
+        const next = { ...prev };
+        delete next[s.id];
+        return next;
+      });
     }
   };
 
@@ -498,9 +517,10 @@ export default function SectionManagement() {
           {sorted.map((s, i) => {
             const role = getRoleInfo(s.role);
             const style = getHeaderStyleInfo(s.headerStyle);
+            const isActive = optimisticActiveStates[s.id] !== undefined ? optimisticActiveStates[s.id] : s.isActive;
             return (
               <motion.div key={s.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
-                className={`relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] p-6 shadow-xl shadow-slate-200/20 dark:shadow-none hover:border-orange-500/30 hover:shadow-2xl hover:shadow-orange-500/10 transition-all group flex flex-col ${!s.isActive ? 'opacity-50 grayscale hover:grayscale-0' : ''}`}>
+                className={`relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] p-6 shadow-xl shadow-slate-200/20 dark:shadow-none hover:border-orange-500/30 hover:shadow-2xl hover:shadow-orange-500/10 transition-all group flex flex-col ${!isActive ? 'opacity-50 grayscale hover:grayscale-0' : ''}`}>
                 
                 {/* Header: Position & Actions */}
                 <div className="flex justify-between items-start mb-6">
@@ -517,10 +537,10 @@ export default function SectionManagement() {
                     {/* Toggle Switch */}
                     <button 
                       onClick={() => toggleActive(s)}
-                      className={`w-10 h-6 rounded-full transition-colors relative shrink-0 flex items-center p-0.5 ${s.isActive ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-                      title={s.isActive ? 'Deactivate Section' : 'Activate Section'}
+                      className={`w-10 h-6 rounded-full transition-colors relative shrink-0 flex items-center p-0.5 ${isActive ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+                      title={isActive ? 'Deactivate Section' : 'Activate Section'}
                     >
-                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${s.isActive ? 'translate-x-4' : 'translate-x-0'}`}/>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-4' : 'translate-x-0'}`}/>
                     </button>
 
                     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
