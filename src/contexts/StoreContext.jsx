@@ -34,6 +34,7 @@ export const StoreProvider = ({ children }) => {
 
   const [settings, setSettings] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [imageSearchResults, setImageSearchResults] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [toast, setToast] = useState(null);
@@ -855,6 +856,8 @@ export const StoreProvider = ({ children }) => {
       error, 
       searchQuery,
       setSearchQuery,
+      imageSearchResults,
+      setImageSearchResults,
       selectedCategory,
       setSelectedCategory,
       selectedBrand,

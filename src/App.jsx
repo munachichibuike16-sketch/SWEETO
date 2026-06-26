@@ -207,7 +207,7 @@ const Storefront = ({ viewMode = 'home' }) => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   
-  const { products: liveProducts, categories, searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
+  const { products: liveProducts, categories, searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
   const { t, t_smart, lang } = useLanguage();
 
   const getProductCountForCategory = (catName) => {
@@ -351,14 +351,25 @@ const Storefront = ({ viewMode = 'home' }) => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isSidebarOpen, isCartOpen]);
 
+  useEffect(() => {
+    if (!searchQuery) {
+      setImageSearchResults(null);
+    }
+  }, [searchQuery, setImageSearchResults]);
+
   let allProducts = liveProducts;
   
-  const searchFilteredProducts = (searchQuery && Array.isArray(allProducts))
-    ? allProducts.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : (Array.isArray(allProducts) ? allProducts : []);
+  const searchFilteredProducts = (() => {
+    if (imageSearchResults) {
+      return imageSearchResults;
+    }
+    return (searchQuery && Array.isArray(allProducts))
+      ? allProducts.filter(p => 
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          p.category.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : (Array.isArray(allProducts) ? allProducts : []);
+  })();
 
   const categoryFilteredProducts = (() => {
     if (!activeCategory || !Array.isArray(searchFilteredProducts)) {

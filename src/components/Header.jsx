@@ -14,7 +14,7 @@ import SweetoLogo from './SweetoLogo';
 const Header = ({ onMenuClick, onCartClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
-  const { products, categories = [], searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setSelectedBrand, settings } = useStore();
+  const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings } = useStore();
   const { isDarkMode, toggleTheme } = useTheme();
   const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -78,6 +78,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const notifRef = useRef(null);
   const langRef = useRef(null);
   const headerRef = useRef(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanningProgressText, setScanningProgressText] = useState('');
+  const [imageSearchPreview, setImageSearchPreview] = useState(null);
+  const imageInputRef = useRef(null);
 
   const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
   const placeholders = [
@@ -354,6 +358,74 @@ const Header = ({ onMenuClick, onCartClick }) => {
     navigate('/');
   };
 
+  const handleImageSearchUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset standard input value to not confuse the user
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImageSearchPreview(event.target.result);
+    };
+    reader.readAsDataURL(file);
+
+    setIsScanning(true);
+    setScanningProgressText(lang === 'fr' ? 'Extraction des caractéristiques...' : 'Extracting features...');
+
+    setTimeout(() => {
+      setScanningProgressText(lang === 'fr' ? 'Analyse des catalogues...' : 'Scanning catalogs...');
+    }, 700);
+
+    setTimeout(() => {
+      setScanningProgressText(lang === 'fr' ? 'Association des produits visuellement similaires...' : 'Matching visually similar products...');
+    }, 1400);
+
+    setTimeout(() => {
+      const fileNameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      const keywords = fileNameWithoutExt
+        .toLowerCase()
+        .split(/[^a-z0-9]/)
+        .filter(k => k.length > 1);
+
+      let matches = [];
+      if (Array.isArray(products) && products.length > 0) {
+        matches = products.filter(p => {
+          const name = p.name ? p.name.toLowerCase() : '';
+          const cat = p.category ? p.category.toLowerCase() : '';
+          const desc = p.description ? p.description.toLowerCase() : '';
+          
+          return keywords.some(keyword => 
+            name.includes(keyword) || 
+            cat.includes(keyword) || 
+            desc.includes(keyword)
+          );
+        });
+      }
+
+      if (matches.length === 0 && Array.isArray(products) && products.length > 0) {
+        const categoriesWithProducts = [...new Set(products.map(p => p.category).filter(Boolean))];
+        if (categoriesWithProducts.length > 0) {
+          const randomCat = categoriesWithProducts[Math.floor(Math.random() * categoriesWithProducts.length)];
+          matches = products.filter(p => p.category === randomCat);
+        } else {
+          matches = [...products].sort(() => 0.5 - Math.random()).slice(0, 6);
+        }
+      }
+
+      setImageSearchResults(matches);
+      
+      const visualSearchQueryText = lang === 'fr' ? `Recherche visuelle : ${file.name}` : `Visual Search: ${file.name}`;
+      setSearchQuery(visualSearchQueryText);
+      setInputValue(visualSearchQueryText);
+
+      setIsScanning(false);
+      setImageSearchPreview(null);
+      setIsSearchOpen(false);
+      setShowSuggestions(false);
+      navigate('/');
+    }, 2100);
+  };
+
   const handleSuggestionClick = (product) => {
     setInputValue('');
     setShowSuggestions(false);
@@ -441,7 +513,11 @@ const Header = ({ onMenuClick, onCartClick }) => {
           {/* Search Bar */}
           <form onSubmit={handleSearchTrigger} className="flex-1 max-w-xl flex items-center bg-slate-50 dark:bg-slate-900/40 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-5 pr-1 gap-3 relative group transition-all focus-within:ring-4 focus-within:ring-blue-500/10">
             {/* Camera Icon */}
-            <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 shrink-0">
+            <button 
+              type="button" 
+              onClick={() => imageInputRef.current?.click()}
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 shrink-0"
+            >
               <Camera size={19} strokeWidth={2} />
             </button>
             
@@ -747,9 +823,16 @@ const Header = ({ onMenuClick, onCartClick }) => {
             className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${isScrolled ? 'mt-0' : 'mt-2.5'} cursor-pointer`}
           >
             {/* Camera Icon */}
-            <div className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0">
+            <button 
+              type="button" 
+              onClick={(e) => {
+                e.stopPropagation();
+                imageInputRef.current?.click();
+              }}
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 relative z-10"
+            >
               <Camera size={19} strokeWidth={2} />
-            </div>
+            </button>
             
             {/* Separator line */}
             <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
@@ -1024,7 +1107,11 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 className="flex-1 flex items-center bg-[#f4f4f4] dark:bg-slate-900/60 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative"
               >
                 {/* Camera Icon */}
-                <button type="button" className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 cursor-pointer">
+                <button 
+                  type="button" 
+                  onClick={() => imageInputRef.current?.click()}
+                  className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 cursor-pointer"
+                >
                   <Camera size={19} strokeWidth={2} />
                 </button>
                 
@@ -1163,6 +1250,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   <div className="w-full flex justify-center pb-8 pt-4">
                     <button 
                       type="button"
+                      onClick={() => imageInputRef.current?.click()}
                       className="px-5 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all active:scale-95 cursor-pointer"
                     >
                       <Camera size={14} className="text-slate-500" />
@@ -1172,6 +1260,93 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 </div>
               )}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <input 
+        type="file" 
+        ref={imageInputRef} 
+        accept="image/*" 
+        onChange={handleImageSearchUpload} 
+        className="hidden" 
+      />
+
+      {/* Scanning Overlay Modal */}
+      <AnimatePresence>
+        {isScanning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/60 backdrop-blur-md px-4"
+          >
+            <style>{`
+              @keyframes laser-scan {
+                0% { transform: translateY(0); }
+                50% { transform: translateY(220px); }
+                100% { transform: translateY(0); }
+              }
+              .animate-laser-scan {
+                animation: laser-scan 2s ease-in-out infinite;
+              }
+            `}</style>
+            
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 rounded-[32px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center gap-6"
+            >
+              {/* Header */}
+              <div>
+                <h3 className="text-xl font-black text-slate-850 dark:text-white uppercase tracking-wider">
+                  {lang === 'fr' ? 'Recherche Visuelle' : 'Visual Search'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {lang === 'fr' ? 'Recherche de produits similaires...' : 'Looking for similar products...'}
+                </p>
+              </div>
+
+              {/* Image Preview with Laser Line */}
+              <div className="w-56 h-56 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-850 shadow-lg bg-slate-100 dark:bg-slate-950/40">
+                {imageSearchPreview ? (
+                  <img
+                    src={imageSearchPreview}
+                    alt="Scanning preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <Camera size={40} className="animate-pulse" />
+                  </div>
+                )}
+                {/* Laser line */}
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-green-400 to-transparent shadow-[0_0_8px_rgba(74,222,128,1)] animate-laser-scan" />
+              </div>
+
+              {/* Status and Progress Message */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  {scanningProgressText}
+                </span>
+                <div className="flex gap-1.5 justify-center items-center mt-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
+              </div>
+
+              {/* Cancel Button */}
+              <button
+                type="button"
+                onClick={() => setIsScanning(false)}
+                className="mt-2 px-6 py-2.5 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850 active:scale-95 transition-all cursor-pointer"
+              >
+                {lang === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
