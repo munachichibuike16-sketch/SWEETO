@@ -18,13 +18,55 @@ const normalizeProductTitle = (title) => {
 const StoreContext = createContext();
 
 export const StoreProvider = ({ children }) => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [videoAds, setVideoAds] = useState([]);
-  const [sections, setSections] = useState([]);
+  const [products, setProducts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_products');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [categories, setCategories] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_categories');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [brands, setBrands] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_brands');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [videoAds, setVideoAds] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_video_ads');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [sections, setSections] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_sections');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_products');
+      return cached ? false : true;
+    } catch (e) {
+      return true;
+    }
+  });
   const [error, setError] = useState(null);
 
   // Track previous products for native notification comparison
@@ -32,7 +74,14 @@ export const StoreProvider = ({ children }) => {
   const hasInitialLoadRef = useRef(false);
   const notifiedProductIdsRef = useRef(new Set());
 
-  const [settings, setSettings] = useState({});
+  const [settings, setSettings] = useState(() => {
+    try {
+      const cached = localStorage.getItem('sweeto_cache_settings');
+      return cached ? JSON.parse(cached) : {};
+    } catch (e) {
+      return {};
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [imageSearchResults, setImageSearchResults] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
