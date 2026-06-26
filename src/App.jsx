@@ -967,6 +967,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                           elements.push(<React.Fragment key={`section-frag-${sec.id}`}>{sec.element}</React.Fragment>);
                         });
 
+                        /*
                         // Finally, show all remaining products constantly until the end
                         if (productIndex < activeProducts.length) {
                           const remaining = activeProducts.slice(productIndex);
@@ -987,6 +988,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                             </div>
                           );
                         }
+                        */
 
                         return elements;
                       })()}
