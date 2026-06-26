@@ -197,7 +197,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
 
   // Find deals for this category (original_price > price or is_daily_deal)
   const categoryDeals = useMemo(() => {
-    return categoryProducts.filter(p => Number(p.is_daily_deal) === 1 || Number(p.discount) > 0 || (p.original_price && p.original_price > p.price)).slice(0, 6);
+    return categoryProducts.filter(p => Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === 'true').slice(0, 6);
   }, [categoryProducts]);
 
   // Get filter pills: either child categories, or unique brands

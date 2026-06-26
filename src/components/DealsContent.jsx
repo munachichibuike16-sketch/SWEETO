@@ -61,7 +61,7 @@ export default function DealsContent({ onProductClick }) {
   // Filter daily deals products (optionally by category and its subcategories)
   const dealProducts = useMemo(() => {
     let list = Array.isArray(products)
-      ? products.filter(p => p.status === 'active' && (Number(p.is_daily_deal) === 1 || (p.original_price && p.original_price > p.price)))
+      ? products.filter(p => p.status === 'active' && (Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true'))
       : [];
     if (categoryParam) {
       const descendants = getCategoryDescendants(categoryParam, categories);

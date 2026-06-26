@@ -21,7 +21,7 @@ const DealOfTheDay = ({ title, isFirst, showVideoPromo, videoAdId }) => {
 
   // Get all products with a discount, sorted by discount percentage
   const dealProducts = products
-    .filter(p => p.status === 'active' && p.stock > 0 && (p.is_daily_deal || (p.original_price && p.original_price > p.price)))
+    .filter(p => p.status === 'active' && p.stock > 0 && (p.is_daily_deal === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true'))
     .sort((a, b) => {
       const discA = (a.original_price - a.price) / (a.original_price || 1);
       const discB = (b.original_price - b.price) / (b.original_price || 1);

@@ -387,7 +387,7 @@ const Storefront = ({ viewMode = 'home' }) => {
     ? categoryFilteredProducts.filter(p => p.brand === selectedBrand)
     : categoryFilteredProducts;
     
-  const dealProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_daily_deal) === 1 || Number(p.discount) > 0) : [];
+  const dealProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === 'true') : [];
   const newProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_new_arrival) === 1).sort((a,b) => b.id - a.id) : [];
   const trendingProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_trending) === 1) : [];
 

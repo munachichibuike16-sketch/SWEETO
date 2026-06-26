@@ -70,7 +70,7 @@ export default function BrightRetailHome({ onProductClick }) {
   const activeProducts = products.filter(p => p.status === 'active' && p.stock > 0);
 
   // Split products for sections
-  const dailyDeals = activeProducts.filter(p => p.is_daily_deal || (p.original_price && p.original_price > p.price));
+  const dailyDeals = activeProducts.filter(p => p.is_daily_deal === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true');
 
   // Dynamic images and text from settings
   const promoImages = {
