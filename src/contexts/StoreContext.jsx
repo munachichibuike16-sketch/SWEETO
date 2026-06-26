@@ -510,7 +510,7 @@ export const StoreProvider = ({ children }) => {
       if (sectionsData) {
         const formattedSections = sectionsData.map(s => ({
           ...s,
-          isActive: s.is_active === 1 || s.is_active === true,
+          isActive: s.is_active === 1 || s.is_active === true || String(s.is_active) === '1' || String(s.is_active) === 'true',
           isDual: s.is_dual === 1 || s.is_dual === true || s.isdual === 1 || s.isdual === true || s.isDual === 1 || s.isDual === true,
           showViewAll: s.show_view_all === 1 || s.show_view_all === true || s.showviewall === 1 || s.showviewall === true || s.showViewAll === 1 || s.showViewAll === true,
           maxProducts: s.max_products || s.maxproducts || s.maxProducts || 8,
@@ -683,7 +683,7 @@ export const StoreProvider = ({ children }) => {
           if (sectionsData) {
             const formattedSections = sectionsData.map(s => ({
               ...s,
-              isActive: s.is_active === 1 || s.is_active === true || s.isActive === 1 || s.isActive === true,
+              isActive: s.is_active === 1 || s.is_active === true || s.isActive === 1 || s.isActive === true || String(s.is_active) === '1' || String(s.is_active) === 'true' || String(s.isActive) === '1' || String(s.isActive) === 'true',
               isDual: s.is_dual === 1 || s.is_dual === true || s.isdual === 1 || s.isdual === true || s.isDual === 1 || s.isDual === true,
               showViewAll: s.show_view_all === 1 || s.show_view_all === true || s.showviewall === 1 || s.showviewall === true || s.showViewAll === 1 || s.showViewAll === true,
               maxProducts: s.max_products || s.maxproducts || s.maxProducts || 8,
