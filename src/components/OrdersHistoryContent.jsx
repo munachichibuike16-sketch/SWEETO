@@ -249,82 +249,88 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
     return (
       <div className="w-full flex flex-col bg-[#f8fafc] dark:bg-[#0f172a] min-h-screen text-slate-800 dark:text-white select-none">
         
-        {/* Header Row: Back button, Search input, sorting/help/trash icons */}
-        <div className="sticky top-0 z-30 bg-white dark:bg-[#0f172a] border-b border-slate-100 dark:border-white/5 shadow-sm px-4 py-3 flex items-center gap-3 w-full">
-          {/* Back button */}
-          <button 
-            onClick={onBack}
-            className="text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          
-          {/* Search bar input container */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="text"
-              placeholder="Order ID, product..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-full text-slate-900 dark:text-white text-[13px] font-medium placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none transition-all"
-            />
-          </div>
-          
-          {/* Right actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Sticky Header Group */}
+        <div 
+          className="sticky z-30 bg-white dark:bg-[#0f172a] shadow-sm w-full"
+          style={{ top: 'var(--header-height, 0px)' }}
+        >
+          {/* Header Row: Back button, Search input, sorting/help/trash icons */}
+          <div className="border-b border-slate-100 dark:border-white/5 px-4 py-3 flex items-center gap-3 w-full">
+            {/* Back button */}
             <button 
-              onClick={handleFilterClick}
-              title="Toggle Filter Options"
-              className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
+              onClick={onBack}
+              className="text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer"
             >
-              <SlidersHorizontal size={18} />
+              <ArrowLeft size={20} />
             </button>
-            <button 
-              onClick={() => window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}`, '_blank')}
-              title="Chat with Support"
-              className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
-            >
-              <Headphones size={18} />
-            </button>
-            <button 
-              onClick={handleTrashClick}
-              title="Clear Search & Filters"
-              className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs Row */}
-        <div className="bg-white dark:bg-[#0f172a] border-b border-slate-100 dark:border-white/5 w-full flex items-center justify-between px-6 py-2.5 relative">
-          {[
-            { id: 'all', label: 'View all' },
-            { id: 'to_pay', label: 'To pay' },
-            { id: 'processing', label: 'Processing' },
-            { id: 'processed', label: 'Processed' }
-          ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="relative py-2 text-[13px] font-bold transition-all duration-300 flex-1 text-center cursor-pointer"
+            
+            {/* Search bar input container */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text"
+                placeholder="Order ID, product..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-full text-slate-900 dark:text-white text-[13px] font-medium placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none transition-all"
+              />
+            </div>
+            
+            {/* Right actions */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button 
+                onClick={handleFilterClick}
+                title="Toggle Filter Options"
+                className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
               >
-                <span className={isActive ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-slate-500"}>
-                  {tab.label}
-                </span>
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeOrderTabIndicator"
-                    className="absolute bottom-0 left-[20%] right-[20%] h-[3px] bg-slate-900 dark:bg-white rounded-full"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
-                )}
+                <SlidersHorizontal size={18} />
               </button>
-            );
-          })}
+              <button 
+                onClick={() => window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}`, '_blank')}
+                title="Chat with Support"
+                className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
+              >
+                <Headphones size={18} />
+              </button>
+              <button 
+                onClick={handleTrashClick}
+                title="Clear Search & Filters"
+                className="text-slate-800 dark:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs Row */}
+          <div className="border-b border-slate-100 dark:border-white/5 w-full flex items-center justify-between px-6 py-2.5 relative">
+            {[
+              { id: 'all', label: 'View all' },
+              { id: 'to_pay', label: 'To pay' },
+              { id: 'processing', label: 'Processing' },
+              { id: 'processed', label: 'Processed' }
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="relative py-2 text-[13px] font-bold transition-all duration-300 flex-1 text-center cursor-pointer"
+                >
+                  <span className={isActive ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-slate-500"}>
+                    {tab.label}
+                  </span>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="activeOrderTabIndicator"
+                      className="absolute bottom-0 left-[20%] right-[20%] h-[3px] bg-slate-900 dark:bg-white rounded-full"
+                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Orders list / empty state container */}

@@ -1125,7 +1125,10 @@ const AuthPage = ({ initialTab, onCartClick }) => {
         <div className="w-full max-w-[560px] flex flex-col relative" style={{ transition: 'max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           
           {/* AliExpress-Style Premium Header Bar */}
-          <div className="sticky top-0 z-40 h-14 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between px-4 w-full shadow-sm">
+          <div 
+            className="sticky z-40 h-14 bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between px-4 w-full shadow-sm"
+            style={{ top: 'var(--header-height, 0px)' }}
+          >
             <button 
               onClick={() => {
                 if (activeSettingsSection !== 'menu' && activeSettingsSection !== 'legal') {

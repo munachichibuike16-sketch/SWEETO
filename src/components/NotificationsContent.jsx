@@ -611,8 +611,11 @@ const NotificationsContent = ({ onProductClick }) => {
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       
-      {/* 1. UP HEADER (Top Bar) - Sticky, fixed at top-0 */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 h-14 flex items-center px-4 justify-between shadow-sm">
+      {/* 1. UP HEADER (Top Bar) - Sticky, fixed below main header */}
+      <div 
+        className="fixed left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 h-14 flex items-center px-4 justify-between shadow-sm"
+        style={{ top: 'var(--header-height, 0px)' }}
+      >
         {/* Left: Back Button */}
         <button 
           onClick={goBack} 
@@ -633,7 +636,7 @@ const NotificationsContent = ({ onProductClick }) => {
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-355 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title={lang === 'fr' ? 'Tout marquer comme lu' : 'Mark all as read'}
             >
               <CheckCheck size={18} />
@@ -651,8 +654,11 @@ const NotificationsContent = ({ onProductClick }) => {
         </div>
       </div>
 
-      {/* Main Content Area - padded to clear the sticky top-0 header (h-14) */}
-      <div className="max-w-xl mx-auto px-4 pt-20 pb-32">
+      {/* Main Content Area - padded to clear the sticky header */}
+      <div 
+        className="max-w-xl mx-auto px-4 pb-32"
+        style={{ paddingTop: 'calc(var(--header-height, 0px) + 5rem)' }}
+      >
 
         {/* 2. CATEGORY FILTERS (Circular buttons) */}
         <div className="grid grid-cols-3 gap-3 mb-6 mt-2">

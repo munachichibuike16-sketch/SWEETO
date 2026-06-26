@@ -33,7 +33,10 @@ const CouponsContent = ({ onBack, onCartClick }) => {
     <div className="w-full flex flex-col bg-[#f8fafc] dark:bg-[#0f172a] min-h-screen text-slate-800 dark:text-white select-none pb-24">
       
       {/* Header Row: Black header with white icons as in reference */}
-      <div className="sticky top-0 z-30 bg-black dark:bg-[#020617] text-white px-4 py-3.5 flex justify-between items-center w-full shadow-md">
+      <div 
+        className="sticky z-30 bg-black dark:bg-[#020617] text-white px-4 py-3.5 flex justify-between items-center w-full shadow-md"
+        style={{ top: 'var(--header-height, 0px)' }}
+      >
         <div className="flex items-center gap-3">
           <button 
             onClick={onBack}
