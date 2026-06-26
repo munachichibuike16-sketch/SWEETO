@@ -152,6 +152,27 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     { name: "Zambia", code: "+260" }, { name: "Zimbabwe", code: "+263" }
   ];
 
+  // Sync tab state when initialTab prop changes dynamically (e.g. via navigation)
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+    if (initialTab) {
+      setCurrentTab(initialTab);
+      if (initialTab === 'login' || initialTab === 'signup') {
+        setShowAuthForm(true);
+      } else {
+        setShowAuthForm(false);
+      }
+    } else {
+      if (session) {
+        setCurrentTab('overview');
+        setShowAuthForm(false);
+      } else {
+        setCurrentTab('login');
+        setShowAuthForm(true);
+      }
+    }
+  }, [initialTab]);
+
   // Fetch session & shipping zones on mount
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('sweetohub_session'));
