@@ -872,12 +872,15 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   if (sessionUser && currentTab === 'overview') {
     return (
-      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
 
 
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row (Signed In): Avatar, Name, and Icons */}
-          <div className="sticky top-0 w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
+          <div 
+            className="sticky w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
+            style={{ top: 'var(--header-height, 96px)' }}
+          >
             <div className="flex items-center gap-3">
               {/* Avatar with click upload handler */}
               <div 
@@ -1819,10 +1822,13 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   if (!showAuthForm) {
     return (
-      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20">
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row: Sign in/Register and icons */}
-          <div className="sticky top-0 w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300">
+          <div 
+            className="sticky w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
+            style={{ top: 'var(--header-height, 96px)' }}
+          >
             <span 
               onClick={() => { 
                 switchTab('login');
