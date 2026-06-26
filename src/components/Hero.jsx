@@ -111,7 +111,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
             {/* Main Large Banner — auto-cycles all products */}
             <div 
               onClick={() => handleBannerClick(mainSlot.link)}
-              className="lg:col-span-8 h-[350px] sm:h-[400px] lg:h-full relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col md:flex-row items-center p-5 md:p-16 gap-6 md:gap-10 group cursor-pointer"
+              className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-row items-center p-5 sm:p-10 md:p-16 gap-6 md:gap-10 group cursor-pointer"
             >
               
               {/* Ambient Background Light Spot */}
@@ -119,10 +119,9 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
               {/* Left Content Area */}
               <div className="flex-1 flex flex-col justify-center relative z-10 w-full text-left">
-                {/* Category Tag */}
-                <div className="flex items-center gap-2 mb-4 md:mb-6">
-                  <span className="w-1.5 h-1.5 rounded-full bg-eas-blue animate-pulse" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-eas-blue">{mainSlot.subtitle || t('featured_selection')}</span>
+                {/* Angled "VIVA" Badge */}
+                <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
+                  VIVA
                 </div>
                 
                 <AnimatePresence mode="wait">
@@ -131,33 +130,29 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     initial={{ y: 15, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -15, opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="text-2xl sm:text-4xl lg:text-6xl font-black text-white mb-3 md:mb-4 leading-tight tracking-tighter uppercase italic"
+                    transition={{ duration: 0.3 }}
+                    className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-2 tracking-tighter uppercase leading-none italic"
                   >
                     {mainSlot.title}
                   </motion.h2>
                 </AnimatePresence>
                 
-                <p className="text-xs md:text-sm text-slate-400 mb-6 md:mb-8 font-medium max-w-sm line-clamp-3 leading-relaxed">{mainSlot.subtitle}</p>
-                
-                <div className="flex flex-wrap items-center gap-4 md:gap-5">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleBannerClick(mainSlot.link); }}
-                    className="px-6 py-3.5 sm:px-8 sm:py-4 bg-gradient-to-r from-eas-blue to-blue-600 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all duration-300 shadow-[0_10px_35px_rgba(59,130,246,0.35)] hover:shadow-[0_15px_45px_rgba(59,130,246,0.5)] active:scale-95"
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={`desc-${gridMainSlide}`}
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -10, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
                   >
-                    {t('explore_now')}
-                  </button>
-                  {mainSlot.price && (
-                    <div className="px-4 py-2 sm:px-5 sm:py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex flex-col">
-                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{t('starting_at')}</span>
-                      <span className="text-sm sm:text-base font-black text-white italic tracking-tight">{settings?.currency || 'FCFA'} {Number(mainSlot.price).toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
+                    {mainSlot.subtitle}
+                  </motion.p>
+                </AnimatePresence>
               </div>
 
               {/* Right Product Image Area — Structured Glass Showcase Frame */}
-              <div className="flex-1 flex justify-center items-center relative h-[200px] md:h-full w-full z-10">
+              <div className="hidden sm:flex flex-1 justify-center items-center relative h-full w-full z-10">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={gridMainSlide}
@@ -303,11 +298,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
     return (
       <section className="max-w-[1600px] mx-auto px-6 pt-3 pb-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
-          
-          {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
+           {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
           <div 
             onClick={() => handleBannerClick(mainSlot.link)}
-            className="lg:col-span-8 h-[350px] sm:h-[420px] lg:h-full relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0057ff] via-[#008cff] to-[#00c6ff] shadow-2xl border border-white/10 group cursor-pointer"
+            className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-slate-950 shadow-2xl border border-white/5 group cursor-pointer"
           >
             
             {/* Full Bleed Image (Vivid 100% Opacity) */}
@@ -317,55 +311,51 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   key={gridMainSlide}
                   src={mainSlot.image}
                   initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 0.8, scale: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.8 }}
-                  className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform duration-[1200ms] ease-out"
+                  className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-102 transition-transform duration-[1200ms] ease-out"
                   alt=""
                 />
               </AnimatePresence>
             )}
 
             {/* Left Dark Gradient Overlay for perfect text contrast */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-black/30 z-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/30 to-transparent z-10 pointer-events-none" />
 
             {/* Content Overlays */}
-            <div className="absolute inset-0 p-10 md:p-16 flex flex-col justify-center max-w-xl z-20 text-left">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400 mb-3 block">
-                {mainSlot.subtitle || t('featured_selection')}
-              </span>
+            <div className="absolute inset-0 pl-6 sm:pl-10 md:pl-16 lg:pl-20 flex flex-col justify-center items-start gap-0.5 sm:gap-1 max-w-lg md:max-w-2xl z-20 text-left">
+              {/* Angled "VIVA" Badge */}
+              <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
+                VIVA
+              </div>
               
               <AnimatePresence mode="wait">
                 <motion.h2
                   key={`title-${gridMainSlide}`}
-                  initial={{ y: 20, opacity: 0 }}
+                  initial={{ y: 15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -20, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 tracking-tighter uppercase leading-none"
+                  exit={{ y: -15, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none"
                 >
                   {mainSlot.title}
                 </motion.h2>
               </AnimatePresence>
               
-              <p className="text-xs md:text-sm text-slate-200 mb-8 max-w-sm font-medium leading-relaxed line-clamp-2">
-                {mainSlot.subtitle}
-              </p>
-              
-              <div className="flex items-center gap-6">
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleBannerClick(mainSlot.link); }}
-                  className="px-8 py-3 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all rounded-md shadow-2xl active:scale-95"
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={`desc-${gridMainSlide}`}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
                 >
-                  {t('explore_now')}
-                </button>
-                {mainSlot.price && (
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('starting_at')}</span>
-                    <span className="text-lg font-black text-white italic tracking-tight">{settings?.currency || 'FCFA'} {Number(mainSlot.price).toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
+                  {mainSlot.subtitle}
+                </motion.p>
+              </AnimatePresence>
             </div>
 
             {/* Slide Navigation Pill Capsule (Bottom Center) */}
