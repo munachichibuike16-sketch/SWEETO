@@ -899,7 +899,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row (Signed In): Avatar, Name, and Icons */}
           <div 
-            className="sticky w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
+            className="fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
             style={{ top: 'var(--header-height, 96px)' }}
           >
             <div className="flex items-center gap-3">
@@ -969,6 +969,8 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               </button>
             </div>
           </div>
+          {/* Spacer to push content below the fixed header */}
+          <div className="h-[80px] w-full shrink-0" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
@@ -1847,7 +1849,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
         <div className="main-container max-w-[480px] w-full">
           {/* Header Row: Sign in/Register and icons */}
           <div 
-            className="sticky w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
+            className="fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
             style={{ top: 'var(--header-height, 96px)' }}
           >
             <span 
@@ -1884,6 +1886,8 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               </button>
             </div>
           </div>
+          {/* Spacer to push content below the fixed header */}
+          <div className="h-[69px] w-full shrink-0" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
