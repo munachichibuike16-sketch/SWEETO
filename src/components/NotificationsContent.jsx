@@ -327,6 +327,11 @@ const NotificationsContent = ({ onProductClick }) => {
       return true;
     });
 
+  // Calculate unread counts per category
+  const ordersUnread = allNotifications.filter(n => n.category === 'orders' && !n.isRead).length;
+  const promosUnread = allNotifications.filter(n => n.category === 'promos' && !n.isRead).length;
+  const securityUnread = allNotifications.filter(n => n.category === 'security' && !n.isRead).length;
+
   // Category Filtering
   const categorizedNotifs = allNotifications.filter(n => {
     if (categoryFilter === 'all') return true;
