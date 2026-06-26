@@ -485,7 +485,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
     <section className="max-w-[1600px] mx-auto md:px-6 pt-3 pb-2 select-none">
       <div 
         onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
-        className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-40 md:h-56 rounded-2xl overflow-hidden shadow-md flex items-center bg-black cursor-pointer group"
+        className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950 cursor-pointer group"
       >
         {/* Background Image */}
         {displayBanners[currentSlide]?.image && (
@@ -502,15 +502,16 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-[1200ms] ease-out"
               />
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+            <div className="absolute inset-0 bg-black/30 z-10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/30 to-transparent z-10 pointer-events-none"></div>
           </div>
         )}
 
         {/* Banner Text Overlay */}
-        <div className="relative z-10 pl-6 md:pl-12 flex flex-col items-start gap-1 max-w-lg md:max-w-2xl">
-          {/* Angled "Viva" Badge */}
-          <div className="bg-[#00f2fe] text-slate-950 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded uppercase tracking-wider transform -rotate-12 select-none shadow-sm mb-1.5 w-fit">
-            Viva
+        <div className="relative z-10 pl-6 sm:pl-10 md:pl-16 lg:pl-20 flex flex-col items-start gap-0.5 sm:gap-1 max-w-lg md:max-w-2xl">
+          {/* Angled "VIVA" Badge */}
+          <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
+            VIVA
           </div>
           {/* Main Title */}
           <AnimatePresence mode="wait">
@@ -520,7 +521,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -15, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="text-xl sm:text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter drop-shadow-md leading-none"
+              className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none"
             >
               {displayBanners[currentSlide]?.title}
             </motion.h1>
@@ -534,7 +535,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="text-[10px] sm:text-xs font-semibold text-slate-300 uppercase tracking-widest mt-1 line-clamp-1"
+              className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
             >
               {displayBanners[currentSlide]?.subtitle}
             </motion.p>
