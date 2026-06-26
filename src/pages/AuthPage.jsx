@@ -157,7 +157,9 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     const session = JSON.parse(localStorage.getItem('sweetohub_session'));
     if (session) {
       setSessionUser(session);
-      setCurrentTab('overview');
+      if (!initialTab) {
+        setCurrentTab('overview');
+      }
       setSettingsForm({
         name: session.name || '',
         countryCode: session.phoneCountryCode || session.countryCode || '',
