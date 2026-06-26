@@ -362,8 +362,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
   };
 
   useEffect(() => {
-    // Keep header fully visible and stable at all times to prevent layout shifts on scroll
-    setIsScrolled(false);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
