@@ -493,7 +493,7 @@ export const DualProductSection = ({ section, liveProducts = [], onProductClick 
   const getFilteredSideProducts = (role, category, isSideB) => {
     let list = [...liveProducts];
     
-    // 1. Check for explicit placements first
+    // Check for explicit placements
     const assigned = list.filter(p => {
       let plist = [];
       try {
@@ -509,38 +509,7 @@ export const DualProductSection = ({ section, liveProducts = [], onProductClick 
       }
     });
 
-    if (assigned.length > 0) {
-      return assigned.slice(0, 4);
-    }
-
-    // 2. Fallback: Automatically populate based on Category & Role filter if no explicit placements are set!
-    let filtered = [...list];
-    
-    // Category Filter
-    if (category && category !== 'All') {
-      const descendants = getCategoryDescendants(category, categories);
-      const matchNames = [category.toLowerCase(), ...descendants];
-      filtered = filtered.filter(p => {
-        const pCat = p.category?.toLowerCase();
-        return pCat && matchNames.includes(pCat);
-      });
-    }
-
-    // Role Filter / Sorting
-    const r = (role || '').toLowerCase();
-    if (r.includes('deal')) {
-      filtered = filtered.filter(p => p.deal_of_the_day || p.dealOfDay || p.on_sale);
-    } else if (r.includes('new') || r.includes('just')) {
-      // Sort by newest
-      filtered = filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    } else if (r.includes('trend') || r.includes('popular')) {
-      // Sort by views or rating
-      filtered = filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
-    } else if (r.includes('feat') || r.includes('star')) {
-      filtered = filtered.filter(p => p.featured);
-    }
-
-    return filtered.slice(0, 4);
+    return assigned.slice(0, 4);
   };
 
   const sideAProducts = getFilteredSideProducts(section.role, section.category, false);

@@ -456,12 +456,16 @@ const Storefront = ({ viewMode = 'home' }) => {
                    section.isdual === true || section.isdual === 1 || section.isdual === 'true';
 
     if (isDual) {
-      // Check if dual section actually has products
-      const sideACat = section.category || 'All';
-      const sideBCat = section.categoryB || 'All';
-      const sideAProducts = sideACat === 'All' ? liveProducts : liveProducts.filter(p => p.category === sideACat);
-      const sideBProducts = sideBCat === 'All' ? liveProducts : liveProducts.filter(p => p.category === sideBCat);
-      if (sideAProducts.length === 0 && sideBProducts.length === 0) return null;
+      // Check if dual section actually has explicitly placed products
+      const sideAHasProducts = liveProducts.some(p => {
+        const plist = p.placements || [];
+        return plist.includes(`${section.id}-A`) || plist.includes(section.id) || plist.includes(String(section.id));
+      });
+      const sideBHasProducts = liveProducts.some(p => {
+        const plist = p.placements || [];
+        return plist.includes(`${section.id}-B`);
+      });
+      if (!sideAHasProducts && !sideBHasProducts) return null;
 
       return (
         <DualProductSection 
@@ -506,13 +510,7 @@ const Storefront = ({ viewMode = 'home' }) => {
           const plist = p.placements || [];
           return plist.includes(section.id) || plist.includes(String(section.id)) || plist.includes(`${section.id}-A`);
         });
-        if (assigned.length > 0) {
-          prods = assigned.slice(0, maxProducts);
-        } else if (section.category && section.category !== 'All') {
-          prods = liveProducts.filter(p => p.category === section.category).slice(0, maxProducts);
-        } else {
-          prods = [];
-        }
+        prods = assigned.slice(0, maxProducts);
       }
       
       if (!prods || prods.length === 0) return null;
@@ -662,13 +660,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                 const plist = p.placements || [];
                 return plist.includes(section.id) || plist.includes(String(section.id)) || plist.includes(`${section.id}-A`);
               });
-              if (assigned.length > 0) {
-                return assigned.slice(0, maxProducts);
-              }
-              if (section.category && section.category !== 'All') {
-                return liveProducts.filter(p => p.category === section.category).slice(0, maxProducts);
-              }
-              return [];
+              return assigned.slice(0, maxProducts);
             })()} 
             type="category" 
             headerStyle={section.headerStyle}
