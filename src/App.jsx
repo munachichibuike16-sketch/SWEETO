@@ -491,11 +491,17 @@ const Storefront = ({ viewMode = 'home' }) => {
         const catName = type === 'speakersPlacement' ? 'Speakers' : 'Refrigerators';
         prods = liveProducts.filter(p => p.category === catName).slice(0, maxProducts);
       } else if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
-        prods = liveProducts.filter(p => {
-          if (section.category && section.category !== 'All' && p.category === section.category) return true;
+        const assigned = liveProducts.filter(p => {
           const plist = p.placements || [];
-          return plist.includes(section.id) || plist.includes(String(section.id));
-        }).slice(0, maxProducts);
+          return plist.includes(section.id) || plist.includes(String(section.id)) || plist.includes(`${section.id}-A`);
+        });
+        if (assigned.length > 0) {
+          prods = assigned.slice(0, maxProducts);
+        } else if (section.category && section.category !== 'All') {
+          prods = liveProducts.filter(p => p.category === section.category).slice(0, maxProducts);
+        } else {
+          prods = [];
+        }
       }
       
       if (!prods || prods.length === 0) return null;
@@ -640,11 +646,19 @@ const Storefront = ({ viewMode = 'home' }) => {
             key={key}
             title={title || (type === 'flashSale' ? 'Flash Sale' : 'Special Collection')} 
             subtitle={subtitle || 'Limited time offers'} 
-            products={liveProducts.filter(p => {
-              if (section.category && section.category !== 'All' && p.category === section.category) return true;
-              const plist = p.placements || [];
-              return plist.includes(section.id) || plist.includes(String(section.id));
-            }).slice(0, maxProducts)} 
+            products={(() => {
+              const assigned = liveProducts.filter(p => {
+                const plist = p.placements || [];
+                return plist.includes(section.id) || plist.includes(String(section.id)) || plist.includes(`${section.id}-A`);
+              });
+              if (assigned.length > 0) {
+                return assigned.slice(0, maxProducts);
+              }
+              if (section.category && section.category !== 'All') {
+                return liveProducts.filter(p => p.category === section.category).slice(0, maxProducts);
+              }
+              return [];
+            })()} 
             type="category" 
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
