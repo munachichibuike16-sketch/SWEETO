@@ -692,7 +692,7 @@ const Storefront = ({ viewMode = 'home' }) => {
   };
 
   const DiscoveryBar = () => {
-    if (['wishlist', 'visit', 'privacy', 'terms', 'security', 'deals'].includes(viewMode)) return null;
+    if (['wishlist', 'visit', 'privacy', 'terms', 'security', 'deals', 'settings', 'auth', 'login', 'signup'].includes(viewMode)) return null;
     if (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand) return null;
     if (activeCategory) return null; // CategoryLandingPage renders its own themed banner, deals, and pills.
 
@@ -855,7 +855,7 @@ const Storefront = ({ viewMode = 'home' }) => {
       >
         
         <main className="flex-1 pb-20">
-          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals'].includes(viewMode) && <DiscoveryBar />}
+          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals', 'settings'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1600px] mx-auto ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
