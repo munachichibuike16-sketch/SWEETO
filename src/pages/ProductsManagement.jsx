@@ -127,6 +127,8 @@ export default function ProductsManagement() {
         is_active: form.status === 'active' ? 1 : 0,
         is_featured: form.featured ? 1 : 0,
         is_deal: form.dealOfDay ? 1 : 0,
+        is_trending: form.trending ? 1 : 0,
+        is_new_arrival: form.newArrival ? 1 : 0,
         image_url: form.image_url || '',
         images: JSON.stringify(form.additional_images || []),
         category: cat?.name || '',
