@@ -266,7 +266,8 @@ const StoreSettings = () => {
     admin_key: '',
     active_template: 'chilling',
     admin_phone: '',
-    enable_admin_call_alerts: false
+    enable_admin_call_alerts: false,
+    wave_number: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -305,7 +306,8 @@ const StoreSettings = () => {
         admin_key: settings.admin_key || '',
         active_template: settings.active_template || 'chilling',
         admin_phone: settings.admin_phone || '',
-        enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false
+        enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false,
+        wave_number: settings.wave_number || ''
       });
     }
   }, [settings, isDirty]);
@@ -959,6 +961,41 @@ const StoreSettings = () => {
                   />
                   <p className="text-[9px] text-slate-400 font-bold leading-normal">
                     Enter the phone number (including country code, e.g. +225) to receive voice call alerts.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Payment Settings Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-cyan-500/5 mt-6 text-left before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-cyan-400/40 before:to-transparent"
+            >
+              <SectionHeader 
+                icon={Coins} 
+                title="Payment Settings (Wave)" 
+                color="blue" 
+                subtitle="Configure Wave Mobile Money payment method"
+              />
+              
+              <div className="space-y-6 mt-6">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Phone Number</span>
+                  <input 
+                    type="tel" 
+                    name="wave_number" 
+                    placeholder="+2250500619923"
+                    value={formData.wave_number} 
+                    onChange={(e) => {
+                      setIsDirty(true);
+                      setFormData(prev => ({ ...prev, wave_number: e.target.value }));
+                    }}
+                    className={inputStyle} 
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    Enter your official Wave phone number to receive customer transfers at checkout.
                   </p>
                 </div>
               </div>

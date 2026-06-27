@@ -601,6 +601,7 @@ try {
   try {
     db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('admin_phone', '+2250500619923')").run();
     db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('enable_admin_call_alerts', 'true')").run();
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('wave_number', '+2250500619923')").run();
   } catch (e) {
     console.error('Failed to seed default admin phone settings:', e);
   }

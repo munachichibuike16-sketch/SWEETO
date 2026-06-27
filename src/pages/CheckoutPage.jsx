@@ -939,13 +939,17 @@ const CheckoutPage = () => {
                   </div>
                 </div>
 
-                <div className="mt-10 p-6 rounded-[2rem] bg-eas-light border border-eas-blue/20 flex items-center gap-4">
+                <div className="mt-10 p-6 rounded-[2rem] bg-eas-light dark:bg-slate-900/40 border border-eas-blue/20 flex items-center gap-4">
                   <div className="w-12 h-12 bg-eas-blue text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-eas-blue/20">
                      <Package size={20} />
                   </div>
                   <div>
-                     <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm italic">{t('pay_on_delivery') || 'Pay on Delivery'}</h4>
-                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{t('payment_collected_doorstep') || 'Payment collected at doorstep'}</p>
+                     <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-sm italic">
+                       {lang === 'fr' ? 'Transfert Wave Uniquement' : 'Wave Transfer Only'}
+                     </h4>
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                       {lang === 'fr' ? 'Payez par transfert mobile Wave' : 'Pay using Wave mobile money'}
+                     </p>
                   </div>
                </div>
  
@@ -953,13 +957,13 @@ const CheckoutPage = () => {
                 <div className="mt-4 p-6 rounded-[2rem] bg-eas-light dark:bg-eas-dark/60 border border-slate-100/50 dark:border-white/5 flex flex-col">
                    <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] mb-2">{t('payment_method') || 'Payment Method'}</h4>
                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4 font-bold">
-                      {lang === 'fr' ? 'Payez à la livraison en espèces ou par transfert mobile :' : 'Pay upon delivery using cash or mobile transfer:'}
+                      {lang === 'fr' ? 'Envoyez votre paiement au numéro Wave suivant :' : 'Send your payment to the following Wave number:'}
                    </p>
                    <div className="flex flex-wrap gap-2">
-                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-eas-blue/10 text-eas-blue dark:text-blue-400 border border-eas-blue/20">Wave</span>
-                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">Orange Money</span>
-                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-eas-blue/10 text-eas-blue dark:text-blue-400 border border-eas-blue/20">Moov Money</span>
-                     <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20">MTN MoMo</span>
+                     <span className="px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center gap-2">
+                       <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                       Wave: {settings?.wave_number || '+225 05 00 61 99 23'}
+                     </span>
                    </div>
                 </div>
 
