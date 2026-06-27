@@ -348,10 +348,32 @@ const ProductDetailPage = () => {
 
 
 
-  // Recommendations feed
-  const recommendedProducts = liveProducts
-    .filter(p => p.id.toString() !== product.id.toString())
-    .slice(0, 6);
+  // Related Products (same category)
+  const relatedProducts = React.useMemo(() => {
+    if (!product || !Array.isArray(liveProducts)) return [];
+    const currentCat = (product.category || '').toLowerCase();
+    return liveProducts
+      .filter(p => p.id.toString() !== product.id.toString() && p.status === 'active' && (p.category || '').toLowerCase() === currentCat)
+      .slice(0, 6);
+  }, [product, liveProducts]);
+
+  // More to Love (shuffled other products)
+  const moreToLoveProducts = React.useMemo(() => {
+    if (!product || !Array.isArray(liveProducts)) return [];
+    const relatedIds = new Set(relatedProducts.map(r => r.id.toString()));
+    const list = liveProducts.filter(p => 
+      p.id.toString() !== product.id.toString() && 
+      p.status === 'active' && 
+      !relatedIds.has(p.id.toString())
+    );
+    
+    const arr = [...list];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, 12);
+  }, [product, liveProducts, relatedProducts]);
 
   const getUnifiedReviews = () => {
     const localAndDb = reviews || [];
@@ -1206,26 +1228,59 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* More to love grid */}
-        <div id="product-recommendations" className="mt-12 space-y-6 text-left">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">More to love</h3>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest">Recommended products</span>
+        {/* Related Products Grid */}
+        {relatedProducts.length > 0 && (
+          <div id="product-recommendations" className="mt-12 space-y-6 text-left border-t border-slate-100 dark:border-white/5 pt-12">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
+                {lang === 'fr' ? 'Produits Associés' : 'Related Products'}
+              </h3>
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest">
+                {lang === 'fr' ? 'Dans la même catégorie' : 'In the same category'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {relatedProducts.map((p, idx) => (
+                <ProductCard 
+                  key={p.id} 
+                  product={p} 
+                  index={idx} 
+                  onProductClick={(prod) => {
+                    navigate(`/product/${prod.id}`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {recommendedProducts.map((p, idx) => (
-              <ProductCard 
-                key={p.id} 
-                product={p} 
-                index={idx} 
-                onProductClick={(prod) => {
-                  navigate(`/product/${prod.id}`);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            ))}
+        )}
+
+        {/* More to Love Grid */}
+        {moreToLoveProducts.length > 0 && (
+          <div className="mt-12 space-y-6 text-left border-t border-slate-100 dark:border-white/5 pt-12">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
+                {lang === 'fr' ? 'Plus à aimer' : 'More to love'}
+              </h3>
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest">
+                {lang === 'fr' ? 'Produits recommandés' : 'Recommended products'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {moreToLoveProducts.map((p, idx) => (
+                <ProductCard 
+                  key={p.id} 
+                  product={p} 
+                  index={idx} 
+                  onProductClick={(prod) => {
+                    navigate(`/product/${prod.id}`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Mobile Sticky Action Footer Bar */}
