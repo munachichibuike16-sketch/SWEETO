@@ -526,6 +526,20 @@ const Dashboard = () => {
 
         if (subErr) throw subErr;
         console.log('✅ Admin push subscription registered with Supabase.');
+
+        // Also sync to local SQLite backend
+        await apiFetch('/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: rawSub.keys?.p256dh || '',
+              auth: rawSub.keys?.auth || ''
+            },
+            role: 'admin'
+          })
+        }).catch(err => console.warn('Could not sync admin push subscription to local backend:', err));
       } catch (err) {
         console.warn('⚠️ Admin push subscription failed:', err);
       }

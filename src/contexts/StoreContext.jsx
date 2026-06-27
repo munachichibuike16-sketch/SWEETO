@@ -216,6 +216,20 @@ export const StoreProvider = ({ children }) => {
 
               if (subErr) throw subErr;
               console.log('✅ Registered Web Push subscription with Supabase database.');
+
+              // Also sync to local SQLite backend
+              await apiFetch('/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  endpoint: subscription.endpoint,
+                  keys: {
+                    p256dh: rawSub.keys?.p256dh || '',
+                    auth: rawSub.keys?.auth || ''
+                  },
+                  role: 'customer'
+                })
+              }).catch(err => console.warn('Could not sync push subscription to local backend:', err));
             } catch (err) {
               console.warn('⚠️ Web Push subscription failed:', err);
             }

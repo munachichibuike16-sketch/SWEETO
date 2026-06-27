@@ -611,12 +611,50 @@ try {
 // Helper: Send Web Push Notification to all active background subscribers
 async function sendBackgroundPushNotification(title, body, url, image = null, targetRole = null) {
   try {
-    let subscriptions;
-    if (targetRole) {
-      subscriptions = db.prepare('SELECT * FROM push_subscriptions WHERE role = ?').all(targetRole);
-    } else {
-      subscriptions = db.prepare('SELECT * FROM push_subscriptions').all();
+    let subscriptions = [];
+    const endpointsSeen = new Set();
+
+    // 1. Load from Supabase push_subscriptions if available
+    if (supabaseAdmin) {
+      try {
+        let query = supabaseAdmin.from('push_subscriptions').select('*');
+        if (targetRole) {
+          query = query.eq('role', targetRole);
+        }
+        const { data, error } = await query;
+        if (error) {
+          console.error('Failed to fetch subscriptions from Supabase:', error);
+        } else if (data) {
+          data.forEach(sub => {
+            if (sub.endpoint && !endpointsSeen.has(sub.endpoint)) {
+              endpointsSeen.add(sub.endpoint);
+              subscriptions.push(sub);
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed querying Supabase push subscriptions:', err);
+      }
     }
+
+    // 2. Load from local SQLite push_subscriptions
+    try {
+      let localSubs = [];
+      if (targetRole) {
+        localSubs = db.prepare('SELECT * FROM push_subscriptions WHERE role = ?').all(targetRole);
+      } else {
+        localSubs = db.prepare('SELECT * FROM push_subscriptions').all();
+      }
+      localSubs.forEach(sub => {
+        if (sub.endpoint && !endpointsSeen.has(sub.endpoint)) {
+          endpointsSeen.add(sub.endpoint);
+          subscriptions.push(sub);
+        }
+      });
+    } catch (err) {
+      console.error('Failed querying local SQLite push subscriptions:', err);
+    }
+
     console.log(`📡 Sending background push to ${subscriptions.length} subscribers${targetRole ? ` (role: ${targetRole})` : ''}...`);
     
     const payload = JSON.stringify({ title, body, url, image });
@@ -632,10 +670,15 @@ async function sendBackgroundPushNotification(title, body, url, image = null, ta
       
       return webpush.sendNotification(pushSubscription, payload)
         .catch((err) => {
-          // If the subscription has expired or is no longer valid, delete it from database
+          // If the subscription has expired or is no longer valid, delete it from databases
           if (err.statusCode === 410 || err.statusCode === 404) {
             console.log(`🗑️ Removing expired push subscription: ${sub.endpoint}`);
-            db.prepare('DELETE FROM push_subscriptions WHERE id = ?').run(sub.id);
+            // Delete locally
+            db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(sub.endpoint);
+            // Delete on Supabase
+            if (supabaseAdmin) {
+              supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint).then();
+            }
           } else {
             console.error('Push notification error for endpoint:', sub.endpoint, err);
           }
