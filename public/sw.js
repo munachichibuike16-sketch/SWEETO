@@ -55,6 +55,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // Only intercept standard HTTP/HTTPS requests (ignores chrome-extension, data, blob, etc.)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
   // Avoid intercepting API database calls or Supabase requests so backend operations work normally
   if (url.pathname.includes('/api/') || url.host.includes('supabase.co')) {
     return;
