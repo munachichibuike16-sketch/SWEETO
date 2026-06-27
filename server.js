@@ -596,6 +596,14 @@ try {
     vapidPrivateKey
   );
   console.log('📡 Web Push service configured.');
+
+  // Set default admin phone number and enable alerts
+  try {
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('admin_phone', '+2250500619923')").run();
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('enable_admin_call_alerts', 'true')").run();
+  } catch (e) {
+    console.error('Failed to seed default admin phone settings:', e);
+  }
 } catch (err) {
   console.error('Failed to configure Web Push:', err);
 }
