@@ -671,7 +671,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Variant Selector (Mobile only) */}
-            {variants.length > 1 && (
+            {variants.length > 1 ? (
               <div className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 space-y-3 shadow-sm lg:hidden text-left">
                 <div 
                   onClick={() => setIsVariantSheetOpen(true)}
@@ -714,6 +714,19 @@ const ProductDetailPage = () => {
                   })}
                 </div>
               </div>
+            ) : (
+              variants.length === 1 && (
+                <button 
+                  onClick={() => setIsVariantSheetOpen(true)}
+                  className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">Color:</span>
+                    <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                </button>
+              )
             )}
 
             {/* Variant tag / Specification Details */}
