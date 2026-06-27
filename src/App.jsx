@@ -210,6 +210,25 @@ const Storefront = ({ viewMode = 'home' }) => {
   const { products: liveProducts, categories, searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
   const { t, t_smart, lang } = useLanguage();
 
+  const shuffledActiveProducts = useMemo(() => {
+    const list = liveProducts?.filter(p => p.status === 'active' && p.stock > 0) || [];
+    const seed = Math.floor(Date.now() / (30 * 60 * 1000));
+    const arr = [...list];
+    let m = arr.length, t, i;
+    let s = seed;
+    const random = () => {
+      const x = Math.sin(s++) * 10000;
+      return x - Math.floor(x);
+    };
+    while (m) {
+      i = Math.floor(random() * m--);
+      t = arr[m];
+      arr[m] = arr[i];
+      arr[i] = t;
+    }
+    return arr;
+  }, [liveProducts]);
+
   const getProductCountForCategory = (catName) => {
     if (!catName) return 0;
     const descendants = getCategoryDescendants(catName, categories);
@@ -918,7 +937,7 @@ const Storefront = ({ viewMode = 'home' }) => {
 
                       {/* Interleaved Content Sections & Products */}
                       {(() => {
-                        const activeProducts = liveProducts?.filter(p => p.status === 'active' && p.stock > 0) || [];
+                        const activeProducts = shuffledActiveProducts;
                         
                         // Filter out hero and inactive/disabled sections from content sections
                         const contentSections = homepageSections.length > 0
