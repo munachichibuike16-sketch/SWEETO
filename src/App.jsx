@@ -1035,15 +1035,38 @@ const Storefront = ({ viewMode = 'home' }) => {
                   <>
                     {searchQuery ? (
                       <div className="px-0 md:px-12">
-                        <ProductSection 
-                          title={t('search_results')} 
-                          subtitle={`${t('found_matches')} "${searchQuery}"`} 
-                          products={sortedProducts} 
-                          type="category" 
-                          hideHeader={true}
-                          settings={{ enabled: false }}
-                          onProductClick={handleProductClick}
-                        />
+                        {sortedProducts.length > 0 ? (
+                          <ProductSection 
+                            title={t('search_results')} 
+                            subtitle={`${t('found_matches')} "${searchQuery}"`} 
+                            products={sortedProducts} 
+                            type="category" 
+                            hideHeader={true}
+                            settings={{ enabled: false }}
+                            onProductClick={handleProductClick}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white dark:bg-slate-900/40 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/80 shadow-sm max-w-lg mx-auto my-8 animate-fadeIn">
+                            <div className="w-20 h-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-6 border border-slate-100 dark:border-slate-700/60 shadow-inner">
+                              <i className="fa-solid fa-magnifying-glass-minus text-3xl animate-pulse"></i>
+                            </div>
+                            <h3 className="text-xl font-black text-slate-850 dark:text-white uppercase tracking-wider mb-2">
+                              NOTHING TO SHOW
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold max-w-sm leading-relaxed mb-6">
+                              We couldn't find any products matching "{searchQuery}". Try using different terms or another image!
+                            </p>
+                            <button
+                              onClick={() => {
+                                setSearchQuery('');
+                                setImageSearchResults(null);
+                              }}
+                              className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-xs font-black uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            >
+                              Clear Search
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ) : activeCategory ? (
                       <CategoryLandingPage 

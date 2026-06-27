@@ -402,15 +402,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
         });
       }
 
-      if (matches.length === 0 && Array.isArray(products) && products.length > 0) {
-        const categoriesWithProducts = [...new Set(products.map(p => p.category).filter(Boolean))];
-        if (categoriesWithProducts.length > 0) {
-          const randomCat = categoriesWithProducts[Math.floor(Math.random() * categoriesWithProducts.length)];
-          matches = products.filter(p => p.category === randomCat);
-        } else {
-          matches = [...products].sort(() => 0.5 - Math.random()).slice(0, 6);
-        }
-      }
 
       setImageSearchResults(matches);
       
