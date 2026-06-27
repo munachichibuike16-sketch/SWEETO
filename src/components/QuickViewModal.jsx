@@ -153,7 +153,16 @@ const QuickViewModal = ({ product, isOpen, onClose, onViewDetails }) => {
                 </div>
 
                 <p className={`text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-md ${isRTL ? 'text-right mr-auto' : 'text-left'}`}>
-                  {t_smart(product.description) || t('default_product_desc')}
+                  {(() => {
+                    const desc = product?.description ?? '';
+                    try {
+                      if (desc && desc.trim().startsWith('{')) {
+                        const parsed = JSON.parse(desc);
+                        return t_smart(parsed.text) || t('default_product_desc');
+                      }
+                    } catch(e) {}
+                    return t_smart(desc) || t('default_product_desc');
+                  })()}
                 </p>
 
 

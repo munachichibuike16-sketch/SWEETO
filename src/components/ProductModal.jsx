@@ -744,9 +744,92 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                               exit={{ height: 0, opacity: 0, marginTop: 0 }}
                               className="overflow-hidden"
                             >
-                              <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm">
-                                {t_smart(product.description) || t('premium_material_desc')}
-                              </p>
+                              <div className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium text-sm space-y-1.5">
+                                {(() => {
+                                  const parsedDesc = (() => {
+                                    const desc = product?.description ?? '';
+                                    try {
+                                      if (desc && desc.trim().startsWith('{')) {
+                                        const parsed = JSON.parse(desc);
+                                        return {
+                                          text: parsed.text || '',
+                                          specs: parsed.specs || null
+                                        };
+                                      }
+                                    } catch(e) {}
+                                    return {
+                                      text: desc,
+                                      specs: null
+                                    };
+                                  })();
+
+                                  if (parsedDesc.specs) {
+                                    const specLabels = {
+                                      productLine: 'Product Line',
+                                      laptopType: 'Laptop Type',
+                                      os: 'Operating System',
+                                      ramCapacity: 'RAM Capacity',
+                                      ramType: 'RAM Type',
+                                      storageCapacity: 'Storage Capacity',
+                                      storageType: 'Storage Type',
+                                      processorTier: 'Processor',
+                                      processorGeneration: 'Generation',
+                                      processorModel: 'Processor Model',
+                                      phoneRam: 'RAM Memory',
+                                      phoneStorage: 'Internal Storage',
+                                      screenSize: 'Screen Size',
+                                      battery: 'Battery Capacity',
+                                      camera: 'Camera Resolution',
+                                      chargerPort: 'Charger Port',
+                                      chargerPower: 'Power (Wattage)',
+                                      fastCharging: 'Fast Charging',
+                                      compatBrand: 'Compatible Brand',
+                                      connectorTip: 'Connector Tip',
+                                      wattage: 'Wattage Output',
+                                      voltage: 'Input Voltage',
+                                      cableType: 'Cable Type',
+                                      length: 'Cable Length',
+                                      cableVersion: 'Version / Speed',
+                                      usbCapacity: 'Storage Capacity',
+                                      usbVersion: 'USB Standard',
+                                      usbConnector: 'Connector Type',
+                                      ramSpeed: 'Memory Frequency',
+                                      ramFormFactor: 'Memory Form Factor',
+                                      driveType: 'Drive Type',
+                                      driveFormFactor: 'Drive Form Factor',
+                                      driveSpeed: 'Read/Write Speed',
+                                      runTime: 'Cordless Runtime',
+                                      chargeTime: 'Charging Time',
+                                      bladeMaterial: 'Blade Material',
+                                      cordless: 'Cordless Operation'
+                                    };
+
+                                    const specList = Object.entries(parsedDesc.specs)
+                                      .filter(([k, v]) => k !== 'customSpecs' && !!v)
+                                      .map(([k, v]) => {
+                                        const label = specLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                        return <p key={k}>• {label}: {v}</p>;
+                                      });
+                                    
+                                    const customSpecList = (parsedDesc.specs.customSpecs || [])
+                                      .filter(s => s.key && s.value)
+                                      .map((s, idx) => (
+                                        <p key={`custom-${idx}`}>• {s.key}: {s.value}</p>
+                                      ));
+
+                                    return (
+                                      <>
+                                        {specList}
+                                        {customSpecList}
+                                        {parsedDesc.text && <p>• Description: {parsedDesc.text}</p>}
+                                      </>
+                                    );
+                                  }
+                                  return (
+                                    <p>{t_smart(parsedDesc.text) || t('premium_material_desc')}</p>
+                                  );
+                                })()}
+                              </div>
                             </motion.div>
                           )}
                         </AnimatePresence>

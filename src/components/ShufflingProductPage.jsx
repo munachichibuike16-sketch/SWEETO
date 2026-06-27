@@ -23,12 +23,20 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
   const { products: liveProducts, settings } = useStore();
   const { t, lang } = useLanguage();
   
-  // Filter active products
+  // Filter active products by section (trending or featured)
   const activeProducts = useMemo(() => {
-    return Array.isArray(liveProducts) 
-      ? liveProducts.filter(p => p.status === 'active') 
-      : [];
-  }, [liveProducts]);
+    if (!Array.isArray(liveProducts)) return [];
+    return liveProducts.filter(p => {
+      if (p.status !== 'active') return false;
+      if (viewMode === 'trending') {
+        return p.is_trending === 1 || p.is_trending === true || String(p.is_trending) === '1' || String(p.is_trending) === 'true';
+      }
+      if (viewMode === 'featured') {
+        return p.is_featured === 1 || p.is_featured === true || String(p.is_featured) === '1' || String(p.is_featured) === 'true';
+      }
+      return true;
+    });
+  }, [liveProducts, viewMode]);
 
   const [shuffledList, setShuffledList] = useState([]);
   const [isPlaying, setIsPlaying] = useState(true);

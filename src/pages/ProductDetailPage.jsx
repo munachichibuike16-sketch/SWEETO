@@ -771,20 +771,105 @@ const ProductDetailPage = () => {
               </div>
               
               <div className="pt-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-bold space-y-2">
-                {activeTab === 'specs' ? (
-                  <>
-                    <p>• Model: {product.brand || 'Sweeto'} {product.id}</p>
-                    <p>• Description: {product.description || 'Premium high-performance electronics gear engineered for ultimate diagnostics.'}</p>
-                    <p>• Warranty: Full replacement coverage active</p>
-                  </>
-                ) : (
-                  <>
-                    <p><strong>Q: How long does delivery take?</strong></p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2">A: Generally 24-48 hours depending on your city zone.</p>
-                    <p><strong>Q: Is cash on delivery supported?</strong></p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">A: Yes, Abidjan and major zones support cash on delivery.</p>
-                  </>
-                )}
+                {(() => {
+                  const parsedDesc = (() => {
+                    const desc = product?.description ?? '';
+                    try {
+                      if (desc && desc.trim().startsWith('{')) {
+                        const parsed = JSON.parse(desc);
+                        return {
+                          text: parsed.text || '',
+                          specs: parsed.specs || null
+                        };
+                      }
+                    } catch(e) {}
+                    return {
+                      text: desc,
+                      specs: null
+                    };
+                  })();
+
+                  if (activeTab === 'specs') {
+                    if (parsedDesc.specs) {
+                      const specLabels = {
+                        productLine: 'Product Line',
+                        laptopType: 'Laptop Type',
+                        os: 'Operating System',
+                        ramCapacity: 'RAM Capacity',
+                        ramType: 'RAM Type',
+                        storageCapacity: 'Storage Capacity',
+                        storageType: 'Storage Type',
+                        processorTier: 'Processor',
+                        processorGeneration: 'Generation',
+                        processorModel: 'Processor Model',
+                        phoneRam: 'RAM Memory',
+                        phoneStorage: 'Internal Storage',
+                        screenSize: 'Screen Size',
+                        battery: 'Battery Capacity',
+                        camera: 'Camera Resolution',
+                        chargerPort: 'Charger Port',
+                        chargerPower: 'Power (Wattage)',
+                        fastCharging: 'Fast Charging',
+                        compatBrand: 'Compatible Brand',
+                        connectorTip: 'Connector Tip',
+                        wattage: 'Wattage Output',
+                        voltage: 'Input Voltage',
+                        cableType: 'Cable Type',
+                        length: 'Cable Length',
+                        cableVersion: 'Version / Speed',
+                        usbCapacity: 'Storage Capacity',
+                        usbVersion: 'USB Standard',
+                        usbConnector: 'Connector Type',
+                        ramSpeed: 'Memory Frequency',
+                        ramFormFactor: 'Memory Form Factor',
+                        driveType: 'Drive Type',
+                        driveFormFactor: 'Drive Form Factor',
+                        driveSpeed: 'Read/Write Speed',
+                        runTime: 'Cordless Runtime',
+                        chargeTime: 'Charging Time',
+                        bladeMaterial: 'Blade Material',
+                        cordless: 'Cordless Operation'
+                      };
+
+                      const specList = Object.entries(parsedDesc.specs)
+                        .filter(([k, v]) => k !== 'customSpecs' && !!v)
+                        .map(([k, v]) => {
+                          const label = specLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                          return <p key={k}>• {label}: {v}</p>;
+                        });
+                      
+                      const customSpecList = (parsedDesc.specs.customSpecs || [])
+                        .filter(s => s.key && s.value)
+                        .map((s, idx) => (
+                          <p key={`custom-${idx}`}>• {s.key}: {s.value}</p>
+                        ));
+
+                      return (
+                        <>
+                          {specList}
+                          {customSpecList}
+                          {parsedDesc.text && <p>• Description: {parsedDesc.text}</p>}
+                          <p>• Warranty: Full replacement coverage active</p>
+                        </>
+                      );
+                    }
+                    return (
+                      <>
+                        <p>• Model: {product.brand || 'Sweeto'} {product.id}</p>
+                        <p>• Description: {parsedDesc.text || 'Premium high-performance electronics gear engineered for ultimate diagnostics.'}</p>
+                        <p>• Warranty: Full replacement coverage active</p>
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <p><strong>Q: How long does delivery take?</strong></p>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2">A: Generally 24-48 hours depending on your city zone.</p>
+                      <p><strong>Q: Is cash on delivery supported?</strong></p>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500">A: Yes, Abidjan and major zones support cash on delivery.</p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -1044,7 +1129,15 @@ const ProductDetailPage = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {recommendedProducts.map((p, idx) => (
-              <ProductCard key={p.id} product={p} index={idx} />
+              <ProductCard 
+                key={p.id} 
+                product={p} 
+                index={idx} 
+                onProductClick={(prod) => {
+                  navigate(`/product/${prod.id}`);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             ))}
           </div>
         </div>

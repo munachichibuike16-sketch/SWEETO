@@ -388,16 +388,17 @@ const Storefront = ({ viewMode = 'home' }) => {
     : categoryFilteredProducts;
     
   const dealProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === 'true') : [];
-  const newProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_new_arrival) === 1).sort((a,b) => b.id - a.id) : [];
-  const trendingProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_trending) === 1) : [];
+  const newProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_new_arrival) === 1 || p.is_new_arrival === true || String(p.is_new_arrival) === '1' || String(p.is_new_arrival) === 'true').sort((a,b) => b.id - a.id) : [];
+  const trendingProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_trending) === 1 || p.is_trending === true || String(p.is_trending) === '1' || String(p.is_trending) === 'true') : [];
+  const featuredProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_featured) === 1 || p.is_featured === true || String(p.is_featured) === '1' || String(p.is_featured) === 'true') : [];
 
   const shuffledTrending = useMemo(() => {
-    return shuffleArray(filteredProducts);
-  }, [viewMode === 'trending', filteredProducts.length]);
+    return shuffleArray(trendingProducts);
+  }, [viewMode === 'trending', trendingProducts.length]);
 
   const shuffledFeatured = useMemo(() => {
-    return shuffleArray(filteredProducts);
-  }, [viewMode === 'featured', filteredProducts.length]);
+    return shuffleArray(featuredProducts);
+  }, [viewMode === 'featured', featuredProducts.length]);
 
   const currentProducts = viewMode === 'deals' ? dealProducts 
     : viewMode === 'trending' ? shuffledTrending 
@@ -970,28 +971,25 @@ const Storefront = ({ viewMode = 'home' }) => {
                           elements.push(<React.Fragment key={`section-frag-${sec.id}`}>{sec.element}</React.Fragment>);
                         });
 
-                        /*
-                        // Finally, show all remaining products constantly until the end
-                        if (productIndex < activeProducts.length) {
-                          const remaining = activeProducts.slice(productIndex);
+                        // Finally, continue rendering remaining products in pairs of 2 until exhausted
+                        while (productIndex < activeProducts.length) {
+                          const pair = activeProducts.slice(productIndex, productIndex + 2);
                           elements.push(
-                            <div key="remaining-products" className="mt-12 pt-8 border-t border-slate-100 dark:border-white/5 px-4 md:px-0">
-                              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 uppercase tracking-wider">
-                                {lang === 'fr' ? 'Plus de produits' : 'More Products'}
-                              </h3>
+                            <div key={`pair-after-sections-${productIndex}`} className="my-0 px-4 md:px-0">
                               <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                                {remaining.map(product => (
-                                  <ProductCard 
-                                    key={product.id} 
-                                    product={product} 
-                                    onProductClick={handleProductClick} 
-                                  />
+                                {pair.map(product => (
+                                  <div key={product.id} className="border-2 border-blue-600/40 dark:border-blue-500/40 rounded-[2rem] overflow-hidden p-1 bg-white dark:bg-slate-900 shadow-md">
+                                    <ProductCard 
+                                      product={product} 
+                                      onProductClick={handleProductClick} 
+                                    />
+                                  </div>
                                 ))}
                               </div>
                             </div>
                           );
+                          productIndex += 2;
                         }
-                        */
 
                         return elements;
                       })()}
