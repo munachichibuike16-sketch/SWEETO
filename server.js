@@ -640,6 +640,89 @@ async function sendBackgroundPushNotification(title, body, url, image = null, ta
   }
 }
 
+// Twilio voice call notification for pending orders
+async function triggerTwilioVoiceCall(adminPhone, orderId, customerName, total) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioPhone = process.env.TWILIO_FROM_PHONE;
+
+  if (!accountSid || !authToken || !twilioPhone) {
+    console.warn('⚠️ Twilio credentials are not configured in environment variables. Cannot make voice call.');
+    return;
+  }
+
+  const twiml = `
+    <Response>
+      <Say voice="alice" language="en-US">
+        Hello! You have a new pending order SWT-${orderId} on your Sweeto store from ${customerName || 'a customer'}. 
+        The order total is ${total} FCFA. 
+        Please review and check the order details on your admin screen. Thank you.
+      </Say>
+    </Response>
+  `;
+
+  try {
+    const params = new URLSearchParams();
+    params.append('To', adminPhone);
+    params.append('From', twilioPhone);
+    params.append('Twiml', twiml.trim());
+
+    console.log(`📞 Placing Twilio Voice Call to ${adminPhone} for order SWT-${orderId}...`);
+    
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    });
+
+    const resData = await response.json();
+    if (response.ok) {
+      console.log(`✅ Phone call initiated successfully! Call SID: ${resData.sid}`);
+    } else {
+      console.error(`❌ Twilio API Error:`, resData);
+    }
+  } catch (err) {
+    console.error(`❌ Failed to trigger Twilio voice call:`, err);
+  }
+}
+
+function scheduleAdminCallBackup(orderId, customerName, total) {
+  setTimeout(() => {
+    try {
+      // Check if order status is still 'pending' and voice calls are enabled
+      const enabledSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('enable_admin_call_alerts');
+      const isEnabled = enabledSetting && (enabledSetting.value === 'true' || enabledSetting.value === '1');
+      
+      if (!isEnabled) {
+        console.log(`ℹ️ Admin phone call alerts are disabled. Skipping backup call check for order SWT-${orderId}.`);
+        return;
+      }
+
+      const order = db.prepare('SELECT status FROM orders WHERE id = ?').get(orderId);
+      if (order && order.status === 'pending') {
+        console.log(`☎️ Order SWT-${orderId} is still pending after 1 minute! Initiating backup phone call to admin...`);
+        
+        // Call the admin's phone number!
+        const adminPhoneSetting = db.prepare('SELECT value FROM settings WHERE key = ?').get('admin_phone');
+        const adminPhone = adminPhoneSetting ? adminPhoneSetting.value : null;
+        
+        if (adminPhone) {
+          triggerTwilioVoiceCall(adminPhone, orderId, customerName, total);
+        } else {
+          console.warn('⚠️ Admin phone number setting (admin_phone) is not configured in settings. Cannot make backup call.');
+        }
+      } else {
+        console.log(`✅ Order SWT-${orderId} status is "${order?.status || 'unknown'}" (not pending), no backup phone call needed.`);
+      }
+    } catch (err) {
+      console.error('Failed checking pending order status for backup call:', err);
+    }
+  }, 60000); // 1 minute (60,000 milliseconds)
+}
+
 
 // Seed Sections if empty
 const sectionCount = db.prepare('SELECT COUNT(*) as count FROM sections').get().count;
@@ -1176,6 +1259,9 @@ app.post('/api/orders', (req, res) => {
       null,
       'admin'
     );
+
+    // Schedule 1-minute pending voice call backup notification
+    scheduleAdminCallBackup(info.lastInsertRowid, customer_name, total);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1914,7 +2000,7 @@ app.post('/api/upload', authenticateAdmin, upload.single('file'), (req, res) => 
 });
 
 // Settings API — filters sensitive keys for unauthenticated visitors
-const SENSITIVE_SETTINGS_KEYS = ['admin_key', 'admin_pin', 'admin_password', 'admin_email'];
+const SENSITIVE_SETTINGS_KEYS = ['admin_key', 'admin_pin', 'admin_password', 'admin_email', 'admin_phone'];
 
 app.get('/api/settings', async (req, res) => {
   try {

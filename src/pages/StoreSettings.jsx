@@ -264,7 +264,9 @@ const StoreSettings = () => {
     currency: 'FCFA',
     language: 'en',
     admin_key: '',
-    active_template: 'chilling'
+    active_template: 'chilling',
+    admin_phone: '',
+    enable_admin_call_alerts: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -301,7 +303,9 @@ const StoreSettings = () => {
         currency: settings.currency || 'FCFA',
         language: settings.language || 'en',
         admin_key: settings.admin_key || '',
-        active_template: settings.active_template || 'chilling'
+        active_template: settings.active_template || 'chilling',
+        admin_phone: settings.admin_phone || '',
+        enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false
       });
     }
   }, [settings, isDirty]);
@@ -365,6 +369,13 @@ const StoreSettings = () => {
       
       const { error } = await supabase.from('settings').upsert(settingsArray, { onConflict: 'key' });
       if (error) throw new Error(error.message);
+
+      // Also sync to local backend settings
+      await apiFetch('/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      }).catch(err => console.warn('Could not sync settings to local Express backend:', err));
       
       setIsDirty(false);
       if (refreshData) await refreshData();
@@ -894,6 +905,63 @@ const StoreSettings = () => {
                 subtitle="Mobile Alerts & Broadcast"
               />
               <PushNotificationPanel showToast={showToast} />
+            </motion.div>
+
+            {/* Admin Phone Call Alerts Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.45 }}
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-cyan-500/5 mt-6 text-left before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-cyan-400/40 before:to-transparent"
+            >
+              <SectionHeader 
+                icon={Phone} 
+                title="Phone Call Alerts" 
+                color="blue" 
+                subtitle="Call admin if order is unchecked for 1 minute"
+              />
+              
+              <div className="space-y-6 mt-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/60 dark:border-slate-800/50 rounded-2xl">
+                  <div className="space-y-0.5 max-w-[70%]">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Enable Phone Call Alerts</span>
+                    <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                      If active, the system will place a voice call to the admin if a new order remains in "Pending" status for more than 1 minute.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      name="enable_admin_call_alerts"
+                      checked={formData.enable_admin_call_alerts}
+                      onChange={(e) => {
+                        setIsDirty(true);
+                        setFormData(prev => ({ ...prev, enable_admin_call_alerts: e.target.checked }));
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Admin Phone Number</span>
+                  <input 
+                    type="tel" 
+                    name="admin_phone" 
+                    placeholder="+2250700000000"
+                    value={formData.admin_phone} 
+                    onChange={(e) => {
+                      setIsDirty(true);
+                      setFormData(prev => ({ ...prev, admin_phone: e.target.value }));
+                    }}
+                    className={inputStyle} 
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    Enter the phone number (including country code, e.g. +225) to receive voice call alerts.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
