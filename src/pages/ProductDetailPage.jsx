@@ -297,20 +297,47 @@ const ProductDetailPage = () => {
     }
   };
 
-  const handleTouchStart = (e) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
+  const mobileCarouselRef = useRef(null);
 
-  const handleTouchEnd = (e) => {
-    if (touchStartX === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
-    if (diff > 50) {
-      setActiveImageIndex(prev => (prev + 1) % imagesList.length);
-    } else if (diff < -50) {
-      setActiveImageIndex(prev => (prev - 1 + imagesList.length) % imagesList.length);
+  const variantLabel = React.useMemo(() => {
+    const category = (product?.category || '').toLowerCase();
+    if (category.includes('laptop') || category.includes('ordinateur') || category.includes('computer')) {
+      return 'Specs';
     }
-    setTouchStartX(null);
+    if (category.includes('storage') || category.includes('drive') || category.includes('ssd') || category.includes('hdd') || category.includes('usb') || category.includes('ram') || category.includes('mémoire') || category.includes('card')) {
+      return 'Capacity';
+    }
+    if (category.includes('cable') || category.includes('câble')) {
+      return 'Length';
+    }
+    return 'Color';
+  }, [product]);
+
+  useEffect(() => {
+    if (mobileCarouselRef.current) {
+      const container = mobileCarouselRef.current;
+      const width = container.offsetWidth;
+      if (width === 0) return;
+      const currentIdx = Math.round(container.scrollLeft / width);
+      if (currentIdx !== activeImageIndex) {
+        container.scrollTo({
+          left: activeImageIndex * width,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [activeImageIndex]);
+
+  const handleCarouselScroll = () => {
+    if (!mobileCarouselRef.current) return;
+    const container = mobileCarouselRef.current;
+    const width = container.offsetWidth;
+    if (width === 0) return;
+    const scrollLeft = container.scrollLeft;
+    const newIdx = Math.round(scrollLeft / width);
+    if (newIdx !== activeImageIndex && newIdx < imagesList.length) {
+      setActiveImageIndex(newIdx);
+    }
   };
 
   const imagesList = getImagesList(product);
@@ -525,19 +552,30 @@ const ProductDetailPage = () => {
       {/* Desktop Header */}
       <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
       
-      {/* Mobile Visual Gallery (Full-bleed AliExpress Style) */}
+      {/* Mobile Visual Gallery (Full-bleed AliExpress Style with Native Snapping) */}
       <div 
         id="product-overview"
-        className="block lg:hidden w-full aspect-square bg-white dark:bg-slate-900 relative overflow-hidden select-none"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        className="block lg:hidden w-full aspect-square bg-white dark:bg-slate-950 relative overflow-hidden select-none"
       >
-        <img 
-          src={imagesList[activeImageIndex]} 
-          alt={product.name} 
-          onClick={() => openGlobalLightbox(imagesList, activeImageIndex, product.category, product.id)}
-          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in"
-        />
+        <div
+          ref={mobileCarouselRef}
+          onScroll={handleCarouselScroll}
+          className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+        >
+          {imagesList.map((img, idx) => (
+            <div 
+              key={idx} 
+              className="w-full h-full shrink-0 snap-center snap-always flex items-center justify-center p-3"
+            >
+              <img 
+                src={img} 
+                alt="" 
+                onClick={() => openGlobalLightbox(imagesList, idx, product.category, product.id)}
+                className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in"
+              />
+            </div>
+          ))}
+        </div>
 
         {/* Top-left: Back Button */}
         <button 
@@ -678,7 +716,7 @@ const ProductDetailPage = () => {
                   className="flex justify-between items-center cursor-pointer select-none"
                 >
                   <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">Color:</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">{variantLabel}:</span>
                     <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase">
@@ -721,7 +759,7 @@ const ProductDetailPage = () => {
                   className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
                 >
                   <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">Color:</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">{variantLabel}:</span>
                     <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
                   </div>
                   <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
@@ -1262,7 +1300,7 @@ const ProductDetailPage = () => {
                         {product.name}
                       </h4>
                       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                        Color: {selectedVariant ? selectedVariant.name : 'Default'}
+                        {variantLabel}: {selectedVariant ? selectedVariant.name : 'Default'}
                       </p>
                     </div>
                   </div>
@@ -1357,7 +1395,7 @@ const ProductDetailPage = () => {
                 {/* Variant Color Section */}
                 <div className="mt-5 space-y-3">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                    Color: {selectedVariant ? selectedVariant.name : 'Default'}
+                    {variantLabel}: {selectedVariant ? selectedVariant.name : 'Default'}
                   </h4>
                   <div className="flex flex-wrap gap-3">
                     {variants.map((v, idx) => {
