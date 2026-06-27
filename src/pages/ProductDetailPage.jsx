@@ -670,17 +670,51 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Variant Selector Button (Mobile only) */}
-            <button 
-              onClick={() => setIsVariantSheetOpen(true)}
-              className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
-            >
-              <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">Color:</span>
-                <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
+            {/* Variant Selector (Mobile only) */}
+            {variants.length > 1 && (
+              <div className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 space-y-3 shadow-sm lg:hidden text-left">
+                <div 
+                  onClick={() => setIsVariantSheetOpen(true)}
+                  className="flex justify-between items-center cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">Color:</span>
+                    <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase">
+                    <span>All {variants.length}</span>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+                </div>
+                
+                {/* Horizontal scroll of small previews */}
+                <div className="flex gap-2.5 overflow-x-auto no-scrollbar select-none py-0.5">
+                  {variants.map((v) => {
+                    const isSelected = selectedVariant && selectedVariant.id === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          setSelectedVariant(v);
+                          setActiveImageIndex(v.id);
+                        }}
+                        className={`w-12 h-12 rounded-xl p-0.5 bg-slate-50 dark:bg-slate-900 border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
+                          isSelected 
+                            ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/10 dark:ring-white/10' 
+                            : 'border-slate-100 dark:border-slate-800/60 hover:border-slate-200'
+                        }`}
+                      >
+                        <img 
+                          src={v.image} 
+                          alt="" 
+                          className="w-10 h-10 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg" 
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-            </button>
+            )}
 
             {/* Variant tag / Specification Details */}
             <div id="product-details" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
