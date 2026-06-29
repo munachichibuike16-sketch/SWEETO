@@ -126,6 +126,9 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   const [userCountry, setUserCountry] = useState(() => localStorage.getItem('sweeto_user_country') || "Cote D'Ivoire");
   const [activeSettingType, setActiveSettingType] = useState(null); // 'country' | 'currency' | 'language' | null
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingVal, setRatingVal] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
 
   const countries = [
     { name: "Burkina Faso", code: "Burkina Faso", flag: "🇧🇫" },
@@ -1387,7 +1390,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/45">
                   {/* Rate Sweeto Hub */}
                   <div 
-                    onClick={() => showToast("Thank you for your rating! ⭐⭐⭐⭐⭐", "success")}
+                    onClick={() => setShowRatingModal(true)}
                     className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
@@ -2000,6 +2003,125 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                           </button>
                         );
                       })}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+
+              {showRatingModal && (
+                <>
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowRatingModal(false)}
+                    className="fixed inset-0 bg-black z-50 cursor-pointer"
+                  />
+                  {/* Bottom Sheet */}
+                  <motion.div
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "100%" }}
+                    transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                    className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[480px] w-full bg-white dark:bg-[#0b0f19] rounded-t-3xl border-t border-slate-100 dark:border-slate-800/80 p-6 z-55 shadow-2xl flex flex-col max-h-[85vh] text-left"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/40">
+                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Rate Sweeto Hub
+                      </h3>
+                      <button 
+                        onClick={() => setShowRatingModal(false)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="py-6 space-y-6 overflow-y-auto">
+                      <div className="text-center space-y-2">
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                          How would you rate your overall experience with Sweeto Hub?
+                        </p>
+                        {/* Interactive Stars */}
+                        <div className="flex items-center justify-center gap-2 pt-2">
+                          {[1, 2, 3, 4, 5].map((index) => {
+                            const isSelected = index <= ratingVal;
+                            return (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => setRatingVal(index)}
+                                className="hover:scale-110 active:scale-95 transition-all p-1 cursor-pointer"
+                              >
+                                <Star 
+                                  size={36} 
+                                  className={`transition-all ${
+                                    isSelected 
+                                      ? 'text-amber-400 fill-amber-400 filter drop-shadow-[0_2px_4px_rgba(251,191,36,0.3)]' 
+                                      : 'text-slate-300 dark:text-slate-600'
+                                  }`} 
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-500 block pt-1">
+                          {ratingVal === 1 && 'Terrible 😡'}
+                          {ratingVal === 2 && 'Poor 😞'}
+                          {ratingVal === 3 && 'Fair 😐'}
+                          {ratingVal === 4 && 'Good 🙂'}
+                          {ratingVal === 5 && 'Excellent! 😍'}
+                        </span>
+                      </div>
+
+                      {/* Feedback Comment */}
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                          Tell us more (Optional)
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={ratingComment}
+                          onChange={(e) => setRatingComment(e.target.value)}
+                          placeholder="Your suggestions, feedback, or bugs found..."
+                          className="w-full p-4 text-xs font-bold rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-white/5 text-slate-800 dark:text-slate-200 focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30] outline-none transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800/40 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowRatingModal(false)}
+                        className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer text-center"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          localStorage.setItem('sweeto_user_rating', JSON.stringify({
+                            rating: ratingVal,
+                            comment: ratingComment,
+                            date: new Date().toISOString()
+                          }));
+                          showToast(
+                            ratingVal === 5 
+                              ? "Thank you for the 5-star rating! We love you! ❤️" 
+                              : "Thank you for your valuable feedback! 🌟", 
+                            "success"
+                          );
+                          setShowRatingModal(false);
+                          setRatingComment('');
+                        }}
+                        className="flex-1 py-3.5 rounded-2xl text-white font-bold text-xs uppercase tracking-widest hover:bg-red-650 transition-all shadow-md bg-[#ff3b30] cursor-pointer text-center"
+                      >
+                        Submit
+                      </button>
                     </div>
                   </motion.div>
                 </>
