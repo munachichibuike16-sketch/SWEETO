@@ -1000,7 +1000,8 @@ const Storefront = ({ viewMode = 'home' }) => {
 
                       {/* Interleaved Content Sections & Products */}
                       {(() => {
-                        const activeProducts = shuffledActiveProducts.filter(p => !sectionedProductIds.has(p.id));
+                        const unsectioned = shuffledActiveProducts.filter(p => !sectionedProductIds.has(p.id));
+                        const sectioned = shuffledActiveProducts.filter(p => sectionedProductIds.has(p.id));
                         
                         // Filter out hero and inactive/disabled sections from content sections
                         const contentSections = homepageSections.length > 0
@@ -1026,12 +1027,12 @@ const Storefront = ({ viewMode = 'home' }) => {
                         });
 
                         const elements = [];
-                        let productIndex = 0;
+                        let unsectionedIndex = 0;
 
                         renderedSections.forEach((sec) => {
                           // First, show 2 products before this section (starts right under Top Categories)
-                          if (productIndex < activeProducts.length) {
-                            const pair = activeProducts.slice(productIndex, productIndex + 2);
+                          if (unsectionedIndex < unsectioned.length) {
+                            const pair = unsectioned.slice(unsectionedIndex, unsectionedIndex + 2);
                             elements.push(
                               <div key={`pair-before-${sec.id}`} className="my-0 px-4 md:px-0">
                                 <div className="grid grid-cols-2 gap-4 sm:gap-6">
@@ -1046,7 +1047,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                                 </div>
                               </div>
                             );
-                            productIndex += 2;
+                            unsectionedIndex += 2;
                           }
 
                           // Then show the section itself
@@ -1054,10 +1055,13 @@ const Storefront = ({ viewMode = 'home' }) => {
                         });
 
                         // Finally, continue rendering remaining products in pairs of 2 until exhausted
-                        while (productIndex < activeProducts.length) {
-                          const pair = activeProducts.slice(productIndex, productIndex + 2);
+                        // We merge remaining unsectioned products and all sectioned products to display at the bottom ("in the down")
+                        const remainingProducts = [...unsectioned.slice(unsectionedIndex), ...sectioned];
+                        let remainingIndex = 0;
+                        while (remainingIndex < remainingProducts.length) {
+                          const pair = remainingProducts.slice(remainingIndex, remainingIndex + 2);
                           elements.push(
-                            <div key={`pair-after-sections-${productIndex}`} className="my-0 px-4 md:px-0">
+                            <div key={`pair-after-sections-${remainingIndex}`} className="my-0 px-4 md:px-0">
                               <div className="grid grid-cols-2 gap-4 sm:gap-6">
                                 {pair.map(product => (
                                   <div key={product.id} className="border-2 border-blue-600/40 dark:border-blue-500/40 rounded-[2rem] overflow-hidden p-1 bg-white dark:bg-slate-900 shadow-md">
@@ -1070,7 +1074,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                               </div>
                             </div>
                           );
-                          productIndex += 2;
+                          remainingIndex += 2;
                         }
 
                         return elements;
