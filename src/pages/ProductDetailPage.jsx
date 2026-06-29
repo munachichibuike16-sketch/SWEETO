@@ -596,7 +596,7 @@ const ProductDetailPage = () => {
                 src={img} 
                 alt="" 
                 onClick={() => openGlobalLightbox(imagesList, idx, product.category, product.id)}
-                className="max-w-full max-h-full object-contain dark:mix-blend-normal cursor-zoom-in"
+                className="w-full h-full object-contain dark:mix-blend-normal cursor-zoom-in"
               />
             </div>
           ))}
@@ -655,7 +655,7 @@ const ProductDetailPage = () => {
               <img 
                 src={imagesList[activeImageIndex]} 
                 alt={product.name} 
-                className="max-w-full max-h-full object-contain dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-contain dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
               />
               
               {/* Wishlist Floating Overlay */}
@@ -683,7 +683,7 @@ const ProductDetailPage = () => {
                         : 'border-slate-100 dark:border-slate-800/60 hover:border-slate-200'
                     }`}
                   >
-                    <img src={img} alt="" className="max-w-full max-h-full object-contain dark:mix-blend-normal" />
+                    <img src={img} alt="" className="w-full h-full object-contain dark:mix-blend-normal" />
                   </button>
                 ))}
               </div>
@@ -1395,7 +1395,7 @@ const ProductDetailPage = () => {
                     <img 
                       src={selectedVariant ? selectedVariant.image : product.image_url} 
                       alt="" 
-                      className="max-w-full max-h-full object-contain dark:mix-blend-normal" 
+                      className="w-full h-full object-contain dark:mix-blend-normal" 
                     />
                     {/* Floating cart icon */}
                     <button 
