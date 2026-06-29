@@ -43,6 +43,7 @@ const ProductDetailPage = () => {
 
 
   const [isVariantSheetOpen, setIsVariantSheetOpen] = useState(false);
+  const [sheetAction, setSheetAction] = useState('both'); // 'both', 'cart', 'buy'
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [sheetScrollY, setSheetScrollY] = useState(0);
@@ -733,66 +734,21 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Variant Selector (Mobile only) */}
-            {variants.length > 1 ? (
-              <div className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 space-y-3 shadow-sm lg:hidden text-left">
-                <div 
-                  onClick={() => setIsVariantSheetOpen(true)}
-                  className="flex justify-between items-center cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">{variantLabel}:</span>
-                    <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase">
-                    <span>All {variants.length}</span>
-                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                  </div>
+            {/* Variant Selector (Mobile only) - AliExpress Style Row */}
+            {variants.length > 0 && (
+              <button 
+                onClick={() => {
+                  setSheetAction('both');
+                  setIsVariantSheetOpen(true);
+                }}
+                className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
+              >
+                <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                  <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">{variantLabel}:</span>
+                  <span className="text-slate-800 dark:text-white font-black">{selectedVariant ? selectedVariant.name : 'Default'}</span>
                 </div>
-                
-                {/* Horizontal scroll of beautiful AliExpress-style variant pills */}
-                <div className="flex gap-3 overflow-x-auto no-scrollbar select-none py-1.5 scroll-smooth snap-x">
-                  {variants.map((v) => {
-                    const isSelected = selectedVariant && selectedVariant.id === v.id;
-                    return (
-                      <button
-                        key={v.id}
-                        onClick={() => {
-                          setSelectedVariant(v);
-                          setActiveImageIndex(v.id);
-                        }}
-                        className={`snap-start relative flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all duration-300 cursor-pointer shrink-0 ${
-                          isSelected 
-                            ? 'border-[#e61e25] bg-[#e61e25]/5 text-[#e61e25] font-black' 
-                            : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-350 hover:border-slate-300'
-                        }`}
-                      >
-                        <img 
-                          src={v.image} 
-                          alt="" 
-                          className="w-7 h-7 object-contain dark:mix-blend-normal rounded-lg shrink-0" 
-                        />
-                        <span className="text-[11px] font-black tracking-tight whitespace-nowrap uppercase leading-none">
-                          {v.name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              variants.length === 1 && (
-                <button 
-                  onClick={() => setIsVariantSheetOpen(true)}
-                  className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                    <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">{variantLabel}:</span>
-                    <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
-                  </div>
-                  <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                </button>
-              )
+                <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+              </button>
             )}
 
             {/* Variant tag / Specification Details */}
@@ -1306,19 +1262,32 @@ const ProductDetailPage = () => {
           <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-1">WhatsApp</span>
         </motion.button>
 
-        {/* Add to Cart Outline Pill & Buy Now Red Pill */}
+        {/* Add to Cart Outline Pill & Buy Now Red Pill (Opens bottom sheet if variants exist) */}
         <div className="flex-1 flex gap-2.5">
           <button 
             onClick={() => {
-              addToCart(product);
-              showToast("Added to shopping cart! 🛒", "success");
+              if (variants.length > 0) {
+                setSheetAction('cart');
+                setIsVariantSheetOpen(true);
+              } else {
+                addToCart(product);
+                showToast("Added to shopping cart! 🛒", "success");
+              }
             }}
             className="flex-1 py-3 px-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center whitespace-nowrap bg-transparent"
           >
             Add to Cart
           </button>
           <button 
-            onClick={handleBuyNow}
+            onClick={() => {
+              if (variants.length > 0) {
+                setSheetAction('buy');
+                setIsVariantSheetOpen(true);
+              } else {
+                addToCart(product);
+                navigate('/checkout');
+              }
+            }}
             className="flex-1 py-3 px-4 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center whitespace-nowrap"
           >
             Buy Now
@@ -1389,27 +1358,30 @@ const ProductDetailPage = () => {
                 onScroll={handleSheetScroll}
                 className="overflow-y-auto flex-1 pb-6 px-4 text-left no-scrollbar"
               >
-                {/* Large visual image (Only shown when unscrolled) */}
-                {sheetScrollY <= 100 && (
-                  <div className="w-full aspect-[4/3] bg-white dark:bg-slate-900 rounded-b-2xl relative overflow-hidden flex items-center justify-center p-6 border-b border-slate-100 dark:border-slate-800/40">
-                    <img 
-                      src={selectedVariant ? selectedVariant.image : product.image_url} 
-                      alt="" 
-                      className="w-full h-full object-contain dark:mix-blend-normal" 
-                    />
-                    {/* Floating cart icon */}
-                    <button 
-                      onClick={() => {
-                        addToCart(product);
-                        showToast("Added to shopping cart! 🛒", "success");
-                        setIsVariantSheetOpen(false);
-                      }}
-                      className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                    >
-                      <ShoppingCart size={18} />
-                    </button>
-                  </div>
-                )}
+              {/* Large visual image (Always in DOM to prevent scroll height jumps and lockups) */}
+              <div 
+                style={{
+                  opacity: Math.max(0, 1 - sheetScrollY / 120)
+                }}
+                className="w-full aspect-[4/3] bg-white dark:bg-slate-900 rounded-b-2xl relative overflow-hidden flex items-center justify-center p-6 border-b border-slate-100 dark:border-slate-800/40 transition-opacity duration-150"
+              >
+                <img 
+                  src={selectedVariant ? selectedVariant.image : product.image_url} 
+                  alt="" 
+                  className="w-full h-full object-contain dark:mix-blend-normal" 
+                />
+                {/* Floating cart icon */}
+                <button 
+                  onClick={() => {
+                    addToCart(product);
+                    showToast("Added to shopping cart! 🛒", "success");
+                    setIsVariantSheetOpen(false);
+                  }}
+                  className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <ShoppingCart size={18} />
+                </button>
+              </div>
 
                 {/* MID-YEAR SALE Banner & Price block */}
                 <div className="mt-4 space-y-3">
@@ -1514,26 +1486,54 @@ const ProductDetailPage = () => {
 
               {/* Bottom Sticky Action Buttons */}
               <div className="p-4 border-t border-slate-150 dark:border-slate-800 bg-white/95 dark:bg-[#0b1324]/95 backdrop-blur flex gap-3 pb-[calc(env(safe-area-inset-bottom,0px)+14px)]">
-                <button 
-                  onClick={() => {
-                    addToCart(product);
-                    showToast("Added to shopping cart! 🛒", "success");
-                    setIsVariantSheetOpen(false);
-                  }}
-                  className="flex-1 py-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center bg-transparent"
-                >
-                  Add to Cart
-                </button>
-                <button 
-                  onClick={() => {
-                    addToCart(product);
-                    setIsVariantSheetOpen(false);
-                    navigate('/checkout');
-                  }}
-                  className="flex-1 py-3 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
-                >
-                  Buy Now
-                </button>
+                {sheetAction === 'cart' && (
+                  <button 
+                    onClick={() => {
+                      addToCart(product);
+                      showToast("Added to shopping cart! 🛒", "success");
+                      setIsVariantSheetOpen(false);
+                    }}
+                    className="w-full py-3.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
+                  >
+                    Confirm
+                  </button>
+                )}
+                {sheetAction === 'buy' && (
+                  <button 
+                    onClick={() => {
+                      addToCart(product);
+                      setIsVariantSheetOpen(false);
+                      navigate('/checkout');
+                    }}
+                    className="w-full py-3.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
+                  >
+                    Confirm
+                  </button>
+                )}
+                {sheetAction === 'both' && (
+                  <>
+                    <button 
+                      onClick={() => {
+                        addToCart(product);
+                        showToast("Added to shopping cart! 🛒", "success");
+                        setIsVariantSheetOpen(false);
+                      }}
+                      className="flex-1 py-3.5 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center bg-transparent"
+                    >
+                      Add to Cart
+                    </button>
+                    <button 
+                      onClick={() => {
+                        addToCart(product);
+                        setIsVariantSheetOpen(false);
+                        navigate('/checkout');
+                      }}
+                      className="flex-1 py-3.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
+                    >
+                      Buy Now
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </>
