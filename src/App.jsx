@@ -45,6 +45,20 @@ const shuffleArray = (array) => {
   return arr;
 };
 
+const getPlacementsArray = (placements) => {
+  if (!placements) return [];
+  if (Array.isArray(placements)) return placements;
+  if (typeof placements === 'string') {
+    try {
+      const parsed = JSON.parse(placements);
+      return Array.isArray(parsed) ? parsed : [placements];
+    } catch (e) {
+      return [placements];
+    }
+  }
+  return [];
+};
+
 const getCurrentPath = () => {
   const hash = window.location.hash;
   if (hash) {
@@ -456,7 +470,7 @@ const Storefront = ({ viewMode = 'home' }) => {
 
       if (isDual) {
         liveProducts.forEach(p => {
-          const plist = p.placements || [];
+          const plist = getPlacementsArray(p.placements);
           const hasPlacement = plist.includes(`${sec.id}-A`) || plist.includes(sec.id) || plist.includes(String(sec.id)) || plist.includes(`${sec.id}-B`);
           if (hasPlacement) {
             ids.add(p.id);
@@ -498,7 +512,7 @@ const Storefront = ({ viewMode = 'home' }) => {
         prods.forEach(p => ids.add(p.id));
       } else if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
         const assigned = liveProducts.filter(p => {
-          const plist = p.placements || [];
+          const plist = getPlacementsArray(p.placements);
           return plist.includes(sec.id) || plist.includes(String(sec.id)) || plist.includes(`${sec.id}-A`);
         });
         const prods = assigned.slice(0, maxProducts);
@@ -551,11 +565,11 @@ const Storefront = ({ viewMode = 'home' }) => {
     if (isDual) {
       // Check if dual section actually has explicitly placed products
       const sideAHasProducts = liveProducts.some(p => {
-        const plist = p.placements || [];
+        const plist = getPlacementsArray(p.placements);
         return plist.includes(`${section.id}-A`) || plist.includes(section.id) || plist.includes(String(section.id));
       });
       const sideBHasProducts = liveProducts.some(p => {
-        const plist = p.placements || [];
+        const plist = getPlacementsArray(p.placements);
         return plist.includes(`${section.id}-B`);
       });
       if (!sideAHasProducts && !sideBHasProducts) return null;
@@ -600,7 +614,7 @@ const Storefront = ({ viewMode = 'home' }) => {
         prods = liveProducts.filter(p => p.category === catName).slice(0, maxProducts);
       } else if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
         const assigned = liveProducts.filter(p => {
-          const plist = p.placements || [];
+          const plist = getPlacementsArray(p.placements);
           return plist.includes(section.id) || plist.includes(String(section.id)) || plist.includes(`${section.id}-A`);
         });
         prods = assigned.slice(0, maxProducts);
@@ -750,7 +764,7 @@ const Storefront = ({ viewMode = 'home' }) => {
             subtitle={subtitle || 'Limited time offers'} 
             products={(() => {
               const assigned = liveProducts.filter(p => {
-                const plist = p.placements || [];
+                const plist = getPlacementsArray(p.placements);
                 return plist.includes(section.id) || plist.includes(String(section.id)) || plist.includes(`${section.id}-A`);
               });
               return assigned.slice(0, maxProducts);
