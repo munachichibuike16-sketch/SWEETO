@@ -583,7 +583,7 @@ const ProductDetailPage = () => {
           transform: `translateY(${scrollY * 0.45}px) scale(${Math.max(0.8, 1 - scrollY / 1500)})`,
           opacity: Math.max(0, 1 - scrollY / 550)
         }}
-        className="absolute lg:hidden top-0 left-0 right-0 w-full aspect-square bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
+        className="absolute lg:hidden top-0 left-0 right-0 w-full h-[100vw] bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
       >
         <div
           ref={mobileCarouselRef}
