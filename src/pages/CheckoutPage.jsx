@@ -104,9 +104,22 @@ const CheckoutPage = () => {
       // Append city context for better search accuracy
       const fullQuery = field === 'street' ? `${formData.city} ${query}` : query;
 
+      const userCountry = localStorage.getItem('sweeto_user_country') || "Cote D'Ivoire";
+      const countryCodesMap = {
+        "Burkina Faso": "bf",
+        "Benin": "bj",
+        "Cote D'Ivoire": "ci",
+        "France": "fr",
+        "Mali": "ml",
+        "Senegal": "sn",
+        "Togo": "tg",
+        "United States": "us"
+      };
+      const cc = countryCodesMap[userCountry] || "ci";
+
       const url = LOCATIONIQ_KEY
-        ? `https://us1.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(fullQuery)}&limit=5&countrycodes=ci&accept-language=${lang}`
-        : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&format=json&addressdetails=1&limit=5&countrycodes=ci`;
+        ? `https://us1.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(fullQuery)}&limit=5&countrycodes=${cc}&accept-language=${lang}`
+        : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullQuery)}&format=json&addressdetails=1&limit=5&countrycodes=${cc}`;
 
       const headers = LOCATIONIQ_KEY 
         ? {} 

@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { playSound } from '../utils/sound';
+import { useStore } from './StoreContext';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
+  const { products } = useStore();
   const [cartItems, setCartItems] = useState(() => {
     const saved = localStorage.getItem('sweeto_cart');
     return saved ? JSON.parse(saved) : [];
@@ -39,12 +41,26 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => setCartItems([]);
 
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const mappedCartItems = useMemo(() => {
+    return cartItems.map(item => {
+      const liveProduct = products.find(p => p.id === item.id);
+      if (liveProduct) {
+        return {
+          ...item,
+          price: liveProduct.price,
+          original_price: liveProduct.original_price,
+        };
+      }
+      return item;
+    });
+  }, [cartItems, products]);
+
+  const cartCount = mappedCartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = mappedCartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   return (
     <CartContext.Provider value={{ 
-      cartItems, 
+      cartItems: mappedCartItems, 
       addToCart, 
       removeFromCart, 
       updateQuantity, 

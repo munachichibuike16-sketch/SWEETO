@@ -82,6 +82,34 @@ export const StoreProvider = ({ children }) => {
       return {};
     }
   });
+
+  const [userCurrency, setUserCurrency] = useState(() => localStorage.getItem('sweeto_user_currency') || 'XOF');
+
+  const changeUserCurrency = (code) => {
+    setUserCurrency(code);
+    localStorage.setItem('sweeto_user_currency', code);
+  };
+
+  const convertedProducts = React.useMemo(() => {
+    const rate = (() => {
+      if (userCurrency === 'USD') return 1 / 600;
+      if (userCurrency === 'EUR') return 1 / 655.957;
+      return 1;
+    })();
+    return products.map(p => ({
+      ...p,
+      price: Math.round((p.price || 0) * rate),
+      original_price: p.original_price ? Math.round(p.original_price * rate) : null,
+      old_price: p.old_price ? Math.round(p.old_price * rate) : null,
+    }));
+  }, [products, userCurrency]);
+
+  const convertedSettings = React.useMemo(() => {
+    return {
+      ...settings,
+      currency: userCurrency === 'XOF' ? 'FCFA' : userCurrency
+    };
+  }, [settings, userCurrency]);
   const [searchQuery, setSearchQuery] = useState('');
   const [imageSearchResults, setImageSearchResults] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -908,11 +936,13 @@ export const StoreProvider = ({ children }) => {
 
   return (
     <StoreContext.Provider value={{ 
-      products, 
+      products: convertedProducts, 
       categories, 
       brands,
       orders,
-      settings,
+      settings: convertedSettings,
+      userCurrency,
+      changeUserCurrency,
       videoAds,
       sections,
       loading, 

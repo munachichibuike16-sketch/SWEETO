@@ -56,7 +56,7 @@ const CoteDivoireFlag = () => (
 
 const AuthPage = ({ initialTab, onCartClick }) => {
   const navigate = useNavigate();
-  const { showToast, settings, products } = useStore();
+  const { showToast, settings, products, userCurrency, changeUserCurrency } = useStore();
   const { t } = useLanguage();
   const { isDarkMode, toggleTheme } = useTheme();
   
@@ -123,6 +123,45 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState('menu'); // 'menu', 'profile', 'address', 'security', 'about'
   const [cacheSize, setCacheSize] = useState('32.4 MB');
+
+  const [userCountry, setUserCountry] = useState(() => localStorage.getItem('sweeto_user_country') || "Cote D'Ivoire");
+  const [activeSettingType, setActiveSettingType] = useState(null); // 'country' | 'currency' | 'language' | null
+
+  const countries = [
+    { name: "Burkina Faso", code: "Burkina Faso", flag: "🇧🇫" },
+    { name: "Benin", code: "Benin", flag: "🇧🇯" },
+    { name: "Cote D'Ivoire", code: "Cote D'Ivoire", flag: "🇨🇮" },
+    { name: "France", code: "France", flag: "🇫🇷" },
+    { name: "Mali", code: "Mali", flag: "🇲🇱" },
+    { name: "Senegal", code: "Senegal", flag: "🇸🇳" },
+    { name: "Togo", code: "Togo", flag: "🇹🇬" },
+    { name: "United States", code: "United States", flag: "🇺🇸" }
+  ];
+
+  const currencies = [
+    { name: "FCFA (XOF)", code: "XOF", symbol: "FCFA" },
+    { name: "Euro (€)", code: "EUR", symbol: "€" },
+    { name: "US Dollar ($)", code: "USD", symbol: "$" }
+  ];
+
+  const languages = [
+    { name: "English (US)", code: "en" },
+    { name: "Français (FR)", code: "fr" },
+    { name: "Español (ES)", code: "es" },
+    { name: "Deutsch (DE)", code: "de" },
+    { name: "Italiano (IT)", code: "it" }
+  ];
+
+  const getLanguageName = (code) => {
+    const names = {
+      en: 'English (US)',
+      fr: 'Français (FR)',
+      es: 'Español (ES)',
+      de: 'Deutsch (DE)',
+      it: 'Italiano (IT)'
+    };
+    return names[code] || 'English (US)';
+  };
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -1239,7 +1278,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 <div className="bg-white dark:bg-[#0b0f19] border border-slate-100 dark:border-slate-800/40 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/45">
                   {/* Ship to */}
                   <div 
-                    onClick={() => showToast("Shipping country is locked to Côte d'Ivoire 🇨🇮", "info")}
+                    onClick={() => setActiveSettingType('country')}
                     className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
@@ -1249,14 +1288,14 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Ship to</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">Cote D'Ivoire</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">{userCountry}</span>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
 
                   {/* Currency */}
                   <div 
-                    onClick={() => showToast(`Store currency is locked to ${settings?.currency || 'XOF'} 💵`, "info")}
+                    onClick={() => setActiveSettingType('currency')}
                     className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
@@ -1266,14 +1305,14 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Currency</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">{settings?.currency || 'XOF'}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">{userCurrency === 'XOF' ? 'FCFA' : userCurrency}</span>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
 
                   {/* Language */}
                   <div 
-                    onClick={() => showToast("Language settings coming soon! 🌍", "info")}
+                    onClick={() => setActiveSettingType('language')}
                     className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
@@ -1283,7 +1322,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Language</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">English (US)</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">{getLanguageName(lang)}</span>
                       <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
@@ -1313,6 +1352,17 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                         return;
                       }
                       showToast("Clearing temporary image cache...", "info");
+                      
+                      try {
+                        localStorage.removeItem('sweeto_cache_products');
+                        localStorage.removeItem('sweeto_cache_settings');
+                        if ('caches' in window) {
+                          caches.keys().then(names => {
+                            for (let name of names) caches.delete(name);
+                          });
+                        }
+                      } catch (e) {}
+
                       setTimeout(() => {
                         setCacheSize('0.0 KB');
                         showToast("Cache cleared successfully! 🧹", "success");
@@ -1839,6 +1889,122 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                 {t('premium_experience_by') || 'Premium Experience by'} <strong>SWEETO-HUB</strong>
               </div>
             </div>
+
+            <AnimatePresence>
+              {activeSettingType && (
+                <>
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setActiveSettingType(null)}
+                    className="fixed inset-0 bg-black z-50 cursor-pointer"
+                  />
+                  {/* Bottom Sheet */}
+                  <motion.div
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "100%" }}
+                    transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                    className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[480px] w-full bg-white dark:bg-[#0b0f19] rounded-t-3xl border-t border-slate-100 dark:border-slate-800/80 p-6 z-55 shadow-2xl flex flex-col max-h-[75vh]"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/40">
+                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        {activeSettingType === 'country' && 'Select Shipping Country'}
+                        {activeSettingType === 'currency' && 'Select Store Currency'}
+                        {activeSettingType === 'language' && 'Select Language'}
+                      </h3>
+                      <button 
+                        onClick={() => setActiveSettingType(null)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Options list */}
+                    <div className="overflow-y-auto py-4 space-y-2 flex-1">
+                      {activeSettingType === 'country' && countries.map(c => {
+                        const isSelected = userCountry === c.code;
+                        return (
+                          <button
+                            key={c.code}
+                            onClick={() => {
+                              setUserCountry(c.code);
+                              localStorage.setItem('sweeto_user_country', c.code);
+                              showToast(`Shipping country set to ${c.name} ${c.flag}`, 'success');
+                              setActiveSettingType(null);
+                            }}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
+                              isSelected 
+                                ? 'border-[#ff3b30] bg-[#ff3b30]/5 text-[#ff3b30]' 
+                                : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{c.flag}</span>
+                              <span className="text-xs font-bold uppercase tracking-wider">{c.name}</span>
+                            </div>
+                            {isSelected && <Check size={16} strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
+
+                      {activeSettingType === 'currency' && currencies.map(c => {
+                        const isSelected = userCurrency === c.code;
+                        return (
+                          <button
+                            key={c.code}
+                            onClick={() => {
+                              changeUserCurrency(c.code);
+                              showToast(`Currency changed to ${c.name} 💵`, 'success');
+                              setActiveSettingType(null);
+                            }}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
+                              isSelected 
+                                ? 'border-[#ff3b30] bg-[#ff3b30]/5 text-[#ff3b30]' 
+                                : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 dark:text-slate-400">
+                                {c.symbol}
+                              </div>
+                              <span className="text-xs font-bold uppercase tracking-wider">{c.name}</span>
+                            </div>
+                            {isSelected && <Check size={16} strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
+
+                      {activeSettingType === 'language' && languages.map(c => {
+                        const isSelected = lang === c.code;
+                        return (
+                          <button
+                            key={c.code}
+                            onClick={() => {
+                              changeLanguage(c.code);
+                              showToast(`Language set to ${c.name} 🌍`, 'success');
+                              setActiveSettingType(null);
+                            }}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
+                              isSelected 
+                                ? 'border-[#ff3b30] bg-[#ff3b30]/5 text-[#ff3b30]' 
+                                : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-800 dark:text-slate-200'
+                            }`}
+                          >
+                            <span className="text-xs font-bold uppercase tracking-wider">{c.name}</span>
+                            {isSelected && <Check size={16} strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
 
           </div>
         </div>
