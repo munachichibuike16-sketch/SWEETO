@@ -251,6 +251,23 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     fetchShipping();
   }, []);
 
+  useEffect(() => {
+    if (sessionUser) {
+      setSettingsForm({
+        name: sessionUser.name || '',
+        countryCode: sessionUser.phoneCountryCode || sessionUser.countryCode || '',
+        phone: sessionUser.phoneNumber || sessionUser.phone || '',
+        address: sessionUser.address || '',
+        city: sessionUser.city || '',
+        avatarUrl: sessionUser.avatarUrl || ''
+      });
+      if (sessionUser.preferences) {
+        setPreferences(sessionUser.preferences);
+      }
+      fetchStats(sessionUser);
+    }
+  }, [sessionUser]);
+
   const switchTab = (tab) => {
     setCurrentTab(tab);
     setErrors({});
@@ -810,7 +827,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   };
 
   const handleSaveSettings = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!settingsForm.name.trim()) {
       showToast('Name cannot be empty.', 'error');
       return;
