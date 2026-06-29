@@ -32,6 +32,7 @@ export default function ReviewManagement() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, pending, approved, flagged
   const [search, setSearch] = useState('');
+  const [reviewTypeFilter, setReviewTypeFilter] = useState('all'); // all, products, app
   
   const generateSKU = (productId) => {
     const prod = products.find(p => String(p.id) === String(productId));
@@ -194,8 +195,15 @@ export default function ReviewManagement() {
     if (filter !== 'all') {
       matchesStatus = rStatus === filter;
     }
+
+    let matchesType = true;
+    if (reviewTypeFilter === 'products') {
+      matchesType = r.product_id !== null && r.product_id !== undefined;
+    } else if (reviewTypeFilter === 'app') {
+      matchesType = r.product_id === null || r.product_id === undefined;
+    }
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   return (
@@ -246,6 +254,36 @@ export default function ReviewManagement() {
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{pendingReviewsCount}</h3>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Awaiting administrator approval</p>
         </div>
+      </div>
+
+      {/* Review Type Segment Tabs */}
+      <div className="flex border-b border-slate-200 dark:border-slate-800/60 pb-px">
+        {[
+          { id: 'all', label: 'All Feedback' },
+          { id: 'products', label: 'Product Reviews' },
+          { id: 'app', label: 'App Ratings' }
+        ].map(tab => {
+          const isActive = reviewTypeFilter === tab.id;
+          const count = tab.id === 'all' 
+            ? reviews.length 
+            : tab.id === 'products'
+              ? reviews.filter(r => r.product_id !== null && r.product_id !== undefined).length
+              : reviews.filter(r => r.product_id === null || r.product_id === undefined).length;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setReviewTypeFilter(tab.id)}
+              className={`pb-3 px-4 text-xs font-black uppercase tracking-wider relative transition-all cursor-pointer ${
+                isActive ? 'text-blue-500' : 'text-slate-400 hover:text-slate-650 dark:hover:text-slate-200'
+              }`}
+            >
+              <span>{tab.label} ({count})</span>
+              {isActive && (
+                <motion.div layoutId="activeReviewTypeUnderline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Control panel and filters */}
@@ -337,7 +375,11 @@ export default function ReviewManagement() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AnimatePresence>
               {filteredReviews.map((r) => {
-                const productImg = r.product_image || '/hero-banner.png';
+                const isAppFeedback = r.product_id === null || r.product_id === undefined;
+                const matchingProd = products.find(p => String(p.id) === String(r.product_id));
+                const productImg = isAppFeedback ? null : (matchingProd?.image_url || r.product_image || '/hero-banner.png');
+                const productName = isAppFeedback ? "SWEETO HUB App Feedback" : (matchingProd?.name || r.product_name || 'Linked Product');
+
                 return (
                   <motion.div
                     key={r.id}
@@ -351,7 +393,7 @@ export default function ReviewManagement() {
                       {/* Customer info & Stars */}
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h4 className="text-xs font-black text-slate-800 dark:text-white">{r.customer_name || r.reviewer_name || 'Anonymous'}</h4>
+                          <h4 className="text-xs font-black text-slate-800 dark:text-white">{r.reviewer_name || r.customer_name || 'Anonymous'}</h4>
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                             {new Date(r.created_at).toLocaleDateString()}
                           </span>
@@ -378,19 +420,27 @@ export default function ReviewManagement() {
                     {/* Linked Product Bar */}
                     <div className="pt-4 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between gap-4 mt-auto">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white overflow-hidden border border-slate-100 dark:border-slate-800 flex-shrink-0 flex items-center justify-center">
-                          <img
-                            src={productImg}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            onError={(e) => { e.target.src = '/hero-banner.png'; }}
-                          />
-                        </div>
+                        {isAppFeedback ? (
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            <Star size={16} fill="currentColor" />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-white overflow-hidden border border-slate-100 dark:border-slate-800 flex-shrink-0 flex items-center justify-center">
+                            <img
+                              src={productImg}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.src = '/hero-banner.png'; }}
+                            />
+                          </div>
+                        )}
                         <div>
                           <p className="text-[10px] font-black text-slate-800 dark:text-slate-200 line-clamp-1">
-                            {r.product_name || 'Linked Product'}
+                            {productName}
                           </p>
-                          <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wider font-mono">SKU: {generateSKU(r.product_id)}</span>
+                          <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wider font-mono">
+                            {isAppFeedback ? 'App Preference Node' : `SKU: ${generateSKU(r.product_id)}`}
+                          </span>
                         </div>
                       </div>
 

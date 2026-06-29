@@ -257,12 +257,9 @@ const ProductDetailPage = () => {
 
     const payload = {
       product_id: product.id,
-      product_name: product.name,
-      customer_name: currentUser?.name || "Guest User",
       reviewer_name: currentUser?.name || "Guest User",
       rating: userRating,
       comment: comment.trim(),
-      status: 'pending',
       is_approved: 0,
       created_at: new Date().toISOString()
     };

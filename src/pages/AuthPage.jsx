@@ -2120,7 +2120,23 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
+                          const payload = {
+                            product_id: null,
+                            reviewer_name: sessionUser?.name || "Anonymous Guest",
+                            rating: ratingVal,
+                            comment: ratingComment.trim() || "Rated the app",
+                            is_approved: 1,
+                            created_at: new Date().toISOString()
+                          };
+
+                          try {
+                            const { error } = await supabase.from('reviews').insert([payload]);
+                            if (error) throw error;
+                          } catch (e) {
+                            console.warn("Saving app feedback locally due to offline/RLS:", e);
+                          }
+
                           localStorage.setItem('sweeto_user_rating', JSON.stringify({
                             rating: ratingVal,
                             comment: ratingComment,
