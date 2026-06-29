@@ -580,7 +580,7 @@ const ProductDetailPage = () => {
       {/* Mobile Visual Gallery (Full-bleed AliExpress Style with Native Snapping) */}
       <div 
         id="product-overview"
-        className="absolute lg:hidden top-0 left-0 right-0 w-full h-[100vw] bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
+        className="relative lg:hidden w-full h-[100vw] bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
       >
         <div
           ref={mobileCarouselRef}
@@ -640,7 +640,7 @@ const ProductDetailPage = () => {
         </button>
       </div>
 
-      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 mt-[100vw] lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 -mt-10 lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
         {/* Main Columns wrapper */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
