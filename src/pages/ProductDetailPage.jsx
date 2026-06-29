@@ -599,7 +599,7 @@ const ProductDetailPage = () => {
                 src={img} 
                 alt="" 
                 onClick={() => openGlobalLightbox(imagesList, idx, product.category, product.id)}
-                className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal cursor-zoom-in"
+                className="max-w-full max-h-full object-contain dark:mix-blend-normal cursor-zoom-in"
               />
             </div>
           ))}
@@ -658,7 +658,7 @@ const ProductDetailPage = () => {
               <img 
                 src={imagesList[activeImageIndex]} 
                 alt={product.name} 
-                className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
+                className="max-w-full max-h-full object-contain dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
               />
               
               {/* Wishlist Floating Overlay */}
@@ -686,7 +686,7 @@ const ProductDetailPage = () => {
                         : 'border-slate-100 dark:border-slate-800/60 hover:border-slate-200'
                     }`}
                   >
-                    <img src={img} alt="" className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                    <img src={img} alt="" className="max-w-full max-h-full object-contain dark:mix-blend-normal" />
                   </button>
                 ))}
               </div>
@@ -773,7 +773,7 @@ const ProductDetailPage = () => {
                         <img 
                           src={v.image} 
                           alt="" 
-                          className="w-7 h-7 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg shrink-0" 
+                          className="w-7 h-7 object-contain dark:mix-blend-normal rounded-lg shrink-0" 
                         />
                         <span className="text-[11px] font-black tracking-tight whitespace-nowrap uppercase leading-none">
                           {v.name}
@@ -1398,7 +1398,7 @@ const ProductDetailPage = () => {
                     <img 
                       src={selectedVariant ? selectedVariant.image : product.image_url} 
                       alt="" 
-                      className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
+                      className="max-w-full max-h-full object-contain dark:mix-blend-normal" 
                     />
                     {/* Floating cart icon */}
                     <button 
@@ -1480,7 +1480,7 @@ const ProductDetailPage = () => {
                           <img 
                             src={v.image} 
                             alt="" 
-                            className="w-7 h-7 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg shrink-0" 
+                            className="w-7 h-7 object-contain dark:mix-blend-normal rounded-lg shrink-0" 
                           />
                           <span className="text-[11px] font-black tracking-tight whitespace-nowrap uppercase leading-none">
                             {v.name}
