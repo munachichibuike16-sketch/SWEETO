@@ -272,31 +272,6 @@ const ProductDetailPage = () => {
     }
   };
 
-  // Early return if product is not loaded yet (all hooks must be declared above this point!)
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <span className="w-10 h-10 border-4 border-eas-blue border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
   const mobileCarouselRef = useRef(null);
 
   const variantLabel = React.useMemo(() => {
@@ -346,8 +321,6 @@ const ProductDetailPage = () => {
     setSheetScrollY(e.currentTarget.scrollTop);
   };
 
-
-
   // Related Products (same category)
   const relatedProducts = React.useMemo(() => {
     if (!product || !Array.isArray(liveProducts)) return [];
@@ -374,6 +347,31 @@ const ProductDetailPage = () => {
     }
     return arr.slice(0, 12);
   }, [product, liveProducts, relatedProducts]);
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Early return if product is not loaded yet (all hooks must be declared above this point!)
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <span className="w-10 h-10 border-4 border-eas-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const getUnifiedReviews = () => {
     const localAndDb = reviews || [];
