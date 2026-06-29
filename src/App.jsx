@@ -486,7 +486,31 @@ const Storefront = ({ viewMode = 'home' }) => {
 
       const maxProducts = sec.maxProducts || 8;
 
-      if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
+      if (type === 'dealOfDay' || type === 'deal_of_the_day') {
+        const prods = sec.category && sec.category !== 'All' ? dealProducts.filter(p => p.category === sec.category) : dealProducts;
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'newArrival' || type === 'products' || type === 'just_arrived') {
+        const prods = (sec.category && sec.category !== 'All' ? newProducts.filter(p => p.category === sec.category) : newProducts).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'trending') {
+        const prods = (sec.category && sec.category !== 'All' ? trendingProducts.filter(p => p.category === sec.category) : trendingProducts).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'featured' || type === 'featured_grid') {
+        const prods = (sec.category && sec.category !== 'All' 
+          ? liveProducts.filter(p => p.is_featured && p.category === sec.category) 
+          : liveProducts.filter(p => p.is_featured)).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'smartphonesPlacement') {
+        const prods = liveProducts.filter(p => p.category === 'Smartphones').slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'homeCinemaPlacement') {
+        const prods = liveProducts.filter(p => p.category === 'TV & Video').slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'speakersPlacement' || type === 'refrigeratorsPlacement') {
+        const catName = type === 'speakersPlacement' ? 'Speakers' : 'Refrigerators';
+        const prods = liveProducts.filter(p => p.category === catName).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
         const assigned = liveProducts.filter(p => {
           const plist = getPlacementsArray(p.placements);
           return plist.includes(sec.id) || plist.includes(String(sec.id)) || plist.includes(`${sec.id}-A`);
@@ -497,7 +521,7 @@ const Storefront = ({ viewMode = 'home' }) => {
     });
 
     return ids;
-  }, [sections, liveProducts]);
+  }, [sections, liveProducts, dealProducts, newProducts, trendingProducts]);
 
   const sortedProducts = useMemo(() => {
     let list = [...(sectionFilteredProducts || [])];
