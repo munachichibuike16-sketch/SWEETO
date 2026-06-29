@@ -1055,8 +1055,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                         });
 
                         // Finally, continue rendering remaining products in pairs of 2 until exhausted
-                        // We merge remaining unsectioned products and all sectioned products to display at the bottom ("in the down")
-                        const remainingProducts = [...unsectioned.slice(unsectionedIndex), ...sectioned];
+                        const remainingProducts = unsectioned.slice(unsectionedIndex);
                         let remainingIndex = 0;
                         while (remainingIndex < remainingProducts.length) {
                           const pair = remainingProducts.slice(remainingIndex, remainingIndex + 2);
