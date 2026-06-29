@@ -37,6 +37,7 @@ const ProductDetailPage = () => {
   const [touchStartX, setTouchStartX] = useState(null);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const [activeScrollSection, setActiveScrollSection] = useState('overview');
+  const [scrollY, setScrollY] = useState(0);
   
 
 
@@ -78,6 +79,7 @@ const ProductDetailPage = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      setScrollY(currentScrollY);
       if (currentScrollY > 120) {
         setShowStickyHeader(true);
       } else {
@@ -575,7 +577,11 @@ const ProductDetailPage = () => {
       {/* Mobile Visual Gallery (Full-bleed AliExpress Style with Native Snapping) */}
       <div 
         id="product-overview"
-        className="block lg:hidden w-full aspect-square bg-white dark:bg-slate-950 relative overflow-hidden select-none"
+        style={{
+          transform: `translateY(${-Math.min(scrollY * 0.45, 180)}px) scale(${Math.max(0.75, 1 - scrollY / 1200)})`,
+          opacity: Math.max(0, 1 - scrollY / 450)
+        }}
+        className="fixed lg:hidden top-0 left-0 right-0 w-full aspect-square bg-white dark:bg-slate-950 overflow-hidden select-none z-10 transition-transform duration-75 ease-out"
       >
         <div
           ref={mobileCarouselRef}
@@ -635,7 +641,7 @@ const ProductDetailPage = () => {
         </button>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 lg:py-6">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 mt-[100vw] lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
         {/* Main Columns wrapper */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
@@ -745,8 +751,8 @@ const ProductDetailPage = () => {
                   </div>
                 </div>
                 
-                {/* Horizontal scroll of small previews */}
-                <div className="flex gap-2.5 overflow-x-auto no-scrollbar select-none py-0.5">
+                {/* Horizontal scroll of beautiful AliExpress-style variant pills */}
+                <div className="flex gap-3 overflow-x-auto no-scrollbar select-none py-1.5 scroll-smooth snap-x">
                   {variants.map((v) => {
                     const isSelected = selectedVariant && selectedVariant.id === v.id;
                     return (
@@ -756,17 +762,20 @@ const ProductDetailPage = () => {
                           setSelectedVariant(v);
                           setActiveImageIndex(v.id);
                         }}
-                        className={`w-12 h-12 rounded-xl p-0.5 bg-slate-50 dark:bg-slate-900 border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
+                        className={`snap-start relative flex items-center gap-2.5 px-3 py-2 rounded-2xl border transition-all duration-300 cursor-pointer shrink-0 ${
                           isSelected 
-                            ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/10 dark:ring-white/10' 
-                            : 'border-slate-100 dark:border-slate-800/60 hover:border-slate-200'
+                            ? 'border-[#e61e25] bg-[#e61e25]/5 text-[#e61e25] font-black' 
+                            : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-350 hover:border-slate-300'
                         }`}
                       >
                         <img 
                           src={v.image} 
                           alt="" 
-                          className="w-10 h-10 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg" 
+                          className="w-7 h-7 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg shrink-0" 
                         />
+                        <span className="text-[11px] font-black tracking-tight whitespace-nowrap uppercase leading-none">
+                          {v.name}
+                        </span>
                       </button>
                     );
                   })}
@@ -1450,7 +1459,7 @@ const ProductDetailPage = () => {
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                     {variantLabel}: {selectedVariant ? selectedVariant.name : 'Default'}
                   </h4>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2.5 pt-1">
                     {variants.map((v, idx) => {
                       const isSelected = selectedVariant && selectedVariant.id === v.id;
                       return (
@@ -1460,27 +1469,20 @@ const ProductDetailPage = () => {
                             setSelectedVariant(v);
                             setActiveImageIndex(v.id);
                           }}
-                          className={`relative w-20 aspect-square rounded-2xl p-1 bg-slate-50 dark:bg-slate-900/50 border transition-all cursor-pointer flex flex-col items-center justify-center ${
+                          className={`relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl border transition-all duration-300 cursor-pointer ${
                             isSelected 
-                              ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/10 dark:ring-white/10' 
-                              : 'border-slate-150 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700'
+                              ? 'border-[#e61e25] bg-[#e61e25]/5 text-[#e61e25] font-black' 
+                              : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-350 hover:border-slate-300'
                           }`}
                         >
                           <img 
                             src={v.image} 
                             alt="" 
-                            className="w-12 h-12 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg" 
+                            className="w-7 h-7 object-contain mix-blend-multiply dark:mix-blend-normal rounded-lg shrink-0" 
                           />
-                          <span className="text-[8px] font-black uppercase tracking-wide truncate max-w-full mt-1.5 text-slate-500 dark:text-slate-400">
+                          <span className="text-[11px] font-black tracking-tight whitespace-nowrap uppercase leading-none">
                             {v.name}
                           </span>
-                          
-                          {/* Selected Check overlay */}
-                          {isSelected && (
-                            <div className="absolute top-1 left-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-md p-0.5 shadow-sm scale-75">
-                              <Check size={8} strokeWidth={4} />
-                            </div>
-                          )}
                         </button>
                       );
                     })}
