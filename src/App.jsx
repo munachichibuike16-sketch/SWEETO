@@ -35,6 +35,7 @@ import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
+import SweetoLogo from './components/SweetoLogo';
 
 const shuffleArray = (array) => {
   const arr = [...(array || [])];
@@ -997,6 +998,26 @@ const Storefront = ({ viewMode = 'home' }) => {
                           return renderSection({ type: 'hero' }, 0);
                         }
                       })()}
+
+                      {/* Brand Logo Showcase Section */}
+                      <div className="w-full max-w-[1600px] mx-auto px-4 md:px-12 my-6">
+                        <div className="relative overflow-hidden rounded-[2rem] bg-[#030712] border border-slate-800/60 p-8 sm:p-12 flex flex-col items-center justify-center shadow-2xl">
+                          {/* Radial ambient glow */}
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                          
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="relative z-10 flex flex-col items-center gap-4"
+                          >
+                            <SweetoLogo size={280} className="drop-shadow-[0_0_15px_rgba(96,165,250,0.25)]" />
+                            <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 text-center mt-2">
+                              Official Brand Hub
+                            </p>
+                          </motion.div>
+                        </div>
+                      </div>
 
                       {/* Interleaved Content Sections & Products */}
                       {(() => {

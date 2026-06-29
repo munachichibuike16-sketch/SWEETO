@@ -1,81 +1,54 @@
 import React from 'react';
 
-const SweetoLogo = ({ size = 48, className = '' }) => {
+const SweetoLogo = ({ size = 120, className = '' }) => {
+  // Circles config: [char, x, y, color]
+  const elements = [
+    { char: 'S', x: 30, y: 35, color: '#ff7675' },
+    { char: 'W', x: 70, y: 35, color: '#ffeaa7' },
+    { char: 'E', x: 110, y: 35, color: '#55efc4' },
+    { char: 'E', x: 150, y: 35, color: '#55efc4' },
+    { char: 'T', x: 190, y: 35, color: '#00cec9' },
+    { char: 'O', x: 230, y: 35, color: '#74b9ff' },
+    { char: 'H', x: 90, y: 70, color: '#a29bfe' },
+    { char: 'U', x: 130, y: 70, color: '#fd79a8' },
+    { char: 'B', x: 170, y: 70, color: '#ff7675' }
+  ];
+
   return (
     <svg 
-      viewBox="0 0 100 100" 
+      viewBox="0 0 260 105" 
       className={`select-none ${className}`} 
-      style={{ width: size, height: size }}
+      style={{ width: size, aspectRatio: '260/105' }}
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
     >
-      <defs>
-        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0000ff" />
-          <stop offset="100%" stopColor="#0000ff" />
-        </linearGradient>
-      </defs>
+      {/* Overlapping Rings */}
+      {elements.map((el, i) => (
+        <circle 
+          key={`ring-${i}`}
+          cx={el.x} 
+          cy={el.y} 
+          r="23" 
+          stroke={el.color} 
+          strokeWidth="3.2"
+        />
+      ))}
       
-      {/* Cart Frame/Body */}
-      <path 
-        d="M 12 18 H 22 L 35 64 H 80" 
-        stroke="url(#logoGrad)" 
-        strokeWidth="7" 
-        strokeLinecap="round" 
-        strokeLinejoin="round" 
-      />
-      <path 
-        d="M 27 28 H 85 L 77 54 H 38 Z" 
-        fill="url(#logoGrad)" 
-        stroke="url(#logoGrad)" 
-        strokeWidth="4" 
-        strokeLinejoin="round" 
-      />
-      
-      {/* Speed / Design Lines inside the basket for premium look */}
-      <path 
-        d="M 42 36 H 75" 
-        stroke="#ffffff" 
-        strokeWidth="3.5" 
-        strokeLinecap="round" 
-      />
-      <path 
-        d="M 45 46 H 68" 
-        stroke="#ffffff" 
-        strokeWidth="3.5" 
-        strokeLinecap="round" 
-      />
-
-      {/* Wheels */}
-      <circle 
-        cx="38" 
-        cy="80" 
-        r="8" 
-        fill="#0b0f19" 
-        stroke="url(#logoGrad)" 
-        strokeWidth="5" 
-      />
-      <circle 
-        cx="38" 
-        cy="80" 
-        r="2" 
-        fill="#ffffff" 
-      />
-      
-      <circle 
-        cx="72" 
-        cy="80" 
-        r="8" 
-        fill="#0b0f19" 
-        stroke="url(#logoGrad)" 
-        strokeWidth="5" 
-      />
-      <circle 
-        cx="72" 
-        cy="80" 
-        r="2" 
-        fill="#ffffff" 
-      />
+      {/* Letters */}
+      {elements.map((el, i) => (
+        <text
+          key={`text-${i}`}
+          x={el.x}
+          y={el.y + 6.2} // offset down to align vertically inside the circle
+          fill={el.color}
+          fontSize="16.5"
+          fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          fontWeight="900"
+          textAnchor="middle"
+        >
+          {el.char}
+        </text>
+      ))}
     </svg>
   );
 };

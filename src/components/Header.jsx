@@ -454,33 +454,21 @@ const Header = ({ onMenuClick, onCartClick }) => {
               className="flex items-center gap-3 cursor-pointer group"
             >
               <motion.div
-                whileHover={{ scale: 1.05, rotate: -2 }}
+                whileHover={{ scale: 1.05, rotate: -1 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative shrink-0"
+                className="relative shrink-0 flex items-center gap-2.5"
               >
-                <SweetoLogo size={42} className="drop-shadow-[0_0_8px_rgba(0,255,0,0.3)]" />
+                <SweetoLogo size={115} className="drop-shadow-[0_0_10px_rgba(96,165,250,0.15)]" />
+                
+                {/* Glowing Active Online Dot */}
+                <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none border border-emerald-500/20">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  </span>
+                  Connected
+                </span>
               </motion.div>
-              <div className="flex flex-col justify-center">
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block text-lg sm:text-2xl font-black tracking-tighter uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
-                    <span className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.25)]">
-                      {settings?.shopName ? settings.shopName.split(' ')[0] : 'SWEETO'}
-                    </span>
-                    <span className="text-slate-900 dark:text-white ml-1.5">
-                      {settings?.shopName ? settings.shopName.split(' ').slice(1).join(' ') || 'HUB' : 'HUB'}
-                    </span>
-                  </span>
-                  
-                  {/* Glowing Active Online Dot */}
-                  <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none border border-emerald-500/20">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                    Connected
-                  </span>
-                </div>
-              </div>
             </motion.div>
 
             {/* Menu button removed */}
