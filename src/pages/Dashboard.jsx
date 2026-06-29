@@ -323,7 +323,9 @@ const Dashboard = () => {
         original_price: null,
         cost_price: null,
         stock_quantity: parseInt(quickProductForm.stock) || 10,
+        stock: parseInt(quickProductForm.stock) || 10,
         is_active: 1,
+        status: 'active',
         is_featured: 0,
         is_deal: 0,
         image_url: quickProductForm.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400',
@@ -616,8 +618,8 @@ const Dashboard = () => {
       const threshold = settings?.low_stock_threshold || 5;
       products.forEach(p => {
         const prev = prevProducts.get(p.id);
-        const stockVal = p.stock ?? p.stock_quantity ?? 0;
-        const prevStockVal = prev ? (prev.stock ?? prev.stock_quantity ?? 999) : 999;
+        const stockVal = p.stock || p.stock_quantity || 0;
+        const prevStockVal = prev ? (prev.stock || prev.stock_quantity || 999) : 999;
 
         // Trigger alert if stock drops to/below threshold
         if (stockVal <= threshold && prevStockVal > threshold) {

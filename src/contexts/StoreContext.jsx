@@ -505,8 +505,8 @@ export const StoreProvider = ({ children }) => {
             ...p,
             name: normalizeProductTitle(p.name),
             // Support both old schema (stock_quantity/cost_price) and new schema (stock/bought_price)
-            stock: p.stock ?? p.stock_quantity ?? 0,
-            bought_price: p.bought_price ?? p.cost_price ?? 0,
+            stock: p.stock || p.stock_quantity || 0,
+            bought_price: p.bought_price || p.cost_price || 0,
             status: p.status || (p.is_active ? 'active' : 'inactive'),
             is_daily_deal: p.is_deal,
             is_new_arrival: p.is_new_arrival,
@@ -706,8 +706,8 @@ export const StoreProvider = ({ children }) => {
               return {
                 ...p,
                 name: normalizeProductTitle(p.name),
-                stock: p.stock ?? p.stock_quantity ?? 0,
-                bought_price: p.bought_price ?? p.cost_price ?? 0,
+                stock: p.stock || p.stock_quantity || 0,
+                bought_price: p.bought_price || p.cost_price || 0,
                 status: p.status || (p.is_active ? 'active' : 'inactive'),
                 is_daily_deal: p.is_deal || p.is_daily_deal,
                 is_new_arrival: p.is_new_arrival,
