@@ -318,11 +318,7 @@ const NotificationsContent = ({ onProductClick }) => {
 
       const readAt = readNotifs[n.id];
       if (readAt) {
-        // Vanish read alerts after 10 minutes
-        const tenMinutes = 10 * 60 * 1000;
-        if (Date.now() - readAt > tenMinutes) {
-          return false;
-        }
+        return false;
       }
       return true;
     });
