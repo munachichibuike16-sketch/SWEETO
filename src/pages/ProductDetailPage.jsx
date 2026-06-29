@@ -91,11 +91,13 @@ const ProductDetailPage = () => {
       const descEl = document.getElementById('product-description');
       const recomEl = document.getElementById('product-recommendations');
 
-      if (recomEl && currentScrollY >= recomEl.offsetTop - 140) {
+      const getAbsoluteTop = (el) => el ? el.getBoundingClientRect().top + currentScrollY : 0;
+
+      if (recomEl && currentScrollY >= getAbsoluteTop(recomEl) - 150) {
         setActiveScrollSection('recommendations');
-      } else if (descEl && currentScrollY >= descEl.offsetTop - 140) {
+      } else if (descEl && currentScrollY >= getAbsoluteTop(descEl) - 150) {
         setActiveScrollSection('description');
-      } else if (reviewsEl && currentScrollY >= reviewsEl.offsetTop - 140) {
+      } else if (reviewsEl && currentScrollY >= getAbsoluteTop(reviewsEl) - 150) {
         setActiveScrollSection('reviews');
       } else {
         setActiveScrollSection('overview');
@@ -485,7 +487,7 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-white pb-24 transition-colors duration-300">
+    <div className="relative min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-white pb-24 transition-colors duration-300">
       {/* Mobile Sticky Scroll Header (revealed on scroll) */}
       <AnimatePresence>
         {showStickyHeader && (
@@ -578,10 +580,10 @@ const ProductDetailPage = () => {
       <div 
         id="product-overview"
         style={{
-          transform: `translateY(${-Math.min(scrollY * 0.25, 80)}px) scale(${Math.max(0.85, 1 - scrollY / 1500)})`,
+          transform: `translateY(${scrollY * 0.45}px) scale(${Math.max(0.8, 1 - scrollY / 1500)})`,
           opacity: Math.max(0, 1 - scrollY / 550)
         }}
-        className="sticky lg:hidden top-0 left-0 right-0 w-full aspect-square bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
+        className="absolute lg:hidden top-0 left-0 right-0 w-full aspect-square bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
       >
         <div
           ref={mobileCarouselRef}
@@ -641,7 +643,7 @@ const ProductDetailPage = () => {
         </button>
       </div>
 
-      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 mt-[100vw] lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
         {/* Main Columns wrapper */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
