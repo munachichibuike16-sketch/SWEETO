@@ -1000,7 +1000,7 @@ const Storefront = ({ viewMode = 'home' }) => {
 
                       {/* Interleaved Content Sections & Products */}
                       {(() => {
-                        const activeProducts = shuffledActiveProducts;
+                        const activeProducts = shuffledActiveProducts.filter(p => !sectionedProductIds.has(p.id));
                         
                         // Filter out hero and inactive/disabled sections from content sections
                         const contentSections = homepageSections.length > 0
