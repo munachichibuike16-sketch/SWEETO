@@ -154,7 +154,25 @@ const ProductDetailPage = () => {
         } else {
           const category = (product.category || '').toLowerCase();
           const pName = (product.name || '').toLowerCase();
-          if (category.includes('knife') || pName.includes('knife')) {
+          
+          if (category.includes('laptop') || category.includes('computer') || category.includes('ordinateur')) {
+            let ram = '8GB';
+            let ssd = '256GB';
+            try {
+              if (product.description && product.description.trim().startsWith('{')) {
+                const parsed = JSON.parse(product.description);
+                if (parsed.specs) {
+                  if (parsed.specs.ramCapacity) ram = parsed.specs.ramCapacity.replace(/\s+/g, '');
+                  if (parsed.specs.storageCapacity) ssd = parsed.specs.storageCapacity.replace(/\s+/g, '');
+                }
+              }
+            } catch (e) {}
+            
+            if (idx === 0) name = `${ram} + ${ssd}`;
+            else if (idx === 1) name = '16GB + 512GB';
+            else if (idx === 2) name = '16GB + 1TB';
+            else name = `Option ${idx + 1}`;
+          } else if (category.includes('knife') || pName.includes('knife')) {
             if (idx === 0) name = 'EDC Knife';
             else if (idx === 1) name = 'Silver Metal';
             else if (idx === 2) name = 'Shadow Black';
@@ -283,7 +301,7 @@ const ProductDetailPage = () => {
   const variantLabel = React.useMemo(() => {
     const category = (product?.category || '').toLowerCase();
     if (category.includes('laptop') || category.includes('ordinateur') || category.includes('computer')) {
-      return 'Specs';
+      return 'Capacity';
     }
     if (category.includes('storage') || category.includes('drive') || category.includes('ssd') || category.includes('hdd') || category.includes('usb') || category.includes('ram') || category.includes('mémoire') || category.includes('card')) {
       return 'Capacity';
