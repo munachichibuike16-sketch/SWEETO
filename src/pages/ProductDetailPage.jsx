@@ -578,10 +578,10 @@ const ProductDetailPage = () => {
       <div 
         id="product-overview"
         style={{
-          transform: `translateY(${-Math.min(scrollY * 0.45, 180)}px) scale(${Math.max(0.75, 1 - scrollY / 1200)})`,
-          opacity: Math.max(0, 1 - scrollY / 450)
+          transform: `translateY(${-Math.min(scrollY * 0.25, 80)}px) scale(${Math.max(0.85, 1 - scrollY / 1500)})`,
+          opacity: Math.max(0, 1 - scrollY / 550)
         }}
-        className="fixed lg:hidden top-0 left-0 right-0 w-full aspect-square bg-white dark:bg-slate-950 overflow-hidden select-none z-10 transition-transform duration-75 ease-out"
+        className="sticky lg:hidden top-0 left-0 right-0 w-full aspect-square bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
       >
         <div
           ref={mobileCarouselRef}
@@ -641,7 +641,7 @@ const ProductDetailPage = () => {
         </button>
       </div>
 
-      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 mt-[100vw] lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
         {/* Main Columns wrapper */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
