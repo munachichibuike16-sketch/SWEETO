@@ -757,14 +757,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 setSelectedBrand(null);
                 navigate('/');
               }}
-              className="flex items-center text-xl font-black tracking-tight select-none cursor-pointer group"
+              className="flex items-center select-none cursor-pointer group"
             >
-              <span className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.25)] uppercase italic group-hover:tracking-normal transition-all duration-500 leading-none">
-                {settings?.shopName ? settings.shopName.split(' ')[0] : 'SWEETO'}
-              </span>
-              <span className="font-black text-slate-900 dark:text-white uppercase italic ml-1.5 leading-none">
-                {settings?.shopName ? settings.shopName.split(' ').slice(1).join(' ') : 'HUB'}
-              </span>
+              <SweetoLogo size={105} className="drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]" />
             </div>
  
             {/* Action Icons: Notification bell & Settings */}

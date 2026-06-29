@@ -963,24 +963,16 @@ export default function BrightRetailHome({ onProductClick }) {
           return (
             <React.Fragment key={section.id || idx}>
               {element}
-              <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 my-6">
-                <div className="relative overflow-hidden rounded-[2rem] bg-[#030712] border border-slate-800/60 p-8 sm:p-12 flex flex-col items-center justify-center shadow-2xl">
-                  {/* Radial ambient glow */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                  
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="relative z-10 flex flex-col items-center gap-4"
-                  >
-                    <SweetoLogo size={280} className="drop-shadow-[0_0_15px_rgba(96,165,250,0.25)]" />
-                    <p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500 text-center mt-2">
-                      Official Brand Hub
-                    </p>
-                  </motion.div>
-                </div>
+              <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 my-6 flex justify-center">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                  className="flex flex-col items-center justify-center"
+                >
+                  <SweetoLogo size={280} className="drop-shadow-[0_0_12px_rgba(96,165,250,0.15)]" />
+                </motion.div>
               </div>
             </React.Fragment>
           );
