@@ -116,6 +116,7 @@ const ProductDetailPage = () => {
       if (foundProduct) {
         setProduct(foundProduct);
         addToRecent(foundProduct);
+        setScrollY(0); // Reset scroll state!
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'instant' });
       } else {
