@@ -442,8 +442,81 @@ const Storefront = ({ viewMode = 'home' }) => {
         return p.brand === activeSubCategory;
       });
 
+  const sectionedProductIds = useMemo(() => {
+    const ids = new Set();
+    if (!Array.isArray(sections)) return ids;
+
+    sections.forEach(sec => {
+      const isEnabled = sec.isActive !== false && sec.enabled !== false;
+      if (!isEnabled) return;
+
+      const isDual = sec.isDual === true || sec.isDual === 1 || sec.isDual === 'true' ||
+                     sec.is_dual === true || sec.is_dual === 1 || sec.is_dual === 'true' ||
+                     sec.isdual === true || sec.isdual === 1 || sec.isdual === 'true';
+
+      if (isDual) {
+        liveProducts.forEach(p => {
+          const plist = p.placements || [];
+          const hasPlacement = plist.includes(`${sec.id}-A`) || plist.includes(sec.id) || plist.includes(String(sec.id)) || plist.includes(`${sec.id}-B`);
+          if (hasPlacement) {
+            ids.add(p.id);
+          }
+        });
+        return;
+      }
+
+      let type = (sec.role && sec.role !== 'custom') ? sec.role : (sec.key || sec.type);
+      if (type && typeof type === 'string' && type.includes('_')) {
+        type = type.replace(/_\d+$/, '');
+      }
+
+      const maxProducts = sec.maxProducts || 8;
+
+      if (type === 'dealOfDay' || type === 'deal_of_the_day') {
+        const prods = sec.category && sec.category !== 'All' ? dealProducts.filter(p => p.category === sec.category) : dealProducts;
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'newArrival' || type === 'products' || type === 'just_arrived') {
+        const prods = (sec.category && sec.category !== 'All' ? newProducts.filter(p => p.category === sec.category) : newProducts).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'trending') {
+        const prods = (sec.category && sec.category !== 'All' ? trendingProducts.filter(p => p.category === sec.category) : trendingProducts).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'featured' || type === 'featured_grid') {
+        const prods = (sec.category && sec.category !== 'All' 
+          ? liveProducts.filter(p => p.is_featured && p.category === sec.category) 
+          : liveProducts.filter(p => p.is_featured)).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'smartphonesPlacement') {
+        const prods = liveProducts.filter(p => p.category === 'Smartphones').slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'homeCinemaPlacement') {
+        const prods = liveProducts.filter(p => p.category === 'TV & Video').slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'speakersPlacement' || type === 'refrigeratorsPlacement') {
+        const catName = type === 'speakersPlacement' ? 'Speakers' : 'Refrigerators';
+        const prods = liveProducts.filter(p => p.category === catName).slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      } else if (type === 'flashSale' || type === 'giftIdeas' || type === 'custom') {
+        const assigned = liveProducts.filter(p => {
+          const plist = p.placements || [];
+          return plist.includes(sec.id) || plist.includes(String(sec.id)) || plist.includes(`${sec.id}-A`);
+        });
+        const prods = assigned.slice(0, maxProducts);
+        prods.forEach(p => ids.add(p.id));
+      }
+    });
+
+    return ids;
+  }, [sections, liveProducts, dealProducts, newProducts, trendingProducts]);
+
   const sortedProducts = useMemo(() => {
-    const list = [...(sectionFilteredProducts || [])];
+    let list = [...(sectionFilteredProducts || [])];
+    
+    // Filter out products that are assigned to any active homepage section
+    if (!activeCategory && !selectedBrand && !searchQuery) {
+      list = list.filter(p => !sectionedProductIds.has(p.id));
+    }
+
     switch (sortBy) {
       case 'price_low_high':
         return list.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
@@ -455,7 +528,7 @@ const Storefront = ({ viewMode = 'home' }) => {
       default:
         return list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }
-  }, [sectionFilteredProducts, sortBy]);
+  }, [sectionFilteredProducts, sortBy, activeCategory, selectedBrand, searchQuery, sectionedProductIds]);
 
   const getSectionType = (sec) => {
     let t = (sec.role && sec.role !== 'custom') ? sec.role : (sec.key || sec.type);
