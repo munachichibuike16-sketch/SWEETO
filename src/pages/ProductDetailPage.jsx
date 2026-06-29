@@ -260,7 +260,7 @@ const ProductDetailPage = () => {
       reviewer_name: currentUser?.name || "Guest User",
       rating: userRating,
       comment: comment.trim(),
-      is_approved: 0,
+      is_approved: 1,
       created_at: new Date().toISOString()
     };
 
