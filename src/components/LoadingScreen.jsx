@@ -48,23 +48,15 @@ export default function LoadingScreen({ isVisible }) {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center overflow-hidden px-6"
         >
-          {/* Subtle tech ambient grid background or radial flow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.08),rgba(255,255,255,0))]"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[140px] pointer-events-none"></div>
-
           {/* Central content cluster */}
-          <div className="relative flex flex-col items-center w-full max-w-[500px] text-center">
+          <div className="relative flex flex-col items-center w-full max-w-[480px] text-center space-y-6">
             
-            {/* Logo panel card */}
-            <div className="relative w-full bg-[#030712] border border-slate-900/60 rounded-3xl p-12 sm:p-16 flex flex-col items-center justify-center shadow-2xl overflow-hidden mb-8">
-              {/* Ambient background glow inside the card */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-blue-500/5 rounded-full blur-[60px] pointer-events-none"></div>
-              
-              {/* Logo with pop-and-bounce letter animation */}
-              <SweetoLogo size={230} animate={true} className="relative z-10 drop-shadow-[0_0_15px_rgba(96,165,250,0.18)]" />
+            {/* Logo with pop-and-bounce letter animation */}
+            <div className="relative flex flex-col items-center justify-center mb-4">
+              <SweetoLogo size={240} animate={true} className="drop-shadow-[0_0_15px_rgba(96,165,250,0.18)]" />
               
               {/* EST. 2026 tag */}
-              <div className="w-full flex justify-end mt-4 pr-2 relative z-10">
+              <div className="w-full flex justify-end mt-4 pr-4">
                 <span className="text-[10px] font-mono tracking-[0.25em] text-[#00ffcc]/70">
                   EST. 2026
                 </span>
