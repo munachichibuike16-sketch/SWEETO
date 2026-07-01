@@ -146,17 +146,64 @@ export default function LoadingScreen({ isVisible }) {
                   {/* Glowing core dot */}
                   <div className="absolute inset-0.5 rounded-full bg-[#070b19] border border-cyan-400/25 flex items-center justify-center">
                     <svg 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2.5" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      className="w-4 h-4 text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
+                      viewBox="0 0 32 32" 
+                      className="w-5 h-5 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]"
                     >
-                      <circle cx="9" cy="21" r="1" />
-                      <circle cx="20" cy="21" r="1" />
-                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                      {/* 1. Mini Credit Card (tilted, in the background) */}
+                      <g transform="translate(18, 6) rotate(22)">
+                        <rect 
+                          x="0" 
+                          y="0" 
+                          width="11" 
+                          height="7.5" 
+                          rx="1.2" 
+                          fill="#ff00cc" 
+                          stroke="#ff00cc"
+                          strokeWidth="0.5"
+                        />
+                        <line x1="1.5" y1="5.5" x2="5.5" y2="5.5" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" />
+                        <rect x="1.5" y="2" width="2" height="1.5" rx="0.3" fill="#ffeaa7" />
+                      </g>
+
+                      {/* 2. Mini Shopping Bag (overlapping, in front of card) */}
+                      <g transform="translate(9, 7) rotate(-8)">
+                        <path 
+                          d="M 2.5 3 C 2.5 0.5, 6.5 0.5, 6.5 3" 
+                          stroke="#00ffcc" 
+                          strokeWidth="0.9" 
+                          fill="none" 
+                        />
+                        <rect 
+                          x="0" 
+                          y="3" 
+                          width="9" 
+                          height="9" 
+                          rx="1" 
+                          fill="#00ffcc" 
+                          stroke="#00ffcc"
+                          strokeWidth="0.5"
+                        />
+                      </g>
+
+                      {/* 3. The Shopping Cart (in the very front) */}
+                      <path 
+                        d="M 3 5 H 6 L 10 20 H 22" 
+                        stroke="#22d3ee" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        fill="none"
+                      />
+                      <path 
+                        d="M 6 8 H 25 L 22.5 17 H 9.5 Z" 
+                        stroke="#22d3ee" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        fill="none"
+                      />
+                      <circle cx="11.5" cy="24" r="2" fill="#030712" stroke="#22d3ee" strokeWidth="1.2" />
+                      <circle cx="20.5" cy="24" r="2" fill="#030712" stroke="#22d3ee" strokeWidth="1.2" />
                     </svg>
                   </div>
                 </div>
