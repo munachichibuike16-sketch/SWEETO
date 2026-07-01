@@ -355,6 +355,7 @@ const NotificationsContent = ({ onProductClick }) => {
         legacy.push(id);
         localStorage.setItem('read_notifications', JSON.stringify(legacy));
       }
+      window.dispatchEvent(new Event('notifications_updated'));
     }
   };
 
@@ -377,6 +378,7 @@ const NotificationsContent = ({ onProductClick }) => {
     setReadNotifs(updated);
     localStorage.setItem('read_notifications_timed', JSON.stringify(updated));
     localStorage.setItem('read_notifications', JSON.stringify(legacy));
+    window.dispatchEvent(new Event('notifications_updated'));
     showToast(lang === 'fr' ? 'Toutes lues ✓' : 'All marked read ✓', 'success');
   };
 
@@ -384,6 +386,7 @@ const NotificationsContent = ({ onProductClick }) => {
     const updated = { ...deletedNotifs, [id]: true };
     setDeletedNotifs(updated);
     localStorage.setItem('deleted_notifications', JSON.stringify(updated));
+    window.dispatchEvent(new Event('notifications_updated'));
     showToast(lang === 'fr' ? 'Notification supprimée 🗑️' : 'Notification dismissed 🗑️', 'info');
   };
 
@@ -394,6 +397,7 @@ const NotificationsContent = ({ onProductClick }) => {
     });
     setDeletedNotifs(updated);
     localStorage.setItem('deleted_notifications', JSON.stringify(updated));
+    window.dispatchEvent(new Event('notifications_updated'));
     showToast(lang === 'fr' ? 'Historique effacé 🗑️' : 'Inbox history cleared 🗑️', 'success');
   };
 

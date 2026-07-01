@@ -155,16 +155,37 @@ const Header = ({ onMenuClick, onCartClick }) => {
   }, []);
 
   // Compute unread notification count (new arrivals not yet read)
-  const unreadNotifCount = (() => {
-    try {
-      const readNotifs = JSON.parse(localStorage.getItem('read_notifications') || '[]');
-      const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
-      return products.filter(p => p.is_new_arrival).filter(p => {
-        const id = `new-product-${p.id}`;
-        return !readNotifs.includes(id) && !readTimed[id];
-      }).length;
-    } catch (e) { return products.filter(p => p.is_new_arrival).length; }
-  })();
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  useEffect(() => {
+    const calculateUnread = () => {
+      try {
+        const readNotifs = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+        const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
+        const deletedNotifs = JSON.parse(localStorage.getItem('deleted_notifications') || '{}');
+        const count = products.filter(p => p.is_new_arrival).filter(p => {
+          const id = `new-product-${p.id}`;
+          return !readNotifs.includes(id) && !readTimed[id] && !deletedNotifs[id];
+        }).length;
+        setUnreadNotifCount(count);
+      } catch (e) {
+        setUnreadNotifCount(products.filter(p => p.is_new_arrival).length);
+      }
+    };
+
+    calculateUnread();
+
+    const handleUpdate = () => {
+      calculateUnread();
+    };
+
+    window.addEventListener('notifications_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('notifications_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [products]);
 
   // Click outside to close dropdowns
   useEffect(() => {
