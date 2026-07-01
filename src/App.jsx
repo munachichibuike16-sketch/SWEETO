@@ -1007,7 +1007,7 @@ const Storefront = ({ viewMode = 'home' }) => {
                           transition={{ duration: 0.6 }}
                           className="flex flex-col items-center justify-center"
                         >
-                          <SweetoLogo size={280} className="drop-shadow-[0_0_12px_rgba(96,165,250,0.15)]" />
+                          <SweetoLogo size={160} animate={true} className="drop-shadow-[0_0_12px_rgba(96,165,250,0.15)]" />
                         </motion.div>
                       </div>
 

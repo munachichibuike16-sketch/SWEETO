@@ -1,6 +1,7 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
-const SweetoLogo = ({ size = 120, className = '' }) => {
+const SweetoLogo = ({ size = 120, className = '', animate = false }) => {
   // Circles config: [char, x, y, color]
   const elements = [
     { char: 'S', x: 30, y: 35, color: '#ff7675' },
@@ -35,20 +36,49 @@ const SweetoLogo = ({ size = 120, className = '' }) => {
       ))}
       
       {/* Letters */}
-      {elements.map((el, i) => (
-        <text
-          key={`text-${i}`}
-          x={el.x}
-          y={el.y + 6.2} // offset down to align vertically inside the circle
-          fill={el.color}
-          fontSize="16.5"
-          fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          fontWeight="900"
-          textAnchor="middle"
-        >
-          {el.char}
-        </text>
-      ))}
+      {elements.map((el, i) => {
+        if (!animate) {
+          return (
+            <text
+              key={`text-${i}`}
+              x={el.x}
+              y={el.y + 6.2} // offset down to align vertically inside the circle
+              fill={el.color}
+              fontSize="16.5"
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontWeight="900"
+              textAnchor="middle"
+            >
+              {el.char}
+            </text>
+          );
+        }
+
+        return (
+          <motion.text
+            key={`text-anim-${i}`}
+            x={el.x}
+            y={el.y + 6.2}
+            fill={el.color}
+            fontSize="16.5"
+            fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+            fontWeight="900"
+            textAnchor="middle"
+            initial={{ y: el.y - 70, opacity: 0 }}
+            whileInView={{ y: el.y + 6.2, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{
+              type: 'spring',
+              stiffness: 110,
+              damping: 10,
+              mass: 0.8,
+              delay: i * 0.08
+            }}
+          >
+            {el.char}
+          </motion.text>
+        );
+      })}
     </svg>
   );
 };
