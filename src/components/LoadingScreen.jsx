@@ -26,7 +26,7 @@ export default function LoadingScreen({ isVisible }) {
         if (prev >= 100) {
           clearInterval(timer);
           // Complete load and fade out smoothly
-          setTimeout(() => setShow(false), 150);
+          setTimeout(() => setShow(false), 200);
           return 100;
         }
         return prev + step;
@@ -36,6 +36,15 @@ export default function LoadingScreen({ isVisible }) {
     return () => clearInterval(timer);
   }, [isVisible]);
 
+  // Determine status message based on current progress
+  const getStatusText = () => {
+    if (progress < 20) return 'INITIALIZING SYSTEM CORES...';
+    if (progress < 45) return 'CONNECTING SECURE PROTOCOLS...';
+    if (progress < 70) return 'LOADING INTERFACE METRICS...';
+    if (progress < 95) return 'OPTIMIZING SWEETO HUBS...';
+    return 'CORE MATRIX DEPLOYED SUCCESSFULLY!';
+  };
+
   return (
     <AnimatePresence>
       {show && (
@@ -43,50 +52,66 @@ export default function LoadingScreen({ isVisible }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, y: -25, scale: 0.98 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-[9999] bg-[#060a13] flex flex-col items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center overflow-hidden px-6"
         >
-          {/* Radiant tech-luxury ambient radial flows */}
+          {/* Subtle tech ambient grid background or radial flow */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.08),rgba(255,255,255,0))]"></div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[140px] pointer-events-none"></div>
-          <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
           {/* Central content cluster */}
-          <div className="relative flex flex-col items-center space-y-8 text-center px-6">
+          <div className="relative flex flex-col items-center w-full max-w-[500px] text-center">
             
-            {/* Elegant glassmorphic pulsing logo unit */}
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              {/* Outer pulsing cyber-glow ring */}
-              <div className="absolute inset-0 rounded-3xl border border-blue-500/20 animate-pulse scale-110 blur-[2px]"></div>
+            {/* Logo panel card */}
+            <div className="relative w-full bg-[#030712] border border-slate-900/60 rounded-3xl p-12 sm:p-16 flex flex-col items-center justify-center shadow-2xl overflow-hidden mb-8">
+              {/* Ambient background glow inside the card */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-blue-500/5 rounded-full blur-[60px] pointer-events-none"></div>
               
-              {/* Delicate orbital dashed rotation */}
-              <div className="absolute inset-0 rounded-[2rem] border border-dashed border-blue-500/10 animate-[spin_12s_linear_infinite]"></div>
+              {/* Logo with pop-and-bounce letter animation */}
+              <SweetoLogo size={230} animate={true} className="relative z-10 drop-shadow-[0_0_15px_rgba(96,165,250,0.18)]" />
               
-              {/* Frosted premium viewport container with our Sweeto logo inside */}
-              <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 flex items-center justify-center shadow-2xl p-1.5">
-                <SweetoLogo size={70} className="w-full h-full drop-shadow-[0_0_12px_rgba(0,0,255,0.4)]" />
+              {/* EST. 2026 tag */}
+              <div className="w-full flex justify-end mt-4 pr-2 relative z-10">
+                <span className="text-[10px] font-mono tracking-[0.25em] text-[#00ffcc]/70">
+                  EST. 2026
+                </span>
               </div>
-            </div>
-
-            {/* Custom high-end text typography */}
-            <div className="space-y-2">
-              <h1 className="text-lg font-black tracking-[0.4em] uppercase text-white">
-                SWEETO<span className="text-blue-500">HUB</span>
-              </h1>
-              <p className="text-[8px] font-black uppercase tracking-[0.6em] text-slate-500">
-                TECH-LUXURY EXPERIENCES
-              </p>
             </div>
 
             {/* Glowing neon stream progress bar */}
-            <div className="w-52 space-y-3.5 pt-2">
-              <div className="h-[3px] w-full bg-white/5 rounded-full overflow-hidden relative border border-white/5">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-indigo-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-                  style={{ width: `${progress}%`, transition: 'width 30ms linear' }}
-                ></div>
+            <div className="w-full max-w-[480px] space-y-4 pt-2">
+              {/* Text row: Status message and Percentage */}
+              <div className="flex justify-between items-center px-1 text-[10px] sm:text-xs font-mono tracking-widest">
+                <span className="text-[#00ffcc] uppercase text-start font-bold">{getStatusText()}</span>
+                <span className="text-[#ff00cc] font-black">{Math.floor(progress)}%</span>
               </div>
-              <div className="flex justify-between items-center px-1 text-[8px] font-black text-slate-500 uppercase tracking-widest">
-                <span>CONNECTING</span>
-                <span className="text-blue-500 font-black">{Math.floor(progress)}%</span>
+              
+              {/* Bar container with glowing borders */}
+              <div className="h-4 w-full bg-slate-950/80 rounded-full relative border border-fuchsia-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)] flex items-center px-1">
+                {/* Gradient Progress Fill */}
+                <div 
+                  className="h-2 bg-gradient-to-r from-blue-600 via-purple-500 to-fuchsia-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                  style={{ width: `${Math.max(2, progress)}%`, transition: 'width 30ms linear' }}
+                ></div>
+                
+                {/* Sliding Shopping Cart Icon */}
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-black border-2 border-fuchsia-500 flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.8)]"
+                  style={{ left: `${Math.max(2, Math.min(98, progress))}%`, transition: 'left 30ms linear' }}
+                >
+                  <svg 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="w-4 h-4 text-white"
+                  >
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                  </svg>
+                </div>
               </div>
             </div>
 
