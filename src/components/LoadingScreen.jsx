@@ -7,18 +7,12 @@ export default function LoadingScreen({ isVisible }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // If the parent is not loading, start closing sequence
-    if (!isVisible) {
-      setShow(false);
-      return;
-    }
-
     setShow(true);
     setProgress(0);
 
-    // Smoothly animate progress bar to 100% over exactly 2000ms (2 seconds)
+    // Smoothly animate progress bar to 100% over exactly 2500ms (2.5 seconds)
     const intervalTime = 20; // 20ms steps
-    const totalDuration = 2000; // 2 seconds
+    const totalDuration = 2500; // 2.5 seconds
     const step = 100 / (totalDuration / intervalTime);
 
     const timer = setInterval(() => {
@@ -26,7 +20,7 @@ export default function LoadingScreen({ isVisible }) {
         if (prev >= 100) {
           clearInterval(timer);
           // Complete load and fade out smoothly
-          setTimeout(() => setShow(false), 200);
+          setTimeout(() => setShow(false), 300);
           return 100;
         }
         return prev + step;
@@ -34,7 +28,7 @@ export default function LoadingScreen({ isVisible }) {
     }, intervalTime);
 
     return () => clearInterval(timer);
-  }, [isVisible]);
+  }, []);
 
   // Determine status message based on current progress
   const getStatusText = () => {
