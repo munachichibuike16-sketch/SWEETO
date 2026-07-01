@@ -64,14 +64,14 @@ const SweetoLogo = ({ size = 120, className = '', animate = false }) => {
             fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
             fontWeight="900"
             textAnchor="middle"
-            initial={{ y: el.y - 70, opacity: 0 }}
-            whileInView={{ y: el.y + 6.2, opacity: 1 }}
+            style={{ transformOrigin: `${el.x}px ${el.y}px` }}
+            initial={{ scale: 0, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
             transition={{
               type: 'spring',
-              stiffness: 110,
-              damping: 10,
-              mass: 0.8,
+              stiffness: 240,
+              damping: 12,
               delay: i * 0.08
             }}
           >
