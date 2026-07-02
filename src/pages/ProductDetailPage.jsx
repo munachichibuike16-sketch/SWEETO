@@ -493,9 +493,7 @@ const ProductDetailPage = () => {
 
   const shareProduct = () => {
     const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile && navigator.share) {
+    if (navigator.share) {
       navigator.share({
         title: product.name,
         text: lang === 'fr' 
@@ -504,8 +502,10 @@ const ProductDetailPage = () => {
         url: shareUrl,
       })
       .catch((err) => {
-        console.warn("Native share failed, showing custom share modal:", err);
-        setIsShareModalOpen(true);
+        if (err.name !== 'AbortError') {
+          console.warn("Native share failed, showing custom share modal:", err);
+          setIsShareModalOpen(true);
+        }
       });
     } else {
       setIsShareModalOpen(true);
@@ -1568,7 +1568,7 @@ const ProductDetailPage = () => {
               </div>
 
               {/* Share Options Grid */}
-              <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className={`grid gap-3 mb-6 ${navigator.share ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 {/* WhatsApp */}
                 <button
                   onClick={() => {
@@ -1579,10 +1579,10 @@ const ProductDetailPage = () => {
                     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
                     setIsShareModalOpen(false);
                   }}
-                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 transition-all cursor-pointer group"
+                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 transition-all cursor-pointer group"
                 >
-                  <i className="fa-brands fa-whatsapp text-2xl mb-2 transition-transform group-hover:scale-110"></i>
-                  <span className="text-[10px] font-black uppercase tracking-wider">WhatsApp</span>
+                  <i className="fa-brands fa-whatsapp text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
+                  <span className="text-[9px] font-black uppercase tracking-wider">WhatsApp</span>
                 </button>
 
                 {/* Facebook */}
@@ -1592,10 +1592,10 @@ const ProductDetailPage = () => {
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
                     setIsShareModalOpen(false);
                   }}
-                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/30 transition-all cursor-pointer group"
+                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/30 transition-all cursor-pointer group"
                 >
-                  <i className="fa-brands fa-facebook text-2xl mb-2 transition-transform group-hover:scale-110"></i>
-                  <span className="text-[10px] font-black uppercase tracking-wider">Facebook</span>
+                  <i className="fa-brands fa-facebook text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
+                  <span className="text-[9px] font-black uppercase tracking-wider">Facebook</span>
                 </button>
 
                 {/* Copy Link */}
@@ -1606,11 +1606,32 @@ const ProductDetailPage = () => {
                     showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
                     setIsShareModalOpen(false);
                   }}
-                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/30 transition-all cursor-pointer group"
+                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/30 transition-all cursor-pointer group"
                 >
-                  <i className="fa-solid fa-link text-2xl mb-2 transition-transform group-hover:scale-110"></i>
-                  <span className="text-[10px] font-black uppercase tracking-wider">{lang === 'fr' ? 'Copier' : 'Copy'}</span>
+                  <i className="fa-solid fa-link text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
+                  <span className="text-[9px] font-black uppercase tracking-wider">{lang === 'fr' ? 'Copier' : 'Copy'}</span>
                 </button>
+
+                {/* More / Device Share */}
+                {navigator.share && (
+                  <button
+                    onClick={() => {
+                      const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                      navigator.share({
+                        title: product.name,
+                        text: lang === 'fr' 
+                          ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
+                          : `Check out ${product.name} on SWEETO! ⚡`,
+                        url: shareUrl,
+                      }).catch((err) => console.log("Native share failed in modal:", err));
+                      setIsShareModalOpen(false);
+                    }}
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30 transition-all cursor-pointer group"
+                  >
+                    <i className="fa-solid fa-share-nodes text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
+                    <span className="text-[9px] font-black uppercase tracking-wider">{lang === 'fr' ? 'Plus' : 'More'}</span>
+                  </button>
+                )}
               </div>
 
               {/* Direct Link Input Box */}

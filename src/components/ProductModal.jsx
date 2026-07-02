@@ -182,20 +182,21 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
       url: shareUrl,
     };
     try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (isMobile && navigator.share) {
+      if (navigator.share) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareUrl);
         showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied to clipboard! 🔗", "success");
       }
     } catch (err) {
-      console.warn("Error sharing, using clipboard fallback:", err);
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied to clipboard! 🔗", "success");
-      } catch (clipErr) {
-        console.error("Clipboard copy failed:", clipErr);
+      if (err.name !== 'AbortError') {
+        console.warn("Error sharing, using clipboard fallback:", err);
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied to clipboard! 🔗", "success");
+        } catch (clipErr) {
+          console.error("Clipboard copy failed:", clipErr);
+        }
       }
     }
   };
