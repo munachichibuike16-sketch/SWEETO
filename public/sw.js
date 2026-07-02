@@ -89,7 +89,36 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-While-Revalidate for other static assets (JS, CSS, images, fonts)
+  // Cache-First strategy for images (to avoid saturating browser network sockets in the background)
+  const isImageRequest = 
+    url.pathname.match(/\.(png|jpg|jpeg|webp|svg|gif|ico)$/i) || 
+    url.pathname.includes('/storage/v1/object/public/');
+
+  if (isImageRequest) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const clone = networkResponse.clone();
+              caches.open(CACHE_NAME)
+                .then((cache) => cache.put(event.request, clone).catch(() => {}))
+                .catch(() => {});
+            }
+            return networkResponse;
+          })
+          .catch(() => {
+            // Ignore offline image errors
+          });
+      })
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for other static assets (JS, CSS, fonts)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)

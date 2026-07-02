@@ -206,8 +206,8 @@ export const StoreProvider = ({ children }) => {
             }
           });
 
-          // Check for push subscription permission
-          if (Notification.permission === 'granted') {
+          // Check for push subscription permission (skip if already registered to speed up load times)
+          if (Notification.permission === 'granted' && localStorage.getItem('sweeto_push_registered') !== 'true') {
             try {
               // 1. Fetch public VAPID key from Supabase settings table
               const { data: settingData, error: settingErr } = await supabase
@@ -258,6 +258,7 @@ export const StoreProvider = ({ children }) => {
                   role: 'customer'
                 })
               }).catch(err => console.warn('Could not sync push subscription to local backend:', err));
+              localStorage.setItem('sweeto_push_registered', 'true');
             } catch (err) {
               console.warn('⚠️ Web Push subscription failed:', err);
             }
