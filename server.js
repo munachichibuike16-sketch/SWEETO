@@ -2439,7 +2439,7 @@ app.use((req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`EAS Local Server running at http://localhost:${port}`);
+  console.log(`SWEETO HUB Local Server running at http://localhost:${port}`);
   
   // Keep-alive / Heartbeat
   setInterval(() => {
