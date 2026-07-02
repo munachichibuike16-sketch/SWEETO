@@ -478,8 +478,7 @@ export const StoreProvider = ({ children }) => {
         { data: sectionsData },
         { data: brandsData },
         { data: ordersData },
-        { data: reviewsData },
-        { data: visitorData }
+        { data: reviewsData }
       ] = await Promise.all([
         supabase.from('categories').select('*'),
         supabase.from('products').select('*'),
@@ -488,30 +487,37 @@ export const StoreProvider = ({ children }) => {
         supabase.from('sections').select('*'),
         supabase.from('brands').select('*'),
         isAdminPage ? supabase.from('orders').select('*') : Promise.resolve({ data: [] }),
-        supabase.from('reviews').select('*').eq('is_approved', 1),
-        supabase.from('visitor_log').select('page_path, event_type').in('event_type', ['product viewed', 'product liked', 'product unliked'])
+        supabase.from('reviews').select('*').eq('is_approved', 1)
       ]);
 
-      if (visitorData) {
-        const viewsObj = {};
-        const likesObj = {};
-        visitorData.forEach(row => {
-          if (row.page_path && row.page_path.includes('/product/')) {
-            const match = row.page_path.match(/\/product\/(\d+)/);
-            if (match) {
-              const pId = match[1];
-              if (row.event_type === 'product viewed') {
-                viewsObj[pId] = (viewsObj[pId] || 0) + 1;
-              } else if (row.event_type === 'product liked') {
-                likesObj[pId] = (likesObj[pId] || 0) + 1;
-              } else if (row.event_type === 'product unliked') {
-                likesObj[pId] = (likesObj[pId] || 0) - 1;
+      try {
+        const { data: statsData, error: statsError } = await supabase.from('product_stats').select('*');
+        if (statsError) throw statsError;
+
+        if (statsData) {
+          const viewsObj = {};
+          const likesObj = {};
+          statsData.forEach(row => {
+            if (row.page_path && row.page_path.includes('/product/')) {
+              const match = row.page_path.match(/\/product\/(\d+)/);
+              if (match) {
+                const pId = match[1];
+                const cnt = Number(row.count) || 0;
+                if (row.event_type === 'product viewed') {
+                  viewsObj[pId] = (viewsObj[pId] || 0) + cnt;
+                } else if (row.event_type === 'product liked') {
+                  likesObj[pId] = (likesObj[pId] || 0) + cnt;
+                } else if (row.event_type === 'product unliked') {
+                  likesObj[pId] = (likesObj[pId] || 0) - cnt;
+                }
               }
             }
-          }
-        });
-        setProductViewsMap(viewsObj);
-        setProductLikesMap(likesObj);
+          });
+          setProductViewsMap(viewsObj);
+          setProductLikesMap(likesObj);
+        }
+      } catch (err) {
+        console.warn('Could not read product stats view. Please run add_product_stats_view.sql in Supabase Console.', err);
       }
 
       if (catData) {
