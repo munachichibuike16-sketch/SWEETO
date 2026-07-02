@@ -34,7 +34,7 @@ import GlobalLightbox from './components/GlobalLightbox';
 import BackToTop from './components/BackToTop';
 import SwipeGestures from './components/SwipeGestures';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
-import CustomerChatWidget from './components/CustomerChatWidget';
+import FloatingChatButton from './components/FloatingChatButton';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -1395,6 +1395,7 @@ function App() {
         <ScrollToTop />
         <GlobalLightbox />
         <RouteTracker />
+        <FloatingChatButton />
         <Routes>
           <Route path="/" element={<Storefront viewMode="home" />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
