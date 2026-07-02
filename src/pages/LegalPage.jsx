@@ -23,7 +23,69 @@ const LegalPage = ({ type = 'privacy' }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   
-  const content = settings?.[`footer_content_${type}`] || `No ${type} content has been provided yet. Please contact support.`;
+  const defaultContent = {
+    privacy: `At SWEETO HUB, we respect your privacy and are committed to protecting your personal data.
+
+1. INFORMATION WE COLLECT
+We collect personal information that you provide to us when placing an order, creating an account, or contacting support. This includes your name, email address, delivery address, phone number, and purchase history.
+
+2. HOW WE USE YOUR INFORMATION
+We use your information exclusively to:
+• Process, verify, and ship your premium tech orders.
+• Provide real-time delivery status updates and customer care.
+• Customize your user experience and language preferences.
+• Prevent fraud and ensure security.
+
+3. COOKIES & TRACKING
+We use secure cookies to keep track of your shopping cart items, current language preferences, and account session states.
+
+4. THIRD-PARTY SHARING
+We do not sell your personal data. We only share necessary details with verified third-party payment gateways and shipping partners required to complete your transactions.
+
+5. YOUR RIGHTS
+Under applicable laws, you have the right to request access, correction, or deletion of your personal data stored with us at any time.`,
+
+    terms: `Welcome to SWEETO HUB. These Terms & Conditions govern your use of our premium web platform.
+
+1. ACCEPTANCE OF TERMS
+By accessing or purchasing from SWEETO HUB, you agree to comply with and be bound by these terms. If you do not agree, please do not use our services.
+
+2. STORE TRANSACTIONS
+• Product availability, pricing, and promotional codes are subject to change without notice.
+• All payment transactions are routed through encrypted gateways. We reserve the right to cancel or hold orders that fail security checks.
+• Prices are displayed in your local currency (XOF, USD, etc.) as set by the store settings.
+
+3. SHIPPING & RETURNS
+• Delivery estimates are provided during checkout. SWEETO HUB is not liable for custom delays or transport events beyond our control.
+• We offer a premium 14-day exchange warranty for verified defective items. Please contact our support team to initiate a return.
+
+4. INTELLECTUAL PROPERTY
+All website logos, circular branding animations, images, text, design layouts, and codebases are the exclusive intellectual property of SWEETO HUB.
+
+5. ACCESSIBILITY & CONDUCT
+Users are prohibited from attempting to bypass site security, upload malicious scripts, or scrape database contents.`,
+
+    security: `Security is at the heart of SWEETO HUB. We deploy tech-luxury protection systems to safeguard your account and transaction history.
+
+1. DATA ENCRYPTION & SSL
+All communication between your browser and our servers is fully encrypted using industry-standard SSL/TLS 1.3 protocols, preventing interception of sensitive details.
+
+2. SECURE AUTHENTICATION
+• Administrative accounts use secure JWT (JSON Web Tokens) for authentication.
+• User sessions are protected against Cross-Site Request Forgery (CSRF) and session-jacking attempts.
+
+3. DATABASE & STORAGE SECURITY
+• Customer databases are secured with strict access controls. 
+• Payment processing is PCI-DSS compliant. Card details are processed directly by payment networks and are never stored on our local database.
+
+4. ACCOUNT SECURITY RECOMMENDATIONS
+We advise all users to use strong, unique passwords and sign out of their accounts when using shared or public devices.
+
+5. VULNERABILITY MONITORING
+Our servers undergo regular automated security scans to detect, block, and mitigate potential threats, keeping your shopping experience safe and uninterrupted.`
+  };
+
+  const content = settings?.[`footer_content_${type}`] || defaultContent[type] || `No ${type} content has been provided yet. Please contact support.`;
   
   const icons = {
     privacy: Shield,
