@@ -2380,6 +2380,15 @@ app.get('/share/product/:id', (req, res) => {
       ? `${priceFormatted} - ${product.description || 'Check out this product on SWEETO!'}` 
       : (product.description || 'Check out this product on SWEETO!');
 
+    // Dynamically resolve frontend URL (localhost in dev, swto.site in production)
+    const getFrontendUrl = () => {
+      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        return 'http://localhost:5173';
+      }
+      return 'https://swto.site';
+    };
+    const frontendUrl = getFrontendUrl();
+
     res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2403,13 +2412,13 @@ app.get('/share/product/:id', (req, res) => {
   
   <!-- Redirect immediately to frontend route -->
   <script>
-    window.location.replace("/#/product/${product.id}");
+    window.location.replace("${frontendUrl}/#/product/${product.id}");
   </script>
 </head>
 <body>
   <div style="font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #090d16; color: white;">
     <h2 style="margin-bottom: 8px;">Redirecting you to ${product.name}...</h2>
-    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="/#/product/${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
+    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="${frontendUrl}/#/product/${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
   </div>
 </body>
 </html>`);
