@@ -26,7 +26,7 @@
 // Dynamic PWA Manifest & Favicon Switcher (Storefront vs Admin Dashboard)
 function updatePWAManifestAndIcons() {
   const hash = window.location.hash || '';
-  const isAdminRoute = hash.includes('/dashboard') || hash.includes('/admin');
+  const isAdminRoute = hash.includes('/dashboard') || hash.includes('/admin') || hash.includes('/chat');
 
   // 1. Update manifest link
   let manifestLink = document.querySelector('link[rel="manifest"]');
