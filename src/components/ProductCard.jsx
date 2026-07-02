@@ -47,20 +47,8 @@ const getSoldCount = (product) => {
   return product.sold_count || 0;
 };
 
-const getViewsCount = (productId) => {
-  const seed = (Number(productId) || 0);
-  const base = ((seed * 17) % 230) + 75; // Between 75 and 305 views
-  
-  let localViews = 0;
-  try {
-    localViews = Number(localStorage.getItem(`sweeto_views_${productId}`) || 0);
-  } catch (e) {}
-  
-  return base + localViews;
-};
-
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
-  const { settings, openGlobalLightbox } = useStore();
+  const { settings, openGlobalLightbox, productViewsMap } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
   const { addToCart } = useCart();
@@ -273,23 +261,23 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
         ) : (
           <div className="flex flex-col flex-1 py-0.5 text-start">
             {/* Sold Count with Red Flame and Views Count */}
-            <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] sm:text-[11px] font-bold mb-1">
-              <span className="text-[#ff3b30] flex items-center gap-0.5">
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs sm:text-[13px] font-extrabold mb-1">
+              <span className="text-[#ff3b30] flex items-center gap-1">
                 <span>🔥</span>
                 <span>
                   {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
                 </span>
               </span>
-              <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-0.5 font-extrabold">
+              <span className="text-slate-350 dark:text-slate-700">•</span>
+              <span className="text-blue-500 dark:text-blue-400 flex items-center gap-1 font-black">
                 <span>👁️</span>
                 <span>
-                  {getViewsCount(product.id)} {lang === 'fr' ? 'vues' : 'views'}
+                  {productViewsMap[product.id] || 0} {lang === 'fr' ? 'vues' : 'views'}
                 </span>
               </span>
               {reviews.length > 0 && (
                 <>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-slate-350 dark:text-slate-700">•</span>
                   <div className="flex items-center gap-0.5 text-amber-500 font-bold">
                     <Star size={11} fill="currentColor" />
                     <span>{averageRating}</span>

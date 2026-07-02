@@ -117,6 +117,23 @@ export const StoreProvider = ({ children }) => {
   const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [realtimeNotification, setRealtimeNotification] = useState(null);
+  const [productViewsMap, setProductViewsMap] = useState({});
+
+  const incrementProductView = useCallback((productId) => {
+    if (!productId) return;
+    const page_path = `/product/${productId}`;
+    if (supabase) {
+      supabase.from('visitor_log').insert([{
+        page_path,
+        event_type: 'product viewed',
+        country: window.localStorage.getItem('user_country') || 'Unknown'
+      }]).then(() => {}).catch(() => {});
+    }
+    setProductViewsMap(prev => ({
+      ...prev,
+      [productId]: (prev[productId] || 0) + 1
+    }));
+  }, []);
 
   const [globalLightbox, setGlobalLightbox] = useState({
     isOpen: false,
@@ -444,7 +461,8 @@ export const StoreProvider = ({ children }) => {
         { data: sectionsData },
         { data: brandsData },
         { data: ordersData },
-        { data: reviewsData }
+        { data: reviewsData },
+        { data: visitorData }
       ] = await Promise.all([
         supabase.from('categories').select('*'),
         supabase.from('products').select('*'),
@@ -453,8 +471,23 @@ export const StoreProvider = ({ children }) => {
         supabase.from('sections').select('*'),
         supabase.from('brands').select('*'),
         isAdminPage ? supabase.from('orders').select('*') : Promise.resolve({ data: [] }),
-        supabase.from('reviews').select('*').eq('is_approved', 1)
+        supabase.from('reviews').select('*').eq('is_approved', 1),
+        supabase.from('visitor_log').select('page_path').eq('event_type', 'product viewed')
       ]);
+
+      if (visitorData) {
+        const viewsObj = {};
+        visitorData.forEach(row => {
+          if (row.page_path && row.page_path.includes('/product/')) {
+            const match = row.page_path.match(/\/product\/(\d+)/);
+            if (match) {
+              const pId = match[1];
+              viewsObj[pId] = (viewsObj[pId] || 0) + 1;
+            }
+          }
+        });
+        setProductViewsMap(viewsObj);
+      }
 
       if (catData) {
         // Fetch local SQLite categories in parallel if on localhost to merge show_daily_deals
@@ -969,6 +1002,8 @@ export const StoreProvider = ({ children }) => {
       openGlobalLightbox,
       closeGlobalLightbox,
       setGlobalLightboxIndex,
+      productViewsMap,
+      incrementProductView,
       refreshData: () => fetchStoreData(true) 
     }}>
       {children}

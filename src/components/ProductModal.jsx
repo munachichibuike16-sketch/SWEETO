@@ -14,7 +14,7 @@ import { supabase } from '../lib/supabase';
 import SweetoLogo from './SweetoLogo';
 
 const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductClick }) => {
-  const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox } = useStore();
+  const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox, productViewsMap, incrementProductView } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
@@ -164,13 +164,10 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
       
       if (isOpen) {
         addToRecent(product);
-        try {
-          const currentViews = Number(localStorage.getItem(`sweeto_views_${product.id}`) || 0);
-          localStorage.setItem(`sweeto_views_${product.id}`, String(currentViews + 1));
-        } catch (e) {}
+        incrementProductView(product.id);
       }
     }
-  }, [product?.id, isOpen]);
+  }, [product?.id, isOpen, incrementProductView]);
 
   const handleToggleWishlist = () => {
     toggleWishlist(product);
@@ -238,17 +235,6 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
     const message = `Bonjour SWEETO-HUB, je souhaite commander "${product.name}" au prix de ${product.price?.toLocaleString()} ${settings?.currency || 'FCFA'}.`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
-  };
-
-  const getViewsCount = (productId) => {
-    if (!productId) return 0;
-    const seed = (Number(productId) || 0);
-    const base = ((seed * 17) % 230) + 75; // Between 75 and 305 views
-    let localViews = 0;
-    try {
-      localViews = Number(localStorage.getItem(`sweeto_views_${productId}`) || 0);
-    } catch (e) {}
-    return base + localViews;
   };
 
   const averageRating = reviews.length > 0 
@@ -559,9 +545,9 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <Star size={12} fill="currentColor" />
                           <span>{averageRating}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-black text-xs px-2.5 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-800">
-                          <span>👁️</span>
-                          <span>{getViewsCount(product.id)} {lang === 'fr' ? 'vues' : 'views'}</span>
+                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-extrabold text-sm px-3.5 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-900/50 shadow-sm">
+                          <span className="text-base">👁️</span>
+                          <span>{productViewsMap[product.id] || 0} {lang === 'fr' ? 'vues' : 'views'}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
