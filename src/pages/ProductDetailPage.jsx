@@ -632,7 +632,7 @@ const ProductDetailPage = () => {
           onClick={() => navigate(-1)} 
           className="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors z-20"
         >
-          <ChevronLeft size={20} strokeWidth={3} />
+          <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none" />
         </button>
 
         {/* Top-right: Zoom & Share Buttons */}
@@ -641,13 +641,13 @@ const ProductDetailPage = () => {
             onClick={() => openGlobalLightbox(imagesList, activeImageIndex, product.category, product.id)} 
             className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
-            <Search size={18} />
+            <Search size={18} className="pointer-events-none" />
           </button>
           <button 
             onClick={shareProduct} 
             className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
-            <Share2 size={18} />
+            <Share2 size={18} className="pointer-events-none" />
           </button>
         </div>
 
