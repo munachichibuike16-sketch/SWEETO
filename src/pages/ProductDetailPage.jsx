@@ -638,7 +638,10 @@ const ProductDetailPage = () => {
         {/* Top-right: Zoom & Share Buttons */}
         <div className="absolute top-4 right-4 flex items-center gap-2.5 z-20">
           <button 
-            onClick={() => openGlobalLightbox(imagesList, activeImageIndex, product.category, product.id)} 
+            onClick={() => {
+              const event = new CustomEvent('open-search-modal');
+              window.dispatchEvent(event);
+            }} 
             className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
           >
             <Search size={18} className="pointer-events-none" />
