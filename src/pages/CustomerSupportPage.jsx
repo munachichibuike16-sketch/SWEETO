@@ -7,6 +7,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
 import { uploadToStorage } from '../utils/storageHelper';
 import SweetoLogo from '../components/SweetoLogo';
+import { apiFetch } from '../utils/api';
 
 export default function CustomerSupportPage() {
   const { lang } = useLanguage();
@@ -191,6 +192,18 @@ export default function CustomerSupportPage() {
       ]);
 
       if (error) throw error;
+      
+      // Trigger background push notification for admins
+      apiFetch('/push/notify-chat-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: username,
+          messageText: messageText,
+          sessionId: sessionId,
+          targetRole: 'admin'
+        })
+      }).catch(err => console.warn('Could not trigger admin push notification:', err));
     } catch (err) {
       console.error('Failed to send message:', err);
       setNewMessageText(messageText);
@@ -222,6 +235,18 @@ export default function CustomerSupportPage() {
 
       if (error) throw error;
       showToast(lang === 'fr' ? 'Image envoyée ! 📸' : 'Image sent! 📸', 'success');
+
+      // Trigger background push notification for admins
+      apiFetch('/push/notify-chat-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: username,
+          messageText: publicUrl,
+          sessionId: sessionId,
+          targetRole: 'admin'
+        })
+      }).catch(err => console.warn('Could not trigger admin push notification:', err));
     } catch (err) {
       console.error('Image upload failed:', err);
       showToast('Image upload failed.', 'error');
@@ -258,6 +283,18 @@ export default function CustomerSupportPage() {
 
           if (error) throw error;
           showToast(lang === 'fr' ? 'Localisation partagée ! 📍' : 'Location shared! 📍', 'success');
+
+          // Trigger background push notification for admins
+          apiFetch('/push/notify-chat-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              senderName: username,
+              messageText: mapsUrl,
+              sessionId: sessionId,
+              targetRole: 'admin'
+            })
+          }).catch(err => console.warn('Could not trigger admin push notification:', err));
         } catch (err) {
           console.error('Failed to send location message:', err);
         } finally {

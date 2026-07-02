@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin, Plus, Image, Loader2, Download, CheckCheck } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { uploadToStorage } from '../utils/storageHelper';
+import { apiFetch } from '../utils/api';
 
 const isImageUrl = (url) => {
   if (typeof url !== 'string') return false;
@@ -98,6 +99,18 @@ export default function LiveChatManagement() {
 
       if (error) throw error;
       showToast('Image sent successfully! 📸', 'success');
+
+      // Trigger background push notification for customer
+      apiFetch('/push/notify-chat-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: 'SWEETO HUB',
+          messageText: publicUrl,
+          sessionId: selectedSessionId,
+          targetRole: 'customer'
+        })
+      }).catch(err => console.warn('Could not trigger customer push notification:', err));
     } catch (err) {
       console.error('Admin image upload failed:', err);
       showToast('Image upload failed.', 'error');
@@ -255,6 +268,18 @@ export default function LiveChatManagement() {
       ]);
 
       if (error) throw error;
+
+      // Trigger background push notification for customer
+      apiFetch('/push/notify-chat-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: 'SWEETO HUB',
+          messageText: messageText,
+          sessionId: selectedSessionId,
+          targetRole: 'customer'
+        })
+      }).catch(err => console.warn('Could not trigger customer push notification:', err));
     } catch (err) {
       console.error('Failed to send admin reply:', err);
       setReplyText(messageText);

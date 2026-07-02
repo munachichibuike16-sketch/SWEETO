@@ -924,6 +924,32 @@ app.post('/api/push/notify-new-product', authenticateAdmin, (req, res) => {
   }
 });
 
+// Trigger push notification for a chat message
+app.post('/api/push/notify-chat-message', async (req, res) => {
+  try {
+    const { senderName, messageText, sessionId, targetRole } = req.body;
+    if (!senderName || !messageText) {
+      return res.status(400).json({ error: 'senderName and messageText are required' });
+    }
+
+    const role = targetRole || 'admin';
+    const url = '/#/chat';
+    const displayBody = messageText.startsWith('http') ? 'Sent a photo 📸' : messageText;
+
+    await sendBackgroundPushNotification(
+      `💬 ${senderName}`,
+      displayBody,
+      url,
+      null,
+      role
+    );
+    res.json({ success: true, message: 'Chat push notification triggered.' });
+  } catch (err) {
+    console.error('Error sending chat push notification:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/push/stats', authenticateAdmin, (req, res) => {
   try {
     const total = db.prepare('SELECT COUNT(*) as count FROM push_subscriptions').get().count;

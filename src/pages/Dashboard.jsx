@@ -291,7 +291,9 @@ const Dashboard = () => {
           setHasUnreadChat(true);
           
           if (activeTab !== 'Live Chat') {
-            const displayTxt = isImageUrl(newMsg.message_text) ? 'Sent a photo 📸' : newMsg.message_text.substring(0, 40);
+            const displayTxt = isImageUrl(newMsg.message_text) 
+              ? 'Sent a photo 📸' 
+              : (newMsg.message_text ? newMsg.message_text.substring(0, 40) : 'Sent a message');
             showToast(`💬 ${newMsg.customer_name}: ${displayTxt}`, 'info');
           }
         }
