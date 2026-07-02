@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams, useLocation } from 'react-router-dom';
-import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon, Heart } from 'lucide-react';
+import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon, Heart, Truck, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -999,16 +999,95 @@ const Storefront = ({ viewMode = 'home' }) => {
                         }
                       })()}
 
-                      {/* Brand Logo Showcase Section */}
-                      <div className="w-full max-w-[1600px] mx-auto px-4 md:px-12 my-6 flex justify-center">
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.6 }}
-                          className="w-full max-w-[220px] flex flex-col items-center justify-center"
-                        >
-                          <SweetoLogo size="100%" animate={true} className="w-full drop-shadow-[0_0_12px_rgba(96,165,250,0.15)]" />
-                        </motion.div>
+                      {/* Premium Feature Showcase Bento Bar */}
+                      <div className="w-full max-w-[1600px] mx-auto px-4 md:px-12 my-6">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                          
+                          {/* Feature 1 */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.05 }}
+                            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                            className="bg-white dark:bg-slate-900/40 backdrop-blur-md border border-slate-100 dark:border-white/5 rounded-3xl p-5 flex items-center gap-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_40px_rgba(59,130,246,0.06)] dark:hover:shadow-[0_15px_40px_rgba(59,130,246,0.02)] transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                              <Truck size={22} className="stroke-[2.25] pointer-events-none" />
+                            </div>
+                            <div className="text-left">
+                              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                {lang === 'fr' ? 'Livraison Gratuite' : 'Free Delivery'}
+                              </h4>
+                              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                                {lang === 'fr' ? 'Sur toutes vos commandes' : 'On all your orders'}
+                              </p>
+                            </div>
+                          </motion.div>
+
+                          {/* Feature 2 */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                            className="bg-white dark:bg-slate-900/40 backdrop-blur-md border border-slate-100 dark:border-white/5 rounded-3xl p-5 flex items-center gap-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_40px_rgba(59,130,246,0.06)] dark:hover:shadow-[0_15px_40px_rgba(59,130,246,0.02)] transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                              <ShieldCheck size={22} className="stroke-[2.25] pointer-events-none" />
+                            </div>
+                            <div className="text-left">
+                              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                {lang === 'fr' ? 'Paiement Sécurisé' : 'Secure Payment'}
+                              </h4>
+                              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                                {lang === 'fr' ? 'Protection cryptée 100%' : '100% encrypted protection'}
+                              </p>
+                            </div>
+                          </motion.div>
+
+                          {/* Feature 3 */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.15 }}
+                            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                            className="bg-white dark:bg-slate-900/40 backdrop-blur-md border border-slate-100 dark:border-white/5 rounded-3xl p-5 flex items-center gap-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_40px_rgba(59,130,246,0.06)] dark:hover:shadow-[0_15px_40px_rgba(59,130,246,0.02)] transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                              <RefreshCw size={22} className="stroke-[2.25] pointer-events-none" />
+                            </div>
+                            <div className="text-left">
+                              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                {lang === 'fr' ? 'Échange Facile' : 'Easy Exchange'}
+                              </h4>
+                              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                                {lang === 'fr' ? 'Garantie de 14 jours' : 'Hassle-free 14-day warranty'}
+                              </p>
+                            </div>
+                          </motion.div>
+
+                          {/* Feature 4 */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                            className="bg-white dark:bg-slate-900/40 backdrop-blur-md border border-slate-100 dark:border-white/5 rounded-3xl p-5 flex items-center gap-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_40px_rgba(59,130,246,0.06)] dark:hover:shadow-[0_15px_40px_rgba(59,130,246,0.02)] transition-all group"
+                          >
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                              <Headphones size={22} className="stroke-[2.25] pointer-events-none" />
+                            </div>
+                            <div className="text-left">
+                              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                {lang === 'fr' ? 'Support 24/7' : '24/7 Support'}
+                              </h4>
+                              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                                {lang === 'fr' ? 'Assistance dédiée' : 'Dedicated care service'}
+                              </p>
+                            </div>
+                          </motion.div>
+
+                        </div>
                       </div>
 
                       {/* Interleaved Content Sections & Products */}
