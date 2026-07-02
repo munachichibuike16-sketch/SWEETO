@@ -1,6 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Send, User, Phone, MessageSquare, Search, Trash2 } from 'lucide-react';
+import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin } from 'lucide-react';
+
+const isImageUrl = (url) => {
+  if (typeof url !== 'string') return false;
+  return url.startsWith('http') && (
+    url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || 
+    url.includes('/uploads/upload_')
+  );
+};
+
+const isMapUrl = (url) => {
+  if (typeof url !== 'string') return false;
+  return url.startsWith('http') && url.includes('google.com/maps');
+};
 
 export default function LiveChatManagement() {
   const [messages, setMessages] = useState([]);
@@ -267,7 +280,31 @@ export default function LiveChatManagement() {
                           : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-white/5 rounded-tl-none'
                       }`}
                     >
-                      {msg.message_text}
+                      {isImageUrl(msg.message_text) ? (
+                        <img 
+                          src={msg.message_text} 
+                          alt="Asset shared" 
+                          className="max-w-[240px] rounded-xl cursor-zoom-in hover:opacity-95"
+                          onClick={() => window.open(msg.message_text, '_blank')}
+                        />
+                      ) : isMapUrl(msg.message_text) ? (
+                        <div className="flex flex-col gap-1.5 leading-normal min-w-[200px]">
+                          <span className="text-[10px] font-black text-red-500 uppercase tracking-wide flex items-center gap-1">
+                            <MapPin size={12} className="animate-bounce" /> Location Shared
+                          </span>
+                          <span className="text-[11px] font-bold">Delivery address pinned by client.</span>
+                          <a 
+                            href={msg.message_text} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="mt-1 py-1.5 bg-blue-600 hover:bg-blue-750 text-white rounded-lg text-[10px] font-black text-center uppercase tracking-widest transition-all"
+                          >
+                            Open Map
+                          </a>
+                        </div>
+                      ) : (
+                        msg.message_text
+                      )}
                     </div>
                     <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 px-1.5">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
