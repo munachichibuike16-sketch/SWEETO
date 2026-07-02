@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, User, Edit2, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
@@ -13,14 +13,14 @@ export default function CustomerSupportPage() {
   const { showToast } = useStore();
   const navigate = useNavigate();
 
-  // Customer session state
+  // Authentication & session state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [sessionId, setSessionId] = useState(null);
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [tempName, setTempName] = useState('');
-  const [tempPhone, setTempPhone] = useState('');
-  
+
+  // Messages log state
   const [messages, setMessages] = useState([]);
   const [newMessageText, setNewMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -45,33 +45,35 @@ export default function CustomerSupportPage() {
     return url.startsWith('http') && url.includes('google.com/maps');
   };
 
-  // 1. Initialize customer session on mount (Auto-Registration)
+  // 1. Initialize user session checking on mount
   useEffect(() => {
-    let savedSessionId = localStorage.getItem('sweeto_chat_session_id');
-    let savedName = localStorage.getItem('sweeto_chat_name');
-    let savedPhone = localStorage.getItem('sweeto_chat_phone');
+    const checkUserSession = () => {
+      try {
+        const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+        if (session) {
+          setIsLoggedIn(true);
+          setUsername(session.name || session.email || 'Client');
+          setPhone(session.phone || '');
+          
+          // Use user ID or email as persistent session ID so their chat history spans across all devices
+          const userSessionId = `user_${session.id || session.email.replace(/[^a-zA-Z0-9]/g, '_')}`;
+          setSessionId(userSessionId);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (e) {
+        setIsLoggedIn(false);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
 
-    if (!savedSessionId) {
-      savedSessionId = `session_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
-      localStorage.setItem('sweeto_chat_session_id', savedSessionId);
-    }
-    setSessionId(savedSessionId);
-
-    // Auto-generate name if not set to prevent blocking forms
-    if (!savedName) {
-      savedName = `Client #${Math.floor(1000 + Math.random() * 9000)}`;
-      localStorage.setItem('sweeto_chat_name', savedName);
-    }
-    
-    setUsername(savedName);
-    setPhone(savedPhone || '');
-    setTempName(savedName);
-    setTempPhone(savedPhone || '');
+    checkUserSession();
   }, []);
 
-  // 2. Fetch past messages and subscribe to real-time additions
+  // 2. Fetch past messages and subscribe to real-time additions once authenticated
   useEffect(() => {
-    if (!sessionId || !supabase) return;
+    if (!isLoggedIn || !sessionId || !supabase) return;
 
     const fetchMessages = async () => {
       try {
@@ -90,7 +92,7 @@ export default function CustomerSupportPage() {
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Subscribe to new messages for this account
     const channel = supabase
       .channel(`support_page_${sessionId}`)
       .on(
@@ -122,25 +124,14 @@ export default function CustomerSupportPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId]);
+  }, [sessionId, isLoggedIn]);
 
-  // 3. Scroll to bottom
+  // 3. Scroll to bottom of message list
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-
-  // Handle Edit profile details
-  const handleSaveProfile = () => {
-    if (!tempName.trim()) return;
-    localStorage.setItem('sweeto_chat_name', tempName.trim());
-    localStorage.setItem('sweeto_chat_phone', tempPhone.trim());
-    setUsername(tempName.trim());
-    setPhone(tempPhone.trim());
-    setIsEditingName(false);
-    showToast("Profile details updated! 👤", "success");
-  };
 
   // Send Text Message
   const handleSendMessage = async (e) => {
@@ -182,7 +173,6 @@ export default function CustomerSupportPage() {
     try {
       const publicUrl = await uploadToStorage(file, 'chat_images');
       
-      // Insert image URL as message
       const { error } = await supabase.from('chat_messages').insert([
         {
           session_id: sessionId,
@@ -246,7 +236,7 @@ export default function CustomerSupportPage() {
     );
   };
 
-  // Custom message renderer to show beautiful cards
+  // Custom message content formatting (Image, GPS Map, Text)
   const renderMessageText = (msg) => {
     const text = msg.message_text;
 
@@ -298,10 +288,69 @@ export default function CustomerSupportPage() {
     );
   };
 
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-sans">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // 1. Render SIGN IN Gate if user is NOT logged in
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#F0F2F5] dark:bg-slate-950 flex flex-col font-sans">
+        {/* Header Bar */}
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 flex items-center justify-between shadow-sm shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer text-slate-600 dark:text-slate-300"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-sm font-black uppercase text-slate-800 dark:text-white tracking-widest leading-none">
+              SWEETO HUB Support
+            </h1>
+          </div>
+        </div>
+
+        {/* Lock Gate Board */}
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-[2.5rem] p-10 text-center shadow-xl space-y-6">
+            <div className="w-16 h-16 rounded-[1.6rem] bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto shadow-inner">
+              <Lock size={28} />
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-black uppercase tracking-tight text-slate-850 dark:text-white">
+                {lang === 'fr' ? 'Se connecter pour continuer' : 'Login to Continue'}
+              </h2>
+              <p className="text-xs font-bold text-slate-400 dark:text-slate-500 leading-relaxed max-w-xs mx-auto">
+                {lang === 'fr' 
+                  ? 'Veuillez vous connecter à votre compte SWEETO HUB pour démarrer une discussion avec le support.' 
+                  : 'Please sign in to your SWEETO HUB account to begin communicating with our support team.'}
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate('/auth')}
+              className="w-full py-4 bg-[#0084FF] hover:bg-[#0078eb] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/15 flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              <LogIn size={14} />
+              <span>{lang === 'fr' ? 'Se Connecter / S\'inscrire' : 'Sign In / Register'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Render Full-Screen Chat View for Logged-In User
   return (
     <div className="min-h-screen bg-[#F0F2F5] dark:bg-slate-950 flex flex-col font-sans">
       {/* Top Header Bar */}
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 py-3.5 px-4 sm:px-6 flex items-center justify-between shadow-sm shrink-0 z-30 sticky top-0">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 py-3.5 px-4 sm:px-6 flex items-center justify-between shadow-sm shrink-0 z-30 sticky top-0 animate-fadeIn">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
@@ -311,14 +360,14 @@ export default function CustomerSupportPage() {
           </button>
           
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center border border-slate-100 dark:border-white/5 select-none overflow-hidden shadow-inner">
+            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center border border-slate-100 dark:border-white/5 overflow-hidden shadow-inner select-none">
               <SweetoLogo size={36} />
             </div>
             <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
           </div>
 
           <div>
-            <h1 className="text-[13px] font-black uppercase text-slate-800 dark:text-white tracking-wide leading-none flex items-center gap-2">
+            <h1 className="text-[13px] font-black uppercase text-slate-800 dark:text-white tracking-wide leading-none">
               SWEETO HUB Support
             </h1>
             <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mt-1">
@@ -328,7 +377,6 @@ export default function CustomerSupportPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          {/* Quick Call Action */}
           <a
             href="tel:+2250500619923"
             className="p-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-full transition-all flex items-center justify-center shadow-sm"
@@ -339,67 +387,39 @@ export default function CustomerSupportPage() {
         </div>
       </div>
 
-      {/* Main Messenger Area */}
+      {/* Main Chat Feed Area */}
       <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto bg-white dark:bg-slate-900 shadow-sm border-x border-slate-200 dark:border-slate-800 relative overflow-hidden">
         
-        {/* Profile Card / Quick Name Edit Row */}
+        {/* Profile Card Header Status */}
         <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-150 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
-            {isEditingName ? (
-              <div className="flex items-center gap-2 w-full max-w-md">
-                <input
-                  type="text"
-                  value={tempName}
-                  onChange={(e) => setTempName(e.target.value)}
-                  placeholder="Your name"
-                  className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold outline-none focus:border-blue-500"
-                />
-                <input
-                  type="tel"
-                  value={tempPhone}
-                  onChange={(e) => setTempPhone(e.target.value)}
-                  placeholder="Phone number"
-                  className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold outline-none focus:border-blue-500 w-32"
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveProfile}
-                  className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
-                >
-                  <Check size={14} />
-                </button>
-              </div>
-            ) : (
-              <span className="truncate">
-                {lang === 'fr' ? 'Discuter en tant que :' : 'Chatting as:'} <strong className="text-slate-700 dark:text-slate-200 font-black">{username}</strong> {phone && `(${phone})`}
-              </span>
-            )}
+            <span className="truncate">
+              {lang === 'fr' ? 'Discuter en tant que :' : 'Chatting as:'} <strong className="text-slate-700 dark:text-slate-200 font-black">{username}</strong> {phone && `(${phone})`}
+            </span>
           </div>
-          {!isEditingName && (
-            <button
-              onClick={() => setIsEditingName(true)}
-              className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
-            >
-              <Edit2 size={11} /> {lang === 'fr' ? 'Modifier' : 'Edit'}
-            </button>
-          )}
         </div>
 
         {/* Message Logs Feed */}
         <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/15 dark:bg-slate-950/10 scrollbar-thin flex flex-col">
           
-          {/* Welcome Info Board */}
+          {/* Welcome Info Board with User Greeting */}
           <div className="text-center py-8 border-b border-slate-100 dark:border-white/5 mb-6">
             <div className="w-16 h-16 rounded-[1.6rem] bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center mx-auto mb-3 shadow-md shadow-blue-500/10 select-none">
               <MessageSquare size={28} />
             </div>
+            
+            {/* dynamic greeting based on user name */}
             <h4 className="text-sm font-black uppercase text-slate-800 dark:text-white leading-none">
-              SWEETO HUB Support
+              {lang === 'fr' ? `Bienvenue, ${username} !` : `Welcome back, ${username}!`}
             </h4>
+            
             <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mt-2 leading-relaxed max-w-sm mx-auto px-4">
               {lang === 'fr' 
-                ? 'Bienvenue ! Vous pouvez nous envoyer des questions, partager des images de produits ou nous envoyer votre position GPS de livraison.' 
-                : 'Welcome! You can send us questions, share product images, or send your GPS delivery location.'}
+                ? 'Que pouvons-nous faire pour vous aujourd\'hui ? Vous pouvez nous poser des questions, partager des images de produits ou nous envoyer votre position GPS de livraison.' 
+                : 'What can we do for you today? You can send us questions, share product images, or send your GPS delivery location.'}
+            </p>
+            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-2 flex items-center justify-center gap-1.5">
+              <PhoneCall size={10} /> +225 050 061 9923
             </p>
           </div>
 
@@ -510,7 +530,7 @@ export default function CustomerSupportPage() {
               />
               <button
                 type="button"
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-655 transition-colors"
               >
                 <Smile size={18} />
               </button>
@@ -520,7 +540,7 @@ export default function CustomerSupportPage() {
             <button
               type="submit"
               disabled={!newMessageText.trim() || isSending || isUploading || isLocating}
-              className="w-10 h-10 rounded-full bg-transparent text-[#0084FF] disabled:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0"
+              className="w-10 h-10 rounded-full bg-transparent text-[#0084FF] disabled:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0"
             >
               <Send size={18} fill={newMessageText.trim() && !isSending ? 'currentColor' : 'none'} />
             </button>
