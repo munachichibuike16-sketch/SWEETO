@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Star, Heart, Eye, ShoppingCart, Zap, TrendingUp } from 'lucide-react';
+import { Clock, Star, Heart, Eye, ShoppingCart, Zap, TrendingUp, Share2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -132,6 +132,34 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     toggleWishlist(product);
   };
 
+  const handleShareProduct = (e) => {
+    e.stopPropagation();
+    
+    // Construct the crawler-friendly share link
+    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+    const shareTitle = product.name;
+    const shareText = product.description || `Check out ${product.name} on SWEETO!`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: shareTitle,
+        text: shareText,
+        url: shareUrl,
+      })
+      .then(() => console.log('Successfully shared'))
+      .catch((error) => console.log('Error sharing:', error));
+    } else {
+      // Fallback: Copy link to clipboard
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          alert(lang === 'fr' ? 'Lien de partage copié dans le presse-papiers !' : 'Share link copied to clipboard!');
+        })
+        .catch((err) => {
+          console.error('Failed to copy: ', err);
+        });
+    }
+  };
+
   const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
   const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
@@ -156,9 +184,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
             </div>
           )}
 
-          {/* Wishlist Button (Floating overlay inside image container top-right, hidden in aliexpress layout) */}
-          {layout !== 'aliexpress' && (
-            <div className="absolute top-2.5 right-2.5 z-20">
+          {/* Action Buttons (Floating overlay inside image container top-right) */}
+          <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5">
+            {layout !== 'aliexpress' && (
               <button 
                 onClick={handleToggleWishlist}
                 className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
@@ -169,8 +197,14 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
               >
                 <Heart size={13} fill={isWished ? "currentColor" : "none"} />
               </button>
-            </div>
-          )}
+            )}
+            <button 
+              onClick={handleShareProduct}
+              className="w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#2563eb] dark:hover:text-[#3b82f6]"
+            >
+              <Share2 size={13} />
+            </button>
+          </div>
 
           {/* Cart Button (Floating overlay inside image container bottom-right, AliExpress style) */}
           <div className="absolute bottom-2.5 right-2.5 z-20">
