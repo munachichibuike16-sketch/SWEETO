@@ -978,21 +978,21 @@ const Header = ({ onMenuClick, onCartClick }) => {
         {/* Chat */}
         <motion.button 
           onClick={() => {
-            navigate('/chat');
+            navigate('/support');
           }} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            location.pathname === '/chat' ? 'text-eas-blue dark:text-blue-450' : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+            location.pathname === '/support' ? 'text-eas-blue dark:text-blue-450' : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
           }`}
         >
-          {location.pathname === '/chat' && (
+          {location.pathname === '/support' && (
             <motion.div 
               layoutId="activeTabGlow"
               className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
-          {location.pathname === '/chat' && (
+          {location.pathname === '/support' && (
             <motion.div 
               layoutId="activeTabLine"
               className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
@@ -1000,7 +1000,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             />
           )}
           <motion.div
-            animate={{ scale: location.pathname === '/chat' ? 1.12 : 1, y: location.pathname === '/chat' ? -1 : 0 }}
+            animate={{ scale: location.pathname === '/support' ? 1.12 : 1, y: location.pathname === '/support' ? -1 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
             <MessageSquare size={20} strokeWidth={2.5} className="transition-all" />

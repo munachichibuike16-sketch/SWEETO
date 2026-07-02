@@ -24,6 +24,7 @@ import DeliverPage from './pages/DeliverPage';
 import Dashboard from './pages/Dashboard';
 import VisitUs from './pages/VisitUs';
 import ChatPage from './pages/ChatPage';
+import CustomerSupportPage from './pages/CustomerSupportPage';
 import LegalPage from './pages/LegalPage';
 import { getCategoryDescendants } from './utils/categoryHelpers';
 import ScrollToTop from './components/ScrollToTop';
@@ -1389,7 +1390,6 @@ function App() {
       <BackToTop />
       <SwipeGestures />
       {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/product/') && !['/auth', '/login', '/register'].includes(getCurrentPath()) && <FloatingWhatsApp />}
-      {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/chat') && <CustomerChatWidget />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
@@ -1418,6 +1418,7 @@ function App() {
           <Route path="/swto-deliver" element={<DeliverPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/support" element={<CustomerSupportPage />} />
           <Route path="/admin/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="/category/:categoryName" element={<Storefront viewMode="category" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
