@@ -1328,7 +1328,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500 shrink-0">
                         <Tag size={16} />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Currency</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">{t('currency')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-slate-400 font-bold uppercase">{userCurrency === 'XOF' ? 'FCFA' : userCurrency}</span>
@@ -1345,7 +1345,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
                         <Globe size={16} />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Language</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">{t('language')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-slate-400 font-bold uppercase">{getLanguageName(lang)}</span>
@@ -1359,10 +1359,10 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                   <div 
                     onClick={() => {
                       if (cacheSize === '0.0 KB') {
-                        showToast("Cache is already clean! 🧹", "info");
+                        showToast(lang === 'fr' ? 'Le cache est déjà propre ! 🧹' : 'Cache is already clean! 🧹', "info");
                         return;
                       }
-                      showToast("Clearing temporary image cache...", "info");
+                      showToast(lang === 'fr' ? 'Vidage du cache d\'images temporaire...' : 'Clearing temporary image cache...', "info");
                       
                       try {
                         localStorage.removeItem('sweeto_cache_products');
@@ -1376,7 +1376,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
                       setTimeout(() => {
                         setCacheSize('0.0 KB');
-                        showToast("Cache cleared successfully! 🧹", "success");
+                        showToast(lang === 'fr' ? 'Cache vidé avec succès ! 🧹' : 'Cache cleared successfully! 🧹', "success");
                       }, 1200);
                     }}
                     className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
@@ -1385,7 +1385,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       <div className="p-2 bg-pink-500/10 rounded-xl text-pink-500 shrink-0">
                         <RotateCcw size={16} />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Clear Cache</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">{t('clear_cache')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-slate-400 font-bold">{cacheSize}</span>
@@ -2174,7 +2174,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               }}
               className="font-bold text-slate-800 dark:text-white cursor-pointer hover:text-eas-blue transition-all pl-2 text-[17px]"
             >
-              Sign in/Register
+              {t('sign_in_register')}
             </span>
             <div className="flex items-center gap-4">
               <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
