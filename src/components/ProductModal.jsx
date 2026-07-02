@@ -173,17 +173,20 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   };
 
   const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
     const shareData = {
       title: product.name,
-      text: `Check out this amazing ${product.name} on SWEETO-HUB!`,
-      url: window.location.href,
+      text: lang === 'fr' 
+        ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
+        : `Check out ${product.name} on SWEETO! ⚡`,
+      url: shareUrl,
     };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        navigator.clipboard.writeText(window.location.href);
-        showToast("Link copied to clipboard!", "success");
+        await navigator.clipboard.writeText(shareUrl);
+        showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied to clipboard! 🔗", "success");
       }
     } catch (err) {
       console.log("Error sharing:", err);

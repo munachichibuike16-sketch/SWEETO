@@ -2346,6 +2346,79 @@ app.delete('/api/reviews/:id', authenticateAdmin, (req, res) => {
   }
 });
 
+app.get('/share/product/:id', (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    if (!product) {
+      return res.status(404).send('Product not found');
+    }
+
+    // Get currency settings
+    let currency = 'XOF';
+    try {
+      const row = db.prepare("SELECT value FROM settings WHERE key = 'currency'").get();
+      if (row) {
+        try { currency = JSON.parse(row.value); } catch (e) { currency = row.value; }
+      }
+    } catch (e) {}
+
+    // Resolve absolute image URL
+    let metaImageUrl = product.image_url || '';
+    if (metaImageUrl && (metaImageUrl.startsWith('/') || !metaImageUrl.startsWith('http'))) {
+      const cleanedPath = metaImageUrl.startsWith('/') ? metaImageUrl : `/${metaImageUrl}`;
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.get('host');
+      metaImageUrl = `${protocol}://${host}${cleanedPath}`;
+    }
+
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host');
+    const shareUrl = `${protocol}://${host}/share/product/${product.id}`;
+    const priceFormatted = product.price ? `${product.price.toLocaleString()} ${currency}` : '';
+    const description = priceFormatted 
+      ? `${priceFormatted} - ${product.description || 'Check out this product on SWEETO!'}` 
+      : (product.description || 'Check out this product on SWEETO!');
+
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${product.name} | SWEETO</title>
+  
+  <!-- Open Graph Meta Tags (WhatsApp, Facebook, Discord, etc.) -->
+  <meta property="og:title" content="${product.name}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${metaImageUrl}" />
+  <meta property="og:url" content="${shareUrl}" />
+  <meta property="og:type" content="product" />
+  <meta property="og:site_name" content="SWEETO" />
+  
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${product.name}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${metaImageUrl}" />
+  
+  <!-- Redirect immediately to frontend route -->
+  <script>
+    window.location.replace("/#/product/${product.id}");
+  </script>
+</head>
+<body>
+  <div style="font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #090d16; color: white;">
+    <h2 style="margin-bottom: 8px;">Redirecting you to ${product.name}...</h2>
+    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="/#/product/${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
+  </div>
+</body>
+</html>`);
+  } catch (err) {
+    console.error(`Error in /share/product/${id}:`, err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // Catch-all for 404s

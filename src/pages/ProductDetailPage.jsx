@@ -34,6 +34,7 @@ const ProductDetailPage = () => {
   const [activeTab, setActiveTab] = useState('specs');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [touchStartX, setTouchStartX] = useState(null);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const [activeScrollSection, setActiveScrollSection] = useState('overview');
@@ -491,15 +492,17 @@ const ProductDetailPage = () => {
   };
 
   const shareProduct = () => {
+    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
     if (navigator.share) {
       navigator.share({
         title: product.name,
-        text: `Check out ${product.name} on SWEETO HUB!`,
-        url: window.location.href,
+        text: lang === 'fr' 
+          ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
+          : `Check out ${product.name} on SWEETO! ⚡`,
+        url: shareUrl,
       }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      showToast("Link copied to clipboard! 🔗", "success");
+      setIsShareModalOpen(true);
     }
   };
 
@@ -1505,6 +1508,128 @@ const ProductDetailPage = () => {
       </AnimatePresence>
 
 
+
+      {/* Global Sidebar & Cart overlay drawers */}
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* Dynamic Share Modal */}
+      <AnimatePresence>
+        {isShareModalOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsShareModalOpen(false)}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[999] cursor-pointer"
+            />
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="fixed inset-x-4 bottom-8 md:bottom-auto md:top-1/2 md:left-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-md bg-white dark:bg-[#0b1324] border border-slate-100 dark:border-slate-800/80 rounded-3xl shadow-2xl p-6 z-[1000] overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white">
+                  {lang === 'fr' ? 'Partager le produit' : 'Share Product'}
+                </h3>
+                <button
+                  onClick={() => setIsShareModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Product Info Preview */}
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 mb-6">
+                <img
+                  src={selectedVariant ? selectedVariant.image : (product.image_url || product.image || '/hero-banner.png')}
+                  alt={product.name}
+                  className="w-14 h-14 rounded-xl object-cover bg-white dark:bg-slate-800"
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white truncate">{product.name}</h4>
+                  <p className="text-xs text-red-500 font-extrabold mt-0.5">
+                    {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Share Options Grid */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {/* WhatsApp */}
+                <button
+                  onClick={() => {
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    const text = lang === 'fr'
+                      ? `Découvrez ${product.name} sur SWEETO ! ⚡ ${shareUrl}`
+                      : `Check out ${product.name} on SWEETO! ⚡ ${shareUrl}`;
+                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+                    setIsShareModalOpen(false);
+                  }}
+                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 transition-all cursor-pointer group"
+                >
+                  <i className="fa-brands fa-whatsapp text-2xl mb-2 transition-transform group-hover:scale-110"></i>
+                  <span className="text-[10px] font-black uppercase tracking-wider">WhatsApp</span>
+                </button>
+
+                {/* Facebook */}
+                <button
+                  onClick={() => {
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+                    setIsShareModalOpen(false);
+                  }}
+                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/30 transition-all cursor-pointer group"
+                >
+                  <i className="fa-brands fa-facebook text-2xl mb-2 transition-transform group-hover:scale-110"></i>
+                  <span className="text-[10px] font-black uppercase tracking-wider">Facebook</span>
+                </button>
+
+                {/* Copy Link */}
+                <button
+                  onClick={() => {
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
+                    setIsShareModalOpen(false);
+                  }}
+                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/30 transition-all cursor-pointer group"
+                >
+                  <i className="fa-solid fa-link text-2xl mb-2 transition-transform group-hover:scale-110"></i>
+                  <span className="text-[10px] font-black uppercase tracking-wider">{lang === 'fr' ? 'Copier' : 'Copy'}</span>
+                </button>
+              </div>
+
+              {/* Direct Link Input Box */}
+              <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/50 rounded-2xl">
+                <input
+                  type="text"
+                  readOnly
+                  value={`${window.location.origin}/share/product/${product.id}`}
+                  className="flex-1 bg-transparent border-none text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 outline-none select-all"
+                />
+                <button
+                  onClick={() => {
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
+                  }}
+                  className="px-3.5 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                >
+                  {lang === 'fr' ? 'Copier' : 'Copy'}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Global Sidebar & Cart overlay drawers */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
