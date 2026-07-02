@@ -2400,6 +2400,8 @@ app.get('/share/product/:id', (req, res) => {
   <meta property="og:title" content="${product.name}" />
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${metaImageUrl}" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="600" />
   <meta property="og:url" content="${shareUrl}" />
   <meta property="og:type" content="product" />
   <meta property="og:site_name" content="SWEETO" />
