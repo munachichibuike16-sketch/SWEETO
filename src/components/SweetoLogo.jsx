@@ -25,14 +25,6 @@ const SweetoLogo = ({ size = 120, className = '', animate = true }) => {
       initial="initial"
       animate="animate"
     >
-      <defs>
-        {/* Chilling ice-blue to deep royal blue gradient */}
-        <linearGradient id="logoRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3b82f6" />
-          <stop offset="100%" stopColor="#1e3a8a" />
-        </linearGradient>
-      </defs>
-
       {/* Overlapping Rings */}
       {elements.map((el, i) => (
         <motion.circle 
@@ -40,7 +32,7 @@ const SweetoLogo = ({ size = 120, className = '', animate = true }) => {
           cx={el.x} 
           cy={el.y} 
           r="23" 
-          fill="url(#logoRingGrad)"
+          fill="#1d4ed8" 
           stroke="#ffffff" 
           strokeWidth="2.5"
           variants={{
@@ -66,12 +58,13 @@ const SweetoLogo = ({ size = 120, className = '', animate = true }) => {
         <motion.text
           key={`text-anim-${i}`}
           x={el.x}
-          y={el.y + 6.2} // offset down to align vertically inside the circle
+          y={el.y} 
+          dominantBaseline="central" 
+          textAnchor="middle"
           fill="#ffffff"
           fontSize="16.5"
           fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
           fontWeight="900"
-          textAnchor="middle"
           style={{ transformOrigin: `${el.x}px ${el.y}px` }}
           variants={{
             initial: { scale: 0, opacity: 0 },
