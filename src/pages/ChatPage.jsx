@@ -15,8 +15,14 @@ export default function ChatPage() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Verify Admin authentication status
+  // Verify Admin authentication status and listen for logout signals
   useEffect(() => {
+    let clientId = sessionStorage.getItem('sweetohub_admin_client_id');
+    if (!clientId) {
+      clientId = `client_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+      sessionStorage.setItem('sweetohub_admin_client_id', clientId);
+    }
+
     const checkAdminAuth = async () => {
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -34,6 +40,26 @@ export default function ChatPage() {
       }
     };
     checkAdminAuth();
+
+    // Subscribe to logout signals
+    const channel = supabase
+      .channel('chat_admin_signals_channel')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_signals' }, async (payload) => {
+        const signal = payload.new;
+        if (signal.signal_type === 'logout') {
+          const localId = sessionStorage.getItem('sweetohub_admin_client_id');
+          if (signal.except_session_id !== localId) {
+            await supabase.auth.signOut();
+            sessionStorage.clear();
+            window.location.reload();
+          }
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (checkingAuth) {

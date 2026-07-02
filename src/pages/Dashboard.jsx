@@ -159,6 +159,11 @@ const Dashboard = () => {
 
   React.useEffect(() => {
     const checkAuth = async () => {
+      let clientId = sessionStorage.getItem('sweetohub_admin_client_id');
+      if (!clientId) {
+        clientId = `client_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+        sessionStorage.setItem('sweetohub_admin_client_id', clientId);
+      }
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (user && !userError) {
@@ -203,8 +208,8 @@ const Dashboard = () => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_signals' }, async (payload) => {
         const signal = payload.new;
         if (signal.signal_type === 'logout') {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session || signal.except_session_id === 'force_all' || session.id !== signal.except_session_id) {
+          const clientId = sessionStorage.getItem('sweetohub_admin_client_id');
+          if (signal.except_session_id !== clientId) {
             await supabase.auth.signOut();
             sessionStorage.clear();
             window.location.reload();
@@ -743,10 +748,15 @@ const Dashboard = () => {
         try {
           await supabase.auth.signOut({ scope: 'others' });
           
-          const { data: { session } } = await supabase.auth.getSession();
+          let clientId = sessionStorage.getItem('sweetohub_admin_client_id');
+          if (!clientId) {
+            clientId = `client_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+            sessionStorage.setItem('sweetohub_admin_client_id', clientId);
+          }
+
           await supabase.from('admin_signals').insert({
             signal_type: 'logout',
-            except_session_id: session?.id || 'force_all'
+            except_session_id: clientId
           });
           
           showToast('Other devices logged out! 🛡️', 'success');
