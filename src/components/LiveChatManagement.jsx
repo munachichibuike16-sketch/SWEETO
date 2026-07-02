@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin } from 'lucide-react';
+import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin, Plus } from 'lucide-react';
+import { useStore } from '../contexts/StoreContext';
 
 const isImageUrl = (url) => {
   if (typeof url !== 'string') return false;
@@ -15,7 +16,47 @@ const isMapUrl = (url) => {
   return url.startsWith('http') && url.includes('google.com/maps');
 };
 
+const getAvatarColor = (name) => {
+  const colors = [
+    'from-blue-500 to-cyan-500 shadow-blue-500/10',
+    'from-purple-500 to-indigo-500 shadow-purple-500/10',
+    'from-emerald-500 to-teal-500 shadow-emerald-500/10',
+    'from-amber-500 to-orange-500 shadow-amber-500/10',
+    'from-rose-500 to-pink-500 shadow-rose-500/10'
+  ];
+  let sum = 0;
+  for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+  return colors[sum % colors.length];
+};
+
+const formatMessageTime = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
+  
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+const getUnreadCount = (messagesList) => {
+  let count = 0;
+  for (let i = messagesList.length - 1; i >= 0; i--) {
+    if (messagesList[i].sender_role === 'customer') {
+      count++;
+    } else {
+      break;
+    }
+  }
+  return count;
+};
+
 export default function LiveChatManagement() {
+  const { showToast } = useStore();
   const [messages, setMessages] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [replyText, setReplyText] = useState('');
@@ -117,7 +158,6 @@ export default function LiveChatManagement() {
     setIsSending(true);
 
     try {
-      // Pick customer details from the current room to maintain consistency
       const customerName = selectedRoom?.customer_name || 'Guest';
       const customerPhone = selectedRoom?.customer_phone || null;
 
@@ -156,89 +196,123 @@ export default function LiveChatManagement() {
       if (selectedSessionId === sessionIdToDelete) {
         setSelectedSessionId(null);
       }
+      showToast('Conversation deleted! 🗑️', 'info');
     } catch (err) {
       console.error('Error deleting chat room:', err);
     }
   };
 
+  const copyInviteLink = () => {
+    const inviteLink = `${window.location.origin}/#/support`;
+    navigator.clipboard.writeText(inviteLink);
+    showToast('Customer support chat link copied to clipboard! 📋✨', 'success');
+  };
+
   return (
-    <div className="w-full h-[calc(100vh-180px)] min-h-[500px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl flex overflow-hidden shadow-sm">
+    <div className="w-full h-[calc(100vh-180px)] min-h-[500px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-[2.5rem] flex overflow-hidden shadow-2xl relative">
+      
       {/* Sidebar: Rooms List */}
-      <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="w-80 border-r border-slate-200/80 dark:border-slate-800 flex flex-col shrink-0 bg-white dark:bg-slate-900/50 relative">
+        
+        {/* Messages Mockup Header */}
+        <div className="p-6 flex flex-col gap-3.5 border-b border-slate-100 dark:border-slate-800/60">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-black text-slate-850 dark:text-white tracking-tight">Messages</h2>
+            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 transition-colors">
+              <Search size={16} />
+            </button>
+          </div>
           <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conversations..."
-              className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:border-blue-500 transition-colors outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-100 dark:border-slate-800/80 rounded-xl text-[10.5px] font-bold outline-none focus:border-blue-500 focus:bg-white transition-all"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40">
+        {/* Rooms Scroll List */}
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/30">
           {roomsList.length === 0 ? (
-            <div className="p-6 text-center text-slate-400 text-xs font-bold uppercase tracking-wider mt-10">
-              No chats active
+            <div className="p-6 text-center text-slate-400 text-[10px] font-black uppercase tracking-widest mt-10">
+              No active conversations
             </div>
           ) : (
             roomsList.map((room) => {
               const isActive = room.session_id === selectedSessionId;
-              const hasUnread = room.messagesList[room.messagesList.length - 1].sender_role === 'customer';
+              const unreadCount = getUnreadCount(room.messagesList);
               
               return (
                 <div
                   key={room.session_id}
                   onClick={() => setSelectedSessionId(room.session_id)}
-                  className={`p-4 flex items-start justify-between gap-3 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-colors group relative ${
-                    isActive ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                  className={`p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-850/30 transition-colors group relative ${
+                    isActive ? 'bg-blue-50/30 dark:bg-blue-950/20' : ''
                   }`}
                 >
+                  {/* Left Active border bar */}
                   {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0084FF]" />
                   )}
                   
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <h4 className={`text-xs font-black truncate ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                        {room.customer_name}
-                      </h4>
-                      {hasUnread && !isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                      )}
+                  {/* Customer Block matching Mockup */}
+                  <div className="flex items-center gap-3 w-full min-w-0">
+                    <div className="relative shrink-0">
+                      <div className={`w-11 h-11 rounded-full bg-gradient-to-tr ${getAvatarColor(room.customer_name)} text-white flex items-center justify-center font-black text-xs uppercase shadow-md select-none`}>
+                        {room.customer_name.substring(0, 2)}
+                      </div>
+                      {/* Active green status dot */}
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
                     </div>
-                    
-                    {room.customer_phone && (
-                      <p className="text-[10px] font-bold text-slate-400 mt-0.5 flex items-center gap-1">
-                        <Phone size={10} /> {room.customer_phone}
-                      </p>
-                    )}
-                    
-                    <p className={`text-[11px] truncate mt-2 ${hasUnread && !isActive ? 'font-black text-slate-900 dark:text-white' : 'font-medium text-slate-400'}`}>
-                      {room.last_message}
-                    </p>
-                  </div>
 
-                  <div className="flex flex-col items-end justify-between self-stretch shrink-0">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                      {new Date(room.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    
-                    <button
-                      onClick={(e) => handleDeleteRoom(room.session_id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
-                      title="Delete chat history"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between">
+                        <h4 className={`text-[11.5px] font-black truncate pr-2 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                          {room.customer_name}
+                        </h4>
+                        <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-wide shrink-0">
+                          {formatMessageTime(room.last_message_time)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-1 gap-2">
+                        <p className={`text-[10px] truncate flex-1 ${unreadCount > 0 && !isActive ? 'font-black text-slate-900 dark:text-white' : 'font-bold text-slate-400'}`}>
+                          {isImageUrl(room.last_message) ? '📸 Photo' : isMapUrl(room.last_message) ? '📍 Location' : room.last_message}
+                        </p>
+                        
+                        {unreadCount > 0 && !isActive ? (
+                          <span className="w-4.5 h-4.5 rounded-full bg-[#0084FF] text-white text-[8px] font-black flex items-center justify-center shrink-0">
+                            {unreadCount}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => handleDeleteRoom(room.session_id, e)}
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all cursor-pointer shrink-0"
+                            title="Delete Chat"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
             })
           )}
         </div>
+
+        {/* Floating Pink Action Button from the Mockup */}
+        <button
+          onClick={copyInviteLink}
+          className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer z-25"
+          title="Copy Customer Support Invite Link"
+        >
+          <Plus size={20} />
+        </button>
       </div>
 
       {/* Main Board: Chat Window */}
@@ -246,17 +320,20 @@ export default function LiveChatManagement() {
         {selectedRoom ? (
           <>
             {/* Active Room Header */}
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
+            <div className="px-6 py-4.5 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <User size={18} />
+                <div className="relative">
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${getAvatarColor(selectedRoom.customer_name)} text-white flex items-center justify-center font-black text-xs uppercase shadow-md select-none`}>
+                    {selectedRoom.customer_name.substring(0, 2)}
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white leading-none">
+                  <h3 className="text-xs font-black uppercase text-slate-850 dark:text-white leading-none">
                     {selectedRoom.customer_name}
                   </h3>
                   {selectedRoom.customer_phone && (
-                    <p className="text-[10px] text-slate-400 font-bold mt-1 flex items-center gap-1">
+                    <p className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-1">
                       <Phone size={10} /> {selectedRoom.customer_phone}
                     </p>
                   )}
@@ -265,7 +342,7 @@ export default function LiveChatManagement() {
             </div>
 
             {/* Message logs */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 scrollbar-thin">
+            <div className="flex-1 p-6 overflow-y-auto space-y-4 scrollbar-thin bg-slate-50/10">
               {selectedRoom.messagesList.map((msg) => {
                 const isAdmin = msg.sender_role === 'admin';
                 return (
@@ -274,9 +351,9 @@ export default function LiveChatManagement() {
                     className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] rounded-[1.5rem] px-5 py-3 text-xs font-bold leading-relaxed shadow-sm ${
+                      className={`max-w-[70%] rounded-[1.4rem] px-5 py-3 text-xs font-bold leading-relaxed shadow-sm ${
                         isAdmin
-                          ? 'bg-blue-600 text-white rounded-tr-none'
+                          ? 'bg-[#0084FF] text-white rounded-tr-none'
                           : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-white/5 rounded-tl-none'
                       }`}
                     >
@@ -288,7 +365,7 @@ export default function LiveChatManagement() {
                           onClick={() => window.open(msg.message_text, '_blank')}
                         />
                       ) : isMapUrl(msg.message_text) ? (
-                        <div className="flex flex-col gap-1.5 leading-normal min-w-[200px]">
+                        <div className="flex flex-col gap-1.5 leading-normal min-w-[200px] text-slate-800 dark:text-slate-100">
                           <span className="text-[10px] font-black text-red-500 uppercase tracking-wide flex items-center gap-1">
                             <MapPin size={12} className="animate-bounce" /> Location Shared
                           </span>
@@ -297,7 +374,7 @@ export default function LiveChatManagement() {
                             href={msg.message_text} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="mt-1 py-1.5 bg-blue-600 hover:bg-blue-750 text-white rounded-lg text-[10px] font-black text-center uppercase tracking-widest transition-all"
+                            className="mt-1 py-1.5 bg-[#0084FF] hover:bg-[#0078eb] text-white rounded-lg text-[10px] font-black text-center uppercase tracking-widest transition-all"
                           >
                             Open Map
                           </a>
@@ -316,13 +393,13 @@ export default function LiveChatManagement() {
             </div>
 
             {/* Reply Input */}
-            <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-2">
+            <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-2">
               <input
                 type="text"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Type your reply..."
-                className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
+                className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
               />
               <button
                 type="submit"
@@ -335,7 +412,7 @@ export default function LiveChatManagement() {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-6">
-            <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-850 flex items-center justify-center mb-4">
               <MessageSquare size={24} className="text-slate-400" />
             </div>
             <h4 className="text-xs font-black uppercase tracking-widest">Select a Conversation</h4>
