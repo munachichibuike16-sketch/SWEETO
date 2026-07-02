@@ -152,7 +152,13 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     { name: "Français (FR)", code: "fr" },
     { name: "Español (ES)", code: "es" },
     { name: "Deutsch (DE)", code: "de" },
-    { name: "Italiano (IT)", code: "it" }
+    { name: "Italiano (IT)", code: "it" },
+    { name: "Português (PT)", code: "pt" },
+    { name: "العربية (AR)", code: "ar" },
+    { name: "中文 (ZH)", code: "zh" },
+    { name: "日本語 (JA)", code: "ja" },
+    { name: "हिन्दी (HI)", code: "hi" },
+    { name: "Русский (RU)", code: "ru" }
   ];
 
   const getLanguageName = (code) => {
@@ -161,7 +167,13 @@ const AuthPage = ({ initialTab, onCartClick }) => {
       fr: 'Français (FR)',
       es: 'Español (ES)',
       de: 'Deutsch (DE)',
-      it: 'Italiano (IT)'
+      it: 'Italiano (IT)',
+      pt: 'Português (PT)',
+      ar: 'العربية (AR)',
+      zh: '中文 (ZH)',
+      ja: '日本語 (JA)',
+      hi: 'हिन्दी (HI)',
+      ru: 'Русский (RU)'
     };
     return names[code] || 'English (US)';
   };
