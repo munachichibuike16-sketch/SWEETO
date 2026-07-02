@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../contexts/StoreContext';
 import LiveChatManagement from '../components/LiveChatManagement';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff } from 'lucide-react';
 import AdminLogin from './AdminLogin';
 import AdminPinLock from '../components/AdminPinLock';
 
@@ -14,6 +14,88 @@ export default function ChatPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [notifPermission, setNotifPermission] = useState('default');
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleToggleNotifications = async () => {
+    if (!('Notification' in window)) {
+      showToast('Notifications are not supported on this device.', 'warning');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      showToast('Browser notifications are already active! 🔔', 'success');
+      return;
+    }
+
+    if (Notification.permission === 'denied') {
+      showToast('Notifications are blocked. Please enable them in your browser settings.', 'warning');
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotifPermission(permission);
+
+      if (permission === 'granted') {
+        showToast('Notification permission granted! Subscribing... ⏳', 'info');
+        
+        // Register SW & Subscribe to push manager
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        
+        // Fetch VAPID public key
+        const { data: settingData, error: settingErr } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'vapid_public_key')
+          .single();
+
+        if (settingErr) throw settingErr;
+        const publicKey = settingData?.value;
+        if (!publicKey) throw new Error('VAPID key not configured in settings');
+
+        // Convert base64 VAPID key to Uint8Array
+        const padding = '='.repeat((4 - publicKey.length % 4) % 4);
+        const base64 = (publicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const applicationServerKey = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          applicationServerKey[i] = rawData.charCodeAt(i);
+        }
+
+        // Subscribe device
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+
+        // Save subscription
+        const rawSub = subscription.toJSON();
+        const { error: subErr } = await supabase
+          .from('push_subscriptions')
+          .upsert({
+            endpoint: subscription.endpoint,
+            p256dh: rawSub.keys?.p256dh || '',
+            auth: rawSub.keys?.auth || '',
+            role: 'admin'
+          }, { onConflict: 'endpoint' });
+
+        if (subErr) throw subErr;
+
+        showToast('Successfully subscribed to browser alerts! 🔔', 'success');
+      } else {
+        showToast('Notification access was denied.', 'warning');
+      }
+    } catch (err) {
+      console.error('Push subscription failed:', err);
+      showToast('Subscription failed: ' + err.message, 'error');
+    }
+  };
 
   // Verify Admin authentication status and listen for logout signals
   useEffect(() => {
@@ -119,12 +201,43 @@ export default function ChatPage() {
             </span>
           </div>
         </div>
-        <button
-          onClick={handleAdminLogout}
-          className="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 cursor-pointer transition-all"
-        >
-          Sign Out Admin
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Notification Toggle Button */}
+          <button
+            onClick={handleToggleNotifications}
+            className={`px-4 py-2 border rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all ${
+              notifPermission === 'granted'
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400'
+                : notifPermission === 'denied'
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
+                  : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+            }`}
+          >
+            {notifPermission === 'granted' ? (
+              <>
+                <Bell size={13} className="text-blue-500 animate-pulse" />
+                <span>Notifications Active</span>
+              </>
+            ) : notifPermission === 'denied' ? (
+              <>
+                <BellOff size={13} />
+                <span>Notifications Blocked</span>
+              </>
+            ) : (
+              <>
+                <Bell size={13} />
+                <span>Enable Notifications</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleAdminLogout}
+            className="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 cursor-pointer transition-all"
+          >
+            Sign Out Admin
+          </button>
+        </div>
       </div>
 
       {/* Live Chat Panel */}
