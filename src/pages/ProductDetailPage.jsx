@@ -493,14 +493,20 @@ const ProductDetailPage = () => {
 
   const shareProduct = () => {
     const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-    if (navigator.share) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share) {
       navigator.share({
         title: product.name,
         text: lang === 'fr' 
           ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
           : `Check out ${product.name} on SWEETO! ⚡`,
         url: shareUrl,
-      }).catch(console.error);
+      })
+      .catch((err) => {
+        console.warn("Native share failed, showing custom share modal:", err);
+        setIsShareModalOpen(true);
+      });
     } else {
       setIsShareModalOpen(true);
     }
