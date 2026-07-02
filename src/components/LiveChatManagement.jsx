@@ -220,17 +220,21 @@ export default function LiveChatManagement() {
   // 4. Group messages into rooms (sessions)
   const roomsMap = {};
   messages.forEach((msg) => {
+    const isProductTag = msg.message_text && msg.message_text.startsWith('[PRODUCT_TAG]:');
+    const isMaps = msg.message_text && msg.message_text.startsWith('http') && msg.message_text.includes('/maps');
+    const cleanText = isProductTag ? 'Tagged a product 🏷️' : (isMaps ? 'Shared location 📍' : msg.message_text);
+
     if (!roomsMap[msg.session_id]) {
       roomsMap[msg.session_id] = {
         session_id: msg.session_id,
         customer_name: msg.customer_name || 'Guest',
         customer_phone: msg.customer_phone || '',
-        last_message: msg.message_text,
+        last_message: cleanText,
         last_message_time: msg.created_at,
         messagesList: []
       };
     }
-    roomsMap[msg.session_id].last_message = msg.message_text;
+    roomsMap[msg.session_id].last_message = cleanText;
     roomsMap[msg.session_id].last_message_time = msg.created_at;
     roomsMap[msg.session_id].messagesList.push(msg);
   });
@@ -465,7 +469,41 @@ export default function LiveChatManagement() {
                           : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-white/5 rounded-tl-none'
                       }`}
                     >
-                      {isImageUrl(msg.message_text) ? (
+                      {msg.message_text && msg.message_text.startsWith('[PRODUCT_TAG]:') ? (() => {
+                        try {
+                          const productData = JSON.parse(msg.message_text.replace('[PRODUCT_TAG]:', ''));
+                          return (
+                            <div className="flex flex-col gap-2 min-w-[200px] text-slate-800 dark:text-slate-100">
+                              <span className="text-[10px] font-black text-[#0084FF] uppercase tracking-wide flex items-center gap-1 select-none">
+                                <span>🏷️</span> Tagged Product
+                              </span>
+                              <div className="flex gap-2.5 items-center bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-white/5">
+                                <img
+                                  src={productData.image || '/hero-banner.png'}
+                                  alt={productData.name}
+                                  className="w-10 h-10 object-cover rounded bg-white shrink-0"
+                                />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs font-black truncate leading-tight">{productData.name}</span>
+                                  <span className="text-[10px] font-bold text-rose-500 font-mono mt-0.5">
+                                    {productData.price ? `${productData.price.toLocaleString()} FCFA` : ''}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  window.open(`${window.location.origin}/#/product/${productData.id}`, '_blank');
+                                }}
+                                className="py-1.5 bg-[#0084FF] hover:bg-[#0078eb] text-white rounded-lg text-[9px] font-black text-center uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-98"
+                              >
+                                View Product Page
+                              </button>
+                            </div>
+                          );
+                        } catch (e) {
+                          return msg.message_text;
+                        }
+                      })() : isImageUrl(msg.message_text) ? (
                         <div className="relative group/img overflow-hidden rounded-xl">
                           <img 
                             src={msg.message_text} 

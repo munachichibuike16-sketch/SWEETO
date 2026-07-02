@@ -314,6 +314,43 @@ export default function CustomerSupportPage() {
   const renderMessageText = (msg) => {
     const text = msg.message_text;
 
+    if (text && text.startsWith('[PRODUCT_TAG]:')) {
+      try {
+        const productData = JSON.parse(text.replace('[PRODUCT_TAG]:', ''));
+        return (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl p-3 shadow-md flex flex-col gap-2.5 max-w-[260px] sm:max-w-xs leading-relaxed">
+            <div className="flex items-center gap-1.5 text-[#0084FF] font-black text-[10px] uppercase tracking-wider select-none">
+              <span className="text-base">🏷️</span>
+              <span>{lang === 'fr' ? 'Produit marqué' : 'Tagged Product'}</span>
+            </div>
+            <div className="flex gap-2.5 items-center bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-100 dark:border-white/5">
+              <img
+                src={productData.image || '/hero-banner.png'}
+                alt={productData.name}
+                className="w-12 h-12 object-cover rounded-lg border border-slate-150 dark:border-slate-800 shrink-0 bg-white"
+              />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-black truncate text-slate-900 dark:text-white leading-tight">{productData.name}</span>
+                <span className="text-[11px] font-black text-rose-500 font-mono mt-1">
+                  {productData.price ? `${productData.price.toLocaleString()} FCFA` : ''}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                window.location.hash = `#/product/${productData.id}`;
+              }}
+              className="py-1.5 bg-[#0084FF] hover:bg-[#0078eb] text-white rounded-xl text-[10px] font-black text-center uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-98"
+            >
+              {lang === 'fr' ? 'Voir le produit' : 'View Product'}
+            </button>
+          </div>
+        );
+      } catch (err) {
+        console.warn('Could not parse product tag:', err);
+      }
+    }
+
     if (isImageUrl(text)) {
       return (
         <div className="relative group overflow-hidden rounded-2xl max-w-[260px] sm:max-w-xs shadow-sm bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-white/5">

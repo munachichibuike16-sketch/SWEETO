@@ -13,6 +13,7 @@ import ProductCard from './ProductCard';
 import { supabase } from '../lib/supabase';
 import SweetoLogo from './SweetoLogo';
 import confetti from 'canvas-confetti';
+import { apiFetch } from '../utils/api';
 
 const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductClick }) => {
   const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox, productViewsMap, incrementProductView, productLikesMap, toggleProductLike } = useStore();
@@ -708,6 +709,64 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <span>Order via WhatsApp ⚡</span>
                         </motion.button>
                       </div>
+
+                      {/* Live Chat Tag Button */}
+                      <motion.button 
+                        type="button"
+                        onClick={async () => {
+                          let sid = window.localStorage.getItem('sweeto_chat_session_id');
+                          if (!sid) {
+                            sid = 'session_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+                            window.localStorage.setItem('sweeto_chat_session_id', sid);
+                          }
+
+                          const username = window.localStorage.getItem('sweeto_chat_username') || 'Guest';
+                          const phone = window.localStorage.getItem('sweeto_chat_phone') || null;
+
+                          const productTagText = `[PRODUCT_TAG]:${JSON.stringify({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image_url || product.image || '/hero-banner.png'
+                          })}`;
+
+                          try {
+                            await supabase.from('chat_messages').insert([
+                              {
+                                session_id: sid,
+                                customer_name: username,
+                                customer_phone: phone,
+                                sender_role: 'customer',
+                                message_text: productTagText
+                              }
+                            ]);
+
+                            apiFetch('/api/push/notify-chat-message', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                senderName: username,
+                                messageText: `Tagged Product: ${product.name}`,
+                                sessionId: sid,
+                                targetRole: 'admin'
+                              })
+                            }).catch(() => {});
+
+                            showToast(lang === 'fr' ? 'Produit lié au chat ! 💬' : 'Product tagged to chat! 💬', 'success');
+                          } catch (err) {
+                            console.error('Failed to tag product:', err);
+                          }
+
+                          onClose();
+                          navigate('/support');
+                        }}
+                        whileHover={{ scale: 1.01, y: -1 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="w-full bg-[#0084FF] hover:bg-[#0078eb] text-white font-black text-[10px] uppercase tracking-[0.2em] h-[48px] rounded-2xl shadow-lg flex items-center justify-center gap-2 mt-2.5 cursor-pointer transition-all border border-blue-400/20"
+                      >
+                        <MessageCircle size={15} fill="currentColor" />
+                        <span>{lang === 'fr' ? 'Discuter de ce produit 💬' : 'Chat about this product 💬'}</span>
+                      </motion.button>
  
                       {/* Continue Shopping secondary link */}
                       <button 
