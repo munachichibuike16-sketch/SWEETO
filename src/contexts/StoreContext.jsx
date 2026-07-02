@@ -118,6 +118,7 @@ export const StoreProvider = ({ children }) => {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [realtimeNotification, setRealtimeNotification] = useState(null);
   const [productViewsMap, setProductViewsMap] = useState({});
+  const [productLikesMap, setProductLikesMap] = useState({});
 
   const incrementProductView = useCallback((productId) => {
     if (!productId) return;
@@ -132,6 +133,22 @@ export const StoreProvider = ({ children }) => {
     setProductViewsMap(prev => ({
       ...prev,
       [productId]: (prev[productId] || 0) + 1
+    }));
+  }, []);
+
+  const toggleProductLike = useCallback((productId, isLiking) => {
+    if (!productId) return;
+    const page_path = `/product/${productId}`;
+    if (supabase) {
+      supabase.from('visitor_log').insert([{
+        page_path,
+        event_type: isLiking ? 'product liked' : 'product unliked',
+        country: window.localStorage.getItem('user_country') || 'Unknown'
+      }]).then(() => {}).catch(() => {});
+    }
+    setProductLikesMap(prev => ({
+      ...prev,
+      [productId]: Math.max(0, (prev[productId] || 0) + (isLiking ? 1 : -1))
     }));
   }, []);
 
@@ -472,21 +489,29 @@ export const StoreProvider = ({ children }) => {
         supabase.from('brands').select('*'),
         isAdminPage ? supabase.from('orders').select('*') : Promise.resolve({ data: [] }),
         supabase.from('reviews').select('*').eq('is_approved', 1),
-        supabase.from('visitor_log').select('page_path').eq('event_type', 'product viewed')
+        supabase.from('visitor_log').select('page_path, event_type').in('event_type', ['product viewed', 'product liked', 'product unliked'])
       ]);
 
       if (visitorData) {
         const viewsObj = {};
+        const likesObj = {};
         visitorData.forEach(row => {
           if (row.page_path && row.page_path.includes('/product/')) {
             const match = row.page_path.match(/\/product\/(\d+)/);
             if (match) {
               const pId = match[1];
-              viewsObj[pId] = (viewsObj[pId] || 0) + 1;
+              if (row.event_type === 'product viewed') {
+                viewsObj[pId] = (viewsObj[pId] || 0) + 1;
+              } else if (row.event_type === 'product liked') {
+                likesObj[pId] = (likesObj[pId] || 0) + 1;
+              } else if (row.event_type === 'product unliked') {
+                likesObj[pId] = (likesObj[pId] || 0) - 1;
+              }
             }
           }
         });
         setProductViewsMap(viewsObj);
+        setProductLikesMap(likesObj);
       }
 
       if (catData) {
@@ -1004,6 +1029,8 @@ export const StoreProvider = ({ children }) => {
       setGlobalLightboxIndex,
       productViewsMap,
       incrementProductView,
+      productLikesMap,
+      toggleProductLike,
       refreshData: () => fetchStoreData(true) 
     }}>
       {children}

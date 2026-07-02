@@ -48,7 +48,7 @@ const getSoldCount = (product) => {
 };
 
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
-  const { settings, openGlobalLightbox, productViewsMap } = useStore();
+  const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
   const { addToCart } = useCart();
@@ -130,6 +130,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     }
 
     toggleWishlist(product);
+    toggleProductLike(product.id, !isWished);
   };
 
   const handleShareProduct = (e) => {
@@ -273,6 +274,13 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <span>👁️</span>
                 <span>
                   {productViewsMap[product.id] || 0} {lang === 'fr' ? 'vues' : 'views'}
+                </span>
+              </span>
+              <span className="text-slate-350 dark:text-slate-700">•</span>
+              <span className="text-rose-550 dark:text-rose-450 flex items-center gap-1 font-black">
+                <span>❤️</span>
+                <span>
+                  {productLikesMap[product.id] || 0} {lang === 'fr' ? 'likes' : 'likes'}
                 </span>
               </span>
               {reviews.length > 0 && (

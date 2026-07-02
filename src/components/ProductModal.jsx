@@ -12,9 +12,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
 import { supabase } from '../lib/supabase';
 import SweetoLogo from './SweetoLogo';
+import confetti from 'canvas-confetti';
 
 const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductClick }) => {
-  const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox, productViewsMap, incrementProductView } = useStore();
+  const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox, productViewsMap, incrementProductView, productLikesMap, toggleProductLike } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
@@ -549,6 +550,37 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <span className="text-base">👁️</span>
                           <span>{productViewsMap[product.id] || 0} {lang === 'fr' ? 'vues' : 'views'}</span>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const isWished = isInWishlist(product.id);
+                            toggleWishlist(product);
+                            toggleProductLike(product.id, !isWished);
+                            
+                            // Play pop confetti effect
+                            if (!isWished) {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = (rect.left + rect.width / 2) / window.innerWidth;
+                              const y = (rect.top + rect.height / 2) / window.innerHeight;
+                              confetti({
+                                particleCount: 80,
+                                spread: 60,
+                                origin: { x, y },
+                                startVelocity: 25,
+                                colors: ['#ff3b30', '#ff85a2', '#ffffff']
+                              });
+                            }
+                          }}
+                          className={`flex items-center gap-2 font-extrabold text-sm px-3.5 py-2 rounded-xl border shadow-sm transition-all cursor-pointer ${
+                            isInWishlist(product.id)
+                              ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:bg-rose-100 dark:hover:bg-rose-950/30 shadow-rose-500/10'
+                              : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                          }`}
+                          title={isInWishlist(product.id) ? "Unlike product" : "Like product"}
+                        >
+                          <span className="text-base">{isInWishlist(product.id) ? '❤️' : '🤍'}</span>
+                          <span>{productLikesMap[product.id] || 0} {lang === 'fr' ? 'likes' : 'likes'}</span>
+                        </button>
                       </div>
                       <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
