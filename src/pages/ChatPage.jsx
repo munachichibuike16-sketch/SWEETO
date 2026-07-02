@@ -5,12 +5,14 @@ import { useStore } from '../contexts/StoreContext';
 import LiveChatManagement from '../components/LiveChatManagement';
 import { ArrowLeft } from 'lucide-react';
 import AdminLogin from './AdminLogin';
+import AdminPinLock from '../components/AdminPinLock';
 
 export default function ChatPage() {
   const { showToast } = useStore();
   const navigate = useNavigate();
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   // Verify Admin authentication status
@@ -42,15 +44,32 @@ export default function ChatPage() {
     );
   }
 
+  const handleAdminLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      sessionStorage.removeItem('sweetohub_admin_authenticated');
+      sessionStorage.removeItem('sweetohub_admin_token');
+      setIsAdmin(false);
+      setIsUnlocked(false);
+      showToast("Logged out of Admin Portal", "info");
+      window.location.reload();
+    } catch (e) {}
+  };
+
   // Force Admin Login if not authenticated
   if (!isAdmin) {
     return (
       <AdminLogin 
         onLoginSuccess={() => {
           setIsAdmin(true);
+          setIsUnlocked(true);
         }} 
       />
     );
+  }
+
+  if (!isUnlocked) {
+    return <AdminPinLock onUnlock={() => setIsUnlocked(true)} onSignOut={handleAdminLogout} />;
   }
 
   // Render Admin Chat Dashboard View
@@ -75,15 +94,7 @@ export default function ChatPage() {
           </div>
         </div>
         <button
-          onClick={async () => {
-            try {
-              await supabase.auth.signOut();
-              sessionStorage.removeItem('sweetohub_admin_authenticated');
-              sessionStorage.removeItem('sweetohub_admin_token');
-              setIsAdmin(false);
-              showToast("Logged out of Admin Portal", "info");
-            } catch (e) {}
-          }}
+          onClick={handleAdminLogout}
           className="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 cursor-pointer transition-all"
         >
           Sign Out Admin

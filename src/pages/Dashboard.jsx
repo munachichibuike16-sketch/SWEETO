@@ -22,6 +22,7 @@ import ReceiptManagement from './ReceiptManagement';
 import AnalysisManagement from './AnalysisManagement';
 import PromoCode from './PromoCode';
 import LiveChatManagement from '../components/LiveChatManagement';
+import AdminPinLock from '../components/AdminPinLock';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { formatDbError } from '../utils/errorHelper';
@@ -143,7 +144,17 @@ const Dashboard = () => {
     }
   };
 
+  const handleAdminLogout = async () => {
+    try { await supabase.auth.signOut(); } catch (e) {}
+    sessionStorage.removeItem('sweetohub_admin_authenticated');
+    sessionStorage.removeItem('sweetohub_admin_token');
+    setIsAdminAuthenticated(false);
+    setIsUnlocked(false);
+    window.location.reload();
+  };
+
   const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
+  const [isUnlocked, setIsUnlocked] = React.useState(false);
   const [checkingAuth, setCheckingAuth] = React.useState(true);
 
   React.useEffect(() => {
@@ -776,7 +787,11 @@ const Dashboard = () => {
   }
 
   if (!isAdminAuthenticated) {
-    return <AdminLogin onLoginSuccess={() => setIsAdminAuthenticated(true)} />;
+    return <AdminLogin onLoginSuccess={() => { setIsAdminAuthenticated(true); setIsUnlocked(true); }} />;
+  }
+
+  if (!isUnlocked) {
+    return <AdminPinLock onUnlock={() => setIsUnlocked(true)} onSignOut={handleAdminLogout} />;
   }
 
   return (
@@ -823,7 +838,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-4"><div className="w-10 h-10 bg-white/10 rounded-2xl backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0"><span className="text-white font-black text-base">A</span></div><div><p className="text-white font-bold text-xs tracking-wide">Admin User</p><p className="text-white/55 text-[9px] uppercase tracking-widest font-black">System Master</p></div></div>
               <div className="flex items-center gap-2">
                 <button onClick={handleLogoutOthers} className="w-9 h-9 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 transition-all flex items-center justify-center border border-amber-500/20" title="Logout Other Devices"><Icons.Smartphone size={16} /></button>
-                <button onClick={async () => { try { await supabase.auth.signOut(); } catch (e) {} sessionStorage.removeItem('sweetohub_admin_authenticated'); sessionStorage.removeItem('sweetohub_admin_token'); window.location.reload(); }} className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all flex items-center justify-center border border-red-500/20" title="Lock Terminal"><Icons.LogOut size={16} /></button>
+                <button onClick={handleAdminLogout} className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all flex items-center justify-center border border-red-500/20" title="Lock Terminal"><Icons.LogOut size={16} /></button>
               </div>
             </div>
           </div>
