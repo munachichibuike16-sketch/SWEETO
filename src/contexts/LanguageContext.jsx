@@ -9,7 +9,7 @@ export const translations = {
     my_orders: "Orders", settings: "Settings", member_since: "Member Since", security: "Security", wishlist: "Wishlist", hello: "Hello",
     search_placeholder: "Search premium store...", welcome: "Welcome", sign_in: "SIGN IN", account: "Account",
     recent_arrivals: "Recent Arrivals", new: "New", just_arrived: "Just arrived!", view_all_new: "View All New Goods",
-    visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications", store_tab: "Store", activity: "Activity",
+    visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications", store_tab: "Store", chat_tab: "Chat", activity: "Activity",
     // Sidebar & Filters
     home_intelligence: "Home Intelligence", luxury_collection: "Luxury Collection", corporate_location: "Corporate Location",
     curated_wishlist: "Curated Wishlist", global_account: "Global Account", preference_node: "Preference Node",
@@ -135,7 +135,7 @@ export const translations = {
     my_orders: "Commandes", settings: "Paramètres", member_since: "Membre depuis", security: "Sécurité", wishlist: "Favoris", hello: "Bonjour",
     search_placeholder: "Recherche premium...", welcome: "Bienvenue", sign_in: "SE CONNECTER", account: "Compte",
     recent_arrivals: "Nouveautés", new: "Nouveau", just_arrived: "Vient d'arriver !", view_all_new: "Voir tout",
-    visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications", store_tab: "Boutique", activity: "Activité",
+    visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications", store_tab: "Boutique", chat_tab: "Chat", activity: "Activité",
     // Sidebar & Filters
     home_intelligence: "Accueil Intelligence", luxury_collection: "Collection Luxe", corporate_location: "Siège Social",
     curated_wishlist: "Liste de Souhaits", global_account: "Compte Global", preference_node: "Préférences",
