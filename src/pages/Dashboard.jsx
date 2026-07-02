@@ -31,6 +31,14 @@ import { useNavigate } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
 import { apiFetch } from '../utils/api';
 
+const isImageUrl = (url) => {
+  if (typeof url !== 'string') return false;
+  return url.startsWith('http') && (
+    url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i) || 
+    url.includes('/uploads/upload_')
+  );
+};
+
 const OrderFeedItem = ({ order, onStatusUpdate, currencySymbol }) => {
   const [dragDir, setDragDir] = useState(null); // 'left' | 'right' | null
   
@@ -232,6 +240,68 @@ const Dashboard = () => {
   }, [isAdminDark]);
 
   const [activeTab, setActiveTab] = React.useState('Overview');
+  const [hasUnreadChat, setHasUnreadChat] = React.useState(false);
+
+  React.useEffect(() => {
+    if (activeTab === 'Live Chat') {
+      setHasUnreadChat(false);
+    }
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    if (!isAdminAuthenticated) return;
+
+    const checkInitialUnreadChats = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        const latestBySession = {};
+        data?.forEach(msg => {
+          if (!latestBySession[msg.session_id]) {
+            latestBySession[msg.session_id] = msg;
+          }
+        });
+
+        const hasUnread = Object.values(latestBySession).some(
+          msg => msg.sender_role === 'customer'
+        );
+        setHasUnreadChat(hasUnread);
+      } catch (err) {
+        console.error('Error checking unread chats:', err);
+      }
+    };
+    checkInitialUnreadChats();
+
+    const channel = supabase
+      .channel('admin_global_chat_notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+        const newMsg = payload.new;
+        if (newMsg.sender_role === 'customer') {
+          try {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-500.wav');
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+          } catch (e) {}
+
+          setHasUnreadChat(true);
+          
+          if (activeTab !== 'Live Chat') {
+            const displayTxt = isImageUrl(newMsg.message_text) ? 'Sent a photo 📸' : newMsg.message_text.substring(0, 40);
+            showToast(`💬 ${newMsg.customer_name}: ${displayTxt}`, 'info');
+          }
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdminAuthenticated, activeTab]);
   const [notifications, setNotifications] = React.useState(() => {
     const saved = localStorage.getItem('admin_notifications_timed');
     return saved ? JSON.parse(saved) : [];
@@ -830,13 +900,14 @@ const Dashboard = () => {
             const isActive = activeTab === item.name;
             const hasUnreadOrders = item.name === 'Orders' && notifications.some(n => n.type === 'order' && !n.readAt);
             const hasUnreadStock = item.name === 'Stock' && notifications.some(n => n.type === 'stock' && !n.readAt);
+            const hasUnreadMessages = item.name === 'Live Chat' && hasUnreadChat;
             
             return (
               <button key={item.name} onClick={() => setActiveTab(item.name)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white font-medium'}`}>
                 {isActive && <motion.div layoutId="activeTabIndicator" className="absolute inset-0 border-2 border-blue-500/20 dark:border-blue-500/30 rounded-2xl" initial={false} transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />}
                 <item.icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                 <span className="text-sm tracking-wide">{item.name}</span>
-                {(hasUnreadOrders || hasUnreadStock) && <span className="ml-auto w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>}
+                {(hasUnreadOrders || hasUnreadStock || hasUnreadMessages) && <span className="ml-auto w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse"></span>}
               </button>
             );
           })}

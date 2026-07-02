@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn } from 'lucide-react';
+import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
@@ -249,6 +249,17 @@ export default function CustomerSupportPage() {
             className="w-full h-auto object-cover max-h-60 cursor-zoom-in hover:scale-[1.02] transition-transform duration-300"
             onClick={() => window.open(text, '_blank')}
           />
+          {/* Download save button overlay */}
+          <a
+            href={text}
+            download={`sweeto_chat_${Date.now()}.png`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-2.5 right-2.5 p-2 bg-black/60 hover:bg-black/80 text-white rounded-xl backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer shadow-md"
+            title={lang === 'fr' ? 'Enregistrer l\'image' : 'Save Image'}
+          >
+            <Download size={14} />
+          </a>
         </div>
       );
     }

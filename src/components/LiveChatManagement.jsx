@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin, Plus } from 'lucide-react';
+import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin, Plus, Image, Loader2, Download } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
+import { uploadToStorage } from '../utils/storageHelper';
 
 const isImageUrl = (url) => {
   if (typeof url !== 'string') return false;
@@ -61,9 +62,44 @@ export default function LiveChatManagement() {
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase || !selectedSessionId) return;
+
+    setIsUploading(true);
+    showToast('Uploading image...', 'info');
+
+    try {
+      const publicUrl = await uploadToStorage(file, 'chat_images');
+      
+      const customerName = selectedRoom?.customer_name || 'Guest';
+      const customerPhone = selectedRoom?.customer_phone || null;
+
+      const { error } = await supabase.from('chat_messages').insert([
+        {
+          session_id: selectedSessionId,
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          sender_role: 'admin',
+          message_text: publicUrl
+        }
+      ]);
+
+      if (error) throw error;
+      showToast('Image sent successfully! 📸', 'success');
+    } catch (err) {
+      console.error('Admin image upload failed:', err);
+      showToast('Image upload failed.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // 1. Fetch all messages on mount
   useEffect(() => {
@@ -358,12 +394,24 @@ export default function LiveChatManagement() {
                       }`}
                     >
                       {isImageUrl(msg.message_text) ? (
-                        <img 
-                          src={msg.message_text} 
-                          alt="Asset shared" 
-                          className="max-w-[240px] rounded-xl cursor-zoom-in hover:opacity-95"
-                          onClick={() => window.open(msg.message_text, '_blank')}
-                        />
+                        <div className="relative group/img overflow-hidden rounded-xl">
+                          <img 
+                            src={msg.message_text} 
+                            alt="Asset shared" 
+                            className="max-w-[240px] rounded-xl cursor-zoom-in hover:opacity-95"
+                            onClick={() => window.open(msg.message_text, '_blank')}
+                          />
+                          <a
+                            href={msg.message_text}
+                            download={`sweeto_chat_${Date.now()}.png`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute bottom-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center cursor-pointer shadow-md"
+                            title="Save Image"
+                          >
+                            <Download size={12} />
+                          </a>
+                        </div>
                       ) : isMapUrl(msg.message_text) ? (
                         <div className="flex flex-col gap-1.5 leading-normal min-w-[200px] text-slate-800 dark:text-slate-100">
                           <span className="text-[10px] font-black text-red-500 uppercase tracking-wide flex items-center gap-1">
@@ -393,17 +441,40 @@ export default function LiveChatManagement() {
             </div>
 
             {/* Reply Input */}
-            <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-2">
+            <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={isUploading}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading || isSending}
+                className="p-3 bg-slate-50 dark:bg-slate-800 text-[#0084FF] hover:bg-slate-100 dark:hover:bg-slate-750 rounded-2xl transition-all cursor-pointer shrink-0 disabled:opacity-40"
+                title="Send Image"
+              >
+                {isUploading ? (
+                  <Loader2 size={16} className="animate-spin text-blue-500" />
+                ) : (
+                  <Image size={16} />
+                )}
+              </button>
+
               <input
                 type="text"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Type your reply..."
                 className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
+                disabled={isUploading}
               />
               <button
                 type="submit"
-                disabled={!replyText.trim() || isSending}
+                disabled={!replyText.trim() || isSending || isUploading}
                 className="w-11 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/10 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all cursor-pointer shrink-0"
               >
                 <Send size={15} />
