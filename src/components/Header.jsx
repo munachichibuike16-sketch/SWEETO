@@ -590,16 +590,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             {/* Unified Icon Pill */}
             <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 rounded-2xl shadow-inner px-1 py-1 gap-1">
               
-              {/* Theme Toggle */}
-              <motion.button 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleTheme}
-                className="p-2.5 rounded-xl text-slate-400 hover:text-eas-blue hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                title={t('theme')}
-              >
-                {isDarkMode ? <Sun size={19} className="text-amber-400" /> : <Moon size={19} className="text-slate-600" />}
-              </motion.button>
+
 
               {/* Wishlist */}
               <motion.button 

@@ -1006,13 +1006,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
                 <CoteDivoireFlag />
               </button>
-              <button 
-                onClick={toggleTheme} 
-                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
-                title="Toggle Theme"
-              >
-                {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} />}
-              </button>
+
               <button 
                 onClick={() => navigate('/settings')} 
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
@@ -1347,22 +1341,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                     </div>
                   </div>
 
-                  {/* Theme */}
-                  <div 
-                    onClick={toggleTheme}
-                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-yellow-500/10 rounded-xl text-yellow-500 shrink-0">
-                        {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                      </div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">Theme</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">{isDarkMode ? 'Dark' : 'Light'}</span>
-                      <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-                    </div>
-                  </div>
+
 
                   {/* Clear Cache */}
                   <div 
@@ -2189,13 +2168,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
                 <CoteDivoireFlag />
               </button>
-              <button 
-                onClick={toggleTheme} 
-                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
-                title="Toggle Theme"
-              >
-                {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} />}
-              </button>
+
               <button 
                 onClick={() => navigate('/settings')} 
                 className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
