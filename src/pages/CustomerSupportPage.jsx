@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download, MessageSquare, CheckCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
@@ -84,7 +84,23 @@ export default function CustomerSupportPage() {
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-        setMessages(data || []);
+        
+        if (data) {
+          setMessages(data);
+          
+          // Mark all admin messages as read in database
+          const unreadAdminMsgIds = data
+            .filter(m => m.sender_role === 'admin' && !m.is_read)
+            .map(m => m.id);
+
+          if (unreadAdminMsgIds.length > 0) {
+            supabase
+              .from('chat_messages')
+              .update({ is_read: true })
+              .in('id', unreadAdminMsgIds)
+              .catch(() => {});
+          }
+        }
       } catch (err) {
         console.error('Error fetching support messages:', err);
       }
@@ -92,7 +108,7 @@ export default function CustomerSupportPage() {
 
     fetchMessages();
 
-    // Subscribe to new messages for this account
+    // Subscribe to new and updated messages for this account
     const channel = supabase
       .channel(`support_page_${sessionId}`)
       .on(
@@ -116,7 +132,28 @@ export default function CustomerSupportPage() {
               audio.volume = 0.4;
               audio.play().catch(() => {});
             } catch (e) {}
+
+            // Automatically mark this incoming admin message as read
+            supabase
+              .from('chat_messages')
+              .update({ is_read: true })
+              .eq('id', payload.new.id)
+              .catch(() => {});
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `session_id=eq.${sessionId}`
+        },
+        (payload) => {
+          setMessages((prev) => 
+            prev.map(m => m.id === payload.new.id ? { ...m, is_read: payload.new.is_read } : m)
+          );
         }
       )
       .subscribe();
@@ -471,8 +508,15 @@ export default function CustomerSupportPage() {
                       {/* Dynamic Message Content */}
                       {renderMessageText(msg)}
                       
-                      <span className="text-[8px] font-bold text-slate-400 mt-1 px-1.5">
+                      <span className="text-[8px] font-bold text-slate-400 mt-1 px-1.5 flex items-center gap-1.5">
                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {!isAdminMsg && (
+                          msg.is_read ? (
+                            <CheckCheck size={11} className="text-[#0084FF] font-black" title="Seen" />
+                          ) : (
+                            <CheckCheck size={11} className="text-slate-350 dark:text-slate-600" title="Sent & Received" />
+                          )
+                        )}
                       </span>
                     </div>
                   </div>

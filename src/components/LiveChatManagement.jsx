@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin, Plus, Image, Loader2, Download } from 'lucide-react';
+import { Send, User, Phone, MessageSquare, Search, Trash2, MapPin, Plus, Image, Loader2, Download, CheckCheck } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { uploadToStorage } from '../utils/storageHelper';
 
@@ -64,6 +64,11 @@ export default function LiveChatManagement() {
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const selectedSessionIdRef = useRef(selectedSessionId);
+  useEffect(() => {
+    selectedSessionIdRef.current = selectedSessionId;
+  }, [selectedSessionId]);
   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -140,7 +145,25 @@ export default function LiveChatManagement() {
               audio.volume = 0.5;
               audio.play().catch(() => {});
             } catch (e) {}
+
+            // If admin is actively viewing this customer's session, mark it as read immediately!
+            if (payload.new.session_id === selectedSessionIdRef.current) {
+              supabase
+                .from('chat_messages')
+                .update({ is_read: true })
+                .eq('id', payload.new.id)
+                .catch(() => {});
+            }
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_messages' },
+        (payload) => {
+          setMessages((prev) => 
+            prev.map(m => m.id === payload.new.id ? { ...m, is_read: payload.new.is_read } : m)
+          );
         }
       )
       .subscribe();
@@ -149,6 +172,30 @@ export default function LiveChatManagement() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Mark selected session's customer messages as read in the database
+  useEffect(() => {
+    if (!selectedSessionId || !supabase) return;
+
+    const markSessionMessagesAsRead = async () => {
+      try {
+        const unreadCustomerMsgIds = messages
+          .filter(m => m.session_id === selectedSessionId && m.sender_role === 'customer' && !m.is_read)
+          .map(m => m.id);
+
+        if (unreadCustomerMsgIds.length > 0) {
+          await supabase
+            .from('chat_messages')
+            .update({ is_read: true })
+            .in('id', unreadCustomerMsgIds);
+        }
+      } catch (err) {
+        console.warn('Could not update seen status:', err);
+      }
+    };
+
+    markSessionMessagesAsRead();
+  }, [selectedSessionId, messages, supabase]);
 
   // 3. Auto scroll selected chat
   useEffect(() => {
@@ -431,8 +478,15 @@ export default function LiveChatManagement() {
                         msg.message_text
                       )}
                     </div>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 px-1.5">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 px-1.5 flex items-center gap-1">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {msg.sender_role === 'admin' && (
+                        msg.is_read ? (
+                          <CheckCheck size={11} className="text-[#0084FF] font-black" title="Seen" />
+                        ) : (
+                          <CheckCheck size={11} className="text-slate-350 dark:text-slate-550" title="Sent & Received" />
+                        )
+                      )}
                     </span>
                   </div>
                 );
