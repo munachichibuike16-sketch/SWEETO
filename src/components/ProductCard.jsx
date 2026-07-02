@@ -47,6 +47,18 @@ const getSoldCount = (product) => {
   return product.sold_count || 0;
 };
 
+const getViewsCount = (productId) => {
+  const seed = (Number(productId) || 0);
+  const base = ((seed * 17) % 230) + 75; // Between 75 and 305 views
+  
+  let localViews = 0;
+  try {
+    localViews = Number(localStorage.getItem(`sweeto_views_${productId}`) || 0);
+  } catch (e) {}
+  
+  return base + localViews;
+};
+
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
   const { settings, openGlobalLightbox } = useStore();
   const { isDarkMode } = useTheme();
@@ -260,11 +272,20 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
           </div>
         ) : (
           <div className="flex flex-col flex-1 py-0.5 text-start">
-            {/* Sold Count with Red Flame */}
-            <div className="flex items-center gap-1 text-[11px] text-[#ff3b30] font-bold mb-1">
-              <span>🔥</span>
-              <span>
-                {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
+            {/* Sold Count with Red Flame and Views Count */}
+            <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] sm:text-[11px] font-bold mb-1">
+              <span className="text-[#ff3b30] flex items-center gap-0.5">
+                <span>🔥</span>
+                <span>
+                  {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
+                </span>
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-0.5 font-extrabold">
+                <span>👁️</span>
+                <span>
+                  {getViewsCount(product.id)} {lang === 'fr' ? 'vues' : 'views'}
+                </span>
               </span>
               {reviews.length > 0 && (
                 <>
