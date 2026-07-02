@@ -32,6 +32,7 @@ import GlobalLightbox from './components/GlobalLightbox';
 import BackToTop from './components/BackToTop';
 import SwipeGestures from './components/SwipeGestures';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+import CustomerChatWidget from './components/CustomerChatWidget';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -1387,6 +1388,7 @@ function App() {
       <BackToTop />
       <SwipeGestures />
       {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/product/') && !['/auth', '/login', '/register'].includes(getCurrentPath()) && <FloatingWhatsApp />}
+      {!getCurrentPath().includes('/dashboard') && <CustomerChatWidget />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />

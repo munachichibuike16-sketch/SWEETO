@@ -21,6 +21,7 @@ import ReviewManagement from './ReviewManagement';
 import ReceiptManagement from './ReceiptManagement';
 import AnalysisManagement from './AnalysisManagement';
 import PromoCode from './PromoCode';
+import LiveChatManagement from '../components/LiveChatManagement';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { formatDbError } from '../utils/errorHelper';
@@ -753,7 +754,7 @@ const Dashboard = () => {
     { name: 'Customers', icon: Icons.Users }, { name: 'Reviews', icon: Icons.Star },
     { name: 'Logistics', icon: Icons.Truck }, { name: 'Sections', icon: Icons.Layers },
     { name: 'Hero', icon: Icons.Monitor }, { name: 'Ads', icon: Icons.Film },
-    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Sweeto', icon: Icons.Sparkles }, { name: 'SWTO', icon: Icons.ToggleLeft }, { name: 'Settings', icon: Icons.Settings },
+    { name: 'Socials', icon: Icons.Share2 }, { name: 'Promos', icon: Icons.Ticket }, { name: 'Sweeto', icon: Icons.Sparkles }, { name: 'SWTO', icon: Icons.ToggleLeft }, { name: 'Live Chat', icon: Icons.MessageSquare }, { name: 'Settings', icon: Icons.Settings },
   ];
 
   const stats = [
@@ -1038,6 +1039,7 @@ const Dashboard = () => {
           {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
           {activeTab === 'Reviews' && <div className="max-w-7xl mx-auto"><ReviewManagement /></div>}
           {activeTab === 'Receipts' && <div className="max-w-7xl mx-auto"><ReceiptManagement /></div>}
+          {activeTab === 'Live Chat' && <div className="max-w-7xl mx-auto"><LiveChatManagement /></div>}
           {activeTab === 'Notifications' && (
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
