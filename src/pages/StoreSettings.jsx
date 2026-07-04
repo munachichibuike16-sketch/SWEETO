@@ -269,7 +269,8 @@ const StoreSettings = () => {
     enable_admin_call_alerts: false,
     wave_number: '',
     facebook_page_id: '',
-    facebook_access_token: ''
+    facebook_access_token: '',
+    gemini_api_key: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -311,7 +312,8 @@ const StoreSettings = () => {
         enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false,
         wave_number: settings.wave_number || '',
         facebook_page_id: settings.facebook_page_id || '',
-        facebook_access_token: settings.facebook_access_token || ''
+        facebook_access_token: settings.facebook_access_token || '',
+        gemini_api_key: settings.gemini_api_key || ''
       });
     }
   }, [settings, isDirty]);
@@ -1076,6 +1078,40 @@ const StoreSettings = () => {
                 >
                   <Zap size={14} /> Send Test Post to Facebook
                 </button>
+              </div>
+            </motion.div>
+
+            {/* AI Integrations Section */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-sm text-left animate-in fade-in slide-in-from-bottom-3 duration-500"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider">AI Integrations</h3>
+                  <p className="text-[9px] text-slate-400 font-bold mt-0.5">Configure AI capabilities for automated product description generation</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Google Gemini API Key</span>
+                  <input 
+                    type="password"
+                    name="gemini_api_key" 
+                    placeholder="AIzaSy..."
+                    value={formData.gemini_api_key || ''} 
+                    onChange={handleInputChange}
+                    className={inputStyle} 
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    Enter your free Gemini API key from Google AI Studio. This is used to automatically generate description text from uploaded product images.
+                  </p>
+                </div>
               </div>
             </motion.div>
           </div>

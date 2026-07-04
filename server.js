@@ -460,6 +460,7 @@ if (settingsCount === 0) {
   insertSetting.run('admin_key', 'admin123');
   insertSetting.run('enable_maintenance', 'false');
   insertSetting.run('hero_layout', 'grid');
+  insertSetting.run('gemini_api_key', '');
 } else {
   // Ensure all new keys exist even if settings table was already seeded
   const ensureSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
@@ -485,6 +486,7 @@ if (settingsCount === 0) {
   ensureSetting.run('loc_map_embed', '');
   ensureSetting.run('policy_privacy', '');
   ensureSetting.run('policy_terms', '');
+  ensureSetting.run('gemini_api_key', '');
 }
 
 // Seed standard Côte d'Ivoire shipping zones with coordinates if empty
@@ -1249,6 +1251,81 @@ app.get('/api/products', (req, res) => {
     res.json(formatted);
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error', message: err.message });
+  }
+});
+
+app.post('/api/products/describe-image', async (req, res) => {
+  const { imageUrl } = req.body;
+  if (!imageUrl) {
+    return res.status(400).json({ error: 'Image URL is required' });
+  }
+
+  try {
+    const keyRow = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get();
+    const apiKey = keyRow ? keyRow.value : '';
+    
+    if (!apiKey) {
+      return res.status(400).json({ 
+        error: 'Gemini API Key is not configured. Please add your free Gemini API Key in Store Settings to use this feature.' 
+      });
+    }
+
+    let base64Data = '';
+    let mimeType = 'image/jpeg';
+    
+    if (imageUrl.startsWith('http')) {
+      const imgRes = await fetch(imageUrl);
+      const contentType = imgRes.headers.get('content-type');
+      if (contentType) mimeType = contentType;
+      const buffer = await imgRes.arrayBuffer();
+      base64Data = Buffer.from(buffer).toString('base64');
+    } else {
+      const localPath = path.join(__dirname, imageUrl.replace(/^\//, ''));
+      if (fs.existsSync(localPath)) {
+        const buffer = fs.readFileSync(localPath);
+        base64Data = buffer.toString('base64');
+        if (imageUrl.endsWith('.png')) mimeType = 'image/png';
+        if (imageUrl.endsWith('.webp')) mimeType = 'image/webp';
+      } else {
+        return res.status(400).json({ error: 'Could not resolve image URL locally or online.' });
+      }
+    }
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const apiRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: "Analyse cette image de produit. Extrais tout texte écrit dessus (spécifications, marque, caractéristiques). Rédige une description de produit professionnelle, vendeuse et attrayante en Français. Structure la description avec des puces claires si nécessaire pour les caractéristiques clés. Donne uniquement le texte de la description rédigée."
+              },
+              {
+                inlineData: {
+                  mimeType: mimeType,
+                  data: base64Data
+                }
+              }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!apiRes.ok) {
+      const errData = await apiRes.json();
+      throw new Error(errData.error?.message || `Gemini API returned status ${apiRes.status}`);
+    }
+
+    const data = await apiRes.json();
+    const descriptionText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    res.json({ description: descriptionText.trim() });
+  } catch (err) {
+    console.error('Image description generation failed:', err);
+    res.status(550).json({ error: 'Failed to describe image: ' + err.message });
   }
 });
 
