@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download, MessageSquare, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download, MessageSquare, CheckCheck, Upload, ShoppingBag, Search, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
@@ -11,7 +11,7 @@ import { apiFetch } from '../utils/api';
 
 export default function CustomerSupportPage() {
   const { lang } = useLanguage();
-  const { showToast } = useStore();
+  const { showToast, products } = useStore();
   const navigate = useNavigate();
 
   // Authentication & session state
@@ -27,6 +27,11 @@ export default function CustomerSupportPage() {
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+
+  // Custom dialogs & modals
+  const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
+  const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -308,6 +313,53 @@ export default function CustomerSupportPage() {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  };
+
+  // Tag support for selected product
+  const handleTagProduct = async (product) => {
+    if (!product || !supabase || !sessionId) return;
+
+    const productTagText = `[PRODUCT_TAG]:${JSON.stringify({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url || product.image || '/hero-banner.png'
+    })}`;
+
+    setIsSending(true);
+    try {
+      const { error } = await supabase.from('chat_messages').insert([
+        {
+          session_id: sessionId,
+          customer_name: username,
+          customer_phone: phone || null,
+          sender_role: 'customer',
+          message_text: productTagText
+        }
+      ]);
+
+      if (error) throw error;
+
+      // Trigger background push notification for admins
+      apiFetch('/push/notify-chat-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: username,
+          messageText: `Tagged Product: ${product.name}`,
+          sessionId: sessionId,
+          targetRole: 'admin'
+        })
+      }).catch(err => console.warn('Could not trigger admin push notification:', err));
+
+      showToast(lang === 'fr' ? 'Produit lié ! 🏷' : 'Product tagged! 🏷', 'success');
+      setIsProductSelectorOpen(false);
+    } catch (err) {
+      console.error('Failed to send tagged product:', err);
+      showToast('Failed to tag product.', 'error');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Custom message content formatting (Image, GPS Map, Text)
@@ -620,7 +672,7 @@ export default function CustomerSupportPage() {
               {/* Send Image Trigger */}
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => setIsAttachmentMenuOpen(true)}
                 disabled={isUploading || isLocating}
                 className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-full transition-colors flex items-center justify-center text-[#0084FF] disabled:opacity-40 cursor-pointer"
                 title="Send Image"
@@ -676,6 +728,147 @@ export default function CustomerSupportPage() {
           </form>
         </div>
       </div>
+
+      {/* 1. ATTACHMENT MENU OPTIONS DIALOG */}
+      {isAttachmentMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative p-6 animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setIsAttachmentMenuOpen(false)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            >
+              <X size={18} />
+            </button>
+
+            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white mb-5 mt-1 text-center">
+              {lang === 'fr' ? 'Partager un média' : 'Share Media / Product'}
+            </h3>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setIsAttachmentMenuOpen(false);
+                  fileInputRef.current?.click();
+                }}
+                className="flex items-center gap-4 p-4 rounded-2xl border border-slate-150 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 bg-slate-50 dark:bg-slate-850 hover:bg-blue-50/50 dark:hover:bg-blue-950/10 text-left transition-all group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-[#0084FF] flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Upload size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">
+                    {lang === 'fr' ? "Télécharger depuis l'appareil" : 'Upload from Device'}
+                  </span>
+                  <span className="block text-[10px] font-bold text-slate-400 mt-0.5">
+                    {lang === 'fr' ? 'Sélectionner une photo dans votre stockage.' : 'Choose an image from your device.'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsAttachmentMenuOpen(false);
+                  setIsProductSelectorOpen(true);
+                }}
+                className="flex items-center gap-4 p-4 rounded-2xl border border-slate-150 dark:border-slate-800 hover:border-rose-500 dark:hover:border-rose-500 bg-slate-50 dark:bg-slate-850 hover:bg-rose-50/50 dark:hover:bg-rose-950/10 text-left transition-all group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <ShoppingBag size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">
+                    {lang === 'fr' ? 'Associer un produit' : 'Tag a Product'}
+                  </span>
+                  <span className="block text-[10px] font-bold text-slate-400 mt-0.5">
+                    {lang === 'fr' ? 'Partager la fiche de lunette / montre.' : 'Link a product directly from our online shop.'}
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. PRODUCT SELECTOR DIALOG */}
+      {isProductSelectorOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-in fade-in zoom-in duration-200">
+            <div className="p-5 border-b border-slate-150 dark:border-slate-850 flex items-center justify-between shrink-0">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                  {lang === 'fr' ? 'Associer un produit' : 'Select Product to Tag'}
+                </h3>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                  {lang === 'fr' ? 'Cliquez sur un produit pour l\'envoyer' : 'Tap on a product to attach it in chat'}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsProductSelectorOpen(false)}
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-855 shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <Search size={16} />
+                </span>
+                <input
+                  type="text"
+                  value={productSearchQuery}
+                  onChange={(e) => setProductSearchQuery(e.target.value)}
+                  placeholder={lang === 'fr' ? 'Rechercher des produits...' : 'Search products by name...'}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {(() => {
+                const filtered = (products || []).filter(p =>
+                  p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                  (p.category && p.category.toLowerCase().includes(productSearchQuery.toLowerCase()))
+                );
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-wider">
+                      {lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}
+                    </div>
+                  );
+                }
+
+                return filtered.map(prod => (
+                  <button
+                    key={prod.id}
+                    onClick={() => handleTagProduct(prod)}
+                    className="w-full flex items-center gap-3.5 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-855 transition-all text-left group"
+                  >
+                    <img
+                      src={prod.image_url || prod.image || '/hero-banner.png'}
+                      alt={prod.name}
+                      className="w-12 h-12 object-cover rounded-xl border border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50 group-hover:scale-[1.02] transition-transform"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-xs font-black text-slate-900 dark:text-white truncate group-hover:text-[#0084FF] transition-colors leading-tight">
+                        {prod.name}
+                      </span>
+                      <span className="block text-[10px] font-black text-rose-500 font-mono mt-1">
+                        {prod.price?.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest shrink-0 border border-dashed border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg group-hover:text-[#0084FF] group-hover:border-[#0084FF]/30 transition-all">
+                      {lang === 'fr' ? 'Taguer' : 'Tag'}
+                    </span>
+                  </button>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
