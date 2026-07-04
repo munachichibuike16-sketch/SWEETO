@@ -2127,6 +2127,80 @@ app.post('/api/settings', authenticateAdmin, (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/social/facebook-post', authenticateAdmin, async (req, res) => {
+  const { product, testPost = false } = req.body;
+  try {
+    const pageIdRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('facebook_page_id');
+    const tokenRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('facebook_access_token');
+    
+    const pageId = pageIdRow ? pageIdRow.value : '';
+    const token = tokenRow ? tokenRow.value : '';
+    
+    if (!pageId || !token) {
+      return res.status(400).json({ error: 'Facebook integration is not configured. Please add your Page ID and Page Access Token in Store Settings.' });
+    }
+    
+    const storeUrl = req.headers.origin || 'https://sweeto-hub.com';
+    
+    let caption = '';
+    let productLink = '';
+    let imageUrl = '';
+    
+    if (testPost) {
+      caption = `🔔 Test auto-posting from SWEETO HUB Admin Dashboard!\n\nCheck out our boutique here: ${storeUrl}`;
+    } else {
+      if (!product) {
+        return res.status(400).json({ error: 'Product details are required for posting.' });
+      }
+      const currency = 'FCFA';
+      caption = `✨ NEW ARRIVAL: ${product.name} ✨\n\n${product.description || ''}\n\n🏷️ Price: ${product.price?.toLocaleString()} ${currency}\n\n🛒 View & Order here:\n${storeUrl}/#/product/${product.id}`;
+      productLink = `${storeUrl}/#/product/${product.id}`;
+      
+      imageUrl = product.image_url || product.image || '';
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = `${storeUrl}${imageUrl}`;
+      }
+    }
+    
+    let fbUrl = `https://graph.facebook.com/v18.0/${pageId}/feed`;
+    let bodyParams = {
+      message: caption,
+      access_token: token
+    };
+    
+    if (!testPost && productLink) {
+      bodyParams.link = productLink;
+    }
+    
+    const isImageValid = imageUrl && imageUrl.startsWith('http') && !imageUrl.includes('localhost') && !imageUrl.includes('127.0.0.1');
+    if (isImageValid) {
+      fbUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
+      bodyParams = {
+        url: imageUrl,
+        caption: caption,
+        access_token: token
+      };
+    }
+    
+    const response = await fetch(fbUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyParams)
+    });
+    
+    const result = await response.json();
+    
+    if (result.error) {
+      throw new Error(result.error.message || 'Facebook API error');
+    }
+    
+    res.json({ success: true, postId: result.id || result.post_id });
+  } catch (err) {
+    console.error('Error posting to Facebook:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/track-visit', (req, res) => {
   const { page_path, country, event_type, device_id } = req.body;
   const ip = req.ip;

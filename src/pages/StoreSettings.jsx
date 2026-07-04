@@ -267,7 +267,9 @@ const StoreSettings = () => {
     active_template: 'chilling',
     admin_phone: '',
     enable_admin_call_alerts: false,
-    wave_number: ''
+    wave_number: '',
+    facebook_page_id: '',
+    facebook_access_token: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -307,7 +309,9 @@ const StoreSettings = () => {
         active_template: settings.active_template || 'chilling',
         admin_phone: settings.admin_phone || '',
         enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false,
-        wave_number: settings.wave_number || ''
+        wave_number: settings.wave_number || '',
+        facebook_page_id: settings.facebook_page_id || '',
+        facebook_access_token: settings.facebook_access_token || ''
       });
     }
   }, [settings, isDirty]);
@@ -998,6 +1002,80 @@ const StoreSettings = () => {
                     Enter your official Wave phone number to receive customer transfers at checkout.
                   </p>
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Social Media Settings Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.55 }}
+              className="group/card backdrop-blur-xl bg-white/80 dark:bg-slate-900/40 border border-white/50 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all hover:shadow-2xl hover:shadow-cyan-500/5 mt-6 text-left before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-indigo-400/40 before:to-transparent"
+            >
+              <SectionHeader 
+                icon={Globe} 
+                title="Social Media Integrations" 
+                color="indigo" 
+                subtitle="Configure auto-posting to Facebook page"
+              />
+              
+              <div className="space-y-6 mt-6">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Facebook Page ID</span>
+                  <input 
+                    type="text" 
+                    name="facebook_page_id" 
+                    placeholder="e.g. 109384839284"
+                    value={formData.facebook_page_id || ''} 
+                    onChange={handleInputChange}
+                    className={inputStyle} 
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    The numeric ID of your Facebook Page.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Facebook Page Access Token</span>
+                  <textarea 
+                    name="facebook_access_token" 
+                    placeholder="EAAGz..."
+                    value={formData.facebook_access_token || ''} 
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full px-5 sm:px-7 py-3.5 sm:py-5 bg-slate-50/50 dark:bg-slate-950/60 border border-slate-100 dark:border-white/10 rounded-2xl sm:rounded-[1.5rem] outline-none focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-400/50 focus:bg-white dark:focus:bg-slate-950/80 transition-all duration-300 font-black text-slate-900 dark:text-white text-xs placeholder:text-slate-300 dark:placeholder:text-slate-655"
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    Paste a permanent Page Access Token here. Keep it secret.
+                  </p>
+                </div>
+
+                {/* Facebook Test Button */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!formData.facebook_page_id || !formData.facebook_access_token) {
+                      showToast('Please enter both Facebook Page ID and Access Token first!', 'error');
+                      return;
+                    }
+                    try {
+                      showToast('Sending test post to Facebook Page... 👥', 'info');
+                      const res = await apiFetch('/social/facebook-post', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ testPost: true })
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || 'Server error');
+                      showToast('Test post published successfully! 🎉', 'success');
+                    } catch (e) {
+                      showToast('Facebook test failed: ' + e.message, 'error');
+                    }
+                  }}
+                  className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl active:scale-95 transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Zap size={14} /> Send Test Post to Facebook
+                </button>
               </div>
             </motion.div>
           </div>

@@ -52,6 +52,8 @@ export default function ProductsManagement() {
   const [confirmDel, setConfirmDel] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [autoPostFacebook, setAutoPostFacebook] = useState(false);
+  const [savedProductForShare, setSavedProductForShare] = useState(null);
   const [colorName, setColorName] = useState('');
   const [colorCode, setColorCode] = useState('#0000FF');
   const [showAllCategories, setShowAllCategories] = useState(false);
@@ -329,7 +331,7 @@ export default function ProductsManagement() {
     setError(''); setSuccess('');
     setView('form');
   };
-  const backToList = () => { setView('list'); setEditingProduct(null); setForm(EMPTY); setError(''); setSuccess(''); };
+  const backToList = () => { setView('list'); setEditingProduct(null); setForm(EMPTY); setError(''); setSuccess(''); setAutoPostFacebook(false); setSavedProductForShare(null); };
 
   const handleImg = async (e) => {
     const file = e.target.files[0]; if (!file) return;
@@ -478,9 +480,45 @@ export default function ProductsManagement() {
         }
       }
 
+      if (autoPostFacebook) {
+        try {
+          const fbPayload = {
+            id: payload.id,
+            name: payload.name,
+            description: form.description || '',
+            price: payload.price,
+            image_url: payload.image_url
+          };
+          apiFetch('/social/facebook-post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product: fbPayload })
+          }).then(res => {
+            if (!res.ok) {
+              res.json().then(d => console.warn('Facebook auto-post failed:', d.error));
+            } else {
+              console.log('✅ Facebook auto-post succeeded!');
+            }
+          }).catch(err => console.warn('Facebook auto-post network error:', err));
+        } catch (e) {
+          console.warn('Facebook auto-post trigger failed:', e);
+        }
+      }
+
       setSuccess(editingProduct?'Product updated!':'Product added!');
       refreshData();
-      setTimeout(()=>backToList(), 1500);
+      
+      if (!editingProduct) {
+        setSavedProductForShare({
+          id: payload.id,
+          name: payload.name,
+          price: payload.price,
+          description: form.description || '',
+          image_url: payload.image_url
+        });
+      } else {
+        setTimeout(()=>backToList(), 1500);
+      }
     } catch (err) {
       console.error(err);
       setError(formatDbError(err, 'Failed to save product.'));
@@ -1548,6 +1586,27 @@ export default function ProductsManagement() {
             )}
           </div>
 
+          {/* Social Media Sharing Options */}
+          {!editingProduct && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 space-y-4 shadow-sm text-left">
+              <label className={lbl}>Social Media Integrations</label>
+              
+              <button 
+                type="button" 
+                onClick={() => setAutoPostFacebook(!autoPostFacebook)}
+                className={`w-full flex items-center gap-3.5 p-4 rounded-2xl border-2 transition-all font-black uppercase tracking-widest text-[10px] text-left ${autoPostFacebook ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/30 text-slate-400 hover:border-indigo-500/30'}`}
+              >
+                <div className={`w-5 h-5 rounded-xl flex items-center justify-center border transition-all shrink-0 ${autoPostFacebook ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-300'}`}>
+                  {autoPostFacebook && <span className="text-[10px]">✓</span>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">Auto-post to Facebook Page</span>
+                  <span className="block text-[8px] font-bold text-slate-400 normal-case mt-0.5">Automatically publish this new product on your Facebook Page feed.</span>
+                </div>
+              </button>
+            </div>
+          )}
+
           <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center disabled:opacity-50">
             {isSubmitting?<Loader2 size={20} className="animate-spin"/>:editingProduct?'Update Product':'Confirm & Publish Listing'}
           </button>
@@ -1558,6 +1617,107 @@ export default function ProductsManagement() {
           </AnimatePresence>
         </form>
       </div>
+
+      {/* SUCCESS SHARE MODAL FOR WHATSAPP/SOCIALS */}
+      <AnimatePresence>
+        {savedProductForShare && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={backToList}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            
+            {/* Panel */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl space-y-6 overflow-hidden text-center z-10"
+            >
+              {/* Top Accent icon */}
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-lg">
+                <CheckCircle2 size={28} />
+              </div>
+              
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  Product Published Successfully! 🎉
+                </h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-bold">
+                  "{savedProductForShare.name}" is now live. Share it with your customers!
+                </p>
+              </div>
+
+              {/* Share Options Grid */}
+              <div className="space-y-3">
+                {/* Share to WhatsApp Status */}
+                <button
+                  onClick={() => {
+                    const message = encodeURIComponent(`🔥 NOUVEAU PRODUIT DISPONIBLE ! 🔥\n\n✨ ${savedProductForShare.name}\n🏷️ Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n\nCliquez ici pour commander directement :\n${window.location.origin}/#/product/${savedProductForShare.id}`);
+                    window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                    <Smartphone size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">Share to WhatsApp Status</span>
+                    <span className="block text-[9px] font-bold text-slate-400 mt-0.5">Post the new arrival link and price directly to your Status.</span>
+                  </div>
+                </button>
+
+                {/* Share to WhatsApp Chat */}
+                <button
+                  onClick={() => {
+                    const message = encodeURIComponent(`Bonjour ! Regardez notre nouvel arrivage chez SWEETO HUB :\n\n🕶️ ${savedProductForShare.name}\n💵 Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n\nDécouvrez plus de détails ici :\n${window.location.origin}/#/product/${savedProductForShare.id}`);
+                    window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 bg-blue-50/20 dark:bg-blue-950/10 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                    <MessageCircle size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">Share to WhatsApp Chat</span>
+                    <span className="block text-[9px] font-bold text-slate-400 mt-0.5">Send a quick promotional card to your clients or groups.</span>
+                  </div>
+                </button>
+
+                {/* Copy Promotional Link */}
+                <button
+                  onClick={() => {
+                    const promoText = `🕶️ ${savedProductForShare.name}\n💵 Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n🛒 Commandez ici: ${window.location.origin}/#/product/${savedProductForShare.id}`;
+                    navigator.clipboard.writeText(promoText);
+                    alert('Copied promotional share text to clipboard! 📋✨');
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-500 bg-slate-50 dark:bg-slate-850/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                    <Plus size={20} className="rotate-45" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">Copy Share Link & Info</span>
+                    <span className="block text-[9px] font-bold text-slate-400 mt-0.5">Copy product details and storefront URL to paste anywhere.</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Close / Return to List */}
+              <button
+                onClick={backToList}
+                className="w-full py-4 bg-slate-900 dark:bg-slate-800 hover:bg-slate-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer"
+              >
+                Close & Return to List
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
