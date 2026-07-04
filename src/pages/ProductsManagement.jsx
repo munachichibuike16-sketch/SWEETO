@@ -5,7 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
-import { apiFetch } from '../utils/api';
+import { apiFetch, API_BASE_URL } from '../utils/api';
 import { formatDbError } from '../utils/errorHelper';
 
 const FacebookIcon = ({ size = 20, className = '' }) => (
@@ -1663,7 +1663,8 @@ export default function ProductsManagement() {
                 {/* Share to WhatsApp Status */}
                 <button
                   onClick={() => {
-                    const message = encodeURIComponent(`🔥 NOUVEAU PRODUIT DISPONIBLE ! 🔥\n\n✨ ${savedProductForShare.name}\n🏷️ Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n\nCliquez ici pour commander directement :\n${window.location.origin}/#/product/${savedProductForShare.id}`);
+                    const shareUrl = `${API_BASE_URL}/share/product/${savedProductForShare.id}?redirect=${encodeURIComponent(window.location.origin)}`;
+                    const message = encodeURIComponent(`🔥 NOUVEAU PRODUIT DISPONIBLE ! 🔥\n\n✨ ${savedProductForShare.name}\n🏷️ Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n\nCliquez ici pour commander directement :\n${shareUrl}`);
                     window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
                   }}
                   className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 text-left transition-all group cursor-pointer"
@@ -1680,7 +1681,8 @@ export default function ProductsManagement() {
                 {/* Share to WhatsApp Chat */}
                 <button
                   onClick={() => {
-                    const message = encodeURIComponent(`Bonjour ! Regardez notre nouvel arrivage chez SWEETO HUB :\n\n🕶️ ${savedProductForShare.name}\n💵 Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n\nDécouvrez plus de détails ici :\n${window.location.origin}/#/product/${savedProductForShare.id}`);
+                    const shareUrl = `${API_BASE_URL}/share/product/${savedProductForShare.id}?redirect=${encodeURIComponent(window.location.origin)}`;
+                    const message = encodeURIComponent(`Bonjour ! Regardez notre nouvel arrivage chez SWEETO HUB :\n\n🕶️ ${savedProductForShare.name}\n💵 Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n\nDécouvrez plus de détails ici :\n${shareUrl}`);
                     window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
                   }}
                   className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 bg-blue-50/20 dark:bg-blue-950/10 text-left transition-all group cursor-pointer"
@@ -1697,8 +1699,8 @@ export default function ProductsManagement() {
                 {/* Share to Facebook */}
                 <button
                   onClick={() => {
-                    const productUrl = encodeURIComponent(`${window.location.origin}/#/product/${savedProductForShare.id}`);
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${productUrl}`, '_blank');
+                    const shareUrl = `${API_BASE_URL}/share/product/${savedProductForShare.id}?redirect=${encodeURIComponent(window.location.origin)}`;
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
                   }}
                   className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 text-left transition-all group cursor-pointer"
                 >
@@ -1714,7 +1716,8 @@ export default function ProductsManagement() {
                 {/* Copy Promotional Link */}
                 <button
                   onClick={() => {
-                    const promoText = `🕶️ ${savedProductForShare.name}\n💵 Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n🛒 Commandez ici: ${window.location.origin}/#/product/${savedProductForShare.id}`;
+                    const shareUrl = `${API_BASE_URL}/share/product/${savedProductForShare.id}?redirect=${encodeURIComponent(window.location.origin)}`;
+                    const promoText = `🕶️ ${savedProductForShare.name}\n💵 Prix: ${savedProductForShare.price?.toLocaleString()} FCFA\n🛒 Commandez ici: ${shareUrl}`;
                     navigator.clipboard.writeText(promoText);
                     alert('Copied promotional share text to clipboard! 📋✨');
                   }}

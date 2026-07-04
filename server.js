@@ -1252,6 +1252,79 @@ app.get('/api/products', (req, res) => {
   }
 });
 
+app.get('/share/product/:id', (req, res) => {
+  const { id } = req.params;
+  const redirect = req.query.redirect || 'https://sweetohub.com';
+  try {
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    if (!product) {
+      return res.status(404).send('Product not found');
+    }
+    
+    let imageUrl = product.image_url || '';
+    if (imageUrl.startsWith('/')) {
+      try {
+        const u = new URL(redirect);
+        imageUrl = u.origin + imageUrl;
+      } catch (e) {}
+    }
+
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:title" content="🔥 ${product.name} 🔥" />
+  <meta property="og:description" content="Prix: ${product.price?.toLocaleString()} FCFA - Découvrez ce produit et commandez maintenant sur SWEETO HUB!" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:type" content="product" />
+  <meta property="og:url" content="${redirect}/#/product/${product.id}" />
+  <title>${product.name}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #0f172a;
+      color: #f8fafc;
+      text-align: center;
+      padding: 20px;
+    }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border-left-color: #3b82f6;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    a { color: #60a5fa; text-decoration: none; font-weight: bold; margin-top: 10px; }
+  </style>
+  <script>
+    setTimeout(function() {
+      window.location.href = "${redirect}/#/product/${product.id}";
+    }, 100);
+  </script>
+</head>
+<body>
+  <div class="spinner"></div>
+  <h2>Redirection vers le produit...</h2>
+  <p>Si vous n'êtes pas redirigé automatiquement, <a href="${redirect}/#/product/${product.id}">cliquez ici</a>.</p>
+</body>
+</html>`;
+
+    res.send(html);
+  } catch (err) {
+    res.status(500).send('Internal Server Error: ' + err.message);
+  }
+});
+
 app.get('/api/products/:id', (req, res) => {
   const { id } = req.params;
   console.log(`GET /api/products/${id} requested`);
