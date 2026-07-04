@@ -8,6 +8,12 @@ import { uploadToStorage } from '../utils/storageHelper';
 import { apiFetch } from '../utils/api';
 import { formatDbError } from '../utils/errorHelper';
 
+const FacebookIcon = ({ size = 20, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+  </svg>
+);
+
 const EMPTY = { 
   name:'', price:'', originalPrice:'', categoryId:'', brandId:'', description:'', image_url:'', additional_images:[], status:'active', 
   featured:false, trending:false, dealOfDay:false, newArrival:false, smartphonesPlacement:false, homeCinemaPlacement:false, 
@@ -1685,6 +1691,23 @@ export default function ProductsManagement() {
                   <div className="flex-1 min-w-0">
                     <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">Share to WhatsApp Chat</span>
                     <span className="block text-[9px] font-bold text-slate-400 mt-0.5">Send a quick promotional card to your clients or groups.</span>
+                  </div>
+                </button>
+
+                {/* Share to Facebook */}
+                <button
+                  onClick={() => {
+                    const productUrl = encodeURIComponent(`${window.location.origin}/#/product/${savedProductForShare.id}`);
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${productUrl}`, '_blank');
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/10 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                    <FacebookIcon size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-xs font-black text-slate-900 dark:text-white leading-snug">Share to Facebook</span>
+                    <span className="block text-[9px] font-bold text-slate-400 mt-0.5">Post the product link directly to your Facebook Feed, Groups, or Story.</span>
                   </div>
                 </button>
 
