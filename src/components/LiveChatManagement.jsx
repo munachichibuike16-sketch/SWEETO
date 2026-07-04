@@ -321,7 +321,7 @@ export default function LiveChatManagement() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-180px)] min-h-[500px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-[2.5rem] flex overflow-hidden shadow-2xl relative">
+    <div className="w-full h-full bg-white dark:bg-slate-900 flex overflow-hidden relative">
       
       {/* Sidebar: Rooms List */}
       <div className="w-80 border-r border-slate-200/80 dark:border-slate-800 flex flex-col shrink-0 bg-white dark:bg-slate-900/50 relative">

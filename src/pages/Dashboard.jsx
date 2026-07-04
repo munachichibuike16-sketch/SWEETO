@@ -1035,7 +1035,7 @@ const Dashboard = () => {
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-32 lg:pb-12 z-10 scrollbar-hide">
+        <div className={`flex-1 ${activeTab === 'Live Chat' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-32 lg:pb-12 scrollbar-hide'} z-10`}>
           {activeTab === 'Overview' && (
             <div className="max-w-7xl mx-auto space-y-8">
               {/* Metrics Section (Grid on Desktop, Swipeable Carousel on Mobile) */}
@@ -1137,7 +1137,7 @@ const Dashboard = () => {
           {activeTab === 'Stock' && <div className="max-w-7xl mx-auto"><StockManagement /></div>}
           {activeTab === 'Reviews' && <div className="max-w-7xl mx-auto"><ReviewManagement /></div>}
           {activeTab === 'Receipts' && <div className="max-w-7xl mx-auto"><ReceiptManagement /></div>}
-          {activeTab === 'Live Chat' && <div className="max-w-7xl mx-auto"><LiveChatManagement /></div>}
+          {activeTab === 'Live Chat' && <div className="w-full flex-1 flex flex-col h-full"><LiveChatManagement /></div>}
           {activeTab === 'Notifications' && (
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
