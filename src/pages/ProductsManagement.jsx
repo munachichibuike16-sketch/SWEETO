@@ -147,6 +147,70 @@ export default function ProductsManagement() {
     setError('');
     try {
       setIsDescribing(true);
+      
+      const apiKey = settings?.gemini_api_key || '';
+      
+      // Client-side fallback if backend is unconfigured or a placeholder
+      if (!API_BASE_URL || API_BASE_URL.includes('your-backend-service.onrender.com') || !apiKey) {
+        if (!apiKey) {
+          throw new Error('Gemini API Key is not configured. Please add your free Gemini API Key in Store Settings to use this feature.');
+        }
+        
+        // 1. Fetch image and convert to base64 on client-side
+        const imgRes = await fetch(form.image_url);
+        const blob = await imgRes.blob();
+        const base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = reject;
+          reader.onloadend = () => {
+            const base64String = reader.result.split(',')[1];
+            resolve(base64String);
+          };
+          reader.readAsDataURL(blob);
+        });
+
+        // 2. Call Gemini Vision API directly from browser
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: "Analyse cette image de produit. Extrais tout texte écrit dessus (spécifications, marque, caractéristiques). Rédige une description de produit professionnelle, vendeuse et attrayante en Français. Structure la description avec des puces claires si nécessaire pour les caractéristiques clés. Donne uniquement le texte de la description rédigée."
+                  },
+                  {
+                    inlineData: {
+                      mimeType: blob.type || "image/jpeg",
+                      data: base64Data
+                    }
+                  }
+                ]
+              }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error?.message || `Gemini API returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+        const descriptionText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        if (descriptionText.trim()) {
+          setForm(p => ({ ...p, description: descriptionText.trim() }));
+          setSuccess('Product description generated successfully from image! 🤖✨');
+          setTimeout(() => setSuccess(''), 3000);
+          return;
+        } else {
+          throw new Error('AI did not return a description.');
+        }
+      }
+
       const res = await apiFetch('/products/describe-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
