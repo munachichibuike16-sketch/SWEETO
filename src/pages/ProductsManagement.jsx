@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit, Trash2, X, Loader2, CheckCircle2, AlertCircle, Tag, DollarSign, ListOrdered, FileText, Award, Percent, Star, TrendingUp, Zap, Clock, Smartphone, Tv, Speaker, Snowflake, Palette, Image as ImageIcon, ArrowLeft, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Loader2, CheckCircle2, AlertCircle, Tag, DollarSign, ListOrdered, FileText, Award, Percent, Star, TrendingUp, Zap, Clock, Smartphone, Tv, Speaker, Snowflake, Palette, Image as ImageIcon, ArrowLeft, Package, MessageCircle } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { compressImage } from '../utils/imageCompressor';
