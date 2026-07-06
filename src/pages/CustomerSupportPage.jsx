@@ -522,7 +522,7 @@ export default function CustomerSupportPage() {
 
   // 2. Render Full-Screen Chat View for Logged-In User
   return (
-    <div className="min-h-screen bg-[#F0F2F5] dark:bg-slate-950 flex flex-col font-sans">
+    <div className="h-screen max-h-screen overflow-hidden bg-[#F0F2F5] dark:bg-slate-950 flex flex-col font-sans">
       {/* Top Header Bar */}
       <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 py-3.5 px-4 sm:px-6 flex items-center justify-between shadow-sm shrink-0 z-30 sticky top-0 animate-fadeIn">
         <div className="flex items-center gap-3">
