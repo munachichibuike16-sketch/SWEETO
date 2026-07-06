@@ -1368,8 +1368,8 @@ app.get('/share/product/:id', (req, res) => {
 
     const priceFormatted = product.price ? `${product.price.toLocaleString()} ${currency}` : '';
     const description = priceFormatted 
-      ? `${priceFormatted} - ${product.description || 'Découvrez ce produit sur SWEETO!'}` 
-      : (product.description || 'Découvrez ce produit sur SWEETO!');
+      ? `${priceFormatted} - Découvrez ce produit sur SWEETO!` 
+      : 'Découvrez ce produit sur SWEETO!';
 
     const shareUrl = `${redirect}/#/product/${product.id}`;
 

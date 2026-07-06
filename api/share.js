@@ -60,8 +60,8 @@ export default async function handler(req, res) {
     
     const priceFormatted = product.price ? `${product.price.toLocaleString()} ${currency}` : '';
     const description = priceFormatted 
-      ? `${priceFormatted} - ${product.description || 'Check out this product on SWEETO!'}` 
-      : (product.description || 'Check out this product on SWEETO!');
+      ? `${priceFormatted} - Découvrez ce produit sur SWEETO!` 
+      : 'Découvrez ce produit sur SWEETO!';
 
     // 4. Return static HTML to the scraper/client
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
