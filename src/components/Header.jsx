@@ -14,7 +14,7 @@ import SweetoLogo from './SweetoLogo';
 const Header = ({ onMenuClick, onCartClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
-  const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings } = useStore();
+  const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings, showToast } = useStore();
   const { isDarkMode, toggleTheme } = useTheme();
   const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -379,12 +379,21 @@ const Header = ({ onMenuClick, onCartClick }) => {
     navigate('/');
   };
 
-  const handleImageSearchUpload = (e) => {
+  const handleImageSearchUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Reset standard input value to not confuse the user
     const reader = new FileReader();
+    
+    // Read the file as base64 to pass to Gemini
+    const base64Promise = new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onloadend = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+
     reader.onload = (event) => {
       setImageSearchPreview(event.target.result);
     };
@@ -393,21 +402,86 @@ const Header = ({ onMenuClick, onCartClick }) => {
     setIsScanning(true);
     setScanningProgressText(lang === 'fr' ? 'Extraction des caractéristiques...' : 'Extracting features...');
 
-    setTimeout(() => {
+    const progressTimeout1 = setTimeout(() => {
       setScanningProgressText(lang === 'fr' ? 'Analyse des catalogues...' : 'Scanning catalogs...');
     }, 700);
 
-    setTimeout(() => {
+    const progressTimeout2 = setTimeout(() => {
       setScanningProgressText(lang === 'fr' ? 'Association des produits visuellement similaires...' : 'Matching visually similar products...');
     }, 1400);
 
-    setTimeout(() => {
-      const fileNameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-      const keywords = fileNameWithoutExt
-        .toLowerCase()
-        .split(/[^a-z0-9]/)
-        .filter(k => k.length > 1);
+    try {
+      const base64Result = await base64Promise;
+      const base64Data = base64Result.split(',')[1];
+      const mimeType = file.type || 'image/jpeg';
+      const apiKey = settings?.gemini_api_key || '';
 
+      let keywords = [];
+      let searchTitle = file.name;
+
+      if (apiKey) {
+        // Call Gemini API to identify the product
+        try {
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+          const response = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: "Analyse cette image de produit. Donne uniquement 2 ou 3 mots-clés simples et pertinents en français ou en anglais séparés par des espaces pour rechercher ce produit dans le catalogue (par exemple: 'chargeur itel', 'samsung galaxy', 'aspirateur portable'). Ne donne aucun autre texte. Si tu ne peux pas identifier le produit, réponds simplement par 'inconnu'."
+                    },
+                    {
+                      inlineData: {
+                        mimeType: mimeType,
+                        data: base64Data
+                      }
+                    }
+                  ]
+                }
+              ]
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const cleanedText = textResult.trim().toLowerCase();
+            
+            if (cleanedText && cleanedText !== 'inconnu' && cleanedText !== 'unknown') {
+              // We successfully identified the product!
+              keywords = cleanedText.split(/[^a-z0-9àâäéèêëîïôöùûüç]/i).filter(k => k.length > 1);
+              searchTitle = textResult.trim();
+            }
+          }
+        } catch (apiError) {
+          console.error("Gemini image search failed, falling back to filename search:", apiError);
+        }
+      } else {
+        // Let the user know they can set up a Gemini API Key for smart search
+        if (showToast) {
+          showToast(
+            lang === 'fr' 
+              ? 'Conseil : Ajoutez votre clé API Gemini dans les Paramètres pour activer la recherche intelligente !' 
+              : 'Tip: Add your Gemini API Key in Store Settings to enable smart visual search!',
+            'info'
+          );
+        }
+      }
+
+      // If we didn't get keywords from Gemini (either no API key, or it failed, or it returned unknown)
+      // Fallback to filename keywords search
+      if (keywords.length === 0) {
+        const fileNameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+        keywords = fileNameWithoutExt
+          .toLowerCase()
+          .split(/[^a-z0-9àâäéèêëîïôöùûüç]/i)
+          .filter(k => k.length > 1);
+      }
+
+      // Perform local product filter based on keywords
       let matches = [];
       if (Array.isArray(products) && products.length > 0) {
         matches = products.filter(p => {
@@ -423,19 +497,23 @@ const Header = ({ onMenuClick, onCartClick }) => {
         });
       }
 
-
       setImageSearchResults(matches);
       
-      const visualSearchQueryText = lang === 'fr' ? `Recherche visuelle : ${file.name}` : `Visual Search: ${file.name}`;
+      const visualSearchQueryText = lang === 'fr' ? `Recherche visuelle : ${searchTitle}` : `Visual Search: ${searchTitle}`;
       setSearchQuery(visualSearchQueryText);
       setInputValue(visualSearchQueryText);
 
+    } catch (error) {
+      console.error("Visual search error:", error);
+    } finally {
+      clearTimeout(progressTimeout1);
+      clearTimeout(progressTimeout2);
       setIsScanning(false);
       setImageSearchPreview(null);
       setIsSearchOpen(false);
       setShowSuggestions(false);
       navigate('/');
-    }, 2100);
+    }
   };
 
   const handleSuggestionClick = (product) => {
