@@ -138,7 +138,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     e.stopPropagation();
     
     // Construct the crawler-friendly share link pointing to the backend metadata route
-    const baseShareUrl = API_BASE_URL || window.location.origin;
+    const baseShareUrl = (API_BASE_URL && !API_BASE_URL.includes('your-backend-service.onrender.com'))
+      ? API_BASE_URL 
+      : window.location.origin;
     const shareUrl = `${baseShareUrl}/share/product/${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
     const shareTitle = product.name;
     const shareText = product.description || `Check out ${product.name} on SWEETO!`;
