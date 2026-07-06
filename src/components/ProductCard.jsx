@@ -9,6 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import QuickViewModal from './QuickViewModal';
 import { supabase } from '../lib/supabase';
+import { API_BASE_URL } from '../utils/api';
 
 const trackVisit = (page_path, event_type) => {
   if (supabase) {
@@ -136,8 +137,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const handleShareProduct = (e) => {
     e.stopPropagation();
     
-    // Construct the crawler-friendly share link
-    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+    // Construct the crawler-friendly share link pointing to the backend metadata route
+    const baseShareUrl = API_BASE_URL || window.location.origin;
+    const shareUrl = `${baseShareUrl}/share/product/${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
     const shareTitle = product.name;
     const shareText = product.description || `Check out ${product.name} on SWEETO!`;
 
