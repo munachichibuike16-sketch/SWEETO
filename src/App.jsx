@@ -1043,12 +1043,11 @@ const Storefront = ({ viewMode = 'home' }) => {
                               <div key={`pair-before-${sec.id}`} className="my-0 px-4 md:px-0">
                                 <div className="grid grid-cols-2 gap-4 sm:gap-6">
                                   {pair.map(product => (
-                                    <div key={product.id} className="border-2 border-blue-600/40 dark:border-blue-500/40 rounded-[2rem] overflow-hidden p-1 bg-white dark:bg-slate-900 shadow-md">
-                                      <ProductCard 
-                                        product={product} 
-                                        onProductClick={handleProductClick} 
-                                      />
-                                    </div>
+                                    <ProductCard 
+                                      key={product.id}
+                                      product={product} 
+                                      onProductClick={handleProductClick} 
+                                    />
                                   ))}
                                 </div>
                               </div>
@@ -1069,12 +1068,11 @@ const Storefront = ({ viewMode = 'home' }) => {
                             <div key={`pair-after-sections-${remainingIndex}`} className="my-0 px-4 md:px-0">
                               <div className="grid grid-cols-2 gap-4 sm:gap-6">
                                 {pair.map(product => (
-                                  <div key={product.id} className="border-2 border-blue-600/40 dark:border-blue-500/40 rounded-[2rem] overflow-hidden p-1 bg-white dark:bg-slate-900 shadow-md">
-                                    <ProductCard 
-                                      product={product} 
-                                      onProductClick={handleProductClick} 
-                                    />
-                                  </div>
+                                  <ProductCard 
+                                    key={product.id}
+                                    product={product} 
+                                    onProductClick={handleProductClick} 
+                                  />
                                 ))}
                               </div>
                             </div>
