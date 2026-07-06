@@ -33,7 +33,7 @@ export const compressImage = async (file, maxWidth = 1200, quality = 0.8) => {
                 resolve(fallbackBlob);
               }, 'image/jpeg', quality);
             }
-          }, 'image/webp', quality);
+          }, 'image/jpeg', quality);
         } catch (e) {
           canvas.toBlob((fallbackBlob) => {
             resolve(fallbackBlob);
