@@ -4,6 +4,21 @@ import { ArrowUp } from 'lucide-react';
 
 export default function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.hash || window.location.pathname);
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.hash || window.location.pathname);
+    };
+
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
 
   useEffect(() => {
     const toggleVisibility = (e) => {
@@ -52,6 +67,11 @@ export default function BackToTop() {
     }
   };
 
+  // Adjust bottom spacing on pages where the floating chat button is hidden (like /dashboard, /chat, /support)
+  const isChatBubbleHidden = currentPath.includes('/dashboard')
+    || currentPath.includes('/chat')
+    || currentPath.includes('/support');
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -61,7 +81,7 @@ export default function BackToTop() {
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           onClick={scrollToTop}
-          className="fixed bottom-36 right-6 sm:bottom-24 sm:right-6 z-[9999] p-3.5 sm:p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-full text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-500 cursor-pointer hover:scale-110 active:scale-95 transition-transform flex items-center justify-center group"
+          className={`fixed ${isChatBubbleHidden ? 'bottom-6 right-6' : 'bottom-36 right-6 sm:bottom-24 sm:right-6'} z-[9999] p-3.5 sm:p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-full text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-500 cursor-pointer hover:scale-110 active:scale-95 transition-transform flex items-center justify-center group`}
           aria-label="Back to Top"
         >
           {/* Glowing background halo */}
