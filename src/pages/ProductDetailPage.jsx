@@ -662,9 +662,13 @@ const ProductDetailPage = () => {
         {/* Bottom-right: Wishlist Heart Button */}
         <button 
           onClick={() => toggleWishlist(product)} 
-          className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-slate-900 text-slate-400 hover:text-red-500 flex items-center justify-center shadow-lg cursor-pointer transition-all z-20"
+          className={`absolute bottom-4 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer z-20 ${
+            isInWishlist(product.id)
+              ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30'
+              : 'bg-white/95 dark:bg-slate-800/90 border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-[#ff3b30]'
+          }`}
         >
-          <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} className={isInWishlist(product.id) ? "text-red-500" : ""} />
+          <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
         </button>
       </div>
 
