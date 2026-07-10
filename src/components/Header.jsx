@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft, MessageSquare, ChevronDown, QrCode } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -14,11 +14,44 @@ import SweetoLogo from './SweetoLogo';
 const Header = ({ onMenuClick, onCartClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
-  const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings, showToast } = useStore();
+  const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings, showToast, sections } = useStore();
   const { isDarkMode, toggleTheme } = useTheme();
+
+  const homepageNavLinks = React.useMemo(() => {
+    let baseSections = [];
+    if (Array.isArray(sections) && sections.length > 0) {
+      baseSections = [...sections].sort((a, b) => (a.position || 0) - (b.position || 0));
+    } else {
+      const raw = settings?.homepageSections;
+      if (typeof raw === 'object' && Array.isArray(raw)) baseSections = raw;
+      else if (typeof raw === 'string' && raw.trim().startsWith('[')) {
+        try { baseSections = JSON.parse(raw); } catch (e) {}
+      }
+    }
+
+    const getSectionType = (sec) => {
+      let t = (sec.role && sec.role !== 'custom') ? sec.role : (sec.key || sec.type);
+      if (t && typeof t === 'string' && t.includes('_')) {
+        return t.replace(/_\d+$/, '');
+      }
+      return t;
+    };
+
+    const contentSections = baseSections.length > 0
+      ? baseSections.filter(s => getSectionType(s) !== 'hero' && s.isActive !== false && s.enabled !== false && s.is_active !== false)
+      : [
+          { type: 'featured_grid', title: 'Featured Gear' },
+          { type: 'just_arrived', title: 'New Arrivals' },
+          { type: 'trending', title: 'Trending Now' },
+          { type: 'deal_of_the_day', title: 'Deal of the Day' }
+        ];
+
+    return contentSections.map(s => s.title || s.name || s.type?.replace(/_/g, ' '));
+  }, [sections, settings]);
   const { lang, changeLanguage, t, t_smart, isRTL } = useLanguage();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showBottomNavScroll, setShowBottomNavScroll] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -524,84 +557,60 @@ const Header = ({ onMenuClick, onCartClick }) => {
   };
 
   useEffect(() => {
+    let scrollTimeout = null;
+    
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 30);
+      
+      // Hide bottom nav while scrolling
+      setShowBottomNavScroll(false);
+      
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      
+      // Show bottom nav after scrolling stops (250ms inactivity)
+      scrollTimeout = setTimeout(() => {
+        setShowBottomNavScroll(true);
+      }, 250);
     };
+    
     handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
   }, []);
 
   return (
     <>
-      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl shadow-md border-b border-slate-100 dark:border-slate-800 ${isScrolled ? 'py-2 px-4' : 'py-3.5 px-4 md:px-12'} ${isHomeOrCategory ? '' : 'hidden md:block'}`}>
-        {/* Desktop Header Layout */}
-        <div className="hidden md:flex max-w-[1600px] mx-auto items-center justify-between gap-6 w-full">
-          
-          {/* Menu & Logo Section */}
-          <div className="flex items-center gap-4">
-            {/* Logo — comes first */}
-            <motion.div 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white dark:bg-[#020617] shadow-md border-b border-slate-150 dark:border-slate-800 ${isHomeOrCategory ? '' : 'hidden md:block'}`}>
+
+        {/* Desktop Main Header Layout */}
+        <div className={`hidden md:flex max-w-[1240px] mx-auto items-center justify-between gap-8 w-full px-6 transition-all duration-300 ${isScrolled ? 'py-1.5' : 'py-3'}`}>
+          {/* Logo Section */}
+          <div className="flex items-center">
+            <div 
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory(null);
                 setSelectedBrand(null);
                 navigate('/');
               }}
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center cursor-pointer"
             >
-              <motion.div
-                whileHover={{ scale: 1.05, rotate: -1 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative shrink-0 flex items-center gap-2.5"
-              >
-                <SweetoLogo size={115} className="drop-shadow-[0_0_10px_rgba(96,165,250,0.15)]" />
-                
-                {/* Glowing Active Online Dot */}
-                <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest leading-none border border-emerald-500/20">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                  </span>
-                  Connected
-                </span>
-              </motion.div>
-            </motion.div>
-
-            {/* Menu button removed */}
-
-            {/* Home button */}
-            <motion.button 
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory(null);
-                setSelectedBrand(null);
-                navigate('/');
-              }}
-              className="flex p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
-            >
-              <Home size={22} />
-            </motion.button>
+              <img 
+                src="/sweeto_logo.png" 
+                alt="Sweeto Hub" 
+                className="h-9 max-h-9 w-auto object-contain select-none cursor-pointer" 
+              />
+            </div>
           </div>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearchTrigger} className="flex-1 max-w-xl flex items-center bg-slate-50 dark:bg-slate-900/40 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-5 pr-1 gap-3 relative group transition-all focus-within:ring-4 focus-within:ring-blue-500/10">
-            {/* Camera Icon */}
-            <button 
-              type="button" 
-              onClick={() => imageInputRef.current?.click()}
-              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 shrink-0"
-            >
-              <Camera size={19} strokeWidth={2} />
-            </button>
-            
-            {/* Divider */}
-            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
-
+          {/* Search Bar - AliExpress Style: Rounded pill with thin black border & black button inside */}
+          <form onSubmit={handleSearchTrigger} className="flex-1 max-w-[480px] xl:max-w-[580px] flex items-center bg-white dark:bg-slate-950 border border-black dark:border-slate-700 rounded-full p-0.5 pl-4 pr-1 gap-2 relative group transition-all">
             <input 
               type="text" 
               value={inputValue}
@@ -609,36 +618,45 @@ const Header = ({ onMenuClick, onCartClick }) => {
               onFocus={() => inputValue.length > 1 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder={placeholders[currentPlaceholderIndex]} 
-              className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-2"
+              className="w-full bg-transparent border-none outline-none font-medium text-xs text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1"
             />
 
             {inputValue && (
               <button 
                 type="button" 
                 onClick={() => setInputValue('')} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 shrink-0"
+                className="text-slate-450 hover:text-slate-650 dark:hover:text-slate-355 p-1 shrink-0 bg-transparent border-none cursor-pointer"
               >
-                <X size={15} />
+                <X size={14} />
               </button>
             )}
 
-            {/* Solid Black Search Button */}
+            {/* Camera Icon inside search bar */}
             <button 
-              type="submit" 
-              className="bg-slate-950 dark:bg-slate-800 hover:bg-slate-900 text-white rounded-full px-5 py-2 font-bold flex items-center justify-center transition-all active:scale-95 shrink-0 text-sm gap-2"
+              type="button" 
+              onClick={() => imageInputRef.current?.click()}
+              className="text-slate-450 hover:text-slate-655 dark:hover:text-slate-400 p-1 shrink-0 bg-transparent border-none cursor-pointer"
+              title="Search by image"
             >
-              <Search size={15} strokeWidth={2.5} />
-              <span>{t('search') || 'Search'}</span>
+              <Camera size={18} strokeWidth={2} />
             </button>
 
-            {/* Desktop Suggestions */}
+            {/* Black Pill-shaped search button inside search bar */}
+            <button 
+              type="submit" 
+              className="bg-[#191919] hover:bg-black text-white rounded-full w-7 h-7 flex items-center justify-center transition-all active:scale-95 shrink-0 border-none cursor-pointer"
+            >
+              <Search size={14} strokeWidth={3} />
+            </button>
+
+            {/* Suggestions list */}
             <AnimatePresence>
               {showSuggestions && suggestions.length > 0 && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: 10 }}
+                   className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50"
                 >
                   {suggestions.map((product) => (
                     <div 
@@ -653,8 +671,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
                         <span className="text-sm font-bold text-slate-900 dark:text-white">{product.name}</span>
                         <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{product.category}</span>
                       </div>
-                      <div className={`${isRTL ? 'mr-auto' : 'ml-auto'}`}>
-                        <span className="text-xs font-black text-eas-blue">{settings?.currency || 'FCFA'} {product.price.toLocaleString()}</span>
+                      <div className="ml-auto">
+                        <span className="text-xs font-black text-[#e61e25]">{settings?.currency || 'FCFA'} {product.price.toLocaleString()}</span>
                       </div>
                     </div>
                   ))}
@@ -663,182 +681,234 @@ const Header = ({ onMenuClick, onCartClick }) => {
             </AnimatePresence>
           </form>
 
-          {/* Desktop Action Center */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Unified Icon Pill */}
-            <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 rounded-2xl shadow-inner px-1 py-1 gap-1">
-              
-
-
-              {/* Wishlist */}
-              <motion.button 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate('/wishlist')}
-                className={`p-2.5 rounded-xl transition-all relative ${
-                  isWishlistPage 
-                    ? 'bg-[#ff3b30] text-white shadow-lg shadow-red-500/20' 
-                    : 'text-slate-400 hover:text-[#ff3b30] hover:bg-slate-50 dark:hover:bg-slate-700'
-                }`}
-              >
-                <Heart 
-                  size={19} 
-                  className={wishlistItems.length > 0 || isWishlistPage ? "text-[#ff3b30]" : ""} 
-                  fill={(wishlistItems.length > 0 || isWishlistPage) ? (isWishlistPage ? "white" : "currentColor") : "none"} 
-                  style={{ color: isWishlistPage ? 'white' : undefined }}
-                />
-                <AnimatePresence>
-                  {wishlistItems.length > 0 && !isWishlistPage && (
-                    <motion.span 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="absolute -top-1.5 -right-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[8px] w-4 h-4 flex items-center justify-center rounded-full font-black shadow border border-white dark:border-slate-800"
-                    >
-                      {wishlistItems.length}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-
-              {/* Language */}
-              <div className="relative" ref={langRef}>
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsLangOpen(!isLangOpen)}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-eas-blue hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                >
-                  <Globe size={17} className="text-eas-blue" />
-                  <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                    {lang.toUpperCase()}
-                  </span>
-                </motion.button>
-
-                <AnimatePresence>
-                  {isLangOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className={`absolute top-full ${isRTL ? 'start-0' : 'end-0'} mt-3 w-40 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]`}
-                    >
-                      <div className="max-h-[300px] overflow-y-auto scrollbar-hide py-2">
-                        {languages.map(language => (
-                          <button
-                            key={language.code}
-                            onClick={() => handleLanguageChange(language.code)}
-                            className={`w-full text-start px-4 py-2 text-[11px] font-bold transition-colors ${
-                              lang === language.code 
-                                ? 'bg-eas-blue/10 text-eas-blue dark:bg-eas-blue/20' 
-                                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                            }`}
-                          >
-                            <span className={`uppercase tracking-widest ${isRTL ? 'ms-2' : 'me-2'} opacity-50`}>{language.code}</span>
-                            {language.name}
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+          {/* Desktop Right Side Actions */}
+          <div className="flex items-center gap-5 flex-shrink-0 select-none">
+            {/* Download App widget */}
+            <div className="hidden xl:flex items-center gap-1.5 p-1 text-slate-700 dark:text-slate-350 hover:text-[#e61e25] cursor-pointer transition-colors" onClick={() => navigate('/visit')}>
+              <QrCode size={18} className="text-slate-650" />
+              <div className="flex flex-col items-start leading-none text-left text-[9px]">
+                <span className="text-slate-450">Download the</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">Sweeto app</span>
               </div>
-
-              {/* Visit Us */}
-              <motion.button 
-                whileHover={{ scale: 1.1 }} 
-                onClick={() => navigate('/visit')}
-                className="p-2.5 rounded-xl text-slate-400 hover:text-eas-blue hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                title={t('visit_us')}
-              >
-                <MapPin size={19} />
-              </motion.button>
             </div>
 
-            {/* User + Cart Group */}
-            <div className="flex items-center gap-3">
-              {user ? (
-                <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm px-3 py-2">
-                  <div 
-                    onClick={() => navigate('/auth')}
-                    className="w-8 h-8 bg-eas-blue text-white rounded-xl flex items-center justify-center font-black text-xs shadow cursor-pointer hover:scale-110 transition-transform overflow-hidden"
+            {/* Language/Country Dropdown (French/USD or similar) */}
+            <div className="relative" ref={langRef}>
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setIsLangOpen(!isLangOpen)}
+                className="flex items-center gap-1 px-1.5 py-1 rounded-xl text-slate-700 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-850/50 transition-all cursor-pointer bg-transparent border-none"
+              >
+                <span className="text-lg">🇨🇮</span>
+                <div className="flex flex-col items-start leading-none text-left text-[9px]">
+                  <span className="text-slate-405">FR/</span>
+                  <span className="font-bold uppercase text-slate-850 dark:text-slate-200 mt-0.5 flex items-center gap-0.5">
+                    {settings?.currency || 'USD'} <ChevronDown size={8} />
+                  </span>
+                </div>
+              </motion.button>
+
+              <AnimatePresence>
+                {isLangOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]"
                   >
-                    {user.avatarUrl || user.picture ? (
-                      <img 
-                        src={user.avatarUrl || user.picture} 
-                        alt={user.name} 
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="max-h-[250px] overflow-y-auto py-2">
+                      {languages.map(language => (
+                        <button
+                          key={language.code}
+                          onClick={() => handleLanguageChange(language.code)}
+                          className={`w-full text-start px-4 py-2 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer ${
+                            lang === language.code 
+                              ? 'bg-[#e61e25]/10 text-[#e61e25] dark:bg-[#e61e25]/20' 
+                              : 'text-slate-655 dark:text-slate-300 hover:bg-slate-55 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <span className="uppercase tracking-widest mr-2 opacity-50">{language.code}</span>
+                          {language.name}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Account dropdown (User icon outline, Welcome text, Log in / Register) */}
+            <div className="relative group/account">
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                onClick={() => navigate('/auth')}
+                className="flex items-center gap-1.5 px-1.5 py-1 rounded-xl text-slate-700 dark:text-slate-350 hover:bg-slate-55 dark:hover:bg-slate-855/50 transition-all cursor-pointer bg-transparent border-none"
+              >
+                <User size={18} strokeWidth={1.5} className="text-slate-800 dark:text-slate-200" />
+                <div className="flex flex-col items-start leading-none text-left text-[9px]">
+                  <span className="text-slate-400">Welcome</span>
+                  <span className="font-bold text-slate-855 dark:text-slate-200 mt-0.5 truncate max-w-[100px]">
+                    {user ? user.name.split(' ')[0] : 'Log in / Register'}
+                  </span>
+                </div>
+              </motion.button>
+
+              {/* Account hover card */}
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl p-5 hidden group-hover/account:block hover:block z-[110] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-405 text-lg font-black overflow-hidden mb-3 border border-slate-200/50">
+                    {user && (user.avatarUrl || user.picture) ? (
+                      <img src={user.avatarUrl || user.picture} alt="" className="w-full h-full object-cover" />
+                    ) : user ? (
+                      user.name.charAt(0).toUpperCase()
                     ) : (
-                      user.name?.charAt(0).toUpperCase()
+                      <User size={24} />
                     )}
                   </div>
-                  <div className="flex flex-col cursor-pointer" onClick={() => navigate('/auth')}>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('welcome')}</span>
-                    <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase italic tracking-tight hover:text-eas-blue transition-colors">{user.name?.split(' ')[0]}</span>
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    className={`${isRTL ? 'me-1' : 'ms-1'} p-1.5 text-slate-300 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20`}
-                    title={t('logout')}
-                  >
-                    <LogOut size={14} />
+                  {user ? (
+                    <>
+                      <h4 className="text-xs font-black text-slate-850 dark:text-white">{user.name}</h4>
+                      <p className="text-[9px] text-slate-450 dark:text-slate-500 mt-0.5">{user.email}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350 mb-3">Welcome to Sweeto Hub!</p>
+                      <div className="flex gap-2 w-full">
+                        <button 
+                          onClick={() => navigate('/login')}
+                          className="flex-1 py-2 bg-[#e61e25] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-[#c9181e] transition-colors border-none cursor-pointer"
+                        >
+                          Sign In
+                        </button>
+                        <button 
+                          onClick={() => navigate('/register')}
+                          className="flex-1 py-2 border border-slate-200 dark:border-slate-755 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-transparent cursor-pointer"
+                        >
+                          Join
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="py-2.5 space-y-1">
+                  <button onClick={() => navigate('/auth')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
+                    My Account
+                  </button>
+                  <button onClick={() => navigate('/auth')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
+                    My Orders
+                  </button>
+                  <button onClick={() => navigate('/wishlist')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-705 dark:text-slate-305 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
+                    My Wish List
+                  </button>
+                  <button onClick={() => navigate('/notifications')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
+                    Message Center
                   </button>
                 </div>
-              ) : (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/auth')}
-                  className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm px-3 py-2 cursor-pointer group"
-                >
-                  <div className="w-8 h-8 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-eas-blue group-hover:text-white transition-all">
-                    <User size={17} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('account')}</span>
-                    <span className="text-[11px] font-black text-slate-900 dark:text-white">{t('sign_in')}</span>
-                  </div>
-                </motion.div>
-              )}
 
-              {/* Settings Icon */}
-              {!isActualHomePage && (
-                <motion.button 
-                  whileHover={{ scale: 1.1 }} 
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate('/settings')}
-                  className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors"
-                  title={t('settings') || 'Settings'}
-                >
-                  <Settings size={20} />
-                </motion.button>
-              )}
-
-              {/* Notifications */}
-              <div className="relative">
-                <motion.button 
-                  whileHover={{ scale: 1.1 }} 
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate('/notifications')}
-                  className="p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-eas-blue hover:border-eas-blue transition-colors relative"
-                >
-                  <Bell size={20} />
-                  {unreadNotifCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-eas-blue rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-eas-blue/30">
-                      {unreadNotifCount}
-                    </span>
-                  )}
-                </motion.button>
+                {user && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-center py-2 bg-slate-50 dark:bg-slate-800/40 text-red-500 hover:bg-red-55 dark:hover:bg-red-955/20 text-xs font-black uppercase tracking-widest rounded-xl transition-colors border-none cursor-pointer"
+                    >
+                      Log Out
+                    </button>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Basket Button (ShoppingCart icon with black count badge and Basket text) */}
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              onClick={onCartClick}
+              className="flex items-center gap-1.5 px-1.5 py-1 rounded-xl text-slate-700 dark:text-slate-350 hover:bg-slate-55 transition-colors relative cursor-pointer bg-transparent border-none"
+            >
+              <div className="relative">
+                <ShoppingCart size={18} className="text-slate-850 dark:text-slate-200" />
+                <span className="absolute -top-1 -right-1.5 bg-black text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black border border-white dark:border-slate-900 shadow-sm leading-none">
+                  {cartCount}
+                </span>
+              </div>
+              <div className="flex flex-col items-start leading-none text-left text-[9px]">
+                <span className="font-bold text-slate-800 dark:text-slate-200">Basket</span>
+              </div>
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Sub-Header Categories Navigation Bar (AliExpress Style) */}
+        <div className="hidden lg:block border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#020617] py-1.5 px-6 select-none">
+          <div className="max-w-[1240px] mx-auto flex items-center gap-6 w-full text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            {/* Categories dropdown trigger (Aliexpress Style hamburger inside pill) */}
+            <div className="relative group/catmenu">
+              <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-full transition-colors cursor-pointer text-[10px] border-none font-bold">
+                <Menu size={12} strokeWidth={2.5} />
+                <span>All categories</span>
+              </button>
+
+              {/* Float Dropdown category list */}
+              <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl py-3 hidden group-hover/catmenu:block hover:block z-[110] animate-in fade-in duration-200">
+                {categories.filter(c => !c.parent_id).slice(0, 10).map(cat => (
+                  <button 
+                    key={cat.id} 
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setSelectedBrand(null);
+                      setSearchQuery('');
+                      navigate(`/category/${encodeURIComponent(cat.name)}`);
+                    }}
+                    className="w-full text-left py-2.5 px-4 text-xs font-bold text-slate-700 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#e61e25] transition-colors border-none bg-transparent cursor-pointer"
+                  >
+                    {t_smart ? t_smart(cat.name) : cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation links */}
+            <div className="flex items-center gap-5">
+              <button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory(null);
+                  setSelectedBrand(null);
+                  navigate('/');
+                }} 
+                className="hover:text-[#e61e25] transition-colors flex items-center gap-1 text-[#e61e25] bg-transparent border-none cursor-pointer font-black uppercase tracking-wider text-[11px]"
+              >
+                <span>For You</span>
+              </button>
+
+              {homepageNavLinks.slice(0, 5).map((sectionName, index) => (
+                <button 
+                  key={index} 
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory(null);
+                    setSelectedBrand(null);
+                    navigate('/');
+                  }} 
+                  className="hover:text-[#e61e25] transition-colors bg-transparent border-none cursor-pointer font-black uppercase tracking-wider text-[11px] text-slate-700 dark:text-slate-300"
+                >
+                  <span>{sectionName}</span>
+                </button>
+              ))}
+
+              {homepageNavLinks.length > 5 && (
+                <button className="hover:text-[#e61e25] transition-colors bg-transparent border-none cursor-pointer font-black uppercase tracking-wider text-[11px] flex items-center gap-0.5 text-slate-700 dark:text-slate-300">
+                  <span>More <ChevronDown size={11} /></span>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Mobile Header Layout */}
         <div className="flex flex-col md:hidden w-full">
-          {/* Row 1: Logo & Icons (fixed, persistent) */}
-          <div className={`flex items-center justify-between w-full transition-all duration-300 origin-top overflow-hidden ${isScrolled ? 'h-0 opacity-0 pointer-events-none mb-0 scale-y-95' : 'h-10 opacity-100 mb-2 scale-y-100'}`}>
+          {/* Persistent Compact Single-Row Mobile Header */}
+          <div className="flex items-center justify-between w-full h-11 gap-2.5 px-0.5">
             {/* Redesigned Icy Cool Mobile Branding without checkmark */}
             <div 
               onClick={() => {
@@ -847,83 +917,58 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 setSelectedBrand(null);
                 navigate('/');
               }}
-              className="flex items-center select-none cursor-pointer group"
+              className="flex items-center select-none cursor-pointer group shrink-0"
             >
-              <SweetoLogo size={105} className="drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]" />
+              <SweetoLogo size={90} className="drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]" />
+            </div>
+
+            {/* Compact Search Bar in the middle */}
+            <div 
+              onClick={() => setIsSearchOpen(true)}
+              className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-full py-1.5 pl-3.5 pr-2.5 gap-2 relative shadow-sm cursor-pointer h-8.5 overflow-hidden"
+            >
+              <Search size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
+              <div className="w-full bg-transparent border-none outline-none font-semibold text-xs text-slate-400 dark:text-slate-500 select-none truncate text-start">
+                {inputValue || placeholders[currentPlaceholderIndex]}
+              </div>
+              <button 
+                type="button" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  imageInputRef.current?.click();
+                }}
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-655 shrink-0 ml-auto flex items-center justify-center p-0.5"
+              >
+                <Camera size={14} strokeWidth={2} />
+              </button>
             </div>
  
-            {/* Action Icons: Notification bell & Settings */}
-            <div className="flex items-center gap-1">
+            {/* Action Icons: Settings gear & Notification bell */}
+            <div className="flex items-center gap-0.5 shrink-0">
               {/* Settings gear */}
               {!isActualHomePage && (
                 <button 
                   onClick={() => navigate('/settings')} 
-                  className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
+                  className="p-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
                   title={t('settings') || 'Settings'}
                 >
-                  <Settings size={22} strokeWidth={1.5} />
+                  <Settings size={20} strokeWidth={1.5} />
                 </button>
               )}
 
               {/* Notifications bell */}
               <button 
                 onClick={() => navigate('/notifications')} 
-                className="p-2 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
+                className="p-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
                 title={t('notifications')}
               >
-                <Bell size={22} strokeWidth={1.5} />
+                <Bell size={20} strokeWidth={1.5} />
                 {unreadNotifCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 min-w-4.5 h-4.5 px-1 bg-[#ff3b30] rounded-full flex items-center justify-center text-white text-[8px] font-black shadow-md leading-none">
+                  <span className="absolute top-1.5 right-1.5 min-w-4 h-4 px-1 bg-[#ff3b30] rounded-full flex items-center justify-center text-white text-[7.5px] font-black shadow-md leading-none">
                     {unreadNotifCount}
                   </span>
                 )}
               </button>
-            </div>
-          </div>
-
-          {/* Row 2: Pill-shaped Search Bar (fixed, persistent click-trigger) */}
-          <div 
-            onClick={() => setIsSearchOpen(true)}
-            className={`w-full flex items-center bg-white dark:bg-slate-900 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative shadow-sm transition-all duration-300 ${isScrolled ? 'mt-0' : 'mt-2.5'} cursor-pointer`}
-          >
-            {/* Camera Icon */}
-            <button 
-              type="button" 
-              onClick={(e) => {
-                e.stopPropagation();
-                imageInputRef.current?.click();
-              }}
-              className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 relative z-10"
-            >
-              <Camera size={19} strokeWidth={2} />
-            </button>
-            
-            {/* Separator line */}
-            <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
-            
-            {/* Input field (readonly visual display) */}
-            <div className="w-full bg-transparent border-none outline-none font-medium text-sm text-slate-400 dark:text-slate-500 px-0 py-1.5 select-none truncate text-start">
-              {inputValue || placeholders[currentPlaceholderIndex]}
-            </div>
-            
-            {/* Clear button */}
-            {inputValue && (
-              <button 
-                type="button" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setInputValue('');
-                  setSearchQuery('');
-                }} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 p-1 shrink-0 cursor-pointer"
-              >
-                <X size={15} />
-              </button>
-            )}
- 
-            {/* Black Search Button */}
-            <div className="bg-slate-950 dark:bg-slate-800 text-white rounded-full h-8 px-5 flex items-center justify-center transition-all shrink-0">
-              <Search size={16} strokeWidth={2.5} />
             </div>
           </div>
  
@@ -990,7 +1035,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
       {/* --- Mobile Bottom Navigation --- */}
       {showBottomNav && (
-        <nav className="fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500">
+        <nav className={`fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500 transform ${
+          showBottomNavScroll ? 'translate-y-0' : 'translate-y-full shadow-none border-t-transparent'
+        }`}>
         {/* Accueil */}
         <motion.button 
           onClick={() => {

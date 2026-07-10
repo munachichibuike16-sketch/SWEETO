@@ -19,6 +19,9 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import SweetoLogo from './SweetoLogo';
+import ForYouSection from './ForYouSection';
+import DealOfTheDaySection from './DealOfTheDaySection';
+import ShopByCategorySection from './ShopByCategorySection';
 
 const getImagesList = (prod) => {
   if (!prod) return [];
@@ -952,29 +955,28 @@ export default function BrightRetailHome({ onProductClick }) {
   };
 
   return (
-    <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] transition-colors duration-500 pb-20">
+    <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] transition-colors duration-500 pb-20 pt-4">
+      {/* Today's Offers (Deal of the Day) */}
+      <DealOfTheDaySection 
+        products={dailyDeals} 
+        onProductClick={onProductClick} 
+      />
+
+      {/* Shop By Category Section */}
+      <ShopByCategorySection />
+
+
+
       {brightSections.map((section, idx) => {
         const isEnabled = section.isActive !== false && section.enabled !== false && section.is_active !== false;
-        if (!isEnabled) return null;
+        if (!isEnabled || section.role === 'bright_dealOfDay') return null;
         
         const element = renderSection(section, idx);
-        
         if (section.role === 'bright_hero') {
           return (
-            <React.Fragment key={section.id || idx}>
+            <div key={section.id || idx} className="block">
               {element}
-              <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 my-6 flex justify-center">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                  className="w-full max-w-[220px] flex flex-col items-center justify-center"
-                >
-                  <SweetoLogo size="100%" animate={true} className="w-full drop-shadow-[0_0_12px_rgba(96,165,250,0.15)]" />
-                </motion.div>
-              </div>
-            </React.Fragment>
+            </div>
           );
         }
         return element;

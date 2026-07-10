@@ -96,12 +96,16 @@ export const StoreProvider = ({ children }) => {
       if (userCurrency === 'EUR') return 1 / 655.957;
       return 1;
     })();
-    return products.map(p => ({
-      ...p,
-      price: Math.round((p.price || 0) * rate),
-      original_price: p.original_price ? Math.round(p.original_price * rate) : null,
-      old_price: p.old_price ? Math.round(p.old_price * rate) : null,
-    }));
+    return products.map(p => {
+      const cleanCategory = p.category && (p.category.toLowerCase() === 'all' || p.category.toLowerCase() === 'tout') ? '' : (p.category || '');
+      return {
+        ...p,
+        category: cleanCategory,
+        price: Math.round((p.price || 0) * rate),
+        original_price: p.original_price ? Math.round(p.original_price * rate) : null,
+        old_price: p.old_price ? Math.round(p.old_price * rate) : null,
+      };
+    });
   }, [products, userCurrency]);
 
   const convertedSettings = React.useMemo(() => {
@@ -110,6 +114,11 @@ export const StoreProvider = ({ children }) => {
       currency: userCurrency === 'XOF' ? 'FCFA' : userCurrency
     };
   }, [settings, userCurrency]);
+
+  const convertedCategories = React.useMemo(() => {
+    return categories.filter(c => c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout');
+  }, [categories]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [imageSearchResults, setImageSearchResults] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -122,14 +131,6 @@ export const StoreProvider = ({ children }) => {
 
   const incrementProductView = useCallback((productId) => {
     if (!productId) return;
-    const page_path = `/product/${productId}`;
-    if (supabase) {
-      supabase.from('visitor_log').insert([{
-        page_path,
-        event_type: 'product viewed',
-        country: window.localStorage.getItem('user_country') || 'Unknown'
-      }]).then(() => {}).catch(() => {});
-    }
     setProductViewsMap(prev => ({
       ...prev,
       [productId]: (prev[productId] || 0) + 1
@@ -1002,7 +1003,7 @@ export const StoreProvider = ({ children }) => {
   return (
     <StoreContext.Provider value={{ 
       products: convertedProducts, 
-      categories, 
+      categories: convertedCategories, 
       brands,
       orders,
       settings: convertedSettings,

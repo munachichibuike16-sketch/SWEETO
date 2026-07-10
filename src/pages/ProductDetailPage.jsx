@@ -531,7 +531,7 @@ const ProductDetailPage = () => {
                 onClick={() => navigate(-1)}
                 className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-70 transition-opacity"
               >
-                <ChevronLeft size={24} strokeWidth={2.5} />
+                <ChevronLeft size={24} strokeWidth={2.5} className="animate-neon-color" />
               </button>
 
               {/* Search Bar Input Container */}
@@ -632,7 +632,7 @@ const ProductDetailPage = () => {
           onClick={() => navigate(-1)} 
           className="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors z-20"
         >
-          <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none" />
+          <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none animate-neon-color" />
         </button>
 
         {/* Top-right: Zoom & Share Buttons */}
@@ -729,25 +729,45 @@ const ProductDetailPage = () => {
                 {product.name}
               </h1>
 
-              {/* Pricing row */}
-              <div className="flex items-baseline gap-3.5">
-                <span className="text-2xl sm:text-3xl font-black text-[#e61e25] italic tracking-tighter">
-                  {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
-                </span>
-                {product.old_price && (
-                  <span className="text-sm text-slate-400 dark:text-slate-500 line-through font-bold">
-                    {settings?.currency || 'XOF'} {product.old_price.toLocaleString()}
+              {/* Pricing card (AliExpress Style) */}
+              <div className="bg-slate-50 dark:bg-slate-950/40 p-4.5 rounded-2xl border border-slate-150/60 dark:border-slate-800/60 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-[#e61e25] text-white px-2 py-0.5 rounded font-black uppercase tracking-wide">
+                    SuperDeals
                   </span>
-                )}
+                  {product.old_price && product.old_price > product.price && (
+                    <span className="text-[10px] text-[#e61e25] font-black">
+                      {Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl sm:text-4xl font-black text-[#e61e25] italic tracking-tighter">
+                    {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
+                  </span>
+                  {product.old_price && (
+                    <span className="text-sm text-slate-400 dark:text-slate-500 line-through font-bold">
+                      {settings?.currency || 'XOF'} {product.old_price.toLocaleString()}
+                    </span>
+                  )}
+                </div>
                 {product.old_price && product.old_price > product.price && (
-                  <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">
-                    {Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF
-                  </span>
+                  <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">
+                    You save: {settings?.currency || 'XOF'} {(product.old_price - product.price).toLocaleString()}
+                  </p>
                 )}
+                
+                {/* Store Coupons info */}
+                <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">
+                  <span>Store Coupons:</span>
+                  <span className="text-[#e61e25] bg-[#e61e25]/5 px-2 py-1 rounded border border-dashed border-[#e61e25]/30">
+                    Claim 1,000 XOF Coupon at Checkout
+                  </span>
+                </div>
               </div>
 
               {/* Rating + Sold proof */}
-              <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 pt-1.5">
                 <div className="flex items-center gap-1 text-amber-500">
                   <Star size={14} fill="currentColor" />
                   <span className="font-extrabold text-slate-700 dark:text-slate-200">{averageRating}</span>
@@ -758,6 +778,90 @@ const ProductDetailPage = () => {
                 <span className="text-[#e61e25] uppercase tracking-wide italic">
                   {getSoldCount(product) > 0 ? `+${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'Vendus' : 'Sold'}
                 </span>
+              </div>
+            </div>
+
+            {/* AliExpress style desktop options, quantity and action panel */}
+            <div className="hidden lg:flex flex-col gap-5 p-5 bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/80 rounded-3xl text-left shadow-sm">
+              {/* Variations selector (Desktop) */}
+              {variants.length > 0 && (
+                <div className="space-y-2.5">
+                  <div className="text-xs uppercase tracking-wider font-black text-slate-800 dark:text-slate-205 flex gap-2">
+                    <span className="text-slate-400 capitalize">{variantLabel}:</span>
+                    <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    {variants.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVariant(v);
+                          setActiveImageIndex(v.id); // Update main image to variant image!
+                        }}
+                        className={`px-4 py-2 border text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                          selectedVariant?.id === v.id
+                            ? 'border-[#e61e25] bg-[#e61e25]/5 text-[#e61e25] ring-2 ring-[#e61e25]/15'
+                            : 'border-slate-200 dark:border-slate-850 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {v.image && (
+                          <div className="w-6 h-6 rounded-md overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
+                            <img src={v.image} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <span>{v.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quantity selector (Desktop) */}
+              <div className="flex items-center gap-6">
+                <span className="text-xs uppercase tracking-wider font-black text-slate-400">Quantity:</span>
+                <div className="flex items-center border border-slate-200 dark:border-slate-850 rounded-full px-2 py-1 select-none bg-slate-50/50 dark:bg-slate-950/20">
+                  <button 
+                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer border-none bg-transparent"
+                  >
+                    <Minus size={13} strokeWidth={3} />
+                  </button>
+                  <span className="text-xs font-black text-slate-800 dark:text-white px-4 min-w-[32px] text-center">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(q => q + 1)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer border-none bg-transparent"
+                  >
+                    <Plus size={13} strokeWidth={3} />
+                  </button>
+                </div>
+                {product.stock !== undefined && (
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">
+                    ({product.stock} items available)
+                  </span>
+                )}
+              </div>
+
+              {/* Action Buttons (Desktop) */}
+              <div className="flex gap-4 pt-2">
+                <button 
+                  onClick={() => {
+                    addToCart(product, quantity);
+                    showToast("Added to shopping cart! 🛒", "success");
+                  }}
+                  className="flex-1 py-3.5 px-6 bg-[#ff9500] hover:bg-[#e08200] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center border-none"
+                >
+                  Add to Cart
+                </button>
+                <button 
+                  onClick={() => {
+                    addToCart(product, quantity);
+                    navigate('/checkout');
+                  }}
+                  className="flex-1 py-3.5 px-6 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center border-none"
+                >
+                  Buy Now
+                </button>
               </div>
             </div>
 

@@ -12,6 +12,7 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
+  Grid,
   Info,
   Layout,
   Link as LinkIcon,
@@ -238,7 +239,7 @@ const PushNotificationPanel = ({ showToast }) => {
 };
 
 const StoreSettings = () => {
-  const { settings, refreshData, showToast } = useStore();
+  const { products = [], settings, refreshData, showToast } = useStore();
   const [formData, setFormData] = useState({
     shopName: '',
     shopLogo: '',
@@ -270,7 +271,20 @@ const StoreSettings = () => {
     wave_number: '',
     facebook_page_id: '',
     facebook_access_token: '',
-    gemini_api_key: ''
+    gemini_api_key: '',
+    mobile_bottom_banner_enabled: false,
+    mobile_bottom_banner_title: 'Shop now',
+    mobile_bottom_banner_subtitle: 'Sale Ends in:',
+    mobile_bottom_banner_hours: '16',
+    mobile_bottom_banner_minutes: '22',
+    mobile_bottom_banner_seconds: '00',
+    mobile_bottom_banner_image: '/hero_summer_oasis.png',
+    mobile_bottom_banner_slot1_product_id: '',
+    mobile_bottom_banner_slot1_label: 'Brand gallery',
+    mobile_bottom_banner_slot2_product_id: '',
+    mobile_bottom_banner_slot2_label: 'LILYGO',
+    mobile_bottom_banner_slot3_product_id: '',
+    mobile_bottom_banner_slot3_label: 'OnePlus',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -313,7 +327,20 @@ const StoreSettings = () => {
         wave_number: settings.wave_number || '',
         facebook_page_id: settings.facebook_page_id || '',
         facebook_access_token: settings.facebook_access_token || '',
-        gemini_api_key: settings.gemini_api_key || ''
+        gemini_api_key: settings.gemini_api_key || '',
+        mobile_bottom_banner_enabled: settings.mobile_bottom_banner_enabled === 'true' || settings.mobile_bottom_banner_enabled === true || false,
+        mobile_bottom_banner_title: settings.mobile_bottom_banner_title || 'Shop now',
+        mobile_bottom_banner_subtitle: settings.mobile_bottom_banner_subtitle || 'Sale Ends in:',
+        mobile_bottom_banner_hours: settings.mobile_bottom_banner_hours || '16',
+        mobile_bottom_banner_minutes: settings.mobile_bottom_banner_minutes || '22',
+        mobile_bottom_banner_seconds: settings.mobile_bottom_banner_seconds || '00',
+        mobile_bottom_banner_image: settings.mobile_bottom_banner_image || '/hero_summer_oasis.png',
+        mobile_bottom_banner_slot1_product_id: settings.mobile_bottom_banner_slot1_product_id || '',
+        mobile_bottom_banner_slot1_label: settings.mobile_bottom_banner_slot1_label || 'Brand gallery',
+        mobile_bottom_banner_slot2_product_id: settings.mobile_bottom_banner_slot2_product_id || '',
+        mobile_bottom_banner_slot2_label: settings.mobile_bottom_banner_slot2_label || 'LILYGO',
+        mobile_bottom_banner_slot3_product_id: settings.mobile_bottom_banner_slot3_product_id || '',
+        mobile_bottom_banner_slot3_label: settings.mobile_bottom_banner_slot3_label || 'OnePlus',
       });
     }
   }, [settings, isDirty]);
@@ -1112,6 +1139,245 @@ const StoreSettings = () => {
                     Enter your free Gemini API key from Google AI Studio. This is used to automatically generate description text from uploaded product images.
                   </p>
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Mobile Bottom Promo Banner Settings Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-sm text-left mt-6"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <Grid size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider">Mobile Bottom Promo Banner</h3>
+                  <p className="text-[9px] text-slate-400 font-bold mt-0.5">Configure the wide promo banner that appears at the bottom of mobile screens</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Enabled Toggle */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Enable Banner on Mobile</span>
+                    <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                      Display this promo banner at the bottom of the home page on mobile viewports.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      name="mobile_bottom_banner_enabled"
+                      checked={formData.mobile_bottom_banner_enabled || false}
+                      onChange={(e) => {
+                        setIsDirty(true);
+                        setFormData(prev => ({ ...prev, mobile_bottom_banner_enabled: e.target.checked }));
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none dark:bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {/* Title & Subtitle */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Promo Action Text</span>
+                    <input 
+                      type="text"
+                      name="mobile_bottom_banner_title" 
+                      placeholder="e.g. Shop now"
+                      value={formData.mobile_bottom_banner_title || ''} 
+                      onChange={handleInputChange}
+                      className={inputStyle} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Countdown Header Text</span>
+                    <input 
+                      type="text"
+                      name="mobile_bottom_banner_subtitle" 
+                      placeholder="e.g. Sale Ends in:"
+                      value={formData.mobile_bottom_banner_subtitle || ''} 
+                      onChange={handleInputChange}
+                      className={inputStyle} 
+                    />
+                  </div>
+                </div>
+
+                {/* Hours, Minutes, Seconds */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Hours</span>
+                    <input 
+                      type="number"
+                      name="mobile_bottom_banner_hours" 
+                      placeholder="16"
+                      value={formData.mobile_bottom_banner_hours || ''} 
+                      onChange={handleInputChange}
+                      className={inputStyle} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Minutes</span>
+                    <input 
+                      type="number"
+                      name="mobile_bottom_banner_minutes" 
+                      placeholder="22"
+                      value={formData.mobile_bottom_banner_minutes || ''} 
+                      onChange={handleInputChange}
+                      className={inputStyle} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Seconds</span>
+                    <input 
+                      type="number"
+                      name="mobile_bottom_banner_seconds" 
+                      placeholder="00"
+                      value={formData.mobile_bottom_banner_seconds || ''} 
+                      onChange={handleInputChange}
+                      className={inputStyle} 
+                    />
+                  </div>
+                </div>
+
+                {/* Banner Illustration Image */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Banner Illustration Image</span>
+                  <div className="flex gap-4 items-center">
+                    <input 
+                      type="text"
+                      name="mobile_bottom_banner_image" 
+                      placeholder="e.g. /hero_summer_oasis.png"
+                      value={formData.mobile_bottom_banner_image || ''} 
+                      onChange={handleInputChange}
+                      className="flex-1 px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white font-medium text-xs" 
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      id="mobile-bottom-banner-file"
+                      onChange={(e) => handleImageUpload(e, 'mobile_bottom_banner_image')}
+                      className="hidden"
+                    />
+                    <label 
+                      htmlFor="mobile-bottom-banner-file"
+                      className="px-5 py-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-[10px] uppercase tracking-wider rounded-2xl transition-all cursor-pointer whitespace-nowrap active:scale-95 shadow-sm border border-slate-200/50 dark:border-white/5"
+                    >
+                      Upload
+                    </label>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <hr className="border-slate-100 dark:border-slate-800 my-4" />
+
+                {/* Product Slot 1 */}
+                <div className="bg-blue-50/30 dark:bg-blue-950/10 p-5 rounded-3xl border border-blue-100/50 dark:border-blue-900/30 space-y-4">
+                  <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[8px] font-black uppercase tracking-widest rounded-full">
+                    Slot 1 (Left Card)
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Slot Label Text</span>
+                      <input 
+                        type="text"
+                        name="mobile_bottom_banner_slot1_label" 
+                        placeholder="Brand gallery"
+                        value={formData.mobile_bottom_banner_slot1_label || ''} 
+                        onChange={handleInputChange}
+                        className={inputStyle} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Select Product</span>
+                      <select
+                        name="mobile_bottom_banner_slot1_product_id"
+                        value={formData.mobile_bottom_banner_slot1_product_id || ''}
+                        onChange={handleInputChange}
+                        className={inputStyle}
+                      >
+                        <option value="">-- Choose Product --</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.name} (${p.price})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Slot 2 */}
+                <div className="bg-amber-50/30 dark:bg-amber-950/10 p-5 rounded-3xl border border-amber-100/50 dark:border-amber-900/30 space-y-4">
+                  <span className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-450 text-[8px] font-black uppercase tracking-widest rounded-full">
+                    Slot 2 (Middle Card)
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Slot Label Text</span>
+                      <input 
+                        type="text"
+                        name="mobile_bottom_banner_slot2_label" 
+                        placeholder="LILYGO"
+                        value={formData.mobile_bottom_banner_slot2_label || ''} 
+                        onChange={handleInputChange}
+                        className={inputStyle} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Select Product</span>
+                      <select
+                        name="mobile_bottom_banner_slot2_product_id"
+                        value={formData.mobile_bottom_banner_slot2_product_id || ''}
+                        onChange={handleInputChange}
+                        className={inputStyle}
+                      >
+                        <option value="">-- Choose Product --</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.name} (${p.price})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Slot 3 */}
+                <div className="bg-rose-50/30 dark:bg-rose-950/10 p-5 rounded-3xl border border-rose-100/50 dark:border-rose-900/30 space-y-4">
+                  <span className="inline-block px-3 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-450 text-[8px] font-black uppercase tracking-widest rounded-full">
+                    Slot 3 (Right Card)
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Slot Label Text</span>
+                      <input 
+                        type="text"
+                        name="mobile_bottom_banner_slot3_label" 
+                        placeholder="OnePlus"
+                        value={formData.mobile_bottom_banner_slot3_label || ''} 
+                        onChange={handleInputChange}
+                        className={inputStyle} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Select Product</span>
+                      <select
+                        name="mobile_bottom_banner_slot3_product_id"
+                        value={formData.mobile_bottom_banner_slot3_product_id || ''}
+                        onChange={handleInputChange}
+                        className={inputStyle}
+                      >
+                        <option value="">-- Choose Product --</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>{p.name} (${p.price})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </motion.div>
           </div>

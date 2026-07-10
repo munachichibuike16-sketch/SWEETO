@@ -91,7 +91,7 @@ export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/he
   );
 };
 
-const ProductRow = ({ products, onProductClick }) => {
+const ProductRow = ({ products, onProductClick, type, isMobile }) => {
   const scrollRef = useRef(null);
   
   const scroll = (direction) => {
@@ -105,7 +105,7 @@ const ProductRow = ({ products, onProductClick }) => {
   };
 
   return (
-    <div className="relative group/row mb-8 px-1 md:px-0">
+    <div className="relative group/row mb-2 md:mb-8 px-1 md:px-0">
       {products.length > 2 && (
         <>
           <button 
@@ -135,6 +135,7 @@ const ProductRow = ({ products, onProductClick }) => {
               product={product}
               index={idx}
               onProductClick={onProductClick}
+              layout={!isMobile && type === 'new' ? 'new_arrivals' : 'default'}
             />
           </div>
         ))}
@@ -182,17 +183,17 @@ export const SectionHeader = ({
     };
 
     return (
-      <div className="flex items-center justify-between w-full mb-4 select-none">
+      <div className="flex items-center justify-between w-full mb-2 md:mb-4 select-none">
         <div 
           onClick={handleHeaderClick}
-          className="flex items-center gap-1.5 text-slate-900 dark:text-white font-extrabold text-base sm:text-lg uppercase tracking-tight group cursor-pointer"
+          className="flex items-center gap-1.5 group cursor-pointer"
         >
-          <span>{title}</span>
+          <span className="animate-title-shining text-base sm:text-lg uppercase tracking-wider">{title}</span>
           {showChevron && (
             <ChevronRight 
               size={18} 
-              className={`text-slate-400 dark:text-slate-500 group-hover:text-eas-blue transition-transform duration-300 ${
-                isMobile && isExpanded ? 'rotate-90 text-eas-blue' : 'group-hover:translate-x-0.5'
+              className={`animate-neon-color transition-transform duration-300 ${
+                isMobile && isExpanded ? 'rotate-90' : 'group-hover:translate-x-0.5'
               }`} 
             />
           )}
@@ -201,10 +202,13 @@ export const SectionHeader = ({
         {(viewAllLink || onViewAllClick) && (
           <button 
             onClick={handleViewAllClick}
-            className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-0.5 uppercase tracking-wider"
+            className="text-[11px] sm:text-xs font-bold text-[#2563eb] dark:text-blue-400 hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-0.5 uppercase tracking-wider"
           >
             <span>{t('view_all') || 'View All'}</span>
-            <ChevronRight size={14} className="stroke-[2.5]" />
+            <ChevronRight 
+              size={14} 
+              className="animate-neon-color stroke-[2.5]" 
+            />
           </button>
         )}
       </div>
@@ -236,7 +240,7 @@ export const SectionHeader = ({
   }`;
 
   return (
-    <div className={`mb-3 md:mb-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 relative group ${currentClass}`}>
+    <div className={`mb-2 md:mb-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 relative group ${currentClass}`}>
       {style === 'neon' && (
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[80px]"></div>
       )}
@@ -300,6 +304,8 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  if (!products || products.length === 0) return null;
+
   // Limit to 100 products for sections
   const displayProducts = (type === 'category') ? products : products.slice(0, 100);
 
@@ -326,7 +332,7 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
   };
 
   return (
-    <section className="py-1 md:py-2 px-0 md:px-12">
+    <section className="pt-2 pb-0 md:py-2 px-0 md:px-12">
       {!hideHeader && (
         <div className="px-3 md:px-0">
           <SectionHeader 
@@ -358,16 +364,17 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
             ))}
           </div>
         ) : (
-          <ProductRow products={filteredProducts} onProductClick={onProductClick} />
+          <ProductRow products={filteredProducts} onProductClick={onProductClick} type={type} isMobile={isMobile} />
         )
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-8 px-1 md:px-0 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-4 px-1 md:px-0 w-full">
           {filteredProducts.map((product, idx) => (
             <ProductCard
               key={`${product.id}-${idx}`}
               product={product}
               index={idx}
               onProductClick={onProductClick}
+              layout={!isMobile && type === 'new' ? 'new_arrivals' : 'default'}
             />
           ))}
         </div>

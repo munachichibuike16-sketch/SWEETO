@@ -224,3 +224,33 @@ button, a, .category-chip, .product-card, [role="button"] {
   -webkit-tap-highlight-color: transparent;
   outline: none;
 }
+
+/* Animated color shifting neon color indicator */
+@keyframes chevronColorAnimation {
+  0% { color: #ff0055; }
+  20% { color: #00f2fe; }
+  40% { color: #39ff14; }
+  60% { color: #ffea00; }
+  80% { color: #ff007a; }
+  100% { color: #ff0055; }
+}
+
+.animate-neon-color {
+  animation: chevronColorAnimation 4s linear infinite !important;
+}
+
+@keyframes textHueRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-title-shining {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  background: linear-gradient(to right, #ff0055, #00f2fe, #d946ef, #ff0055) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: textHueRotate 8s linear infinite !important;
+}

@@ -127,7 +127,7 @@ export default function DealsContent({ onProductClick }) {
               : 'bg-black/35 text-white hover:bg-black/50'
           }`}
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} className="animate-neon-color" />
         </button>
         
         <span className={`font-black text-sm uppercase tracking-widest transition-opacity duration-300 ${

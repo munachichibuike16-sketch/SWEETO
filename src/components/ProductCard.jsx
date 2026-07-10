@@ -49,12 +49,21 @@ const getSoldCount = (product) => {
 };
 
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
-  const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike } = useStore();
+  const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike, incrementProductView } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+  const isNewArrivalProduct = (() => {
+    if (product.created_at) {
+      const createdDate = new Date(product.created_at);
+      const ageInDays = (new Date() - createdDate) / (1000 * 60 * 60 * 24);
+      return ageInDays <= 5;
+    }
+    return Number(product.is_new_arrival) === 1 || product.is_new_arrival === true || String(product.is_new_arrival) === '1' || String(product.is_new_arrival) === 'true';
+  })();
 
   const getImagesList = (prod) => {
     if (!prod) return [];
@@ -76,7 +85,6 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   };
 
   const handleCardClick = (e) => {
-    trackVisit(`/product/${product.id}`, 'product clicked');
     if (onProductClick) {
       onProductClick(product);
     }
@@ -89,7 +97,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
 
   const openQuickView = (e) => {
     e.stopPropagation();
-    trackVisit(`/product/${product.id}`, 'product viewed');
+    incrementProductView(product.id);
     setIsQuickViewOpen(true);
   };
 
@@ -98,9 +106,6 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   };
 
   const handleViewDetails = (prod) => {
-    // Track view event
-    trackVisit(`/product/${prod.id}`, 'product viewed');
-
     setIsQuickViewOpen(false);
     if (onProductClick) {
       onProductClick(prod);
@@ -169,6 +174,116 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
   const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
 
+  if (layout === 'new_arrivals') {
+    const isEarlyBird = index < 3;
+    const isFr = lang === 'fr';
+
+    return (
+      <>
+        <motion.div 
+          whileHover={{ y: -4 }}
+          onClick={handleCardClick}
+          className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none select-none text-left"
+        >
+          {/* Image Container */}
+          <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-2.5 rounded-2xl bg-[#f4f4f4] dark:bg-slate-905 p-1">
+            {/* Top-left Badges Container */}
+            <div className="absolute top-2.5 left-2.5 z-20 flex flex-col sm:flex-row gap-1.5">
+              {isNewArrivalProduct && (
+                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none">
+                  {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
+                </span>
+              )}
+              {(product.is_daily_deal === 1 || product.is_daily_deal === true || String(product.is_daily_deal) === '1' || String(product.is_daily_deal) === 'true') && (
+                <span className="bg-[#2563eb] text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none">
+                  {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE OFFER'}
+                </span>
+              )}
+            </div>
+            {/* Wishlist Button (Floating overlay top-right) */}
+            <div className="absolute top-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleToggleWishlist}
+                className={`w-8.5 h-8.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
+                  isWished 
+                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
+                    : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
+                }`}
+              >
+                <Heart size={15} fill={isWished ? "currentColor" : "none"} />
+              </button>
+            </div>
+
+            {/* Cart Button (Floating overlay bottom-right) */}
+            <div className="absolute bottom-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleAddToCart}
+                className="w-8.5 h-8.5 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all text-slate-900 dark:text-white cursor-pointer"
+              >
+                <ShoppingCart size={15} className="text-slate-900 dark:text-white" />
+              </button>
+            </div>
+
+            <img 
+              src={product.image_url || product.image || '/hero-banner.png'} 
+              alt={product.name} 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = '/hero-banner.png';
+              }}
+              className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 rounded-lg"
+            />
+          </div>
+
+          {/* Title & Badges */}
+          <div className="flex flex-col flex-1 py-0.5 text-start">
+            <div className="flex items-start gap-1.5 mt-1.5 w-full leading-tight text-left">
+              {index % 2 === 0 ? (
+                <span className="bg-[#fff000] text-black text-[9.5px] font-black px-2 py-0.5 rounded leading-none shrink-0 uppercase">Choice</span>
+              ) : (
+                <span className="bg-[#1e5cff] text-white text-[9.5px] font-black px-2 py-0.5 rounded leading-none shrink-0 uppercase">Marque+</span>
+              )}
+              <span className="line-clamp-2 text-[13px] font-bold text-slate-700 dark:text-slate-350">
+                {t_smart(product.name)}
+              </span>
+            </div>
+
+            {/* Deal tag and Stats */}
+            <div className="mt-2.5 text-[12px] font-medium leading-normal">
+              {isEarlyBird ? (
+                <>
+                  <div className="text-[#ff0a24] font-black">
+                    {isFr ? "Offre de lancement" : "Early bird deal"}
+                  </div>
+                  <div className="text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+                    {getSoldCount(product)} {isFr ? 'vendus' : 'sold'}
+                  </div>
+                </>
+              ) : (
+                <div className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5">
+                  <span>{getSoldCount(product)} {isFr ? 'vendus' : 'sold'}</span>
+                  {reviews.length > 0 && reviews.length !== "0.0" && (
+                    <span className="flex items-center gap-0.5 text-amber-500">
+                      <span>⭐</span>
+                      <span>{averageRating}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        <QuickViewModal 
+          product={product} 
+          isOpen={isQuickViewOpen} 
+          onClose={closeQuickView}
+          onViewDetails={handleViewDetails}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <motion.div 
@@ -180,14 +295,19 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
         <div className={`relative aspect-square w-full flex items-center justify-center overflow-hidden mb-2 rounded-2xl ${
           layout === 'aliexpress' ? 'bg-[#f4f4f4] dark:bg-slate-900/50' : 'bg-transparent'
         }`}>
-          {/* Offre Élite Badge */}
-          {(product.is_daily_deal === 1 || product.is_daily_deal === true || String(product.is_daily_deal) === '1' || String(product.is_daily_deal) === 'true') && (
-            <div className="absolute top-2.5 left-2.5 z-20">
+          {/* Top-left Badges Container */}
+          <div className="absolute top-2.5 left-2.5 z-20 flex flex-col sm:flex-row gap-1.5">
+            {isNewArrivalProduct && (
+              <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none">
+                {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
+              </span>
+            )}
+            {(product.is_daily_deal === 1 || product.is_daily_deal === true || String(product.is_daily_deal) === '1' || String(product.is_daily_deal) === 'true') && (
               <span className="bg-[#2563eb] text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none">
                 {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE OFFER'}
               </span>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Action Buttons (Floating overlay inside image container top-right) */}
           <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5">
@@ -237,31 +357,64 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
         {/* Content */}
         {layout === 'aliexpress' ? (
           <div className="flex flex-col flex-1 py-0.5 text-start px-0.5">
-            {/* Title at the top */}
-            <h3 className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug line-clamp-2 mb-1.5">
-              {t_smart(product.name)}
-            </h3>
-
-            {/* Prices Row: Current Price & Original Price */}
-            <div className="flex items-baseline flex-wrap gap-1.5 mb-1.5">
-              <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white font-mono tracking-tight leading-none">
-                {settings?.currency || 'XOF'}{product.price?.toLocaleString()}
-              </span>
-              {product.original_price && (
-                <span className="text-[10.5px] sm:text-xs text-slate-400 dark:text-slate-500 line-through font-semibold font-mono">
-                  {settings?.currency || 'XOF'}{product.original_price.toLocaleString()}
+            {/* Pricing row with Slanted Red Discount Ribbon */}
+            <div className="flex items-stretch justify-between w-full mt-1 overflow-hidden">
+              <div className="flex flex-col text-left justify-center pl-0.5">
+                <span className="text-[14px] sm:text-base font-black text-slate-900 dark:text-white leading-none">
+                  {settings?.currency || 'FCFA'} {product.price?.toLocaleString()}
                 </span>
+                {product.original_price && product.original_price > product.price && (
+                  <span className="text-[10px] sm:text-[12px] font-bold text-slate-450 dark:text-slate-500 line-through mt-1.5 font-mono leading-none">
+                    {settings?.currency || 'FCFA'} {product.original_price.toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {discountPercent > 0 && (
+                <div 
+                  className="bg-[#ff0a24] text-white font-black text-[10px] sm:text-[13px] pl-3.5 sm:pl-5.5 pr-2 sm:pr-3 py-1 sm:py-2 flex items-center justify-center italic shrink-0"
+                  style={{ clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)' }}
+                >
+                  -{discountPercent}%
+                </div>
               )}
             </div>
 
-            {/* Pink Discount Badge at the bottom */}
-            {discountPercent > 0 && (
-              <div className="mt-auto">
-                <span className="bg-[#fff0f3] dark:bg-[#2b0811] text-[#ff007a] dark:text-[#ff4d94] font-black text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider leading-none">
-                  -{discountPercent}%
+            {/* Title with Choice/Marque+ Badge */}
+            <div className="flex items-center gap-1.5 mt-2 w-full leading-tight text-left">
+              {product.id % 2 === 0 ? (
+                <span className="bg-[#fff000] text-black text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded leading-none shrink-0 uppercase">Choice</span>
+              ) : (
+                <span className="bg-[#1e5cff] text-white text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded leading-none shrink-0 uppercase">Marque+</span>
+              )}
+              <span className="line-clamp-1 text-[11px] sm:text-[13px] font-bold text-slate-700 dark:text-slate-350">
+                {t_smart(product.name)}
+              </span>
+            </div>
+
+            {/* Stock urgency / sales ratings */}
+            <div className="mt-2 text-[10px] sm:text-[12px] font-medium leading-normal text-left">
+              {/* Urgency Stock (Line 1) */}
+              <div className="text-red-500 font-bold flex items-center gap-0.5">
+                <span>🔥</span>
+                <span>
+                  {product.stock <= 1 
+                    ? (lang === 'fr' ? '0 restant' : '0 remaining') 
+                    : product.stock <= 3 
+                      ? (lang === 'fr' ? 'Stock faible' : 'Low stock') 
+                      : (lang === 'fr' ? `${product.stock || 5} restants` : `${product.stock || 5} remaining`)}
                 </span>
               </div>
-            )}
+              {/* Sales & Rating (Line 2) */}
+              <div className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1 mt-0.5">
+                <span>{product.sold_count || 0} {lang === 'fr' ? 'vendus' : 'sold'}</span>
+                {reviews.length > 0 && (
+                  <span className="flex items-center gap-0.5 text-amber-500">
+                    <span>⭐</span>
+                    <span>{averageRating}</span>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col flex-1 py-0.5 text-start">

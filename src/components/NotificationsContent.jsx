@@ -622,7 +622,7 @@ const NotificationsContent = ({ onProductClick }) => {
           className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-none"
           aria-label="Back"
         >
-          <ChevronLeft size={22} strokeWidth={2.5} />
+          <ChevronLeft size={22} strokeWidth={2.5} className="animate-neon-color" />
         </button>
 
         {/* Center: Title */}

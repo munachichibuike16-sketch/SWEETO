@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { ArrowRight, ArrowRightCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -8,7 +8,16 @@ const Hero = ({ banners, layout = 'slider' }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [gridMainSlide, setGridMainSlide] = useState(0);
   const { products, settings } = useStore();
-  const { t, t_smart, isRTL } = useLanguage();
+  const { lang, t, t_smart, isRTL } = useLanguage();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleBannerClick = (link) => {
     if (!link) return;
@@ -26,6 +35,32 @@ const Hero = ({ banners, layout = 'slider' }) => {
     }
     window.location.href = link;
   };
+
+  const [timeLeft, setTimeLeft] = useState({ hours: 18, minutes: 10, seconds: 45 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        } else if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        } else if (prev.hours > 0) {
+          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        } else {
+          return { hours: 23, minutes: 59, seconds: 59 };
+        }
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const activeProducts = React.useMemo(() => {
+    return products?.filter(p => p.status === 'active' && p.stock > 0) || [];
+  }, [products]);
+
+  const dealProduct1 = activeProducts[0] || { name: 'Smart Phone', price: 1.36, image_url: '/hero-banner.png' };
+  const dealProduct2 = activeProducts[1] || { name: 'DOOGEE Phone', price: 863.71, image_url: '/hero-banner.png' };
 
 
   // 1. Parse Settings Banners
@@ -81,6 +116,90 @@ const Hero = ({ banners, layout = 'slider' }) => {
     }
   }, [layout, products.length]);
 
+  if (!isMobile) {
+    return (
+      <section className="w-full px-4 md:px-10 pt-3 pb-2 select-none bg-transparent">
+        <div 
+          onClick={() => handleBannerClick(displayBanners[currentSlide]?.link || '/deals')}
+          className="relative w-full h-[150px] sm:h-[220px] md:h-[240px] rounded-2xl overflow-hidden shadow-lg bg-[#007aff] flex flex-row items-center justify-between select-none cursor-pointer"
+        >
+          {/* Left Side Info */}
+          <div className="w-[60%] pl-5 sm:pl-8 flex flex-col justify-between py-4 sm:py-6 h-full text-white z-10 text-left">
+            <div className="flex flex-col gap-1.5 sm:gap-2.5">
+              {/* Countdown */}
+              <div className="flex items-center gap-1.5 text-white font-bold text-[9px] sm:text-[11px] tracking-wide">
+                <span>{lang === 'fr' ? 'Fin de la promo dans :' : 'End of promo in:'}</span>
+                <div className="flex items-center gap-0.5 sm:gap-1 font-sans">
+                  <span className="bg-white text-black text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="text-white font-bold leading-none">:</span>
+                  <span className="bg-white text-black text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="text-white font-bold leading-none">:</span>
+                  <span className="bg-white text-black text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                </div>
+              </div>
+              
+              {/* Headline */}
+              <div className="flex items-center gap-1 text-white font-black text-base sm:text-2xl md:text-3xl italic tracking-tighter leading-tight">
+                <span>{lang === 'fr' ? 'Faites vos achats sans souci' : 'Shop worry-free'}</span>
+                <ArrowRightCircle size={18} className="text-white fill-white/20 shrink-0" />
+              </div>
+            </div>
+
+            {/* Slashed Coupon Card & Product Deal slots */}
+            <div className="flex items-center gap-2 mt-auto">
+              {/* Coupon */}
+              <div className="relative px-3 py-1.5 bg-white rounded-lg border border-red-105 flex items-center gap-2 text-center shadow-md select-none text-red-500 font-black text-[9px] sm:text-[10px] leading-none">
+                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#007aff] rounded-full"></div>
+                <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#007aff] rounded-full"></div>
+                <span>-US $4 Coupon</span>
+              </div>
+              
+              {/* Brands slot */}
+              <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-1 text-[10px] text-white font-bold pl-2 pr-3">
+                <img 
+                  src={dealProduct1.image_url} 
+                  alt="" 
+                  className="w-6 h-6 object-contain bg-white rounded"
+                />
+                <div className="flex flex-col text-left leading-none">
+                  <span className="text-[8px] opacity-75">{lang === 'fr' ? 'Galerie des marques' : 'Brand gallery'}</span>
+                  <span className="text-[10px] font-black mt-0.5">US ${dealProduct1.price}</span>
+                </div>
+              </div>
+
+              {/* DOOGEE slot */}
+              <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-1 text-[10px] text-white font-bold pl-2 pr-3">
+                <img 
+                  src={dealProduct2.image_url} 
+                  alt="" 
+                  className="w-6 h-6 object-contain bg-white rounded"
+                />
+                <div className="flex flex-col text-left leading-none">
+                  <span className="text-[8px] opacity-75">DOOGEE</span>
+                  <span className="text-[10px] font-black mt-0.5">US ${dealProduct2.price}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side Illustration */}
+          <div className="w-[40%] h-full flex flex-col justify-between items-end relative overflow-hidden">
+            <div className="pt-4 pr-5 sm:pr-8 text-white font-black text-sm sm:text-xl md:text-2xl tracking-tight leading-none text-right z-10 italic">
+              {lang === 'fr' ? 'Plaisir d\'été' : 'Summer pleasure'}
+            </div>
+            <div className="absolute bottom-0 right-0 h-[85%] w-full flex justify-end items-end pointer-events-none select-none z-0">
+              <img 
+                src="/hero_summer_oasis.png" 
+                alt="" 
+                className="h-[95%] w-auto object-contain object-bottom select-none pointer-events-none" 
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (layout === 'grid') {
     // Main: auto-cycles through ALL active products
     const activeProducts = products.filter(p => p.status !== 'draft');
@@ -106,7 +225,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
     if (gridStyle === 'glass') {
       return (
-        <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-2">
+        <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-[600px]">
             {/* Main Large Banner — auto-cycles all products */}
             <div 
@@ -296,7 +415,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
     // Default: Full-Bleed Cover style (Immersive fullscreen)
     return (
-      <section className="max-w-[1600px] mx-auto px-6 pt-3 pb-2">
+      <section className="max-w-[1600px] mx-auto px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
            {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
           <div 
@@ -472,7 +591,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
   // We use the custom wide banner layout for all slider styles as requested by the user
   return (
-    <section className="max-w-[1600px] mx-auto md:px-6 pt-3 pb-2 select-none">
+    <section className="max-w-[1600px] mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2 select-none">
       <div 
         onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
         className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950 cursor-pointer group"

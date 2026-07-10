@@ -7,7 +7,7 @@ export const translations = {
     // Header & Nav
     home: "Home", saved: "Saved", profile: "Profile", me: "Me", cart: "Cart",
     my_orders: "Orders", settings: "Settings", member_since: "Member Since", security: "Security", wishlist: "Wishlist", hello: "Hello",
-    search_placeholder: "Search premium store...", welcome: "Welcome", sign_in: "SIGN IN", account: "Account",
+    search_placeholder: "Search premium store...", welcome: "Welcome", welcome_to_store: "Welcome to Sweeto Hub!", sign_in: "SIGN IN", account: "Account",
     recent_arrivals: "Recent Arrivals", new: "New", just_arrived: "Just arrived!", view_all_new: "View All New Goods",
     visit_us: "Visit Us", language: "Language", theme: "Theme", notifications: "Notifications", store_tab: "Store", chat_tab: "Chat", activity: "Activity",
     // Sidebar & Filters
@@ -133,7 +133,7 @@ export const translations = {
     // Header & Nav
     home: "Accueil", saved: "Enregistré", profile: "Profil", me: "Moi", cart: "Panier",
     my_orders: "Commandes", settings: "Paramètres", member_since: "Membre depuis", security: "Sécurité", wishlist: "Favoris", hello: "Bonjour",
-    search_placeholder: "Recherche premium...", welcome: "Bienvenue", sign_in: "SE CONNECTER", account: "Compte",
+    search_placeholder: "Recherche premium...", welcome: "Bienvenue", welcome_to_store: "Bienvenue sur Sweeto Hub!", sign_in: "SE CONNECTER", account: "Compte",
     recent_arrivals: "Nouveautés", new: "Nouveau", just_arrived: "Vient d'arriver !", view_all_new: "Voir tout",
     visit_us: "Nous Visiter", language: "Langue", theme: "Thème", notifications: "Notifications", store_tab: "Boutique", chat_tab: "Chat", activity: "Activité",
     // Sidebar & Filters

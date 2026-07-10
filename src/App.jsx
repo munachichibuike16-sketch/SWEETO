@@ -4,6 +4,7 @@ import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, M
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import ForYouSection from './components/ForYouSection';
 import TopCategories from './components/TopCategories';
 import Sidebar from './components/Sidebar';
 import ProductSection, { SectionBanner, DualProductSection } from './components/ProductSection';
@@ -39,6 +40,8 @@ import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
 import SweetoLogo from './components/SweetoLogo';
+import MobileBottomBanner from './components/MobileBottomBanner';
+import MobileBottomFeed from './components/MobileBottomFeed';
 
 const shuffleArray = (array) => {
   const arr = [...(array || [])];
@@ -105,6 +108,7 @@ import LoadingScreen from './components/LoadingScreen';
 
 import VideoAdSection from './components/VideoAdSection';
 import DealOfTheDaySection from './components/DealOfTheDaySection';
+import ShopByCategorySection from './components/ShopByCategorySection';
 import { CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 const Toast = () => {
@@ -218,7 +222,31 @@ const ConfirmDialog = () => {
 };
 
 
-const Storefront = ({ viewMode = 'home' }) => {
+const Storefront = ({ viewMode: propViewMode }) => {
+  const location = useLocation();
+  const viewMode = useMemo(() => {
+    if (propViewMode) return propViewMode;
+    const path = location.pathname;
+    if (path === '/') return 'home';
+    if (path === '/wishlist') return 'wishlist';
+    if (path === '/notifications') return 'notifications';
+    if (path === '/products') return 'products';
+    if (path === '/login') return 'login';
+    if (path === '/register') return 'signup';
+    if (path === '/auth') return 'auth';
+    if (path === '/settings') return 'settings';
+    if (path === '/deals') return 'deals';
+    if (path === '/trending') return 'trending';
+    if (path === '/new-arrivals') return 'new-arrivals';
+    if (path === '/featured') return 'featured';
+    if (path === '/visit') return 'visit';
+    if (path === '/privacy') return 'privacy';
+    if (path === '/terms') return 'terms';
+    if (path === '/security') return 'security';
+    if (path.startsWith('/category/')) return 'category';
+    return 'home';
+  }, [location.pathname, propViewMode]);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -425,7 +453,14 @@ const Storefront = ({ viewMode = 'home' }) => {
     : categoryFilteredProducts;
     
   const dealProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === 'true') : [];
-  const newProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_new_arrival) === 1 || p.is_new_arrival === true || String(p.is_new_arrival) === '1' || String(p.is_new_arrival) === 'true').sort((a,b) => b.id - a.id) : [];
+  const newProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => {
+    if (p.created_at) {
+      const createdDate = new Date(p.created_at);
+      const ageInDays = (new Date() - createdDate) / (1000 * 60 * 60 * 24);
+      return ageInDays <= 5;
+    }
+    return Number(p.is_new_arrival) === 1 || p.is_new_arrival === true || String(p.is_new_arrival) === '1' || String(p.is_new_arrival) === 'true';
+  }).sort((a,b) => b.id - a.id) : [];
   const trendingProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_trending) === 1 || p.is_trending === true || String(p.is_trending) === '1' || String(p.is_trending) === 'true') : [];
   const featuredProducts = Array.isArray(filteredProducts) ? filteredProducts.filter(p => Number(p.is_featured) === 1 || p.is_featured === true || String(p.is_featured) === '1' || String(p.is_featured) === 'true') : [];
 
@@ -612,19 +647,7 @@ const Storefront = ({ viewMode = 'home' }) => {
 
       case 'dealOfDay':
       case 'deal_of_the_day':
-        return (
-          <DealOfTheDaySection 
-            key={key}
-            products={section.category && section.category !== 'All' ? dealProducts.filter(p => p.category === section.category) : dealProducts}
-            bannerImage={section.headerImage}
-            headerStyle={section.headerStyle}
-            onProductClick={handleProductClick}
-            videoAdId={section.categoryB}
-            onCartClick={() => setIsCartOpen(true)}
-            title={title}
-            subtitle={subtitle}
-          />
-        );
+        return null;
       case 'newArrival':
       case 'products':
       case 'just_arrived':
@@ -816,9 +839,9 @@ const Storefront = ({ viewMode = 'home' }) => {
       : "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1000";
 
     return (
-      <div className="w-full max-w-[1600px] mx-auto px-0 py-2 flex flex-col gap-4">
+      <div className="w-full max-w-[1240px] mx-auto px-4 md:px-6 py-2 flex flex-col gap-4">
         {/* Back Button */}
-        <div className="px-3 md:px-12">
+        <div className="px-0">
           <button 
             onClick={() => {
               setSearchQuery('');
@@ -961,7 +984,7 @@ const Storefront = ({ viewMode = 'home' }) => {
         <main className="flex-1 pb-20">
           {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals', 'settings'].includes(viewMode) && <DiscoveryBar />}
           
-          <div className={`max-w-[1600px] mx-auto ${
+          <div className={`max-w-[1240px] mx-auto px-4 md:px-6 ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
               ? 'mt-0'
               : (searchQuery || activeCategory || selectedBrand ? 'mt-4' : 'mt-12')
@@ -992,20 +1015,34 @@ const Storefront = ({ viewMode = 'home' }) => {
                     <BrightRetailHome onProductClick={handleProductClick} />
                   ) : (
                     <>
-                      {/* Header Block: Hero */}
-                      {(() => {
-                        const heroSection = homepageSections.find(s => getSectionType(s) === 'hero');
-                        if (homepageSections.length > 0) {
-                          return heroSection && renderSection(heroSection, homepageSections.indexOf(heroSection));
-                        } else {
-                          return renderSection({ type: 'hero' }, 0);
-                        }
-                      })()}
+                      {/* Hero Banner */}
+                      <div className="block">
+                        {(() => {
+                          const heroSection = homepageSections.find(s => getSectionType(s) === 'hero');
+                          if (homepageSections.length > 0) {
+                            return heroSection && renderSection(heroSection, homepageSections.indexOf(heroSection));
+                          } else {
+                            return renderSection({ type: 'hero' }, 0);
+                          }
+                        })()}
+                      </div>
+
+                      {/* Today's Offers (Deal of the Day) */}
+                      <DealOfTheDaySection 
+                        products={dealProducts} 
+                        onProductClick={handleProductClick} 
+                      />
+
+                      {/* Shop By Category Section */}
+                      <ShopByCategorySection />
 
 
 
                       {/* Interleaved Content Sections & Products */}
                       {(() => {
+                        const isMobileDevice = window.innerWidth < 1024;
+                        const sliceSize = isMobileDevice ? 2 : 4;
+                        
                         const unsectioned = shuffledActiveProducts.filter(p => !sectionedProductIds.has(p.id));
                         const sectioned = shuffledActiveProducts.filter(p => sectionedProductIds.has(p.id));
                         
@@ -1033,55 +1070,14 @@ const Storefront = ({ viewMode = 'home' }) => {
                         });
 
                         const elements = [];
-                        let unsectionedIndex = 0;
-
                         renderedSections.forEach((sec) => {
-                          // First, show 2 products before this section (starts right under Top Categories)
-                          if (unsectionedIndex < unsectioned.length) {
-                            const pair = unsectioned.slice(unsectionedIndex, unsectionedIndex + 2);
-                            elements.push(
-                              <div key={`pair-before-${sec.id}`} className="my-0 px-4 md:px-0">
-                                <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                                  {pair.map(product => (
-                                    <ProductCard 
-                                      key={product.id}
-                                      product={product} 
-                                      onProductClick={handleProductClick} 
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                            unsectionedIndex += 2;
-                          }
-
-                          // Then show the section itself
                           elements.push(<React.Fragment key={`section-frag-${sec.id}`}>{sec.element}</React.Fragment>);
                         });
-
-                        // Finally, continue rendering remaining products in pairs of 2 until exhausted
-                        const remainingProducts = unsectioned.slice(unsectionedIndex);
-                        let remainingIndex = 0;
-                        while (remainingIndex < remainingProducts.length) {
-                          const pair = remainingProducts.slice(remainingIndex, remainingIndex + 2);
-                          elements.push(
-                            <div key={`pair-after-sections-${remainingIndex}`} className="my-0 px-4 md:px-0">
-                              <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                                {pair.map(product => (
-                                  <ProductCard 
-                                    key={product.id}
-                                    product={product} 
-                                    onProductClick={handleProductClick} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          );
-                          remainingIndex += 2;
-                        }
-
                         return elements;
                       })()}
+
+                      <MobileBottomBanner />
+                      <MobileBottomFeed />
                       
                       {/* Permanent Recommended for You - Removed from home page per user request */}
                       {/*
@@ -1395,23 +1391,23 @@ function App() {
         <RouteTracker />
         <FloatingChatButton />
         <Routes>
-          <Route path="/" element={<Storefront viewMode="home" />} />
+          <Route path="/" element={<Storefront />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
-          <Route path="/wishlist" element={<Storefront viewMode="wishlist" />} />
-          <Route path="/notifications" element={<Storefront viewMode="notifications" />} />
-          <Route path="/products" element={<Storefront viewMode="products" />} />
-          <Route path="/login" element={<Storefront viewMode="login" />} />
-          <Route path="/register" element={<Storefront viewMode="signup" />} />
-          <Route path="/auth" element={<Storefront viewMode="auth" />} />
-          <Route path="/settings" element={<Storefront viewMode="settings" />} />
-          <Route path="/deals" element={<Storefront viewMode="deals" />} />
-          <Route path="/trending" element={<Storefront viewMode="trending" />} />
-          <Route path="/new-arrivals" element={<Storefront viewMode="new-arrivals" />} />
-          <Route path="/featured" element={<Storefront viewMode="featured" />} />
-          <Route path="/visit" element={<Storefront viewMode="visit" />} />
-          <Route path="/privacy" element={<Storefront viewMode="privacy" />} />
-          <Route path="/terms" element={<Storefront viewMode="terms" />} />
-          <Route path="/security" element={<Storefront viewMode="security" />} />
+          <Route path="/wishlist" element={<Storefront />} />
+          <Route path="/notifications" element={<Storefront />} />
+          <Route path="/products" element={<Storefront />} />
+          <Route path="/login" element={<Storefront />} />
+          <Route path="/register" element={<Storefront />} />
+          <Route path="/auth" element={<Storefront />} />
+          <Route path="/settings" element={<Storefront />} />
+          <Route path="/deals" element={<Storefront />} />
+          <Route path="/trending" element={<Storefront />} />
+          <Route path="/new-arrivals" element={<Storefront />} />
+          <Route path="/featured" element={<Storefront />} />
+          <Route path="/visit" element={<Storefront />} />
+          <Route path="/privacy" element={<Storefront />} />
+          <Route path="/terms" element={<Storefront />} />
+          <Route path="/security" element={<Storefront />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
           <Route path="/swto-deliver" element={<DeliverPage />} />
@@ -1419,7 +1415,7 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/support" element={<CustomerSupportPage />} />
           <Route path="/admin/*" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/category/:categoryName" element={<Storefront viewMode="category" />} />
+          <Route path="/category/:categoryName" element={<Storefront />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

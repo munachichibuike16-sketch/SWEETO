@@ -86,7 +86,7 @@ const SwipeGestures = () => {
         setPullProgress(progress);
         setIsPulling(true);
 
-        if (deltaY > 20) {
+        if (deltaY > 20 && e.cancelable) {
           e.preventDefault();
         }
       } else if (deltaY < -10) {
