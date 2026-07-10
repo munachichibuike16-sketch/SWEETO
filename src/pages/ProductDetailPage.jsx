@@ -395,6 +395,15 @@ const ProductDetailPage = () => {
     );
   }
 
+  const isNewArrivalProduct = (() => {
+    if (product.created_at) {
+      const createdDate = new Date(product.created_at);
+      const ageInDays = (new Date() - createdDate) / (1000 * 60 * 60 * 24);
+      return ageInDays <= 5;
+    }
+    return Number(product.is_new_arrival) === 1 || product.is_new_arrival === true || String(product.is_new_arrival) === '1' || String(product.is_new_arrival) === 'true';
+  })();
+
   const getUnifiedReviews = () => {
     const localAndDb = reviews || [];
     const prodReviews = typeof product.reviews === 'string'
@@ -729,16 +738,25 @@ const ProductDetailPage = () => {
 
             {/* Header info */}
             <div className="space-y-3.5 text-left">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-snug">
-                {product.name}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-snug">
+                  {product.name}
+                </h1>
+                {isNewArrivalProduct && (
+                  <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none animate-pulse shrink-0">
+                    {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
+                  </span>
+                )}
+              </div>
 
               {/* Pricing card (AliExpress Style) */}
               <div className="bg-slate-50 dark:bg-slate-950/40 p-4.5 rounded-2xl border border-slate-150/60 dark:border-slate-800/60 space-y-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] bg-[#e61e25] text-white px-2 py-0.5 rounded font-black uppercase tracking-wide">
-                    SuperDeals
-                  </span>
+                  {(product.is_daily_deal === 1 || product.is_daily_deal === true || String(product.is_daily_deal) === '1' || String(product.is_daily_deal) === 'true') && (
+                    <span className="text-[10px] bg-[#e61e25] text-white px-2 py-0.5 rounded font-black uppercase tracking-wide">
+                      {lang === 'fr' ? 'SuperOffres' : 'SuperDeals'}
+                    </span>
+                  )}
                   {product.old_price && product.old_price > product.price && (
                     <span className="text-[10px] text-[#e61e25] font-black">
                       {Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF
@@ -892,22 +910,28 @@ const ProductDetailPage = () => {
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Details & Warranty</span>
               </div>
               <div className="grid grid-cols-2 gap-4 text-xs font-bold">
-                <div className="space-y-1">
-                  <span className="text-slate-400 uppercase text-[9px]">Category</span>
-                  <p className="text-slate-700 dark:text-slate-200">{product.category || 'Official Category'}</p>
-                </div>
+                {product.category && (
+                  <div className="space-y-1">
+                    <span className="text-slate-400 uppercase text-[9px]">Category</span>
+                    <p className="text-slate-700 dark:text-slate-200">{product.category}</p>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <span className="text-slate-400 uppercase text-[9px]">Status</span>
                   <p className="text-emerald-500 uppercase">In Stock</p>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-slate-400 uppercase text-[9px]">Warranty</span>
-                  <p className="text-slate-700 dark:text-slate-200">Official Warranty Included</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-400 uppercase text-[9px]">Brand</span>
-                  <p className="text-slate-700 dark:text-slate-200">{product.brand || 'Sweeto Official'}</p>
-                </div>
+                {product.warranty && (
+                  <div className="space-y-1">
+                    <span className="text-slate-400 uppercase text-[9px]">Warranty</span>
+                    <p className="text-slate-700 dark:text-slate-200">{product.warranty}</p>
+                  </div>
+                )}
+                {product.brand && (
+                  <div className="space-y-1">
+                    <span className="text-slate-400 uppercase text-[9px]">Brand</span>
+                    <p className="text-slate-700 dark:text-slate-200">{product.brand}</p>
+                  </div>
+                )}
               </div>
             </div>
 
