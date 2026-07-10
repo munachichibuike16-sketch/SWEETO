@@ -664,14 +664,14 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Bottom-left: Slide Indicator Pill */}
-        <div className="absolute bottom-4 left-4 bg-slate-950/40 backdrop-blur-sm px-3.5 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-wider select-none z-20">
+        <div className="absolute bottom-14 left-4 bg-slate-950/40 backdrop-blur-sm px-3.5 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-wider select-none z-20">
           Item {activeImageIndex + 1}/{imagesList.length}
         </div>
 
         {/* Bottom-right: Wishlist Heart Button */}
         <button 
           onClick={() => toggleWishlist(product)} 
-          className={`absolute bottom-4 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer z-20 ${
+          className={`absolute bottom-14 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer z-20 ${
             isInWishlist(product.id)
               ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30'
               : 'bg-white/95 dark:bg-slate-800/90 border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-[#ff3b30]'
