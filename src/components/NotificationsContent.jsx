@@ -619,10 +619,10 @@ const NotificationsContent = ({ onProductClick }) => {
         {/* Left: Back Button */}
         <button 
           onClick={goBack} 
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-none"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-none"
           aria-label="Back"
         >
-          <ChevronLeft size={22} strokeWidth={2.5} className="animate-neon-color" />
+          <ChevronLeft size={22} strokeWidth={2.5} />
         </button>
 
         {/* Center: Title */}

@@ -529,9 +529,9 @@ const ProductDetailPage = () => {
               {/* Back chevron */}
               <button 
                 onClick={() => navigate(-1)}
-                className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-70 transition-opacity"
+                className="text-blue-600 dark:text-blue-400 p-1 cursor-pointer hover:opacity-70 transition-opacity"
               >
-                <ChevronLeft size={24} strokeWidth={2.5} className="animate-neon-color" />
+                <ChevronLeft size={24} strokeWidth={2.5} />
               </button>
 
               {/* Search Bar Input Container */}
@@ -630,9 +630,9 @@ const ProductDetailPage = () => {
         {/* Top-left: Back Button */}
         <button 
           onClick={() => navigate(-1)} 
-          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors z-20"
+          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/90 dark:bg-slate-950/90 shadow-md text-blue-600 dark:text-blue-400 border border-slate-100 dark:border-slate-800 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all z-20"
         >
-          <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none animate-neon-color" />
+          <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none" />
         </button>
 
         {/* Top-right: Zoom & Share Buttons */}

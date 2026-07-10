@@ -121,13 +121,9 @@ export default function DealsContent({ onProductClick }) {
       }`}>
         <button 
           onClick={() => navigate(-1)} 
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            scrolled 
-              ? 'text-slate-850 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-900' 
-              : 'bg-black/35 text-white hover:bg-black/50'
-          }`}
+          className="w-9 h-9 rounded-full bg-white/95 dark:bg-slate-950/95 border border-slate-100 dark:border-slate-800 shadow-md text-blue-600 dark:text-blue-400 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all"
         >
-          <ChevronLeft size={20} className="animate-neon-color" />
+          <ChevronLeft size={20} />
         </button>
         
         <span className={`font-black text-sm uppercase tracking-widest transition-opacity duration-300 ${
