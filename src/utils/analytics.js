@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { apiFetch } from './api';
 
 // Browser detection helper
 const detectBrowser = () => {
@@ -123,7 +124,7 @@ export const logVisitorEvent = async (pagePath, eventType, optionalProductName =
     }]);
 
     // Also send locally if needed (optional backend sync)
-    fetch('/api/track-visit', {
+    apiFetch('track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
