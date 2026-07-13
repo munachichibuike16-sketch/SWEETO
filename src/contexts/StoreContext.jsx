@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { supabase } from '../lib/supabase';
 import { playSound } from '../utils/sound';
 import { API_BASE_URL, apiFetch, isLocalHost } from '../utils/api';
+import { logVisitorEvent } from '../utils/analytics';
 
 const normalizeProductTitle = (title) => {
   if (!title) return '';
@@ -140,13 +141,12 @@ export const StoreProvider = ({ children }) => {
   const toggleProductLike = useCallback((productId, isLiking) => {
     if (!productId) return;
     const page_path = `/product/${productId}`;
-    if (supabase) {
-      supabase.from('visitor_log').insert([{
-        page_path,
-        event_type: isLiking ? 'product liked' : 'product unliked',
-        country: window.localStorage.getItem('user_country') || 'Unknown'
-      }]).then(() => {}).catch(() => {});
+    let productName = '';
+    if (products) {
+      const prod = products.find(p => String(p.id) === String(productId));
+      if (prod) productName = prod.name;
     }
+    logVisitorEvent(page_path, isLiking ? 'product liked' : 'product unliked', productName);
     setProductLikesMap(prev => ({
       ...prev,
       [productId]: Math.max(0, (prev[productId] || 0) + (isLiking ? 1 : -1))

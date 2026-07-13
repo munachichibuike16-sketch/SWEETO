@@ -8,19 +8,10 @@ import { useStore } from '../contexts/StoreContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import QuickViewModal from './QuickViewModal';
-import { supabase } from '../lib/supabase';
-import { API_BASE_URL } from '../utils/api';
+import { logVisitorEvent } from '../utils/analytics';
 
-const trackVisit = (page_path, event_type) => {
-  if (supabase) {
-    Promise.resolve(
-      supabase.from('visitor_log').insert([{
-        page_path,
-        event_type,
-        country: window.localStorage.getItem('user_country') || 'Unknown'
-      }])
-    ).then(() => {}).catch(() => {});
-  }
+const trackVisit = (page_path, event_type, product_name = '') => {
+  logVisitorEvent(page_path, event_type, product_name);
 };
 
 const getSocialProof = (product, lang) => {

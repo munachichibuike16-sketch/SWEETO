@@ -39,6 +39,7 @@ import FloatingChatButton from './components/FloatingChatButton';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
+import { logVisitorEvent } from './utils/analytics';
 import SweetoLogo from './components/SweetoLogo';
 import MobileBottomBanner from './components/MobileBottomBanner';
 import MobileBottomFeed from './components/MobileBottomFeed';
@@ -1263,6 +1264,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
 
 const RouteTracker = () => {
   const location = useLocation();
+  const { products } = useStore();
 
   useEffect(() => {
     const pagePath = location.pathname + location.search;
@@ -1280,19 +1282,21 @@ const RouteTracker = () => {
       eventType = 'product searched';
     }
 
-    const country = window.localStorage.getItem('user_country') || 'Unknown';
-
-    // Log view count to Supabase visitor_log
-    if (supabase) {
-      Promise.resolve(
-        supabase.from('visitor_log').insert([{ 
-          page_path: pagePath,
-          event_type: eventType,
-          country: country
-        }])
-      ).catch(() => {});
+    // Find product name if product viewed
+    let productName = '';
+    if (pagePath.startsWith('/product/') && products) {
+      const match = pagePath.match(/\/product\/([^\/\?]+)/);
+      if (match && match[1]) {
+        const pId = parseInt(match[1]) || match[1];
+        const prod = products.find(p => String(p.id) === String(pId));
+        if (prod) {
+          productName = prod.name;
+        }
+      }
     }
-  }, [location.pathname, location.search]);
+
+    logVisitorEvent(pagePath, eventType, productName);
+  }, [location.pathname, location.search, products]);
 
   return null;
 };
@@ -1363,14 +1367,13 @@ function App() {
           const info = await res.json();
           if (info && info.country_code) {
             country = info.country_code;
+            window.localStorage.setItem('user_geo_data', JSON.stringify(info));
           }
         }
       } catch (e) {
-        // Fallback to random country from screenshot list to keep seed authentic
-        const codes = ['PH', 'CI', 'PK', 'KE', 'CR', 'ZM', 'GH', 'US'];
-        country = codes[Math.floor(Math.random() * codes.length)];
+        country = 'Unknown';
       }
-      window.localStorage.setItem('user_country', country || 'PH');
+      window.localStorage.setItem('user_country', country || 'Unknown');
     };
 
     detectCountry();

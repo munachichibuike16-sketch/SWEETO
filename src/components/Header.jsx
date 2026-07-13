@@ -10,6 +10,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { getCategoryDescendants } from '../utils/categoryHelpers';
 import SweetoLogo from './SweetoLogo';
+import { logVisitorEvent } from '../utils/analytics';
 
 const Header = ({ onMenuClick, onCartClick }) => {
   const { cartCount, cartTotal } = useCart();
@@ -270,15 +271,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
     ).length;
     
     // Log search to Supabase visitor_log (general traffic tracking)
-    if (supabase) {
-      Promise.resolve(
-        supabase.from('visitor_log').insert([{
-          page_path: `/search?q=${encodeURIComponent(query)}`,
-          event_type: 'product searched',
-          country: window.localStorage.getItem('user_country') || 'Unknown'
-        }])
-      ).catch(() => {});
-    }
+    logVisitorEvent(`/search?q=${encodeURIComponent(query)}`, 'product searched');
 
     // Detailed Search Tracker logic (Missing vs Found)
     if (count > 0) {

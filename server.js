@@ -375,71 +375,13 @@ try { db.exec('ALTER TABLE visitor_log ADD COLUMN event_type TEXT DEFAULT "page_
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN device_id TEXT'); } catch (e) {}
 try { db.exec('ALTER TABLE push_subscriptions ADD COLUMN role TEXT DEFAULT "customer"'); } catch (e) {}
 
-// Seed visitor logs if empty or small to show realistic analytics
+// Seed visitor logs removed - we only want real visitors
 try {
-  const countryCount = db.prepare("SELECT COUNT(*) as count FROM visitor_log WHERE country IS NOT NULL AND country != 'Unknown'").get().count;
-  if (countryCount < 5) {
-    console.log('Seeding countries event data into visitor_log...');
-    const countries = [
-      { code: 'PH', name: 'PH', events: 638, devices: 1, topEvent: 'sale recorded' },
-      { code: 'CI', name: 'CI', events: 64, devices: 3, topEvent: 'sale recorded' },
-      { code: 'PK', name: 'PK', events: 48, devices: 1, topEvent: 'dashboard shown' },
-      { code: 'KE', name: 'KE', events: 42, devices: 1, topEvent: 'sale recorded' },
-      { code: 'CI', name: 'Ivory Coast', events: 41, devices: 6, topEvent: 'dashboard shown' },
-      { code: 'CR', name: 'CR', events: 37, devices: 1, topEvent: 'sale recorded' },
-      { code: 'ZM', name: 'ZM', events: 13, devices: 1, topEvent: 'item added to stock' },
-      { code: 'GH', name: 'GH', events: 12, devices: 2, topEvent: 'dashboard shown' },
-      { code: 'US', name: 'US', events: 3, devices: 1, topEvent: 'dashboard shown' }
-    ];
-
-    const insertLog = db.prepare(`
-      INSERT INTO visitor_log (ip, user_agent, page_path, country, event_type, device_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const now = new Date();
-    
-    countries.forEach(c => {
-      // Generate distinct device IDs
-      const deviceIds = [];
-      for(let d=0; d<c.devices; d++) {
-        deviceIds.push(`dev_sig_${c.code}_${Math.random().toString(36).substr(2, 9)}`);
-      }
-
-      // Insert events
-      for (let e=0; e<c.events; e++) {
-        const deviceId = deviceIds[e % deviceIds.length];
-        const ip = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-        const userAgent = Math.random() > 0.5 
-          ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15' 
-          : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-        
-        const pagePath = e % 3 === 0 ? '/' : (e % 3 === 1 ? '/dashboard' : `/product/${Math.floor(Math.random() * 10) + 1}`);
-        
-        // Event type mix
-        let eventType = c.topEvent;
-        if (Math.random() > 0.7) {
-          eventType = Math.random() > 0.5 ? 'visit storefront' : 'product viewed';
-        }
-
-        // Generate randomized timestamps within the last 7 days to support calendar query
-        const eventTime = new Date(now.getTime() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000));
-        
-        insertLog.run(
-          ip, 
-          userAgent, 
-          pagePath, 
-          c.name, 
-          eventType, 
-          deviceId, 
-          eventTime.toISOString()
-        );
-      }
-    });
-    console.log('Seeded countries event logs successfully.');
-  }
+  // Clear any existing logs on startup to clean out old mock logs
+  db.prepare('DELETE FROM visitor_log').run();
+  console.log('Cleared visitor_log table to remove mock/legacy entries.');
 } catch (err) {
-  console.error('Error seeding visitor logs:', err);
+  console.error('Error clearing old visitor logs:', err);
 }
 
 // Initial Seeding
@@ -2378,6 +2320,15 @@ app.post('/api/track-visit', (req, res) => {
       device_id || `dev_sig_${ip.replace(/[^a-zA-Z0-9]/g, '')}`
     );
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/analytics/clear-logs', authenticateAdmin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM visitor_log').run();
+    res.json({ success: true, message: 'Local logs cleared successfully' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

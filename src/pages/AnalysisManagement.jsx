@@ -207,6 +207,13 @@ export default function AnalysisManagement() {
         }
       }
 
+      // Filter out mock/seeded logs to keep analysis 100% real
+      logs = logs.filter(log => {
+        const isMock = !log.user_agent?.startsWith('METADATA:') && 
+                       (log.ip?.startsWith('192.168.') || ['PH', 'CI', 'PK', 'KE', 'CR', 'ZM', 'GH', 'US', 'Ivory Coast'].includes(log.country));
+        return !isMock;
+      });
+
       // --- AGGREGATION ENGINE ---
       const totalSales = ordersList.reduce((sum, o) => sum + (o.total_amount || o.total || 0), 0);
       const totalOrders = ordersList.length;
@@ -219,23 +226,41 @@ export default function AnalysisManagement() {
         ? ((totalOrders / totalViews) * 100).toFixed(2)
         : '0.00';
 
-      // Devices
+      // Devices & Browsers
       const devices = { mobile: 0, desktop: 0 };
-      const browsers = { Chrome: 0, Safari: 0, Firefox: 0, Edge: 0, Other: 0 };
+      const browsers = { Chrome: 0, Safari: 0, Firefox: 0, Edge: 0, PWA: 0, Other: 0 };
       
       logs.forEach(l => {
-        const ua = (l.user_agent || '').toLowerCase();
-        if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+        let browser = 'Other';
+        let isMobile = false;
+
+        if (l.user_agent && l.user_agent.startsWith('METADATA:')) {
+          try {
+            const meta = JSON.parse(l.user_agent.substring(9));
+            browser = meta.browser || 'Other';
+            const dev = (meta.device || '').toLowerCase();
+            isMobile = dev.includes('iphone') || dev.includes('ipad') || dev.includes('android') || dev.includes('mobile');
+          } catch (e) {}
+        } else {
+          const ua = (l.user_agent || '').toLowerCase();
+          isMobile = ua.includes('mobile') || ua.includes('android') || ua.includes('iphone');
+          if (ua.includes('chrome')) browser = 'Chrome';
+          else if (ua.includes('safari')) browser = 'Safari';
+          else if (ua.includes('firefox')) browser = 'Firefox';
+          else if (ua.includes('edge')) browser = 'Edge';
+        }
+
+        if (isMobile) {
           devices.mobile++;
         } else {
           devices.desktop++;
         }
         
-        if (ua.includes('chrome')) browsers.Chrome++;
-        else if (ua.includes('safari')) browsers.Safari++;
-        else if (ua.includes('firefox')) browsers.Firefox++;
-        else if (ua.includes('edge')) browsers.Edge++;
-        else browsers.Other++;
+        if (browsers[browser] !== undefined) {
+          browsers[browser]++;
+        } else {
+          browsers.Other++;
+        }
       });
 
       // 7-day trend
@@ -345,6 +370,26 @@ export default function AnalysisManagement() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleClearAllLogs = async () => {
+    if (window.confirm("Are you sure you want to clear all visitor activity logs? This will delete all mock and real logs.")) {
+      try {
+        setRefreshing(true);
+        const { error } = await supabase.from('visitor_log').delete().neq('id', 0); // deletes all rows in Supabase
+        if (error) throw error;
+        
+        // Also delete from local SQLite
+        await apiFetch('/api/analytics/clear-logs', { method: 'DELETE' }).catch(() => {});
+        
+        playSound('success');
+        fetchAnalytics(true);
+      } catch (err) {
+        alert("Failed to clear logs: " + err.message);
+      } finally {
+        setRefreshing(false);
+      }
     }
   };
 
@@ -794,7 +839,7 @@ export default function AnalysisManagement() {
             <span className="text-slate-700 dark:text-white">Live Activity Feed</span>
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {clickedCountry && (
               <button
                 onClick={() => setClickedCountry(null)}
@@ -817,15 +862,21 @@ export default function AnalysisManagement() {
                 All
               </button>
             </div>
+            <button
+              onClick={handleClearAllLogs}
+              className="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20"
+            >
+              Clear Logs
+            </button>
           </div>
         </div>
 
-        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
           {filteredFeed.length === 0 ? (
             <div className="py-12 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">
               No activity recorded for the current filters.
             </div>
-          ) : filteredFeed.slice(0, 20).map((log, idx) => {
+          ) : filteredFeed.slice(0, 50).map((log, idx) => {
             const flag = flagMap[log.country] || '🌐';
             const countryName = countryNameMap[log.country] || log.country || 'Unknown';
             const eventEmoji = {
@@ -833,6 +884,8 @@ export default function AnalysisManagement() {
               'product clicked': '👆',
               'product searched': '🔍',
               'product viewed': '👁️',
+              'product liked': '💖',
+              'product unliked': '💔',
               'sale recorded': '💰',
               'admin login': '🔐',
               'page view': '📄'
@@ -842,28 +895,110 @@ export default function AnalysisManagement() {
             const hours = Math.floor(timeDiff / 3600000);
             const timeAgo = hours > 0 ? `${hours}h ago` : minutes > 0 ? `${minutes}m ago` : 'Just now';
 
+            // Parse metadata
+            let meta = null;
+            let browser = 'Other';
+            let device = 'Desktop';
+            let referrer = 'Direct';
+            let city = '';
+            let product = '';
+
+            if (log.user_agent && log.user_agent.startsWith('METADATA:')) {
+              try {
+                meta = JSON.parse(log.user_agent.substring(9));
+                browser = meta.browser || 'Other';
+                device = meta.device || 'Desktop';
+                referrer = meta.referrer || 'Direct';
+                city = meta.city || '';
+                product = meta.product || '';
+              } catch (e) {}
+            } else {
+              const ua = (log.user_agent || '').toLowerCase();
+              if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+                device = 'Mobile';
+              } else {
+                device = 'Desktop';
+              }
+              if (ua.includes('chrome')) browser = 'Chrome';
+              else if (ua.includes('safari')) browser = 'Safari';
+              else if (ua.includes('firefox')) browser = 'Firefox';
+              else if (ua.includes('edge')) browser = 'Edge';
+            }
+
+            // Referrer colors
+            const referrerColors = {
+              'WhatsApp': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+              'Facebook': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+              'Instagram': 'text-pink-400 bg-pink-500/10 border-pink-500/20',
+              'Google': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+              'Direct': 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+            };
+            const refBadgeClass = referrerColors[referrer] || 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
+
+            // Browser badges
+            const browserBadges = {
+              'PWA': 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 font-black',
+              'Chrome': 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+              'Safari': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+              'Firefox': 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+              'Edge': 'text-teal-400 bg-teal-500/10 border-teal-500/20'
+            };
+            const browserClass = browserBadges[browser] || 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+
             return (
               <motion.div 
                 key={idx} 
-                initial={{ opacity: 0, x: -10 }} 
+                initial={{ opacity: 0, y: -10 }} 
                 animate={{ opacity: 1, x: 0 }} 
-                transition={{ delay: idx * 0.03 }}
-                className="flex items-center gap-3 p-3 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/50 dark:border-white/5 rounded-xl hover:border-teal-500/20 transition-all cursor-default group"
+                transition={{ delay: idx * 0.02 }}
+                className="p-4 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/50 dark:border-white/5 rounded-2xl hover:border-teal-500/20 transition-all cursor-default flex flex-col md:flex-row md:items-center justify-between gap-4 group"
                 onClick={() => setClickedCountry(log.country)}
               >
-                <span className="text-base leading-none shrink-0">{flag}</span>
-                <span className="text-sm leading-none shrink-0">{eventEmoji[log.event_type] || '📌'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">
-                    <span className="text-slate-400 dark:text-slate-500">{countryName}</span>
-                    <span className="mx-1.5 text-slate-300 dark:text-slate-600">•</span>
-                    <span className="uppercase tracking-wide">{log.event_type || 'visit'}</span>
-                  </p>
-                  {log.page_path && (
-                    <p className="text-[8px] font-mono text-slate-400 truncate mt-0.5">{log.page_path}</p>
-                  )}
+                <div className="flex items-start gap-3 min-w-0">
+                  <span className="text-2xl leading-none shrink-0 p-2 bg-slate-200/50 dark:bg-slate-900/50 rounded-xl">{flag}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {countryName} {city ? `(${city})` : ''}
+                      </span>
+                      <span className="text-[9px] px-2 py-0.5 rounded-full border text-slate-400 border-slate-300 dark:border-slate-850 dark:bg-slate-900/50 leading-none">
+                        {device}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs leading-none shrink-0">{eventEmoji[log.event_type] || '📌'}</span>
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                        {log.event_type === 'product viewed' && product ? (
+                          <>Viewed product <span className="text-cyan-400 font-extrabold">{product}</span></>
+                        ) : log.event_type === 'product clicked' && product ? (
+                          <>Clicked product <span className="text-cyan-400 font-extrabold">{product}</span></>
+                        ) : log.event_type === 'product liked' && product ? (
+                          <>Liked product <span className="text-pink-400 font-extrabold">{product}</span></>
+                        ) : log.event_type === 'product unliked' && product ? (
+                          <>Unliked product <span className="text-slate-500">{product}</span></>
+                        ) : (
+                          <span className="uppercase tracking-wide text-[10px] font-black">{log.event_type || 'visit'}</span>
+                        )}
+                      </span>
+                    </div>
+                    {log.page_path && !product && (
+                      <p className="text-[9px] font-mono text-slate-400 dark:text-slate-500 mt-1 truncate max-w-md">{log.page_path}</p>
+                    )}
+                  </div>
                 </div>
-                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 shrink-0 uppercase tracking-wider">{timeAgo}</span>
+
+                <div className="flex items-center gap-2 shrink-0 md:self-center ml-12 md:ml-0">
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border leading-none ${browserClass}`}>
+                    {browser === 'PWA' ? '📱 PWA' : `🌐 ${browser}`}
+                  </span>
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border leading-none ${refBadgeClass}`}>
+                    {referrer === 'Direct' ? '🔗 Direct' : `📣 ${referrer}`}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-200/30 dark:bg-slate-900/50 px-2 py-1 rounded-lg">
+                    {timeAgo}
+                  </span>
+                </div>
               </motion.div>
             );
           })}
