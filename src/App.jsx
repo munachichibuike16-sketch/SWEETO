@@ -1077,8 +1077,19 @@ const Storefront = ({ viewMode: propViewMode }) => {
                         return elements;
                       })()}
 
-                      <MobileBottomBanner />
-                      <MobileBottomFeed />
+                      <MobileBottomBanner 
+                        settings={settings}
+                        products={liveProducts}
+                        lang={lang}
+                        t_smart={t_smart}
+                      />
+                      <MobileBottomFeed 
+                        settings={settings}
+                        products={liveProducts}
+                        categories={categories}
+                        lang={lang}
+                        t_smart={t_smart}
+                      />
                       
                       {/* Permanent Recommended for You - Removed from home page per user request */}
                       {/*

@@ -4,9 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { ArrowRightCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function MobileBottomBanner() {
-  const { settings, products = [] } = useStore();
-  const { lang, t_smart } = useLanguage();
+export default function MobileBottomBanner({ settings, products = [], lang, t_smart }) {
   const navigate = useNavigate();
 
   const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;

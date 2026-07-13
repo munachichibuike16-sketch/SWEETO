@@ -3,9 +3,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
 
-export default function MobileBottomFeed() {
-  const { settings, products = [], categories = [] } = useStore();
-  const { lang, t_smart } = useLanguage();
+export default function MobileBottomFeed({ settings, products = [], categories = [], lang, t_smart }) {
 
   const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;
   
