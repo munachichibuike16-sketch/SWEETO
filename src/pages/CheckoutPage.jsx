@@ -35,6 +35,7 @@ const CheckoutPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [waMessage, setWaMessage] = useState('');
+  const [paymentOption, setPaymentOption] = useState('direct'); // 'direct' | 'manual'
   const [formData, setFormData] = useState({
     name: '', phone: '', city: 'Abidjan', address: '', street: '', junction: '', landmark: ''
   });
@@ -474,11 +475,17 @@ const CheckoutPage = () => {
       setIsProcessing(false);
       setIsSuccess(true);
 
-      // Immediately redirect user to WhatsApp for checkout execution
+      // Open Wave payment link in a new tab if selected
+      if (paymentOption === 'direct') {
+        const wavePayUrl = settings?.wave_payment_url || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+        window.open(wavePayUrl, '_blank');
+      }
+
+      // Open WhatsApp to finalize checkout (use window.location for reliability)
       const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`;
-      window.open(whatsappUrl, '_blank');
-      setIsProcessing(false);
-      setIsSuccess(true);
+      setTimeout(() => {
+        window.location.href = whatsappUrl;
+      }, 500);
     } catch (err) {
       console.error('Order placement failed:', err);
       setIsProcessing(false);
@@ -530,6 +537,17 @@ const CheckoutPage = () => {
                     <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.42 9.863-9.864.002-2.637-1.023-5.116-2.887-6.98C15.782 1.896 13.313.864 10.68.864 5.244.864.827 5.285.823 10.724c0 1.687.445 3.328 1.29 4.767l-.992 3.62 3.71-.973zm11.365-6.86c-.302-.15-1.786-.882-2.057-.98-.27-.1-.468-.15-.665.15-.198.3-.765.98-.937 1.18-.173.2-.347.225-.65.075-.302-.15-1.276-.47-2.43-1.498-.897-.8-1.503-1.787-1.68-2.087-.177-.3-.02-.46.13-.61.137-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.665-1.6-.91-2.187-.24-.575-.48-.5-.665-.51-.173-.007-.37-.01-.568-.01-.198 0-.52.075-.79.37-.27.3-1.035 1.01-1.035 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.085 3.18 5.05 4.464.707.306 1.258.489 1.69.626.71.226 1.356.194 1.866.118.57-.085 1.786-.73 2.037-1.435.25-.705.25-1.31.175-1.435-.075-.125-.27-.2-.57-.35z"/>
                   </svg>
                   {lang === 'fr' ? 'Ouvrir WhatsApp pour finaliser' : 'Open WhatsApp to Finalize'}
+                </button>
+              )}
+              {paymentOption === 'direct' && (
+                <button 
+                  onClick={() => window.open(settings?.wave_payment_url || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/', '_blank')}
+                  className="w-full bg-[#0052FF] text-white font-black py-5 rounded-[2rem] uppercase tracking-[0.2em] shadow-xl hover:bg-[#0043d0] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm2-2h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 2h2v-2h-2v2zm0-4h2v-2h-2v2zm-4-2h2v4h-2v-4zm0 6h2v-2h-2v2z"/>
+                  </svg>
+                  {lang === 'fr' ? 'Payer via Wave (App/QR)' : 'Pay via Wave (App/QR)'}
                 </button>
               )}
              <button 
@@ -952,32 +970,79 @@ const CheckoutPage = () => {
                   </div>
                 </div>
 
-                <div className="mt-10 p-6 rounded-[2rem] bg-eas-light dark:bg-slate-900/40 border border-eas-blue/20 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-eas-blue text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-eas-blue/20">
-                     <Package size={20} />
+                <div className="mt-10 space-y-4">
+                  <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] ml-2">
+                    {t('payment_method') || 'Payment Method'}
+                  </h4>
+
+                  {/* Option A: Direct Wave payment Link/QR Code */}
+                  <div 
+                    onClick={() => setPaymentOption('direct')}
+                    className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'direct' ? 'bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/5' : 'bg-eas-light dark:bg-slate-905/40 border-slate-100 dark:border-white/5 hover:border-slate-350 dark:hover:border-white/10'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${paymentOption === 'direct' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm2-2h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 2h2v-2h-2v2zm0-4h2v-2h-2v2zm-4-2h2v4h-2v-4zm0 6h2v-2h-2v2z"/>
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                          {lang === 'fr' ? 'Paiement Wave Direct' : 'Direct Wave Payment'}
+                        </h5>
+                        <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
+                          {lang === 'fr' ? 'Redirection App (Mobile) ou Code QR (PC)' : 'App Redirect (Mobile) or QR Code (PC)'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center justify-center">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === 'direct' ? 'border-blue-500' : 'border-slate-300 dark:border-slate-700'}`}>
+                        {paymentOption === 'direct' && <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                     <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-sm italic">
-                       {lang === 'fr' ? 'Transfert Wave Uniquement' : 'Wave Transfer Only'}
-                     </h4>
-                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                       {lang === 'fr' ? 'Payez par transfert mobile Wave' : 'Pay using Wave mobile money'}
-                     </p>
+
+                  {/* Option B: Manual Wave Transfer */}
+                  <div 
+                    onClick={() => setPaymentOption('manual')}
+                    className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'manual' ? 'bg-cyan-500/10 border-cyan-500 shadow-md shadow-cyan-500/5' : 'bg-eas-light dark:bg-slate-905/40 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${paymentOption === 'manual' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                        <Phone size={18} />
+                      </div>
+                      <div className="text-left">
+                        <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                          {lang === 'fr' ? 'Transfert Wave Manuel' : 'Manual Wave Transfer'}
+                        </h5>
+                        <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
+                          {lang === 'fr' ? 'Envoyez les fonds manuellement au numéro' : 'Send funds manually to the merchant number'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center justify-center">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === 'manual' ? 'border-cyan-500' : 'border-slate-300 dark:border-slate-700'}`}>
+                        {paymentOption === 'manual' && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
+                      </div>
+                    </div>
                   </div>
-               </div>
- 
-               {/* Local Mobile Money Trust Badge Card */}
-                <div className="mt-4 p-6 rounded-[2rem] bg-eas-light dark:bg-eas-dark/60 border border-slate-100/50 dark:border-white/5 flex flex-col">
-                   <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] mb-2">{t('payment_method') || 'Payment Method'}</h4>
-                   <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4 font-bold">
-                      {lang === 'fr' ? 'Envoyez votre paiement au numéro Wave suivant :' : 'Send your payment to the following Wave number:'}
-                   </p>
-                   <div className="flex flex-wrap gap-2">
-                     <span className="px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center gap-2">
-                       <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-                       Wave: {settings?.wave_number || '+225 05 00 61 99 23'}
-                     </span>
-                   </div>
+
+                  {/* Manual details card (conditional) */}
+                  {paymentOption === 'manual' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-5 rounded-[2rem] bg-cyan-500/5 border border-cyan-500/10 flex flex-col items-center text-center mt-2"
+                    >
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold mb-3">
+                        {lang === 'fr' ? 'Effectuez le transfert au numéro suivant :' : 'Please perform the transfer to the following phone number:'}
+                      </p>
+                      <span className="px-4 py-2.5 rounded-2xl text-xs font-black bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                        Wave: {settings?.wave_number || '+225 05 00 61 99 23'}
+                      </span>
+                    </motion.div>
+                  )}
                 </div>
 
                 <motion.button 

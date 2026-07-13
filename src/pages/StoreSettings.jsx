@@ -269,6 +269,7 @@ const StoreSettings = () => {
     admin_phone: '',
     enable_admin_call_alerts: false,
     wave_number: '',
+    wave_payment_url: '',
     facebook_page_id: '',
     facebook_access_token: '',
     gemini_api_key: '',
@@ -325,6 +326,7 @@ const StoreSettings = () => {
         admin_phone: settings.admin_phone || '',
         enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false,
         wave_number: settings.wave_number || '',
+        wave_payment_url: settings.wave_payment_url || '',
         facebook_page_id: settings.facebook_page_id || '',
         facebook_access_token: settings.facebook_access_token || '',
         gemini_api_key: settings.gemini_api_key || '',
@@ -1029,6 +1031,24 @@ const StoreSettings = () => {
                   />
                   <p className="text-[9px] text-slate-400 font-bold leading-normal">
                     Enter your official Wave phone number to receive customer transfers at checkout.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Payment Link / QR Link</span>
+                  <input 
+                    type="url" 
+                    name="wave_payment_url" 
+                    placeholder="https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/"
+                    value={formData.wave_payment_url} 
+                    onChange={(e) => {
+                      setIsDirty(true);
+                      setFormData(prev => ({ ...prev, wave_payment_url: e.target.value }));
+                    }}
+                    className={inputStyle} 
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    Enter your official Wave pay link (e.g. Wave QR code checkout URL). Mobile users will be redirected to their Wave app, and desktop users will scan the QR code.
                   </p>
                 </div>
               </div>
