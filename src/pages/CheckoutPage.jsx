@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check, Truck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -383,9 +383,11 @@ const CheckoutPage = () => {
         formData.landmark ? `${lang === 'fr' ? 'Repère' : 'Landmark'}: ${formData.landmark}` : ''
       ].filter(Boolean).join(' | ');
 
+      const paymentMethodText = paymentOption === 'direct' ? 'Wave Direct' : paymentOption === 'manual' ? 'Wave Manual' : 'Paiement à la Livraison';
       const contactInfo = [
         formData.phone,
         fullAddress || '',
+        paymentMethodText,
         session?.email || '',
         session?.id || ''
       ].join(' | ');
@@ -462,6 +464,7 @@ const CheckoutPage = () => {
       const rawMessage = `Bonjour Sweeto-Hub, je souhaite valider ma commande :\n` +
         `${itemsList}\n\n` +
         `Total : ${grandTotal.toLocaleString()} ${currency}\n` +
+        `Moyen de Paiement : ${paymentOption === 'direct' ? 'Wave (Direct App/QR)' : paymentOption === 'manual' ? 'Transfert Wave Manuel' : 'Paiement à la Livraison'}\n` +
         `Destinataire : ${formData.name}\n` +
         `Téléphone : ${formData.phone}\n` +
         `Adresse de Livraison : ${addressDetails}\n\n` +
@@ -1043,6 +1046,31 @@ const CheckoutPage = () => {
                       </span>
                     </motion.div>
                   )}
+
+                  {/* Option C: Pay on Delivery */}
+                  <div 
+                    onClick={() => setPaymentOption('cod')}
+                    className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'cod' ? 'bg-emerald-500/10 border-emerald-500 shadow-md shadow-emerald-500/5' : 'bg-eas-light dark:bg-slate-905/40 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${paymentOption === 'cod' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                        <Truck size={18} />
+                      </div>
+                      <div className="text-left">
+                        <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                          {lang === 'fr' ? 'Payer à la Livraison' : 'Pay on Delivery'}
+                        </h5>
+                        <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
+                          {lang === 'fr' ? 'Payez en espèces ou par Wave lors de la réception' : 'Pay with cash or Wave money upon receiving your order'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center justify-center">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === 'cod' ? 'border-emerald-500' : 'border-slate-300 dark:border-slate-700'}`}>
+                        {paymentOption === 'cod' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <motion.button 
