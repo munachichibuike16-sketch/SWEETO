@@ -3,7 +3,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
 
-export default function MobileBottomFeed({ settings, products = [], categories = [], lang, t_smart }) {
+export default function MobileBottomFeed({ settings, products = [], categories = [], lang, t_smart, onProductClick }) {
 
   const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;
   
@@ -69,7 +69,7 @@ export default function MobileBottomFeed({ settings, products = [], categories =
       {feedProducts.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
           {feedProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onProductClick={onProductClick} />
           ))}
         </div>
       ) : (

@@ -1089,6 +1089,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
                         categories={categories}
                         lang={lang}
                         t_smart={t_smart}
+                        onProductClick={handleProductClick}
                       />
                       
                       {/* Permanent Recommended for You - Removed from home page per user request */}
