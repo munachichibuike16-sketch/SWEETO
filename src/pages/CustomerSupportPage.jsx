@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download, MessageSquare, CheckCheck, Upload, ShoppingBag, Search, X } from 'lucide-react';
+import { ArrowLeft, Send, PhoneCall, Image, MapPin, Loader2, Smile, Lock, LogIn, Download, MessageSquare, CheckCheck, Upload, ShoppingBag, Search, X, HelpCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
 import { uploadToStorage } from '../utils/storageHelper';
 import SweetoLogo from '../components/SweetoLogo';
+import FAQPanel from '../components/FAQPanel';
 import { apiFetch } from '../utils/api';
 
 export default function CustomerSupportPage() {
@@ -32,6 +33,7 @@ export default function CustomerSupportPage() {
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -362,6 +364,12 @@ export default function CustomerSupportPage() {
     }
   };
 
+  const handleAskFaqQuestion = (questionText) => {
+    setNewMessageText(questionText);
+    setIsFaqOpen(false);
+    showToast(lang === 'fr' ? 'Question copiée dans le chat ! ✏️' : 'Question copied to chat input! ✏️', 'info');
+  };
+
   // Custom message content formatting (Image, GPS Map, Text)
   const renderMessageText = (msg) => {
     const text = msg.message_text;
@@ -473,7 +481,7 @@ export default function CustomerSupportPage() {
   // 1. Render SIGN IN Gate if user is NOT logged in
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#F0F2F5] dark:bg-slate-950 flex flex-col font-sans">
+      <div className="min-h-screen bg-[#F0F2F5] dark:bg-slate-950 flex flex-col font-sans relative overflow-hidden">
         {/* Header Bar */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-3">
@@ -487,10 +495,17 @@ export default function CustomerSupportPage() {
               SWEETO HUB Support
             </h1>
           </div>
+          <button
+            onClick={() => setIsFaqOpen(!isFaqOpen)}
+            className="p-2 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-full transition-all flex items-center justify-center shadow-sm cursor-pointer"
+            title="Help / FAQ"
+          >
+            <HelpCircle size={16} />
+          </button>
         </div>
 
         {/* Lock Gate Board */}
-        <div className="flex-1 flex items-center justify-center p-6">
+        <div className="flex-1 flex items-center justify-center p-6 relative">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-[2.5rem] p-10 text-center shadow-xl space-y-6">
             <div className="w-16 h-16 rounded-[1.6rem] bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto shadow-inner">
               <Lock size={28} />
@@ -515,6 +530,15 @@ export default function CustomerSupportPage() {
               <span>{lang === 'fr' ? 'Se Connecter / S\'inscrire' : 'Sign In / Register'}</span>
             </button>
           </div>
+
+          {/* FAQ panel inside Sign-In lock screen */}
+          {isFaqOpen && (
+            <FAQPanel 
+              lang={lang} 
+              onClose={() => setIsFaqOpen(false)} 
+              onAskQuestion={null}
+            />
+          )}
         </div>
       </div>
     );
@@ -551,6 +575,13 @@ export default function CustomerSupportPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsFaqOpen(!isFaqOpen)}
+            className="p-2.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-full transition-all flex items-center justify-center shadow-sm cursor-pointer animate-pulse"
+            title="Help / FAQ"
+          >
+            <HelpCircle size={16} />
+          </button>
           <a
             href="tel:+2250500619923"
             className="p-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-full transition-all flex items-center justify-center shadow-sm"
@@ -564,8 +595,17 @@ export default function CustomerSupportPage() {
       {/* Main Chat Feed Area */}
       <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto bg-white dark:bg-slate-900 shadow-sm border-x border-slate-200 dark:border-slate-800 relative overflow-hidden">
         
+        {/* FAQ panel inside active chat screen */}
+        {isFaqOpen && (
+          <FAQPanel 
+            lang={lang} 
+            onClose={() => setIsFaqOpen(false)} 
+            onAskQuestion={handleAskFaqQuestion}
+          />
+        )}
+
         {/* Profile Card Header Status */}
-        <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-150 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
+        <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-955/20 border-b border-slate-150 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
             <span className="truncate">
               {lang === 'fr' ? 'Discuter en tant que :' : 'Chatting as:'} <strong className="text-slate-700 dark:text-slate-200 font-black">{username}</strong> {phone && `(${phone})`}
