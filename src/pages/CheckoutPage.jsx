@@ -40,6 +40,7 @@ const CheckoutPage = () => {
     name: '', phone: '', city: 'Abidjan', address: '', street: '', junction: '', landmark: ''
   });
   const [currentUser, setCurrentUser] = useState(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('sweetohub_session'));
@@ -367,6 +368,17 @@ const CheckoutPage = () => {
 
   const handleCheckout = async (e) => {
     e.preventDefault();
+    
+    if (!acceptedTerms) {
+      showToast(
+        lang === 'fr' 
+          ? "Veuillez lire et accepter les Conditions Générales de Vente pour finaliser votre commande." 
+          : "Please read and accept the Terms & Conditions to complete your order.", 
+        "error"
+      );
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
@@ -1072,6 +1084,42 @@ const CheckoutPage = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Terms and Conditions Checkbox */}
+                <div className="mt-8 flex items-start gap-3 p-5 bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-100 dark:border-white/5 rounded-[1.5rem] text-left">
+                  <input 
+                    type="checkbox" 
+                    id="terms-checkbox" 
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-1 w-4.5 h-4.5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
+                  />
+                  <label htmlFor="terms-checkbox" className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed cursor-pointer select-none">
+                    {lang === 'fr' ? (
+                      <>
+                        J'ai lu et j'accepte les{' '}
+                        <a href="#/legal?tab=terms" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 font-black underline">
+                          Conditions Générales de Vente
+                        </a>{' '}
+                        et la{' '}
+                        <a href="#/legal?tab=refund" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 font-black underline">
+                          Politique de Retour
+                        </a>.
+                      </>
+                    ) : (
+                      <>
+                        I have read and agree to the{' '}
+                        <a href="#/legal?tab=terms" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 font-black underline">
+                          Terms & Conditions
+                        </a>{' '}
+                        and the{' '}
+                        <a href="#/legal?tab=refund" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 font-black underline">
+                          Return Policy
+                        </a>.
+                      </>
+                    )}
+                  </label>
                 </div>
 
                 <motion.button 
