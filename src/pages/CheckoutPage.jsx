@@ -480,15 +480,16 @@ const CheckoutPage = () => {
 
       // Open Wave payment link in a new tab if selected
       if (paymentOption === 'direct') {
-        const wavePayUrl = settings?.wave_payment_url || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
-        window.open(wavePayUrl, '_blank');
+        setTimeout(() => {
+          navigate(`/wave-pay/${newOrderId}`);
+        }, 500);
+      } else {
+        // Open WhatsApp to finalize checkout (use window.location for reliability)
+        const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`;
+        setTimeout(() => {
+          window.location.href = whatsappUrl;
+        }, 500);
       }
-
-      // Open WhatsApp to finalize checkout (use window.location for reliability)
-      const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`;
-      setTimeout(() => {
-        window.location.href = whatsappUrl;
-      }, 500);
     } catch (err) {
       console.error('Order placement failed:', err);
       setIsProcessing(false);

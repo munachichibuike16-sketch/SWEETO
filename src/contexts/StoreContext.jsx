@@ -206,23 +206,6 @@ export const StoreProvider = ({ children }) => {
     return outputArray;
   };
 
-  // Request browser notification permission on storefront mount (not on admin pages)
-  useEffect(() => {
-    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
-    if (isAdminPage) return;
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      // Small delay so it doesn't fire immediately on page load
-      const timer = setTimeout(() => {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            window.location.reload();
-          }
-        });
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   // Register Service Worker and subscribe to closed-tab background push notifications
   useEffect(() => {
     const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
@@ -241,8 +224,8 @@ export const StoreProvider = ({ children }) => {
             }
           });
 
-          // Check for push subscription permission (skip if already registered to speed up load times)
-          if (Notification.permission === 'granted' && localStorage.getItem('sweeto_push_registered') !== 'true') {
+          // Helper to subscribe customer device
+          const subscribeDevice = async () => {
             try {
               // 1. Fetch public VAPID key from Supabase settings table
               const { data: settingData, error: settingErr } = await supabase
@@ -297,6 +280,24 @@ export const StoreProvider = ({ children }) => {
             } catch (err) {
               console.warn('⚠️ Web Push subscription failed:', err);
             }
+          };
+
+          // Unified flow: request permission if default, then subscribe
+          let permission = Notification.permission;
+          if (permission === 'default') {
+            // Delay slightly to not annoy the user immediately on mount
+            setTimeout(async () => {
+              try {
+                const result = await Notification.requestPermission();
+                if (result === 'granted') {
+                  await subscribeDevice();
+                }
+              } catch (e) {
+                console.warn('Permission request failed:', e);
+              }
+            }, 5000);
+          } else if (permission === 'granted') {
+            await subscribeDevice();
           }
         })
         .catch((err) => {

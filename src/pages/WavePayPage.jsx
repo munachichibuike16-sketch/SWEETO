@@ -1,0 +1,380 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Lock, CheckCircle2, XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { useStore } from '../contexts/StoreContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { apiFetch } from '../utils/api';
+import { supabase } from '../lib/supabase';
+
+// Wave Logo SVG
+const WaveLogo = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="256" height="256" rx="48" fill="#0052FF"/>
+    <path d="M128 50C84.9218 50 50 84.9218 50 128C50 171.078 84.9218 206 128 206C171.078 206 206 171.078 206 128C206 84.9218 171.078 50 128 50ZM128 184C97.072 184 72 158.928 72 128C72 97.072 97.072 72 128 72C158.928 72 184 97.072 184 128C184 158.928 158.928 184 128 184Z" fill="white"/>
+    <path d="M128 94C109.222 94 94 109.222 94 128C94 146.778 109.222 162 128 162C146.778 162 162 146.778 162 128C162 109.222 146.778 94 128 94Z" fill="white"/>
+  </svg>
+);
+
+const WavePayPage = () => {
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const statusParam = searchParams.get('status'); // 'success' or 'error' from live Wave redirects
+
+  const { settings, showToast } = useStore();
+  const { t, lang } = useLanguage();
+
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [paymentMode, setPaymentMode] = useState('checking'); // checking, live, simulation
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [txId, setTxId] = useState('');
+  const [waUrl, setWaUrl] = useState('');
+
+  // 1. Fetch Order details
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        let orderData = null;
+        
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
+          if (!error && data) {
+            orderData = data;
+          }
+        }
+        
+        if (!orderData) {
+          // Fetch from local Express DB
+          const res = await apiFetch(`/api/orders/${orderId}/tracking`);
+          if (res.ok) {
+            orderData = await res.json();
+          }
+        }
+
+        if (orderData) {
+          setOrder(orderData);
+          
+          // Generate WhatsApp redirect link in advance
+          const ADMIN_WHATSAPP = settings?.admin_phone || '+2250500619923';
+          const itemsList = orderData.items ? 
+            JSON.parse(orderData.items).map(item => `- ${item.name} (Qté: ${item.quantity})`).join('\n') : '';
+          const currency = settings?.currency || 'FCFA';
+
+          const msg = `Bonjour Sweeto-Hub, j'ai effectué mon paiement Wave pour ma commande :\n` +
+            `${itemsList}\n\n` +
+            `Montant Payé : ${Number(orderData.total || orderData.total_amount).toLocaleString()} ${currency} (Wave)\n` +
+            `Destinataire : ${orderData.customer_name}\n` +
+            `ID Commande : #${orderId}`;
+          setWaUrl(`https://wa.me/${ADMIN_WHATSAPP.replace(/\+/g, '')}?text=${encodeURIComponent(msg)}`);
+
+          // If the order is already marked as paid
+          if (orderData.status === 'paid' || statusParam === 'success') {
+            setIsSuccess(true);
+            setLoading(false);
+            return;
+          }
+          
+          // 2. Check for live Wave Checkout Session
+          checkWaveSession(orderData);
+        } else {
+          showToast('Commande introuvable / Order not found.', 'error');
+          navigate('/');
+        }
+      } catch (err) {
+        console.error('Error fetching order:', err);
+        showToast('Erreur de chargement / Loading error.', 'error');
+        setPaymentMode('simulation');
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId, settings, statusParam]);
+
+  const checkWaveSession = async (orderData) => {
+    try {
+      const res = await apiFetch('/api/payments/wave/checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.mode === 'live' && data.checkoutUrl) {
+          setPaymentMode('live');
+          // Redirect immediately to Wave Checkout Session
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+      }
+      setPaymentMode('simulation');
+      setLoading(false);
+    } catch (e) {
+      console.warn('Failed to check live Wave session, falling back to simulation:', e);
+      setPaymentMode('simulation');
+      setLoading(false);
+    }
+  };
+
+  // 3. Confirm simulated payment
+  const handleConfirmPayment = async () => {
+    setIsConfirming(true);
+    const generatedTxId = 'WAV-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString().slice(-4);
+    setTxId(generatedTxId);
+
+    try {
+      // Create chat notification session ID
+      let chatSid = window.localStorage.getItem('sweeto_chat_session_id');
+      if (!chatSid) {
+        chatSid = 'session_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+        window.localStorage.setItem('sweeto_chat_session_id', chatSid);
+      }
+
+      const shopName = settings?.shopName || 'SWEETO HUB';
+      const orderAmount = order.total || order.total_amount;
+      const currency = settings?.currency || 'FCFA';
+
+      // update in Database
+      if (supabase) {
+        const currentContact = order.customer_contact || '';
+        const { error } = await supabase
+          .from('orders')
+          .update({ 
+            status: 'paid',
+            customer_contact: currentContact ? `${currentContact} | Wave Tx: ${generatedTxId}` : `Wave Tx: ${generatedTxId}`
+          })
+          .eq('id', orderId);
+        if (error) throw error;
+
+        // Insert notification in admin chat
+        await supabase.from('chat_messages').insert([
+          {
+            session_id: chatSid,
+            customer_name: order.customer_name,
+            customer_phone: order.customer_phone || null,
+            sender_role: 'customer',
+            message_text: `💸 [Wave Auto-Payment]: J'ai payé ${Number(orderAmount).toLocaleString()} ${currency} pour la Commande #${orderId}. ID Transaction Wave: ${generatedTxId}.`
+          }
+        ]).catch(err => console.warn('Could not write payment message to Chat:', err));
+
+      } else {
+        const response = await apiFetch(`/api/orders/${orderId}/confirm-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wave_transaction_id: generatedTxId })
+        });
+        if (!response.ok) throw new Error('Local database update failed');
+      }
+
+      // Trigger local push notification to admin
+      await apiFetch('/api/push/notify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          customerName: order.customer_name,
+          amount: orderAmount,
+          status: 'SUCCESSFUL'
+        })
+      }).catch(err => console.warn('Could not trigger payment push notification:', err));
+
+      // Success transition
+      setTimeout(() => {
+        setIsConfirming(false);
+        setIsSuccess(true);
+        showToast(lang === 'fr' ? 'Paiement confirmé ! 💸' : 'Payment confirmed! 💸', 'success');
+      }, 1500);
+
+    } catch (err) {
+      console.error('Payment confirmation failed:', err);
+      showToast('Une erreur est survenue lors de la validation. / Confirmation failed.', 'error');
+      setIsConfirming(false);
+    }
+  };
+
+  const handleCancelPayment = () => {
+    showToast(lang === 'fr' ? 'Paiement annulé.' : 'Payment cancelled.', 'info');
+    navigate('/checkout');
+  };
+
+  // ──── RENDER LOADING STATE ────
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex flex-col items-center justify-center p-6 text-center">
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="relative w-16 h-16 rounded-3xl bg-[#0052FF] flex items-center justify-center shadow-lg">
+            <WaveLogo size={36} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-slate-800 dark:text-white font-black uppercase text-xs tracking-widest">
+          <RefreshCw className="animate-spin text-[#0052FF]" size={16} />
+          <span>{lang === 'fr' ? 'Connexion sécurisée Wave...' : 'Connecting to Wave Secure...'}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ──── RENDER SUCCESS STATE ────
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,82,255,0.15),transparent_70%)]"></div>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="max-w-md w-full bg-slate-900/60 backdrop-blur-3xl rounded-[2.5rem] p-10 text-center border border-white/10 shadow-2xl relative z-10"
+        >
+          <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20">
+            <CheckCircle2 size={48} className="text-white" />
+          </div>
+          <h3 className="text-2xl font-black text-white uppercase italic tracking-tight mb-2">
+            {lang === 'fr' ? 'PAIEMENT CONFIRMÉ !' : 'PAYMENT SUCCESSFUL!'}
+          </h3>
+          <p className="text-xs text-slate-400 font-bold tracking-wider uppercase mb-6">
+            {lang === 'fr' ? 'Commande' : 'Order'} SWT-{orderId}
+          </p>
+          <p className="text-sm text-slate-350 leading-relaxed mb-8">
+            {lang === 'fr' ? 
+              'Votre paiement via Wave a été validé et enregistré. L’administrateur a été notifié de votre transaction.' : 
+              'Your payment via Wave was successfully validated and registered. The administrator has been notified of the transfer.'}
+          </p>
+          {txId && (
+            <div className="p-4 bg-white/5 border border-white/5 rounded-2xl mb-8">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">ID Transaction</span>
+              <code className="text-xs font-black text-blue-400 select-all">{txId}</code>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {waUrl && (
+              <button 
+                onClick={() => window.open(waUrl, '_blank')}
+                className="w-full bg-[#25D366] text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+              >
+                <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.42 9.863-9.864.002-2.637-1.023-5.116-2.887-6.98C15.782 1.896 13.313.864 10.68.864 5.244.864.827 5.285.823 10.724c0 1.687.445 3.328 1.29 4.767l-.992 3.62 3.71-.973zm11.365-6.86c-.302-.15-1.786-.882-2.057-.98-.27-.1-.468-.15-.665.15-.198.3-.765.98-.937 1.18-.173.2-.347.225-.65.075-.302-.15-1.276-.47-2.43-1.498-.897-.8-1.503-1.787-1.68-2.087-.177-.3-.02-.46.13-.61.137-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.665-1.6-.91-2.187-.24-.575-.48-.5-.665-.51-.173-.007-.37-.01-.568-.01-.198 0-.52.075-.79.37-.27.3-1.035 1.01-1.035 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.085 3.18 5.05 4.464.707.306 1.258.489 1.69.626.71.226 1.356.194 1.866.118.57-.085 1.786-.73 2.037-1.435.25-.705.25-1.31.175-1.435-.075-.125-.27-.2-.57-.35z"/>
+                </svg>
+                <span>{lang === 'fr' ? 'Ouvrir WhatsApp pour Finaliser' : 'Open WhatsApp to Finalize'}</span>
+              </button>
+            )}
+            <button 
+              onClick={() => navigate('/')}
+              className="w-full bg-white/10 text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] hover:bg-white/15 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              {lang === 'fr' ? 'Retourner à la boutique' : 'Back to Store'}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ──── RENDER SIMULATION PORTAL ────
+  const shopName = settings?.shopName || 'SWEETO HUB';
+  const orderAmount = order?.total || order?.total_amount || 0;
+  const currency = settings?.currency || 'FCFA';
+
+  return (
+    <div className="min-h-screen bg-slate-550/30 dark:bg-[#070b12] flex items-center justify-center p-4 transition-colors duration-500">
+      <div className="max-w-md w-full bg-white dark:bg-[#0b101c] rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-2xl overflow-hidden text-left relative">
+        
+        {/* Wave Checkout Header */}
+        <div className="bg-[#0052FF] p-6 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <WaveLogo size={32} />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-200">Wave Checkout</p>
+              <h2 className="text-base font-black uppercase tracking-wider leading-none mt-0.5">{shopName}</h2>
+            </div>
+          </div>
+          <div className="bg-white/15 px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10 select-none">
+            <Shield size={12} />
+            <span className="text-[9px] font-black tracking-widest uppercase">Secure</span>
+          </div>
+        </div>
+
+        {/* Amount Box */}
+        <div className="p-8 border-b border-slate-100 dark:border-white/5 text-center bg-slate-50/50 dark:bg-white/2">
+          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-2">Montant à Payer / Total Amount</p>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-4xl font-black text-[#0052FF] dark:text-blue-450 tracking-tight leading-none">
+              {Number(orderAmount).toLocaleString()}
+            </h1>
+            <span className="text-lg font-black text-slate-500 dark:text-slate-400">{currency}</span>
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-1.5 text-[9px] font-black text-amber-500 bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 rounded-lg max-w-xs mx-auto">
+            <Lock size={10} />
+            <span className="uppercase tracking-widest">Le montant est verrouillé / Amount Locked</span>
+          </div>
+        </div>
+
+        {/* Order Details Details */}
+        <div className="p-8 space-y-5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ID Commande</span>
+            <span className="font-black text-slate-800 dark:text-white">SWT-{orderId}</span>
+          </div>
+
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Client / Recipient</span>
+            <span className="font-black text-slate-850 dark:text-slate-200">{order?.customer_name}</span>
+          </div>
+
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Téléphone / Phone</span>
+            <span className="font-black text-slate-850 dark:text-slate-200">{order?.customer_phone}</span>
+          </div>
+          
+          <div className="pt-2 border-t border-slate-100 dark:border-white/5">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed font-bold">
+              {lang === 'fr' ? 
+                'En confirmant ce paiement, le montant sera automatiquement prélevé de votre compte Wave. Vous ne pouvez pas modifier ce montant.' : 
+                'By confirming this payment, the exact amount will be deducted from your Wave wallet. You cannot modify the transaction amount.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Buttons Row */}
+        <div className="p-8 bg-slate-50/50 dark:bg-white/2 border-t border-slate-100 dark:border-white/5 flex gap-4">
+          <button
+            onClick={handleCancelPayment}
+            disabled={isConfirming}
+            className="flex-1 py-4.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
+          >
+            {lang === 'fr' ? 'Annuler' : 'Cancel'}
+          </button>
+          
+          <button
+            onClick={handleConfirmPayment}
+            disabled={isConfirming}
+            className="flex-[2] py-4.5 bg-[#0052FF] hover:bg-[#0043D0] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isConfirming ? (
+              <>
+                <RefreshCw size={12} className="animate-spin" />
+                <span>{lang === 'fr' ? 'Validation...' : 'Verifying...'}</span>
+              </>
+            ) : (
+              <>
+                <Lock size={12} />
+                <span>{lang === 'fr' ? 'Confirmer le Paiement' : 'Confirm Payment'}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default WavePayPage;

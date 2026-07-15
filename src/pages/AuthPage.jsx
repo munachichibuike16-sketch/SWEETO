@@ -4,6 +4,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
+import { APP_VERSION } from '../utils/version';
 import { motion, AnimatePresence } from 'framer-motion';
 import OrdersHistoryContent from '../components/OrdersHistoryContent';
 import CouponsContent from '../components/CouponsContent';
@@ -1446,7 +1447,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       </div>
                       <span className="text-xs font-bold uppercase tracking-wider">Version</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-bold">v2.0.1</span>
+                    <span className="text-[10px] text-slate-400 font-bold">v{APP_VERSION}</span>
                   </div>
                 </div>
 
@@ -1502,6 +1503,20 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                         <Lock size={16} />
                       </div>
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-850 dark:text-slate-200">Security Policy</span>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
+                  </div>
+
+                  {/* Refund Policy */}
+                  <div 
+                    onClick={() => { navigate('/refund'); window.scrollTo(0, 0); }}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500 shrink-0">
+                        <RotateCcw size={16} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-850 dark:text-slate-200">Refund Policy</span>
                     </div>
                     <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
                   </div>
@@ -1865,7 +1880,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                   <div className="text-center pb-2 border-b border-slate-100 dark:border-slate-800/50 flex flex-col items-center">
                     <div className="w-12 h-12 bg-eas-blue rounded-2xl flex items-center justify-center text-white font-bold text-lg mb-2 shadow-md">SW</div>
                     <span className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">SWEETO HUB App</span>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Version v2.0.1</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Version v{APP_VERSION}</span>
                   </div>
 
                   <div className="text-[11px] text-slate-655 dark:text-slate-400 leading-relaxed space-y-2.5">

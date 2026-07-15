@@ -33,10 +33,11 @@ export default function MobileBottomFeed({ settings, products = [], categories =
   // Determine products to show for active tab
   const feedProducts = useMemo(() => {
     const activeProducts = products.filter(p => p.status !== 'draft');
+    const sortedProducts = [...activeProducts].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
     if (activeTab === forYouText) {
-      return activeProducts;
+      return sortedProducts;
     }
-    return activeProducts.filter(p => p.category === activeTab);
+    return sortedProducts.filter(p => p.category === activeTab);
   }, [products, activeTab, forYouText]);
 
   if (!isEnabled) return null;

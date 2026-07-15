@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Search, Phone, MapPin, Loader2, CheckCircle2, Clock, Truck, ShieldCheck, User } from 'lucide-react';
+import { Package, Search, Phone, MapPin, Loader2, CheckCircle2, Clock, Truck, ShieldCheck, User, Trash2 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../utils/api';
@@ -142,7 +142,7 @@ const LeafletMap = ({ destLat, destLng, agentLat, agentLng, history }) => {
 };
 
 export default function OrdersManagement({ preselectedOrderId }) {
-  const { settings } = useStore();
+  const { settings, showToast } = useStore();
   const currency = settings?.currency || 'FCFA';
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -332,6 +332,40 @@ export default function OrdersManagement({ preselectedOrderId }) {
     }
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm(`Are you sure you want to permanently delete order SWT-${orderId}? This action cannot be undone.`)) return;
+    
+    try {
+      setIsUpdating(true);
+      // 1. Delete from Supabase
+      if (supabase) {
+        const { error } = await supabase
+          .from('orders')
+          .delete()
+          .eq('id', orderId);
+        if (error) throw error;
+      }
+      
+      // 2. Delete from local SQLite
+      const res = await apiFetch(`/api/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) {
+        console.warn('Failed to delete order from local backend, but deleted from Supabase.');
+      }
+      
+      showToast(`Order SWT-${orderId} deleted successfully!`, 'success');
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+      showToast("Failed to delete order: " + err.message, "error");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-amber-500 text-amber-500';
@@ -438,17 +472,41 @@ export default function OrdersManagement({ preselectedOrderId }) {
                 </div>
                 <div className="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex flex-col items-end">
-                    <select 
-                      value={selectedOrder.status || 'pending'}
-                      onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
-                      disabled={isUpdating}
-                      className="bg-transparent text-sm font-black uppercase tracking-widest outline-none cursor-pointer text-slate-700 dark:text-slate-300 disabled:opacity-50"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="shipping">Shipping</option>
-                      <option value="completed">Completed</option>
-                    </select>
+                    {(() => {
+                      const isConfirmedOrPassed = ['confirmed', 'shipping', 'completed', 'paid'].includes(selectedOrder.status);
+                      return (
+                        <>
+                          <select 
+                            value={selectedOrder.status || 'pending'}
+                            onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
+                            disabled={isUpdating || isConfirmedOrPassed}
+                            className="bg-transparent text-sm font-black uppercase tracking-widest outline-none cursor-pointer text-slate-700 dark:text-slate-300 disabled:opacity-50"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="shipping">Shipping</option>
+                            <option value="completed">Completed</option>
+                            {selectedOrder.status === 'paid' && <option value="paid">Paid (Wave)</option>}
+                          </select>
+                          
+                          {isConfirmedOrPassed && (
+                            <span className="text-[8px] font-black text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider mt-1 text-center select-none">
+                              Locked / Verrouillé
+                            </span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrder(selectedOrder.id)}
+                            disabled={isUpdating}
+                            className="mt-3.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all shadow-md shadow-rose-500/15 hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 shrink-0"
+                          >
+                            <Trash2 size={12} />
+                            <span>Delete Order</span>
+                          </button>
+                        </>
+                      );
+                    })()}
                     {selectedOrder.status === 'shipping' && (
                       <div className="mt-3 w-full space-y-2">
                         <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Update Arrival Time (Mins)</label>
@@ -463,9 +521,9 @@ export default function OrdersManagement({ preselectedOrderId }) {
                         </div>
                       </div>
                     )}
-                    {selectedOrder.status === 'completed' && (
-                      <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-1">
-                        Delivered: {new Date(selectedOrder.updated_at || Date.now()).toLocaleTimeString()}
+                    {(selectedOrder.status === 'completed' || selectedOrder.status === 'paid') && (
+                      <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-2 block">
+                        {selectedOrder.status === 'paid' ? 'Paid via Wave ✓' : `Delivered: ${new Date(selectedOrder.updated_at || Date.now()).toLocaleTimeString()}`}
                       </span>
                     )}
                   </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, 
   Truck, 
@@ -11,7 +11,8 @@ import {
   ArrowLeft,
   RefreshCw,
   ShieldCheck,
-  Award
+  Award,
+  Compass
 } from 'lucide-react';
 import Header from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -157,12 +158,13 @@ const LeafletMap = ({ destLat, destLng, agentLat, agentLng, history }) => {
 const OrderTrackingPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [trackingData, setTrackingData] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   const expectedPin = ((parseInt(orderId) * 837 + 1492) % 9000 + 1000).toString();
 
@@ -377,51 +379,103 @@ const OrderTrackingPage = () => {
               {/* LIVE MAP UI */}
               {currentStatus === 'shipping' && (
                 <div className="mt-12 relative z-10">
-                  <div className="bg-eas-dark rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative h-[380px]">
-                    
-                    {/* Dynamic Leaflet Map Component */}
-                    <div className="absolute inset-0 w-full h-full">
-                      <LeafletMap 
-                        destLat={trackingData?.destination_lat ? parseFloat(trackingData.destination_lat) : 5.3484}
-                        destLng={trackingData?.destination_lng ? parseFloat(trackingData.destination_lng) : -3.9788}
-                        agentLat={trackingData?.agent_lat ? parseFloat(trackingData.agent_lat) : null}
-                        agentLng={trackingData?.agent_lng ? parseFloat(trackingData.agent_lng) : null}
-                        history={trackingData?.history || []}
-                      />
-                    </div>
+                  <AnimatePresence mode="wait">
+                    {!showMap ? (
+                      <motion.div 
+                        key="track-button"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.4 }}
+                        className="bg-eas-dark/40 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,82,255,0.15)] relative h-[380px] flex flex-col items-center justify-center p-6 text-center select-none group"
+                      >
+                        {/* Pulsing neon tracking circle background */}
+                        <div className="absolute w-[280px] h-[280px] bg-blue-500/5 rounded-full border border-blue-500/10 animate-[ping_4s_infinite] pointer-events-none" />
+                        <div className="absolute w-[180px] h-[180px] bg-indigo-500/5 rounded-full border border-indigo-500/20 animate-[pulse_2s_infinite] pointer-events-none" />
+                        
+                        <div className="relative z-10 flex flex-col items-center gap-4">
+                          {/* Floating glowing Tap Me badge */}
+                          <div className="bg-[#ffc200] text-slate-950 font-black text-[9px] px-3 py-1 rounded-full uppercase tracking-widest animate-bounce shadow-lg shadow-amber-500/20 select-none">
+                            Tap Me! / Cliquez-moi ! 👈
+                          </div>
 
-                    {/* Map Overlay Info */}
-                    <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-[99]">
-                      <div className="bg-eas-dark/90 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-2xl">
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Estimated Arrival</p>
-                        <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">{order?.estimated_minutes || '20'} <span className="text-sm">MINS</span></h4>
-                      </div>
-                      <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 flex items-center gap-2 pointer-events-auto">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                        Live Tracking
-                      </div>
-                    </div>
+                          {/* Radar-like glowing tracking map button */}
+                          <button 
+                            type="button"
+                            onClick={() => setShowMap(true)}
+                            className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#0052FF] to-indigo-600 text-white flex items-center justify-center shadow-[0_0_50px_rgba(0,82,255,0.4)] border-2 border-white/20 hover:scale-[1.08] hover:shadow-[0_0_70px_rgba(0,82,255,0.6)] hover:border-white/40 active:scale-95 transition-all duration-500 cursor-pointer relative"
+                          >
+                            <Compass className="w-10 h-10 animate-[spin_10s_linear_infinite]" />
+                            {/* Pulse beacon inside the compass */}
+                            <span className="absolute top-2 right-2 w-3 h-3 bg-emerald-400 rounded-full border border-white shadow-lg flex items-center justify-center">
+                              <span className="w-full h-full bg-emerald-400 rounded-full animate-ping opacity-75" />
+                            </span>
+                          </button>
 
-                    {/* Quick navigation links */}
-                    {trackingData?.agent && (
-                      <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center pointer-events-none z-[99]">
-                        <div className="bg-eas-dark/90 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 shadow-2xl pointer-events-auto">
-                          <img src={trackingData.agent.avatar} alt={trackingData.agent.name} className="w-9 h-9 rounded-xl object-cover" />
-                          <div>
-                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">Your Courier</p>
-                            <p className="text-xs font-black text-white mt-1">{trackingData.agent.name}</p>
+                          <div className="space-y-1 mt-2">
+                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight">
+                              {t('track_now') || 'Track Now'}
+                            </h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              {lang === 'fr' ? 'Cliquez pour ouvrir la carte en direct' : 'Tap to open the live route map'}
+                            </p>
                           </div>
                         </div>
-                        <a 
-                          href={`tel:${trackingData.agent.phone}`}
-                          className="bg-emerald-500 hover:bg-emerald-400 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/20 border border-white/10 pointer-events-auto transition-transform active:scale-95"
-                          title="Call Courier"
-                        >
-                          <Phone size={18} />
-                        </a>
-                      </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        key="live-map"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.4 }}
+                        className="bg-eas-dark rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative h-[380px]"
+                      >
+                        {/* Dynamic Leaflet Map Component */}
+                        <div className="absolute inset-0 w-full h-full">
+                          <LeafletMap 
+                            destLat={trackingData?.destination_lat ? parseFloat(trackingData.destination_lat) : 5.3484}
+                            destLng={trackingData?.destination_lng ? parseFloat(trackingData.destination_lng) : -3.9788}
+                            agentLat={trackingData?.agent_lat ? parseFloat(trackingData.agent_lat) : null}
+                            agentLng={trackingData?.agent_lng ? parseFloat(trackingData.agent_lng) : null}
+                            history={trackingData?.history || []}
+                          />
+                        </div>
+
+                        {/* Map Overlay Info */}
+                        <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-[99]">
+                          <div className="bg-eas-dark/90 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-2xl">
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Estimated Arrival</p>
+                            <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">{order?.estimated_minutes || '20'} <span className="text-sm">MINS</span></h4>
+                          </div>
+                          <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 flex items-center gap-2 pointer-events-auto">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                            Live Tracking
+                          </div>
+                        </div>
+
+                        {/* Quick navigation links */}
+                        {trackingData?.agent && (
+                          <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center pointer-events-none z-[99]">
+                            <div className="bg-eas-dark/90 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 shadow-2xl pointer-events-auto">
+                              <img src={trackingData.agent.avatar} alt={trackingData.agent.name} className="w-9 h-9 rounded-xl object-cover" />
+                              <div>
+                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">Your Courier</p>
+                                <p className="text-xs font-black text-white mt-1">{trackingData.agent.name}</p>
+                              </div>
+                            </div>
+                            <a 
+                              href={`tel:${trackingData.agent.phone}`}
+                              className="bg-emerald-500 hover:bg-emerald-400 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/20 border border-white/10 pointer-events-auto transition-transform active:scale-95"
+                              title="Call Courier"
+                            >
+                              <Phone size={18} />
+                            </a>
+                          </div>
+                        )}
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </div>
               )}
 

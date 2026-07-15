@@ -19,9 +19,12 @@ const ForYouSection = ({ products = [], categories = [], onProductClick }) => {
     // Filter products belonging to this category or its subcategories
     const catProducts = products.filter(p => p.category === cat.name || subcatIds.includes(p.category));
 
+    // Sort by id descending so newly added comes first
+    const sortedProducts = [...catProducts].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+
     return {
       category: cat,
-      products: catProducts.slice(0, 2)
+      products: sortedProducts.slice(0, 2)
     };
   }).filter(group => group.products.length > 0); // Only show categories that have products
 

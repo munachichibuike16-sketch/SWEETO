@@ -448,6 +448,14 @@ const Dashboard = () => {
 
   const handleSwipeStatusUpdate = async (orderId, newStatus) => {
     try {
+      // Prevent editing locked confirmed/completed/paid orders
+      const orderToUpdate = orders.find(o => o.id === orderId);
+      if (orderToUpdate && ['confirmed', 'shipping', 'completed', 'paid'].includes(orderToUpdate.status)) {
+        showToast(`SWT-${orderId} est verrouillé. Il ne peut être que supprimé !`, 'error');
+        refreshData();
+        return;
+      }
+
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })
@@ -550,13 +558,6 @@ const Dashboard = () => {
   const activeProductsCount = products.filter(p => p.status === 'active').length;
   const activeProductsPercent = products.length > 0 ? ((activeProductsCount / products.length) * 100).toFixed(1) : '0.0';
 
-  React.useEffect(() => {
-    if (!isAdminAuthenticated) return;
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission();
-    }
-  }, [isAdminAuthenticated]);
-
   // Register Service Worker and subscribe admin to Web Push for closed-tab notifications
   React.useEffect(() => {
     if (!isAdminAuthenticated) return;
@@ -574,7 +575,16 @@ const Dashboard = () => {
           }
         });
 
-        if (Notification.permission !== 'granted') return;
+        // Request permission if not yet decided
+        let permission = Notification.permission;
+        if (permission === 'default') {
+          permission = await Notification.requestPermission();
+        }
+
+        if (permission !== 'granted') {
+          console.warn('⚠️ Admin notification permission is not granted.');
+          return;
+        }
 
         // Fetch VAPID public key from Supabase settings
         const { data: settingData, error: settingErr } = await supabase

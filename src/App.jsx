@@ -27,6 +27,8 @@ import VisitUs from './pages/VisitUs';
 import ChatPage from './pages/ChatPage';
 import CustomerSupportPage from './pages/CustomerSupportPage';
 import LegalPage from './pages/LegalPage';
+import Footer from './components/Footer';
+import WavePayPage from './pages/WavePayPage';
 import { getCategoryDescendants } from './utils/categoryHelpers';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
@@ -244,6 +246,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     if (path === '/privacy') return 'privacy';
     if (path === '/terms') return 'terms';
     if (path === '/security') return 'security';
+    if (path === '/refund') return 'refund';
     if (path.startsWith('/category/')) return 'category';
     return 'home';
   }, [location.pathname, propViewMode]);
@@ -820,7 +823,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
   };
 
   const DiscoveryBar = () => {
-    if (['wishlist', 'visit', 'privacy', 'terms', 'security', 'deals', 'settings', 'auth', 'login', 'signup'].includes(viewMode)) return null;
+    if (['wishlist', 'visit', 'privacy', 'terms', 'security', 'refund', 'deals', 'settings', 'auth', 'login', 'signup'].includes(viewMode)) return null;
     if (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand) return null;
     if (activeCategory) return null; // CategoryLandingPage renders its own themed banner, deals, and pills.
 
@@ -983,7 +986,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
       >
         
         <main className="flex-1 pb-20">
-          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals', 'settings'].includes(viewMode) && <DiscoveryBar />}
+          {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'refund', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals', 'settings'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1240px] mx-auto px-4 md:px-6 ${
             (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
@@ -1000,7 +1003,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
               <VisitUs />
             ) : viewMode === 'products' ? (
               <StoreContent />
-            ) : ['privacy', 'terms', 'security'].includes(viewMode) ? (
+            ) : ['privacy', 'terms', 'security', 'refund'].includes(viewMode) ? (
               <LegalPage type={viewMode} />
             ) : ['trending', 'featured'].includes(viewMode) ? (
               <ShufflingProductPage viewMode={viewMode} onProductClick={handleProductClick} />
@@ -1234,6 +1237,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
           </div>
 
         </main>
+        <Footer />
 
 
       </motion.div>
@@ -1423,7 +1427,9 @@ function App() {
           <Route path="/privacy" element={<Storefront />} />
           <Route path="/terms" element={<Storefront />} />
           <Route path="/security" element={<Storefront />} />
+          <Route path="/refund" element={<Storefront />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
           <Route path="/swto-deliver" element={<DeliverPage />} />
           <Route path="/dashboard" element={<Dashboard />} />

@@ -5,7 +5,7 @@
     const knownRoutes = [
       '/dashboard', '/admin', '/product/', '/wishlist', '/notifications',
       '/login', '/register', '/auth', '/deals', '/trending', '/new-arrivals',
-      '/featured', '/visit', '/privacy', '/terms', '/security', '/checkout',
+      '/featured', '/visit', '/privacy', '/terms', '/security', '/refund', '/checkout',
       '/order-tracking/', '/swto-deliver', '/category/'
     ];
 

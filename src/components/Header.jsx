@@ -69,7 +69,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const isProfilePage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/settings' || location.pathname === '/wishlist';
   const isHomeOrCategory = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/category/');
   const showBottomNav = !location.pathname.startsWith('/product/') && 
-                        !['/deals', '/notifications', '/settings', '/privacy', '/terms', '/security', '/visit'].includes(location.pathname);
+                        !['/deals', '/notifications', '/settings', '/privacy', '/terms', '/security', '/refund', '/visit'].includes(location.pathname);
 
   useEffect(() => {
     const handleResize = () => {

@@ -13,10 +13,12 @@ import {
   Scale,
   Printer,
   Download,
-  Share2
+  Share2,
+  RefreshCw
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { APP_VERSION } from '../utils/version';
 
 const LegalPage = ({ type = 'privacy' }) => {
   const { settings } = useStore();
@@ -82,7 +84,34 @@ All communication between your browser and our servers is fully encrypted using 
 We advise all users to use strong, unique passwords and sign out of their accounts when using shared or public devices.
 
 5. VULNERABILITY MONITORING
-Our servers undergo regular automated security scans to detect, block, and mitigate potential threats, keeping your shopping experience safe and uninterrupted.`
+Our servers undergo regular automated security scans to detect, block, and mitigate potential threats, keeping your shopping experience safe and uninterrupted.`,
+
+    refund: `At SWEETO HUB, we want you to have a premium shopping experience. We follow a clear, consumer-first refund and return framework inspired by Jumia's official policies to ensure fairness and efficiency.
+
+1. RETURN TIMELINE
+• Most items purchased on SWEETO HUB are eligible for return within 7 to 15 days from the delivery date, depending on the product category.
+• Premium tech devices, certified electronic products, and promotional drop items are eligible for returns within 7 days.
+• Items marked as "Non-Returnable" cannot be returned.
+
+2. RETURN CONDITIONS & QUALITY CHECKS
+To qualify for a refund, returned items must comply with the following:
+• Pristine, unused condition with all tags and protective seals intact.
+• Packaged in their original box/packaging, including all manuals, documentation, accessories, and promotional freebies that were included.
+• Sealed products (like phones, tablets, smartwatches, or laptops) must remain unopened. If the manufacturer's seal is broken, we cannot accept change-of-mind returns.
+• Defective or damaged items must be reported immediately upon delivery.
+
+3. QUALITY EVALUATION PROCESS
+• Once you initiate a return, we arrange for pickup or drop-off at a verified hub.
+• Returned products undergo a strict Quality Evaluation Check at our diagnostic facility. This process typically takes between 1 to 5 business days from receipt.
+
+4. REFUND METHOD & TIMELINES
+Following a successful quality evaluation, your refund will be processed:
+• SweetoPay / Digital Wallet: Refund is credited within 24 to 48 hours.
+• Mobile Money / Bank Transfer: Refund is processed within 5 to 7 business days.
+• Credit/Debit Card: Refund is initiated instantly but may take up to 10-15 business days depending on your bank's clearance policy.
+
+5. HOW TO REQUEST A RETURN
+To request a return, go to your Orders page, select the item you wish to return, click "Request Return", and fill out the details. Alternatively, contact our support team.`
   };
 
   const content = settings?.[`footer_content_${type}`] || defaultContent[type] || `No ${type} content has been provided yet. Please contact support.`;
@@ -90,13 +119,15 @@ Our servers undergo regular automated security scans to detect, block, and mitig
   const icons = {
     privacy: Shield,
     terms: Scale,
-    security: LockIcon
+    security: LockIcon,
+    refund: RefreshCw
   };
   
   const gradients = {
     privacy: 'from-blue-600 to-indigo-600',
     terms: 'from-emerald-600 to-teal-600',
-    security: 'from-rose-600 to-orange-600'
+    security: 'from-rose-600 to-orange-600',
+    refund: 'from-amber-600 to-orange-600'
   };
   
   const Icon = icons[type] || FileText;
@@ -239,7 +270,7 @@ Our servers undergo regular automated security scans to detect, block, and mitig
                         <FileText size={18} />
                      </div>
                      <div>
-                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">Document Version 2.0.1</p>
+                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest leading-none">Document Version {APP_VERSION}</p>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Released {new Date().toLocaleDateString()}</p>
                      </div>
                   </div>
@@ -282,7 +313,7 @@ Our servers undergo regular automated security scans to detect, block, and mitig
 
             {/* Quick Navigation Footer */}
             <div className="mt-12 flex justify-center gap-10">
-               {['privacy', 'terms', 'security'].filter(t => t !== type).map(otherType => (
+               {['privacy', 'terms', 'security', 'refund'].filter(t => t !== type).map(otherType => (
                   <button 
                     key={otherType}
                     onClick={() => navigate(`/${otherType}`)}

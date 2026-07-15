@@ -238,6 +238,93 @@ const PushNotificationPanel = ({ showToast }) => {
   );
 };
 
+const defaultContent = {
+  privacy: `1. INFORMATION WE COLLECT
+We collect personal information that you provide to us when placing an order, creating an account, or contacting support. This includes your name, email address, delivery address, phone number, and purchase history.
+
+2. HOW WE USE YOUR INFORMATION
+We use your information exclusively to:
+• Process, verify, and ship your premium tech orders.
+• Provide real-time delivery status updates and customer care.
+• Customize your user experience and language preferences.
+• Prevent fraud and ensure security.
+
+3. COOKIES & TRACKING
+We use secure cookies to keep track of your shopping cart items, current language preferences, and account session states.
+
+4. THIRD-PARTY SHARING
+We do not sell your personal data. We only share necessary details with verified third-party payment gateways and shipping partners required to complete your transactions.
+
+5. YOUR RIGHTS
+Under applicable laws, you have the right to request access, correction, or deletion of your personal data stored with us at any time.`,
+
+  terms: `Welcome to SWEETO HUB. These Terms & Conditions govern your use of our premium web platform.
+
+1. ACCEPTANCE OF TERMS
+By accessing or purchasing from SWEETO HUB, you agree to comply with and be bound by these terms. If you do not agree, please do not use our services.
+
+2. STORE TRANSACTIONS
+• Product availability, pricing, and promotional codes are subject to change without notice.
+• All payment transactions are routed through encrypted gateways. We reserve the right to cancel or hold orders that fail security checks.
+• Prices are displayed in your local currency (XOF, USD, etc.) as set by the store settings.
+
+3. SHIPPING & RETURNS
+• Delivery estimates are provided during checkout. SWEETO HUB is not liable for custom delays or transport events beyond our control.
+• We offer a premium 14-day exchange warranty for verified defective items. Please contact our support team to initiate a return.
+
+4. INTELLECTUAL PROPERTY
+All website logos, circular branding animations, images, text, design layouts, and codebases are the exclusive intellectual property of SWEETO HUB.
+
+5. ACCESSIBILITY & CONDUCT
+Users are prohibited from attempting to bypass site security, upload malicious scripts, or scrape database contents.`,
+
+  security: `Security is at the heart of SWEETO HUB. We deploy tech-luxury protection systems to safeguard your account and transaction history.
+
+1. DATA ENCRYPTION & SSL
+All communication between your browser and our servers is fully encrypted using industry-standard SSL/TLS 1.3 protocols, preventing interception of sensitive details.
+
+2. SECURE AUTHENTICATION
+• Administrative accounts use secure JWT (JSON Web Tokens) for authentication.
+• User sessions are protected against Cross-Site Request Forgery (CSRF) and session-jacking attempts.
+
+3. DATABASE & STORAGE SECURITY
+• Customer databases are secured with strict access controls. 
+• Payment processing is PCI-DSS compliant. Card details are processed directly by payment networks and are never stored on our local database.
+
+4. ACCOUNT SECURITY RECOMMENDATIONS
+We advise all users to use strong, unique passwords and sign out of their accounts when using shared or public devices.
+
+5. VULNERABILITY MONITORING
+Our servers undergo regular automated security scans to detect, block, and mitigate potential threats, keeping your shopping experience safe and uninterrupted.`,
+
+  refund: `At SWEETO HUB, we want you to have a premium shopping experience. We follow a clear, consumer-first refund and return framework inspired by Jumia's official policies to ensure fairness and efficiency.
+
+1. RETURN TIMELINE
+• Most items purchased on SWEETO HUB are eligible for return within 7 to 15 days from the delivery date, depending on the product category.
+• Premium tech devices, certified electronic products, and promotional drop items are eligible for returns within 7 days.
+• Items marked as "Non-Returnable" cannot be returned.
+
+2. RETURN CONDITIONS & QUALITY CHECKS
+To qualify for a refund, returned items must comply with the following:
+• Pristine, unused condition with all tags and protective seals intact.
+• Packaged in their original box/packaging, including all manuals, documentation, accessories, and promotional freebies that were included.
+• Sealed products (like phones, tablets, smartwatches, or laptops) must remain unopened. If the manufacturer's seal is broken, we cannot accept change-of-mind returns.
+• Defective or damaged items must be reported immediately upon delivery.
+
+3. QUALITY EVALUATION PROCESS
+• Once you initiate a return, we arrange for pickup or drop-off at a verified hub.
+• Returned products undergo a strict Quality Evaluation Check at our diagnostic facility. This process typically takes between 1 to 5 business days from receipt.
+
+4. REFUND METHOD & TIMELINES
+Following a successful quality evaluation, your refund will be processed:
+• SweetoPay / Digital Wallet: Refund is credited within 24 to 48 hours.
+• Mobile Money / Bank Transfer: Refund is processed within 5 to 7 business days.
+• Credit/Debit Card: Refund is initiated instantly but may take up to 10-15 business days depending on your bank's clearance policy.
+
+5. HOW TO REQUEST A RETURN
+To request a return, go to your Orders page, select the item you wish to return, click "Request Return", and fill out the details. Alternatively, contact our support team.`
+};
+
 const StoreSettings = () => {
   const { products = [], settings, refreshData, showToast } = useStore();
   const [formData, setFormData] = useState({
@@ -249,9 +336,11 @@ const StoreSettings = () => {
     footer_link_privacy: '',
     footer_link_terms: '',
     footer_link_security: '',
+    footer_link_refund: '',
     footer_content_privacy: '',
     footer_content_terms: '',
     footer_content_security: '',
+    footer_content_refund: '',
     subscriber_count: '',
     loc_address: '',
     loc_hours_weekday: '',
@@ -270,6 +359,8 @@ const StoreSettings = () => {
     enable_admin_call_alerts: false,
     wave_number: '',
     wave_payment_url: '',
+    wave_api_key: '',
+    wave_currency: 'XOF',
     facebook_page_id: '',
     facebook_access_token: '',
     gemini_api_key: '',
@@ -306,9 +397,11 @@ const StoreSettings = () => {
         footer_link_privacy: settings.footer_link_privacy || '/privacy',
         footer_link_terms: settings.footer_link_terms || '/terms',
         footer_link_security: settings.footer_link_security || '/security',
-        footer_content_privacy: settings.footer_content_privacy || '',
-        footer_content_terms: settings.footer_content_terms || '',
-        footer_content_security: settings.footer_content_security || '',
+        footer_link_refund: settings.footer_link_refund || '/refund',
+        footer_content_privacy: settings.footer_content_privacy || defaultContent.privacy,
+        footer_content_terms: settings.footer_content_terms || defaultContent.terms,
+        footer_content_security: settings.footer_content_security || defaultContent.security,
+        footer_content_refund: settings.footer_content_refund || defaultContent.refund,
         subscriber_count: settings.subscriber_count || '2,500',
         loc_address: settings.loc_address || '',
         loc_hours_weekday: settings.loc_hours_weekday || '',
@@ -327,6 +420,8 @@ const StoreSettings = () => {
         enable_admin_call_alerts: settings.enable_admin_call_alerts === 'true' || settings.enable_admin_call_alerts === true || false,
         wave_number: settings.wave_number || '',
         wave_payment_url: settings.wave_payment_url || '',
+        wave_api_key: settings.wave_api_key || '',
+        wave_currency: settings.wave_currency || 'XOF',
         facebook_page_id: settings.facebook_page_id || '',
         facebook_access_token: settings.facebook_access_token || '',
         gemini_api_key: settings.gemini_api_key || '',
@@ -720,7 +815,7 @@ const StoreSettings = () => {
               />
               
               <div className="flex gap-2 sm:gap-3 mb-8 p-1 sm:p-1.5 bg-slate-100/50 dark:bg-slate-950/40 rounded-2xl sm:rounded-[1.8rem] border border-slate-100/50 dark:border-white/5">
-                {['privacy', 'terms', 'security'].map(tab => (
+                {['privacy', 'terms', 'security', 'refund'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveLegalTab(tab)}
@@ -823,7 +918,7 @@ const StoreSettings = () => {
                 
                 <div className="p-5 sm:p-8 bg-slate-50/50 dark:bg-slate-950/40 rounded-2xl sm:rounded-[2rem] border border-slate-100 dark:border-white/10 space-y-4 sm:space-y-6">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-b border-slate-100 dark:border-white/10 pb-4">Static Policy URL Routing</p>
-                  {['privacy', 'terms', 'security'].map(field => (
+                  {['privacy', 'terms', 'security', 'refund'].map(field => (
                     <div key={field} className="flex items-center gap-4 group/path">
                       <div className="w-20 text-[10px] font-black text-slate-400 uppercase tracking-widest group-focus-within/path:text-rose-500 transition-colors">{field}</div>
                       <div className="flex-1 relative">
@@ -1050,6 +1145,40 @@ const StoreSettings = () => {
                   <p className="text-[9px] text-slate-400 font-bold leading-normal">
                     Enter your official Wave pay link (e.g. Wave QR code checkout URL). Mobile users will be redirected to their Wave app, and desktop users will scan the QR code.
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Launch API Key (Secret Key)</span>
+                  <input 
+                    type="password" 
+                    name="wave_api_key" 
+                    placeholder="wave_la_prod_..."
+                    value={formData.wave_api_key} 
+                    onChange={(e) => {
+                      setIsDirty(true);
+                      setFormData(prev => ({ ...prev, wave_api_key: e.target.value }));
+                    }}
+                    className={inputStyle} 
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                    Enter your Wave Launch API secret key to dynamically generate amount-locked checkout URLs. If left blank, Wave simulation mode will be used.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Checkout Currency</span>
+                  <select 
+                    name="wave_currency" 
+                    value={formData.wave_currency || 'XOF'} 
+                    onChange={(e) => {
+                      setIsDirty(true);
+                      setFormData(prev => ({ ...prev, wave_currency: e.target.value }));
+                    }}
+                    className={inputStyle}
+                  >
+                    <option value="XOF">XOF (West African CFA franc - CI, SN, etc.)</option>
+                    <option value="XAF">XAF (Central African CFA franc)</option>
+                  </select>
                 </div>
               </div>
             </motion.div>

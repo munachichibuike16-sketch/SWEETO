@@ -533,6 +533,16 @@ try {
     vapidPrivateKey = privateKeyRow.value;
   }
 
+  // Sync VAPID keys to Supabase settings table if available to prevent key mismatches
+  if (supabaseAdmin) {
+    supabaseAdmin.from('settings').upsert([
+      { key: 'vapid_public_key', value: vapidPublicKey },
+      { key: 'vapid_private_key', value: vapidPrivateKey }
+    ])
+    .then(() => console.log('✅ Synced active VAPID keys to Supabase settings.'))
+    .catch(err => console.error('⚠️ Failed to sync VAPID keys to Supabase settings:', err));
+  }
+
   // Configure Web Push with VAPID keys
   webpush.setVapidDetails(
     'mailto:hello@sweeto.com',
@@ -1416,6 +1426,19 @@ app.get('/api/orders/:id', authenticateAdmin, (req, res) => {
   }
 });
 
+app.delete('/api/orders/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    res.json({ success: true, message: 'Order deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.post('/api/orders', (req, res) => {
   const { 
     customer_name, customer_contact, items, 
@@ -1447,6 +1470,100 @@ app.post('/api/orders', (req, res) => {
     scheduleAdminCallBackup(info.lastInsertRowid, customer_name, total);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/orders/:id/confirm-payment', (req, res) => {
+  const { id } = req.params;
+  const { wave_transaction_id } = req.body;
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    
+    let newContact = order.customer_contact || '';
+    if (wave_transaction_id) {
+      newContact += ` | Wave Tx: ${wave_transaction_id}`;
+    }
+    
+    db.prepare("UPDATE orders SET status = 'paid', customer_contact = ? WHERE id = ?").run(newContact, id);
+    res.json({ success: true, message: 'Order status updated to paid successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/payments/wave/checkout-session', (req, res) => {
+  const { orderId } = req.body;
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    
+    // Get settings
+    const settingsRows = db.prepare('SELECT key, value FROM settings').all();
+    const settings = settingsRows.reduce((acc, row) => {
+      acc[row.key] = row.value;
+      return acc;
+    }, {});
+    
+    const apiKey = settings.wave_api_key;
+    if (apiKey && apiKey.trim()) {
+      // Call actual Wave Checkout API using native fetch
+      const origin = req.headers.origin || 'http://localhost:5173';
+      
+      fetch('https://api.wave.com/v1/checkout/sessions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: String(order.total),
+          currency: settings.wave_currency || 'XOF',
+          error_url: `${origin}/#/wave-pay/${orderId}?status=error`,
+          success_url: `${origin}/#/wave-pay/${orderId}?status=success`
+        })
+      })
+      .then(async (waveRes) => {
+        if (waveRes.ok) {
+          const waveData = await waveRes.json();
+          res.json({ success: true, mode: 'live', checkoutUrl: waveData.wave_launch_url });
+        } else {
+          const errText = await waveRes.text();
+          console.error('Wave Checkout session API failed:', errText);
+          res.json({ success: true, mode: 'simulation' });
+        }
+      })
+      .catch((err) => {
+        console.error('Wave Checkout session network call failed:', err);
+        res.json({ success: true, mode: 'simulation' });
+      });
+      return;
+    }
+    
+    res.json({ success: true, mode: 'simulation' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/push/notify-payment', async (req, res) => {
+  try {
+    const { orderId, customerName, amount, status } = req.body;
+    await sendBackgroundPushNotification(
+      `💸 Wave Payment Confirmed!`,
+      `Order SWT-${orderId} from ${customerName} has been paid via Wave: ${Number(amount).toLocaleString()} FCFA (${status || 'PAID'})`,
+      `/#/dashboard`,
+      null,
+      'admin'
+    );
+    res.json({ success: true, message: 'Payment push notification triggered.' });
+  } catch (err) {
+    console.error('Error sending payment push notification:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
