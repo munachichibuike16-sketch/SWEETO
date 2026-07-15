@@ -297,7 +297,7 @@ We advise all users to use strong, unique passwords and sign out of their accoun
 5. VULNERABILITY MONITORING
 Our servers undergo regular automated security scans to detect, block, and mitigate potential threats, keeping your shopping experience safe and uninterrupted.`,
 
-  refund: `At SWEETO HUB, we want you to have a premium shopping experience. We follow a clear, consumer-first refund and return framework inspired by Jumia's official policies to ensure fairness and efficiency.
+  refund: `At SWEETO HUB, we want you to have a premium shopping experience. We follow a clear, consumer-first refund and return framework to ensure fairness and efficiency.
 
 1. RETURN TIMELINE
 • Most items purchased on SWEETO HUB are eligible for return within 7 to 15 days from the delivery date, depending on the product category.
@@ -788,7 +788,7 @@ const StoreSettings = () => {
                       className={`${inputStyle} appearance-none cursor-pointer pr-10`}
                     >
                       <option value="chilling">Arctic Tech Luxury (Chilling)</option>
-                      <option value="bright">Bright Modern Retail (Shopify / Flipkart style)</option>
+                      <option value="bright">Bright Modern Retail</option>
                     </select>
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
