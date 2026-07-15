@@ -9,6 +9,10 @@
 const customBackendUrl = import.meta.env.VITE_API_URL;
 
 export function isLocalHost() {
+  // If running inside Capacitor native app container, we must treat it as remote to force absolute requests to our server
+  if (typeof window !== 'undefined' && (window.Capacitor || window.location.protocol === 'capacitor:')) {
+    return false;
+  }
   const host = window.location.hostname;
   return (
     host === 'localhost' ||
@@ -24,6 +28,12 @@ export function isLocalHost() {
 
 const getDefaultBackendUrl = () => {
   const { protocol, hostname, origin } = window.location;
+  
+  // If inside Capacitor app, fall back to the production API URL (VITE_API_URL or placeholder)
+  if (typeof window !== 'undefined' && (window.Capacitor || protocol === 'capacitor:')) {
+    return 'https://your-backend-service.onrender.com';
+  }
+
   if (hostname) {
     if (isLocalHost()) {
       return `${protocol}//${hostname}:3000`;
