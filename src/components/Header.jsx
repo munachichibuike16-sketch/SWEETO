@@ -550,30 +550,47 @@ const Header = ({ onMenuClick, onCartClick }) => {
   };
 
   useEffect(() => {
-    let scrollTimeout = null;
+    let activityTimeout = null;
     
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
+    const showNav = () => {
+      setShowBottomNavScroll(true);
       
-      // Hide bottom nav while scrolling
-      setShowBottomNavScroll(false);
-      
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
+      // Reset the 10-second inactivity timer
+      if (activityTimeout) {
+        clearTimeout(activityTimeout);
       }
       
-      // Show bottom nav after scrolling stops (250ms inactivity)
-      scrollTimeout = setTimeout(() => {
-        setShowBottomNavScroll(true);
-      }, 250);
+      activityTimeout = setTimeout(() => {
+        setShowBottomNavScroll(false);
+      }, 10000); // 10 seconds of no activity
     };
-    
-    handleScroll();
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+      showNav();
+    };
+
+    const handleActivity = () => {
+      showNav();
+    };
+
+    // Initialize the timer and visibility on mount
+    showNav();
+
+    // Attach listeners for all types of interactions (touch, click, scroll, keypress)
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('touchstart', handleActivity, { passive: true });
+    window.addEventListener('touchmove', handleActivity, { passive: true });
+    window.addEventListener('mousedown', handleActivity, { passive: true });
+    window.addEventListener('keydown', handleActivity, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
+      window.removeEventListener('touchstart', handleActivity);
+      window.removeEventListener('touchmove', handleActivity);
+      window.removeEventListener('mousedown', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      if (activityTimeout) clearTimeout(activityTimeout);
     };
   }, []);
 
