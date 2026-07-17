@@ -25,28 +25,6 @@ const operatorConfigs = {
     accentColor: 'bg-[#0052FF]',
     prefix: 'WAV',
     icon: <WaveLogo size={28} />
-  },
-  orange: {
-    name: 'Orange Money',
-    color: '#FF6600',
-    hoverColor: '#E65C00',
-    textColor: 'text-white',
-    accentColor: 'bg-[#FF6600]',
-    prefix: 'ORG',
-    icon: (
-      <div className="w-7 h-7 bg-[#FF6600] flex items-center justify-center rounded-lg font-black text-white text-[10px] select-none border border-white/20">OM</div>
-    )
-  },
-  mtn: {
-    name: 'MTN MoMo',
-    color: '#FFCC00',
-    hoverColor: '#E6B800',
-    textColor: 'text-slate-900',
-    accentColor: 'bg-[#FFCC00]',
-    prefix: 'MTN',
-    icon: (
-      <div className="w-7 h-7 bg-[#FFCC00] text-slate-900 flex items-center justify-center rounded-lg font-black text-[10px] select-none border border-black/10">MTN</div>
-    )
   }
 };
 
@@ -66,7 +44,8 @@ const WavePayPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [txId, setTxId] = useState('');
   const [waUrl, setWaUrl] = useState('');
-  const [operator, setOperator] = useState('wave'); // 'wave' | 'orange' | 'mtn'
+  const [operator, setOperator] = useState('wave'); // 'wave'
+  const [customTxId, setCustomTxId] = useState('');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -127,17 +106,26 @@ const WavePayPage = () => {
       
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.mode === 'live' && data.checkoutUrl) {
+        if (data.success && data.checkoutUrl) {
           setPaymentMode('live');
           window.location.href = data.checkoutUrl;
           return;
         }
       }
-      setPaymentMode('simulation');
+      
+      if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
+        setPaymentMode('live_link');
+      } else {
+        setPaymentMode('simulation');
+      }
       setLoading(false);
     } catch (e) {
-      console.warn('Failed to check live Wave session, falling back to simulation:', e);
-      setPaymentMode('simulation');
+      console.warn('Failed to check live Wave session, checking merchant url:', e);
+      if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
+        setPaymentMode('live_link');
+      } else {
+        setPaymentMode('simulation');
+      }
       setLoading(false);
     }
   };
@@ -145,7 +133,7 @@ const WavePayPage = () => {
   const handleConfirmPayment = async () => {
     setIsConfirming(true);
     const activeOp = operatorConfigs[operator];
-    const generatedTxId = `${activeOp.prefix}-` + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString().slice(-4);
+    const generatedTxId = customTxId.trim() || `${activeOp.prefix}-` + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString().slice(-4);
     setTxId(generatedTxId);
 
     try {
@@ -316,29 +304,31 @@ const WavePayPage = () => {
       <div className="max-w-md w-full bg-white dark:bg-[#0b101c] rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-2xl overflow-hidden text-left relative">
         
         {/* Operator Selector Header Tabs */}
-        <div className="flex border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20">
-          {Object.keys(operatorConfigs).map((opKey) => {
-            const op = operatorConfigs[opKey];
-            const isActive = operator === opKey;
-            return (
-              <button
-                key={opKey}
-                onClick={() => setOperator(opKey)}
-                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer ${
-                  isActive
-                    ? 'font-extrabold'
-                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650'
-                }`}
-                style={{
-                  borderBottomColor: isActive ? op.color : 'transparent',
-                  color: isActive ? op.color : undefined
-                }}
-              >
-                {op.name}
-              </button>
-            );
-          })}
-        </div>
+        {Object.keys(operatorConfigs).length > 1 && (
+          <div className="flex border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20">
+            {Object.keys(operatorConfigs).map((opKey) => {
+              const op = operatorConfigs[opKey];
+              const isActive = operator === opKey;
+              return (
+                <button
+                  key={opKey}
+                  onClick={() => setOperator(opKey)}
+                  className={`flex-1 py-4 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer ${
+                    isActive
+                      ? 'font-extrabold'
+                      : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650'
+                  }`}
+                  style={{
+                    borderBottomColor: isActive ? op.color : 'transparent',
+                    color: isActive ? op.color : undefined
+                  }}
+                >
+                  {op.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* operator Header */}
         <div className="p-6 text-white flex items-center justify-between transition-colors duration-500" style={{ backgroundColor: activeOp.color }}>
@@ -395,6 +385,41 @@ const WavePayPage = () => {
             </p>
           </div>
         </div>
+
+        {/* Transaction ID input box for Live Link & Simulation */}
+        {(paymentMode === 'live_link' || paymentMode === 'simulation') && (
+          <div className="p-8 border-t border-slate-100 dark:border-white/5 space-y-4">
+            {paymentMode === 'live_link' && (
+              <button
+                type="button"
+                onClick={() => {
+                  const payUrl = settings?.wave_payment_url || 'https://pay.wave.com';
+                  window.open(payUrl, '_blank');
+                }}
+                className="w-full bg-[#0052FF] hover:bg-[#0043D0] text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2 cursor-pointer border-none"
+              >
+                <Lock size={12} />
+                {lang === 'fr' ? '1. Ouvrir l\'application Wave pour payer' : '1. Open Wave App to Pay'}
+              </button>
+            )}
+            
+            <div className="space-y-2 text-left">
+              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                {lang === 'fr' 
+                  ? (paymentMode === 'live_link' ? '2. Saisir l\'ID de Transaction reçu' : 'ID de Transaction Wave')
+                  : (paymentMode === 'live_link' ? '2. Enter the received Transaction ID' : 'Wave Transaction ID')
+                }
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: WAV-123456-ABCDEF"
+                value={customTxId}
+                onChange={(e) => setCustomTxId(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 text-xs font-black text-slate-800 dark:text-white outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Buttons Row */}
         <div className="p-8 bg-slate-50/50 dark:bg-white/2 border-t border-slate-100 dark:border-white/5 flex gap-4">
