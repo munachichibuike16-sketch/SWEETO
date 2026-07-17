@@ -96,6 +96,44 @@ const WavePayPage = () => {
     fetchOrder();
   }, [orderId, settings, statusParam]);
 
+  // Polling effect to check for automated webhook/payment confirmation
+  useEffect(() => {
+    if (!orderId || isSuccess) return;
+
+    const interval = setInterval(async () => {
+      try {
+        let orderData = null;
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
+          if (!error && data) {
+            orderData = data;
+          }
+        }
+        
+        if (!orderData) {
+          const res = await apiFetch(`/api/orders/${orderId}/tracking`);
+          if (res.ok) {
+            orderData = await res.json();
+          }
+        }
+
+        if (orderData && orderData.status === 'paid') {
+          setOrder(orderData);
+          setIsSuccess(true);
+          clearInterval(interval);
+        }
+      } catch (err) {
+        console.warn('Polling order status failed:', err);
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [orderId, isSuccess, supabase]);
+
   const checkWaveSession = async (orderData) => {
     try {
       const res = await apiFetch('/api/payments/wave/checkout-session', {
@@ -387,37 +425,25 @@ const WavePayPage = () => {
         </div>
 
         {/* Transaction ID input box for Live Link & Simulation */}
-        {(paymentMode === 'live_link' || paymentMode === 'simulation') && (
+        {paymentMode === 'live_link' && (
           <div className="p-8 border-t border-slate-100 dark:border-white/5 space-y-4">
-            {paymentMode === 'live_link' && (
-              <button
-                type="button"
-                onClick={() => {
-                  const payUrl = settings?.wave_payment_url || 'https://pay.wave.com';
-                  window.open(payUrl, '_blank');
-                }}
-                className="w-full bg-[#0052FF] hover:bg-[#0043D0] text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2 cursor-pointer border-none"
-              >
-                <Lock size={12} />
-                {lang === 'fr' ? '1. Ouvrir l\'application Wave pour payer' : '1. Open Wave App to Pay'}
-              </button>
-            )}
-            
-            <div className="space-y-2 text-left">
-              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                {lang === 'fr' 
-                  ? (paymentMode === 'live_link' ? '2. Saisir l\'ID de Transaction reçu' : 'ID de Transaction Wave')
-                  : (paymentMode === 'live_link' ? '2. Enter the received Transaction ID' : 'Wave Transaction ID')
-                }
-              </label>
-              <input
-                type="text"
-                placeholder="Ex: WAV-123456-ABCDEF"
-                value={customTxId}
-                onChange={(e) => setCustomTxId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 text-xs font-black text-slate-800 dark:text-white outline-none focus:border-blue-500"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const payUrl = settings?.wave_payment_url || 'https://pay.wave.com';
+                window.open(payUrl, '_blank');
+              }}
+              className="w-full bg-[#0052FF] hover:bg-[#0043D0] text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2 cursor-pointer border-none"
+            >
+              <Lock size={12} />
+              {lang === 'fr' ? '1. Ouvrir l\'application Wave pour payer' : '1. Open Wave App to Pay'}
+            </button>
+            <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-wider leading-relaxed">
+              {lang === 'fr'
+                ? '2. Après avoir payé sur Wave, cliquez sur "Confirmer" ci-dessous'
+                : '2. After paying in Wave, click "Confirm" below'
+              }
+            </p>
           </div>
         )}
 
