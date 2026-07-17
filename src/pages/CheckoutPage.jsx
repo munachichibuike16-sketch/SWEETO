@@ -524,6 +524,8 @@ const CheckoutPage = () => {
 
       // Open Wave payment link in a new tab if selected
       if (paymentOption === 'direct') {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         try {
           const res = await apiFetch('/api/payments/wave/checkout-session', {
             method: 'POST',
@@ -531,27 +533,41 @@ const CheckoutPage = () => {
             body: JSON.stringify({ orderId: newOrderId })
           });
           
+          let targetUrl = '';
           if (res.ok) {
             const data = await res.json();
             if (data.success && data.checkoutUrl) {
-              window.location.href = data.checkoutUrl;
-              return;
+              targetUrl = data.checkoutUrl;
             }
           }
           
-          // Fallback to configured merchant payment link (hardcoded default as fallback)
-          const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
-          const waveLink = baseLink.includes('?') 
-            ? `${baseLink}&amount=${grandTotal}` 
-            : `${baseLink}?amount=${grandTotal}`;
-          window.location.href = waveLink;
+          if (!targetUrl) {
+            const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+            targetUrl = baseLink.includes('?') 
+              ? `${baseLink}&amount=${grandTotal}` 
+              : `${baseLink}?amount=${grandTotal}`;
+          }
+
+          if (isMobile) {
+            window.location.href = targetUrl;
+          } else {
+            // Desktop: open payment link in a new window/tab and navigate store to intermediate/tracking page
+            window.open(targetUrl, '_blank');
+            navigate(`/wave-pay/${newOrderId}`);
+          }
         } catch (e) {
           console.warn('Failed to start Wave session from checkout:', e);
           const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
           const waveLink = baseLink.includes('?') 
             ? `${baseLink}&amount=${grandTotal}` 
             : `${baseLink}?amount=${grandTotal}`;
-          window.location.href = waveLink;
+          
+          if (isMobile) {
+            window.location.href = waveLink;
+          } else {
+            window.open(waveLink, '_blank');
+            navigate(`/wave-pay/${newOrderId}`);
+          }
         }
       } else {
         // Open WhatsApp to finalize checkout (use window.location for reliability)

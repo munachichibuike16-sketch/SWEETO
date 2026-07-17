@@ -454,19 +454,26 @@ const WavePayPage = () => {
         )}
 
         {/* Buttons Row */}
-        <div className="p-8 bg-slate-50/50 dark:bg-white/2 border-t border-slate-100 dark:border-white/5 flex gap-4">
+        <div className="p-8 bg-slate-50/50 dark:bg-white/2 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-3">
           <button
             onClick={handleCancelPayment}
             disabled={isConfirming}
-            className="flex-1 py-4.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
+            className="flex-1 min-w-[80px] py-4.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
           >
             {lang === 'fr' ? 'Annuler' : 'Cancel'}
+          </button>
+
+          <button
+            onClick={() => navigate(`/order-tracking/${orderId}`)}
+            className="flex-1 min-w-[80px] py-4.5 bg-blue-500/10 text-[#0052FF] dark:text-blue-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center border border-blue-500/20"
+          >
+            {lang === 'fr' ? 'Passer' : 'Skip'}
           </button>
           
           <button
             onClick={handleConfirmPayment}
             disabled={isConfirming}
-            className="flex-[2] py-4.5 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-[2] min-w-[150px] py-4.5 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
             style={{
               backgroundColor: activeOp.color,
               boxShadow: `0 10px 15px -3px ${activeOp.color}40`
