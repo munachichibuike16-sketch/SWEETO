@@ -540,11 +540,17 @@ const CheckoutPage = () => {
           }
           
           // Fallback to configured merchant payment link (hardcoded default as fallback)
-          const waveLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+          const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+          const waveLink = baseLink.includes('?') 
+            ? `${baseLink}&amount=${grandTotal}` 
+            : `${baseLink}?amount=${grandTotal}`;
           window.location.href = waveLink;
         } catch (e) {
           console.warn('Failed to start Wave session from checkout:', e);
-          const waveLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+          const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+          const waveLink = baseLink.includes('?') 
+            ? `${baseLink}&amount=${grandTotal}` 
+            : `${baseLink}?amount=${grandTotal}`;
           window.location.href = waveLink;
         }
       } else {
