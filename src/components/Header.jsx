@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft, MessageSquare, ChevronDown, QrCode } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft, MessageSquare, ChevronDown, QrCode, Mic } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -70,7 +70,53 @@ const Header = ({ onMenuClick, onCartClick }) => {
   const isHomeOrCategory = location.pathname === '/' || location.pathname === '' || location.pathname.startsWith('/category/');
   const showBottomNav = !location.pathname.startsWith('/product/') && 
                         !['/deals', '/notifications', '/settings', '/privacy', '/terms', '/security', '/refund', '/visit'].includes(location.pathname);
+  const [isListening, setIsListening] = useState(false);
 
+  const startVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast(
+        lang === 'fr' 
+          ? "La reconnaissance vocale n'est pas supportée par votre navigateur." 
+          : "Speech recognition is not supported in your browser.", 
+        "error"
+      );
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      try { playSound?.('click'); } catch (e) {}
+    };
+
+    recognition.onresult = (event) => {
+      const speechToText = event.results[0][0].transcript;
+      setInputValue(speechToText);
+      setSearchQuery(speechToText);
+      showToast(
+        lang === 'fr' 
+          ? `Recherche vocale : "${speechToText}"` 
+          : `Voice search: "${speechToText}"`, 
+        "success"
+      );
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -649,6 +695,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
               title="Search by image"
             >
               <Camera size={18} strokeWidth={2} />
+            </button>
+
+            {/* Voice Search Icon */}
+            <button 
+              type="button" 
+              onClick={startVoiceSearch}
+              className={`p-1 shrink-0 bg-transparent border-none cursor-pointer transition-all ${
+                isListening 
+                  ? 'text-red-500 animate-pulse scale-110' 
+                  : 'text-slate-450 hover:text-slate-655 dark:hover:text-slate-400'
+              }`}
+              title="Voice Search"
+            >
+              <Mic size={18} strokeWidth={2} />
             </button>
 
             {/* Black Pill-shaped search button inside search bar */}
@@ -1231,6 +1291,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 cursor-pointer"
                 >
                   <Camera size={19} strokeWidth={2} />
+                </button>
+                
+                {/* Voice Search Button */}
+                <button
+                  type="button"
+                  onClick={startVoiceSearch}
+                  className={`shrink-0 cursor-pointer transition-all ${
+                    isListening 
+                      ? 'text-red-500 animate-pulse scale-110' 
+                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400'
+                  }`}
+                  title="Voice Search"
+                >
+                  <Mic size={19} strokeWidth={2} />
                 </button>
                 
                 {/* Separator line */}

@@ -861,10 +861,47 @@ export const LanguageProvider = ({ children }) => {
   const [lang, setLang] = useState('fr');
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('sweetohub_lang');
+    // 1. Define global Google Translate init callback
+    if (!window.googleTranslateElementInit) {
+      window.googleTranslateElementInit = () => {
+        if (window.google && window.google.translate) {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'auto',
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+          }, 'google_translate_element');
+        }
+      };
+    }
+
+    // 2. Append script tag if not present
+    const scriptId = 'google-translate-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.type = 'text/javascript';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      document.body.appendChild(script);
+    }
+    
+    // 3. Create hidden target div if not present
+    const elementId = 'google_translate_element';
+    if (!document.getElementById(elementId)) {
+      const div = document.createElement('div');
+      div.id = elementId;
+      div.style.display = 'none';
+      document.body.appendChild(div);
+    }
+
+    const savedLang = localStorage.getItem('sweetohub_lang') || 'fr';
     if (savedLang && translations[savedLang]) {
       setLang(savedLang);
       document.documentElement.lang = savedLang;
+
+      // Set cookie on initial load to match saved language
+      const cookieVal = `/auto/${savedLang}`;
+      document.cookie = `googtrans=${cookieVal}; path=/;`;
+      document.cookie = `googtrans=${cookieVal}; path=/; domain=${window.location.hostname};`;
     }
   }, []);
 
@@ -873,6 +910,16 @@ export const LanguageProvider = ({ children }) => {
       setLang(newLang);
       localStorage.setItem('sweetohub_lang', newLang);
       document.documentElement.lang = newLang;
+
+      // Set cookie to trigger Google Auto-Translate
+      const cookieVal = `/auto/${newLang}`;
+      document.cookie = `googtrans=${cookieVal}; path=/;`;
+      document.cookie = `googtrans=${cookieVal}; path=/; domain=${window.location.hostname};`;
+
+      // Brief delay then reload to let Google Translate process the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 150);
     }
   };
 
@@ -912,10 +959,22 @@ export const LanguageProvider = ({ children }) => {
 
   const t_smart = (str) => {
     if (!str) return str;
-    const key = str.toLowerCase().replace(/ /g, '_');
+    
+    // Normalize string to lowercase and replace non-alphanumeric character sequences with a single underscore
+    const key = str.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/(^_|_$)/g, ''); // strip leading/trailing underscores
+    
     if (translations[lang] && translations[lang][key]) {
       return translations[lang][key];
     }
+    
+    // Fallback: try raw space-to-underscore replacement
+    const fallbackKey = str.toLowerCase().replace(/ /g, '_');
+    if (translations[lang] && translations[lang][fallbackKey]) {
+      return translations[lang][fallbackKey];
+    }
+    
     return cleanProductName(str);
   };
 

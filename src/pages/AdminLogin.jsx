@@ -58,7 +58,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] flex items-center justify-center p-6 relative overflow-hidden font-sans select-none text-slate-100">
+    <div className="min-h-[100dvh] w-full max-w-full bg-[#030712] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans select-none text-slate-100">
       {/* Animated matrix/cyber flows in the background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.03),transparent_60%)]"></div>
       <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/5 rounded-full blur-[140px] pointer-events-none"></div>
@@ -68,7 +68,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-md bg-[#090d16]/80 backdrop-blur-2xl border border-slate-800/80 rounded-[2.5rem] p-10 shadow-[0_30px_70px_rgba(0,0,0,0.8)] text-center space-y-8 overflow-hidden"
+        className="relative w-full max-w-md bg-[#090d16]/80 backdrop-blur-2xl border border-slate-800/80 rounded-[2.5rem] p-6 sm:p-10 shadow-[0_30px_70px_rgba(0,0,0,0.8)] text-center space-y-8 overflow-hidden"
       >
         {/* Top glowing tech line */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[3px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>

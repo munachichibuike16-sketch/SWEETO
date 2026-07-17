@@ -85,10 +85,10 @@ const Footer = () => {
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
       <div className="max-w-[1240px] mx-auto px-6 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 mb-16">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-10 md:gap-8 mb-16">
           
-          {/* Brand & Description Column (Span 4) */}
-          <div className="md:col-span-4 flex flex-col gap-5">
+          {/* Brand & Description Column (Span 6) */}
+          <div className="md:col-span-6 flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <SweetoLogo size={36} />
               <span className="text-lg font-black uppercase tracking-widest text-slate-900 dark:text-white italic">
@@ -124,38 +124,8 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links Column (Span 4) */}
-          <div className="md:col-span-4 flex flex-col gap-5 md:pl-10">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.25em] leading-none mb-1">
-              {lang === 'fr' ? 'Navigation' : 'Quick Navigation'}
-            </h4>
-            <ul className="flex flex-col gap-3">
-              {[
-                { id: 'footer-nav-home', label: lang === 'fr' ? 'Accueil' : 'Home', action: () => navigate('/') },
-                { id: 'footer-nav-products', label: lang === 'fr' ? 'Boutique' : 'All Products', action: () => navigate('/products') },
-                { id: 'footer-nav-deals', label: lang === 'fr' ? 'Offres du Jour' : 'Super Deals', action: () => navigate('/deals') },
-                { id: 'footer-nav-visit', label: lang === 'fr' ? 'Nous Visiter' : 'Visit Us', action: () => navigate('/visit') },
-                { id: 'footer-nav-support', label: lang === 'fr' ? 'Support Client' : 'Customer Support', action: () => navigate('/support') }
-              ].map((item) => (
-                <li key={item.id}>
-                  <button
-                    id={item.id}
-                    onClick={() => {
-                      item.action();
-                      window.scrollTo(0, 0);
-                    }}
-                    className="flex items-center gap-1.5 text-xs text-slate-450 hover:text-blue-600 dark:text-slate-400 dark:hover:text-cyan-400 font-bold transition-colors group cursor-pointer text-left"
-                  >
-                    <ArrowRight size={10} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                    <span>{item.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Store Address & Contact Column (Span 4) */}
-          <div className="md:col-span-4 flex flex-col gap-5">
+          {/* Store Address & Contact Column (Span 6) */}
+          <div className="md:col-span-6 flex flex-col gap-5">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.25em] leading-none mb-1">
               {lang === 'fr' ? 'Coordonnées' : 'Store Coordinates'}
             </h4>
@@ -178,14 +148,6 @@ const Footer = () => {
                 <Mail size={16} className="text-slate-400 dark:text-slate-500 shrink-0" />
                 <span className="font-semibold">support@{shopName.toLowerCase().replace(/\s+/g, '')}.com</span>
               </div>
-            </div>
-            
-            {/* Trust Badges */}
-            <div className="flex flex-wrap gap-2.5 mt-2">
-              <span className="px-2.5 py-1 text-[8px] font-black tracking-wider uppercase border border-slate-100 dark:border-white/5 rounded bg-slate-50 dark:bg-white/5 text-slate-400 select-none">VISA</span>
-              <span className="px-2.5 py-1 text-[8px] font-black tracking-wider uppercase border border-slate-100 dark:border-white/5 rounded bg-slate-50 dark:bg-white/5 text-slate-400 select-none">MASTERCARD</span>
-              <span className="px-2.5 py-1 text-[8px] font-black tracking-wider uppercase border border-slate-100 dark:border-white/5 rounded bg-slate-50 dark:bg-white/5 text-slate-400 select-none">MOBILE MONEY</span>
-              <span className="px-2.5 py-1 text-[8px] font-black tracking-wider uppercase border border-slate-100 dark:border-white/5 rounded bg-slate-50 dark:bg-white/5 text-slate-400 select-none">SSL SECURE</span>
             </div>
           </div>
 

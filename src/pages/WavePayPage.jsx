@@ -16,11 +16,45 @@ const WaveLogo = ({ size = 28 }) => (
   </svg>
 );
 
+const operatorConfigs = {
+  wave: {
+    name: 'Wave',
+    color: '#0052FF',
+    hoverColor: '#0043D0',
+    textColor: 'text-white',
+    accentColor: 'bg-[#0052FF]',
+    prefix: 'WAV',
+    icon: <WaveLogo size={28} />
+  },
+  orange: {
+    name: 'Orange Money',
+    color: '#FF6600',
+    hoverColor: '#E65C00',
+    textColor: 'text-white',
+    accentColor: 'bg-[#FF6600]',
+    prefix: 'ORG',
+    icon: (
+      <div className="w-7 h-7 bg-[#FF6600] flex items-center justify-center rounded-lg font-black text-white text-[10px] select-none border border-white/20">OM</div>
+    )
+  },
+  mtn: {
+    name: 'MTN MoMo',
+    color: '#FFCC00',
+    hoverColor: '#E6B800',
+    textColor: 'text-slate-900',
+    accentColor: 'bg-[#FFCC00]',
+    prefix: 'MTN',
+    icon: (
+      <div className="w-7 h-7 bg-[#FFCC00] text-slate-900 flex items-center justify-center rounded-lg font-black text-[10px] select-none border border-black/10">MTN</div>
+    )
+  }
+};
+
 const WavePayPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const statusParam = searchParams.get('status'); // 'success' or 'error' from live Wave redirects
+  const statusParam = searchParams.get('status');
 
   const { settings, showToast } = useStore();
   const { t, lang } = useLanguage();
@@ -32,8 +66,8 @@ const WavePayPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [txId, setTxId] = useState('');
   const [waUrl, setWaUrl] = useState('');
+  const [operator, setOperator] = useState('wave'); // 'wave' | 'orange' | 'mtn'
 
-  // 1. Fetch Order details
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -51,7 +85,6 @@ const WavePayPage = () => {
         }
         
         if (!orderData) {
-          // Fetch from local Express DB
           const res = await apiFetch(`/api/orders/${orderId}/tracking`);
           if (res.ok) {
             orderData = await res.json();
@@ -61,27 +94,13 @@ const WavePayPage = () => {
         if (orderData) {
           setOrder(orderData);
           
-          // Generate WhatsApp redirect link in advance
-          const ADMIN_WHATSAPP = settings?.admin_phone || '+2250500619923';
-          const itemsList = orderData.items ? 
-            JSON.parse(orderData.items).map(item => `- ${item.name} (Qté: ${item.quantity})`).join('\n') : '';
-          const currency = settings?.currency || 'FCFA';
-
-          const msg = `Bonjour Sweeto-Hub, j'ai effectué mon paiement Wave pour ma commande :\n` +
-            `${itemsList}\n\n` +
-            `Montant Payé : ${Number(orderData.total || orderData.total_amount).toLocaleString()} ${currency} (Wave)\n` +
-            `Destinataire : ${orderData.customer_name}\n` +
-            `ID Commande : #${orderId}`;
-          setWaUrl(`https://wa.me/${ADMIN_WHATSAPP.replace(/\+/g, '')}?text=${encodeURIComponent(msg)}`);
-
-          // If the order is already marked as paid
           if (orderData.status === 'paid' || statusParam === 'success') {
             setIsSuccess(true);
             setLoading(false);
             return;
           }
           
-          // 2. Check for live Wave Checkout Session
+          // Check for live Wave Checkout Session
           checkWaveSession(orderData);
         } else {
           showToast('Commande introuvable / Order not found.', 'error');
@@ -110,7 +129,6 @@ const WavePayPage = () => {
         const data = await res.json();
         if (data.success && data.mode === 'live' && data.checkoutUrl) {
           setPaymentMode('live');
-          // Redirect immediately to Wave Checkout Session
           window.location.href = data.checkoutUrl;
           return;
         }
@@ -124,14 +142,13 @@ const WavePayPage = () => {
     }
   };
 
-  // 3. Confirm simulated payment
   const handleConfirmPayment = async () => {
     setIsConfirming(true);
-    const generatedTxId = 'WAV-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString().slice(-4);
+    const activeOp = operatorConfigs[operator];
+    const generatedTxId = `${activeOp.prefix}-` + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString().slice(-4);
     setTxId(generatedTxId);
 
     try {
-      // Create chat notification session ID
       let chatSid = window.localStorage.getItem('sweeto_chat_session_id');
       if (!chatSid) {
         chatSid = 'session_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
@@ -142,26 +159,24 @@ const WavePayPage = () => {
       const orderAmount = order.total || order.total_amount;
       const currency = settings?.currency || 'FCFA';
 
-      // update in Database
       if (supabase) {
         const currentContact = order.customer_contact || '';
         const { error } = await supabase
           .from('orders')
           .update({ 
             status: 'paid',
-            customer_contact: currentContact ? `${currentContact} | Wave Tx: ${generatedTxId}` : `Wave Tx: ${generatedTxId}`
+            customer_contact: currentContact ? `${currentContact} | ${activeOp.name} Tx: ${generatedTxId}` : `${activeOp.name} Tx: ${generatedTxId}`
           })
           .eq('id', orderId);
         if (error) throw error;
 
-        // Insert notification in admin chat
         await supabase.from('chat_messages').insert([
           {
             session_id: chatSid,
             customer_name: order.customer_name,
             customer_phone: order.customer_phone || null,
             sender_role: 'customer',
-            message_text: `💸 [Wave Auto-Payment]: J'ai payé ${Number(orderAmount).toLocaleString()} ${currency} pour la Commande #${orderId}. ID Transaction Wave: ${generatedTxId}.`
+            message_text: `💸 [${activeOp.name} Auto-Payment]: J'ai payé ${Number(orderAmount).toLocaleString()} ${currency} pour la Commande #${orderId}. ID Transaction: ${generatedTxId}.`
           }
         ]).catch(err => console.warn('Could not write payment message to Chat:', err));
 
@@ -174,7 +189,18 @@ const WavePayPage = () => {
         if (!response.ok) throw new Error('Local database update failed');
       }
 
-      // Trigger local push notification to admin
+      const ADMIN_WHATSAPP = settings?.admin_phone || '+2250500619923';
+      const itemsList = order.items ? 
+        JSON.parse(order.items).map(item => `- ${item.name} (Qté: ${item.quantity})`).join('\n') : '';
+
+      const msg = `Bonjour Sweeto-Hub, j'ai effectué mon paiement ${activeOp.name} pour ma commande :\n` +
+        `${itemsList}\n\n` +
+        `Montant Payé : ${Number(orderAmount).toLocaleString()} ${currency} (${activeOp.name})\n` +
+        `Destinataire : ${order.customer_name}\n` +
+        `ID Commande : #${orderId}\n` +
+        `ID Transaction : ${generatedTxId}`;
+      setWaUrl(`https://wa.me/${ADMIN_WHATSAPP.replace(/\+/g, '')}?text=${encodeURIComponent(msg)}`);
+
       await apiFetch('/api/push/notify-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,7 +212,6 @@ const WavePayPage = () => {
         })
       }).catch(err => console.warn('Could not trigger payment push notification:', err));
 
-      // Success transition
       setTimeout(() => {
         setIsConfirming(false);
         setIsSuccess(true);
@@ -205,28 +230,27 @@ const WavePayPage = () => {
     navigate('/checkout');
   };
 
-  // ──── RENDER LOADING STATE ────
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex flex-col items-center justify-center p-6 text-center">
         <div className="relative mb-6">
           <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
-          <div className="relative w-16 h-16 rounded-3xl bg-[#0052FF] flex items-center justify-center shadow-lg">
+          <div className="relative w-16 h-16 rounded-3xl bg-[#0052FF] flex items-center justify-center shadow-lg animate-bounce">
             <WaveLogo size={36} />
           </div>
         </div>
         <div className="flex items-center gap-2 text-slate-800 dark:text-white font-black uppercase text-xs tracking-widest">
           <RefreshCw className="animate-spin text-[#0052FF]" size={16} />
-          <span>{lang === 'fr' ? 'Connexion sécurisée Wave...' : 'Connecting to Wave Secure...'}</span>
+          <span>{lang === 'fr' ? 'Connexion sécurisée Gateway...' : 'Connecting to Secure Gateway...'}</span>
         </div>
       </div>
     );
   }
 
-  // ──── RENDER SUCCESS STATE ────
   if (isSuccess) {
+    const activeOp = operatorConfigs[operator];
     return (
-      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-6 relative overflow-hidden font-sans">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,82,255,0.15),transparent_70%)]"></div>
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
@@ -244,12 +268,12 @@ const WavePayPage = () => {
           </p>
           <p className="text-sm text-slate-350 leading-relaxed mb-8">
             {lang === 'fr' ? 
-              'Votre paiement via Wave a été validé et enregistré. L’administrateur a été notifié de votre transaction.' : 
-              'Your payment via Wave was successfully validated and registered. The administrator has been notified of the transfer.'}
+              `Votre paiement via ${activeOp.name} a été validé et enregistré. L’administrateur a été notifié de votre transaction.` : 
+              `Your payment via ${activeOp.name} was successfully validated and registered. The administrator has been notified of the transfer.`}
           </p>
           {txId && (
             <div className="p-4 bg-white/5 border border-white/5 rounded-2xl mb-8">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">ID Transaction</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">ID Transaction ({activeOp.name})</span>
               <code className="text-xs font-black text-blue-400 select-all">{txId}</code>
             </div>
           )}
@@ -278,21 +302,46 @@ const WavePayPage = () => {
     );
   }
 
-  // ──── RENDER SIMULATION PORTAL ────
   const shopName = settings?.shopName || 'SWEETO HUB';
   const orderAmount = order?.total || order?.total_amount || 0;
   const currency = settings?.currency || 'FCFA';
+  const activeOp = operatorConfigs[operator];
 
   return (
-    <div className="min-h-screen bg-slate-550/30 dark:bg-[#070b12] flex items-center justify-center p-4 transition-colors duration-500">
-      <div className="max-w-md w-full bg-white dark:bg-[#0b101c] rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-2xl overflow-hidden text-left relative">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070b12] flex items-center justify-center p-4 transition-colors duration-500 font-sans">
+      <div className="max-w-md w-full bg-white dark:bg-[#0b101c] rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-2xl overflow-hidden text-left relative">
         
-        {/* Wave Checkout Header */}
-        <div className="bg-[#0052FF] p-6 text-white flex items-center justify-between">
+        {/* Operator Selector Header Tabs */}
+        <div className="flex border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20">
+          {Object.keys(operatorConfigs).map((opKey) => {
+            const op = operatorConfigs[opKey];
+            const isActive = operator === opKey;
+            return (
+              <button
+                key={opKey}
+                onClick={() => setOperator(opKey)}
+                className={`flex-1 py-4 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-1.5 cursor-pointer ${
+                  isActive
+                    ? 'font-extrabold'
+                    : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-650'
+                }`}
+                style={{
+                  borderBottomColor: isActive ? op.color : 'transparent',
+                  color: isActive ? op.color : undefined
+                }}
+              >
+                {op.name}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* operator Header */}
+        <div className="p-6 text-white flex items-center justify-between transition-colors duration-500" style={{ backgroundColor: activeOp.color }}>
           <div className="flex items-center gap-3">
-            <WaveLogo size={32} />
+            {activeOp.icon}
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-blue-200">Wave Checkout</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-80">{activeOp.name} Gateway</p>
               <h2 className="text-base font-black uppercase tracking-wider leading-none mt-0.5">{shopName}</h2>
             </div>
           </div>
@@ -306,7 +355,7 @@ const WavePayPage = () => {
         <div className="p-8 border-b border-slate-100 dark:border-white/5 text-center bg-slate-50/50 dark:bg-white/2">
           <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-2">Montant à Payer / Total Amount</p>
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-4xl font-black text-[#0052FF] dark:text-blue-450 tracking-tight leading-none">
+            <h1 className="text-4xl font-black tracking-tight leading-none" style={{ color: activeOp.color }}>
               {Number(orderAmount).toLocaleString()}
             </h1>
             <span className="text-lg font-black text-slate-500 dark:text-slate-400">{currency}</span>
@@ -317,7 +366,7 @@ const WavePayPage = () => {
           </div>
         </div>
 
-        {/* Order Details Details */}
+        {/* Order details */}
         <div className="p-8 space-y-5">
           <div className="flex justify-between items-center text-xs">
             <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ID Commande</span>
@@ -337,8 +386,8 @@ const WavePayPage = () => {
           <div className="pt-2 border-t border-slate-100 dark:border-white/5">
             <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed font-bold">
               {lang === 'fr' ? 
-                'En confirmant ce paiement, le montant sera automatiquement prélevé de votre compte Wave. Vous ne pouvez pas modifier ce montant.' : 
-                'By confirming this payment, the exact amount will be deducted from your Wave wallet. You cannot modify the transaction amount.'}
+                `En confirmant ce paiement, le montant sera automatiquement prélevé de votre compte ${activeOp.name}. Vous ne pouvez pas modifier ce montant.` : 
+                `By confirming this payment, the exact amount will be deducted from your ${activeOp.name} wallet. You cannot modify the transaction amount.`}
             </p>
           </div>
         </div>
@@ -356,7 +405,11 @@ const WavePayPage = () => {
           <button
             onClick={handleConfirmPayment}
             disabled={isConfirming}
-            className="flex-[2] py-4.5 bg-[#0052FF] hover:bg-[#0043D0] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-[2] py-4.5 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            style={{
+              backgroundColor: activeOp.color,
+              boxShadow: `0 10px 15px -3px ${activeOp.color}40`
+            }}
           >
             {isConfirming ? (
               <>

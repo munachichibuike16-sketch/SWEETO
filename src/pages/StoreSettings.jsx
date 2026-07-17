@@ -377,6 +377,8 @@ const StoreSettings = () => {
     mobile_bottom_banner_slot2_label: 'LILYGO',
     mobile_bottom_banner_slot3_product_id: '',
     mobile_bottom_banner_slot3_label: 'OnePlus',
+    mobile_bottom_banner_target_time: '',
+    free_delivery_code: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -438,6 +440,8 @@ const StoreSettings = () => {
         mobile_bottom_banner_slot2_label: settings.mobile_bottom_banner_slot2_label || 'LILYGO',
         mobile_bottom_banner_slot3_product_id: settings.mobile_bottom_banner_slot3_product_id || '',
         mobile_bottom_banner_slot3_label: settings.mobile_bottom_banner_slot3_label || 'OnePlus',
+        mobile_bottom_banner_target_time: settings.mobile_bottom_banner_target_time || '',
+        free_delivery_code: settings.free_delivery_code || '',
       });
     }
   }, [settings, isDirty]);
@@ -493,8 +497,27 @@ const StoreSettings = () => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Convert formData object to array of {key, value} pairs for Supabase upsert
-      const settingsArray = Object.entries(formData).map(([key, value]) => ({
+      const hours = Number(formData.mobile_bottom_banner_hours) || 0;
+      const minutes = Number(formData.mobile_bottom_banner_minutes) || 0;
+      const seconds = Number(formData.mobile_bottom_banner_seconds) || 0;
+      
+      const prevHours = Number(settings?.mobile_bottom_banner_hours) || 0;
+      const prevMinutes = Number(settings?.mobile_bottom_banner_minutes) || 0;
+      const prevSeconds = Number(settings?.mobile_bottom_banner_seconds) || 0;
+
+      let targetTime = settings?.mobile_bottom_banner_target_time;
+      
+      if (!targetTime || hours !== prevHours || minutes !== prevMinutes || seconds !== prevSeconds) {
+        targetTime = String(Date.now() + (hours * 3600 + minutes * 60 + seconds) * 1000);
+      }
+      
+      const updatedFormData = {
+        ...formData,
+        mobile_bottom_banner_target_time: targetTime
+      };
+
+      // Convert updatedFormData object to array of {key, value} pairs for Supabase upsert
+      const settingsArray = Object.entries(updatedFormData).map(([key, value]) => ({
         key,
         value: (typeof value === 'object' && value !== null) ? JSON.stringify(value) : String(value ?? '')
       }));
@@ -672,6 +695,17 @@ const StoreSettings = () => {
                     value={formData.shopName}
                     onChange={handleInputChange}
                     placeholder="e.g. SWEETO HUB"
+                    className={inputStyle}
+                  />
+                </InputWrapper>
+
+                <InputWrapper label="Free Delivery Promo Code" icon={Tag}>
+                  <input 
+                    type="text"
+                    name="free_delivery_code"
+                    value={formData.free_delivery_code}
+                    onChange={handleInputChange}
+                    placeholder="e.g. FREESHIP"
                     className={inputStyle}
                   />
                 </InputWrapper>

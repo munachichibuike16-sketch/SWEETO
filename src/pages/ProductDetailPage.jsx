@@ -15,6 +15,19 @@ import MobileDock from '../components/MobileDock';
 import CartDrawer from '../components/CartDrawer';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
+import ProductThreeDView from '../components/ProductThreeDView';
+
+const getColorFilter = (variantName) => {
+  if (!variantName) return 'none';
+  const name = variantName.toLowerCase();
+  if (name.includes('rouge') || name.includes('red')) return 'hue-rotate(340deg) saturate(1.5)';
+  if (name.includes('bleu') || name.includes('blue')) return 'hue-rotate(210deg) saturate(1.3)';
+  if (name.includes('vert') || name.includes('green')) return 'hue-rotate(110deg) saturate(1.2)';
+  if (name.includes('jaune') || name.includes('yellow') || name.includes('gold') || name.includes('or')) return 'hue-rotate(45deg) saturate(1.4)';
+  if (name.includes('violet') || name.includes('purple')) return 'hue-rotate(270deg) saturate(1.3)';
+  if (name.includes('orange')) return 'hue-rotate(15deg) saturate(1.5)';
+  return 'none';
+};
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
@@ -24,14 +37,25 @@ const ProductDetailPage = () => {
     setSearchQuery, setSelectedCategory, setSelectedBrand, 
     openGlobalLightbox 
   } = useStore();
-  const { addToCart, cartCount } = useCart();
+  const { addToCart: originalAddToCart, cartCount } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
+
+  const addToCart = (prod, qty = 1) => {
+    const finalProduct = {
+      ...prod,
+      name: selectedVariant ? `${prod.name} (${selectedVariant.name})` : prod.name,
+      price: prod.price + (selectedVariant?.priceAdjust || 0)
+    };
+    originalAddToCart(finalProduct, qty);
+  };
 
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('specs');
+  const [showVideo, setShowVideo] = useState(false);
+  const [showThreeD, setShowThreeD] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -117,6 +141,7 @@ const ProductDetailPage = () => {
       const foundProduct = liveProducts.find(p => p.id.toString() === productId.toString());
       if (foundProduct) {
         setProduct(foundProduct);
+        setShowVideo(false);
         addToRecent(foundProduct);
         setScrollY(0); // Reset scroll state!
         // Scroll to top
@@ -187,7 +212,11 @@ const ProductDetailPage = () => {
             else name = `Option ${idx + 1}`;
           }
         }
-        return { id: idx, name, image: img };
+        let priceAdjust = 0;
+        if (idx === 1) priceAdjust = 15000;
+        else if (idx === 2) priceAdjust = 45000;
+        else if (idx === 3) priceAdjust = 65000;
+        return { id: idx, name, image: img, priceAdjust };
       });
       setVariants(mapped);
       setSelectedVariant(mapped[0] || null);
@@ -616,6 +645,60 @@ const ProductDetailPage = () => {
         id="product-overview"
         className="relative lg:hidden w-full h-[100vw] bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
       >
+        {/* 3D/AR Toggle Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowThreeD(!showThreeD);
+            setShowVideo(false);
+          }}
+          className="absolute top-4 left-4 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer animate-pulse"
+        >
+          <span>{showThreeD ? (lang === 'fr' ? 'Standard' : 'Standard') : (lang === 'fr' ? 'Vue 3D/AR' : '3D/AR View')}</span>
+        </button>
+
+        {/* Video Toggle Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowVideo(!showVideo);
+            setShowThreeD(false);
+          }}
+          className="absolute top-4 right-16 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer"
+        >
+          <svg className={`w-3 h-3 fill-current ${showVideo ? 'text-red-500' : 'text-emerald-400'}`} viewBox="0 0 24 24">
+            {showVideo ? (
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            ) : (
+              <path d="M8 5v14l11-7z"/>
+            )}
+          </svg>
+          <span>{showVideo ? (lang === 'fr' ? 'Photo' : 'Photo') : (lang === 'fr' ? 'Vidéo' : 'Video')}</span>
+        </button>
+
+        {showThreeD ? (
+          <div className="absolute inset-0 bg-white dark:bg-slate-950 z-[20] flex items-center justify-center p-4">
+            <ProductThreeDView product={product} />
+          </div>
+        ) : showVideo && (
+          <div className="absolute inset-0 bg-white dark:bg-slate-950 z-[20] flex items-center justify-center">
+            <video
+              src={
+                product.video_url || 
+                (['Smartphones', 'Phones', 'Téléphones', 'Phones & Tablets'].includes(product.category)
+                  ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                  : ['Laptops', 'Computers', 'Ordinateurs'].includes(product.category)
+                  ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+                  : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4')
+              }
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
         <div
           ref={mobileCarouselRef}
           onScroll={handleCarouselScroll}
@@ -631,6 +714,7 @@ const ProductDetailPage = () => {
                 alt="" 
                 onClick={() => openGlobalLightbox(imagesList, idx, product.category, product.id)}
                 className="w-full h-full object-contain dark:mix-blend-normal cursor-zoom-in"
+                style={{ filter: getColorFilter(selectedVariant?.name) }}
               />
             </div>
           ))}
@@ -690,19 +774,79 @@ const ProductDetailPage = () => {
             
             {/* Main Image View */}
             <div 
-              onClick={() => openGlobalLightbox(imagesList, activeImageIndex, product.category, product.id)}
+              onClick={() => {
+                if (!showVideo) {
+                  openGlobalLightbox(imagesList, activeImageIndex, product.category, product.id);
+                }
+              }}
               className="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden group cursor-zoom-in"
             >
-              <img 
-                src={imagesList[activeImageIndex]} 
-                alt={product.name} 
-                className="w-full h-full object-contain dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
-              />
+              {/* 3D/AR Toggle Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowThreeD(!showThreeD);
+                  setShowVideo(false);
+                }}
+                className="absolute top-4 right-28 sm:right-32 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer animate-pulse"
+              >
+                <span>{showThreeD ? (lang === 'fr' ? 'Standard' : 'Standard') : (lang === 'fr' ? 'Vue 3D/AR' : '3D/AR View')}</span>
+              </button>
+
+              {/* Video Toggle Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowVideo(!showVideo);
+                  setShowThreeD(false);
+                }}
+                className="absolute top-4 left-4 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer"
+              >
+                <svg className={`w-3 h-3 fill-current ${showVideo ? 'text-red-500' : 'text-emerald-400'}`} viewBox="0 0 24 24">
+                  {showVideo ? (
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                  ) : (
+                    <path d="M8 5v14l11-7z"/>
+                  )}
+                </svg>
+                <span>{showVideo ? (lang === 'fr' ? 'Photo' : 'Photo') : (lang === 'fr' ? 'Vidéo' : 'Video')}</span>
+              </button>
+
+              {showThreeD ? (
+                <div className="absolute inset-0 bg-slate-50 dark:bg-slate-955 z-[20] flex items-center justify-center p-4">
+                  <ProductThreeDView product={product} />
+                </div>
+              ) : showVideo ? (
+                <div className="absolute inset-0 bg-slate-55 dark:bg-slate-955 z-[20] flex items-center justify-center">
+                  <video
+                    src={
+                      product.video_url || 
+                      (['Smartphones', 'Phones', 'Téléphones', 'Phones & Tablets'].includes(product.category)
+                        ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                        : ['Laptops', 'Computers', 'Ordinateurs'].includes(product.category)
+                        ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+                        : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4')
+                    }
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                </div>
+              ) : (
+                <img 
+                  src={imagesList[activeImageIndex]} 
+                  alt={product.name} 
+                  className="w-full h-full object-contain dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
+                  style={{ filter: getColorFilter(selectedVariant?.name) }}
+                />
+              )}
               
               {/* Wishlist Floating Overlay */}
               <button 
                 onClick={() => toggleWishlist(product)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-100 dark:border-slate-800 flex items-center justify-center shadow-md text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-100 dark:border-slate-800 flex items-center justify-center shadow-md text-slate-400 hover:text-red-500 transition-colors cursor-pointer z-[25]"
               >
                 <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} className={isInWishlist(product.id) ? "text-red-500" : ""} />
               </button>
@@ -765,7 +909,7 @@ const ProductDetailPage = () => {
                 </div>
                 <div className="flex items-baseline gap-3">
                   <span className="text-3xl sm:text-4xl font-black text-[#e61e25] italic tracking-tighter">
-                    {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
+                    {settings?.currency || 'XOF'} {((product.price || 0) + (selectedVariant?.priceAdjust || 0)).toLocaleString()}
                   </span>
                   {product.old_price && (
                     <span className="text-sm text-slate-400 dark:text-slate-500 line-through font-bold">
@@ -1490,7 +1634,7 @@ const ProductDetailPage = () => {
                 <div className="flex-1 text-left space-y-1">
                   <div className="flex items-baseline gap-2">
                     <span className="text-xl font-black text-[#e61e25] italic tracking-tighter">
-                      {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
+                      {settings?.currency || 'XOF'} {((product.price || 0) + (selectedVariant?.priceAdjust || 0)).toLocaleString()}
                     </span>
                     {discountPercentage > 0 && (
                       <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">

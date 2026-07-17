@@ -14,6 +14,7 @@ import { supabase } from '../lib/supabase';
 import SweetoLogo from './SweetoLogo';
 import confetti from 'canvas-confetti';
 import { apiFetch } from '../utils/api';
+import ProductThreeDView from './ProductThreeDView';
 
 const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductClick }) => {
   const { settings, addToRecent, setSelectedCategory, showToast, openGlobalLightbox, productViewsMap, incrementProductView, productLikesMap, toggleProductLike } = useStore();
@@ -23,6 +24,8 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [showVideo, setShowVideo] = useState(false);
+  const [showThreeD, setShowThreeD] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
   const scrollRef = React.useRef(null);
@@ -299,6 +302,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   useEffect(() => {
     setQuantity(1);
     setSelectedImage(product?.image_url || product?.image || '/hero-banner.png');
+    setShowVideo(false);
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -450,6 +454,60 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                     </div>
                     {/* Stage Image Container with Touch Snap Swiping */}
                     <div className="md:flex-1 relative overflow-hidden order-1 md:order-2 modal-product-image-box border border-slate-100/50 dark:border-white/5 shadow-inner">
+                      {/* 3D/AR Toggle Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowThreeD(!showThreeD);
+                          setShowVideo(false);
+                        }}
+                        className="absolute top-4 left-4 sm:top-10 sm:left-10 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer animate-pulse"
+                      >
+                        <span>{showThreeD ? (lang === 'fr' ? 'Standard' : 'Standard') : (lang === 'fr' ? 'Vue 3D/AR' : '3D/AR View')}</span>
+                      </button>
+
+                      {/* Video Toggle Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowVideo(!showVideo);
+                          setShowThreeD(false);
+                        }}
+                        className="absolute top-4 right-4 sm:top-10 sm:right-10 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer"
+                      >
+                        <svg className={`w-3 h-3 fill-current ${showVideo ? 'text-red-500' : 'text-emerald-400'}`} viewBox="0 0 24 24">
+                          {showVideo ? (
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                          ) : (
+                            <path d="M8 5v14l11-7z"/>
+                          )}
+                        </svg>
+                        <span>{showVideo ? (lang === 'fr' ? 'Photo' : 'Photo') : (lang === 'fr' ? 'Vidéo' : 'Video')}</span>
+                      </button>
+
+                      {showThreeD ? (
+                        <div className="absolute inset-0 bg-slate-50 dark:bg-slate-955 z-[20] flex items-center justify-center p-4">
+                          <ProductThreeDView product={product} />
+                        </div>
+                      ) : showVideo && (
+                        <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 z-[20] flex items-center justify-center">
+                          <video
+                            src={
+                              product.video_url || 
+                              (['Smartphones', 'Phones', 'Téléphones', 'Phones & Tablets'].includes(product.category)
+                                ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                                : ['Laptops', 'Computers', 'Ordinateurs'].includes(product.category)
+                                ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+                                : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4')
+                            }
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       
                       {/* Mobile Horizontal Snap Swiper */}
                       <div 

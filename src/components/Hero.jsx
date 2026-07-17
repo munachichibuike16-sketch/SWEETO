@@ -36,24 +36,44 @@ const Hero = ({ banners, layout = 'slider' }) => {
     window.location.href = link;
   };
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 18, minutes: 10, seconds: 45 });
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const target = Number(settings?.mobile_bottom_banner_target_time) || 
+      (Date.now() + ((Number(settings?.mobile_bottom_banner_hours) || 16) * 3600 + (Number(settings?.mobile_bottom_banner_minutes) || 22) * 60 + (Number(settings?.mobile_bottom_banner_seconds) || 0)) * 1000);
+    const diff = target - Date.now();
+    if (diff <= 0) return { hours: 0, minutes: 0, seconds: 0, expired: true };
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return { hours: h, minutes: m, seconds: s, expired: false };
+  });
 
   useEffect(() => {
+    const target = Number(settings?.mobile_bottom_banner_target_time) || 
+      (Date.now() + ((Number(settings?.mobile_bottom_banner_hours) || 16) * 3600 + (Number(settings?.mobile_bottom_banner_minutes) || 22) * 60 + (Number(settings?.mobile_bottom_banner_seconds) || 0)) * 1000);
+    
+    const updateTimer = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, expired: true });
+        return true;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({ hours: h, minutes: m, seconds: s, expired: false });
+      return false;
+    };
+
+    updateTimer();
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        } else {
-          return { hours: 23, minutes: 59, seconds: 59 };
-        }
-      });
+      const expired = updateTimer();
+      if (expired) {
+        clearInterval(timer);
+      }
     }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [settings?.mobile_bottom_banner_target_time, settings?.mobile_bottom_banner_hours, settings?.mobile_bottom_banner_minutes, settings?.mobile_bottom_banner_seconds]);
 
   const activeProducts = React.useMemo(() => {
     return products?.filter(p => p.status === 'active' && p.stock > 0) || [];
@@ -117,6 +137,9 @@ const Hero = ({ banners, layout = 'slider' }) => {
   }, [layout, products.length]);
 
   if (!isMobile) {
+    if (layout !== 'grid' && timeLeft.expired) {
+      return null;
+    }
     return (
       <section className="w-full px-4 md:px-10 pt-3 pb-2 select-none bg-transparent">
         <div 
@@ -225,12 +248,12 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
     if (gridStyle === 'glass') {
       return (
-        <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
+        <section className="max-w-[1600px] mx-auto -mx-4 md:mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-[600px]">
             {/* Main Large Banner — auto-cycles all products */}
             <div 
               onClick={() => handleBannerClick(mainSlot.link)}
-              className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-row items-center p-5 sm:p-10 md:p-16 gap-6 md:gap-10 group cursor-pointer"
+              className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-row items-center p-5 sm:p-10 md:p-16 gap-6 md:gap-10 group cursor-pointer"
             >
               
               {/* Ambient Background Light Spot */}
@@ -252,7 +275,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     transition={{ duration: 0.3 }}
                     className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-2 tracking-tighter uppercase leading-none italic"
                   >
-                    {mainSlot.title}
+                    {t_smart(mainSlot.title)}
                   </motion.h2>
                 </AnimatePresence>
                 
@@ -265,7 +288,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     transition={{ duration: 0.3 }}
                     className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
                   >
-                    {mainSlot.subtitle}
+                    {t_smart(mainSlot.subtitle)}
                   </motion.p>
                 </AnimatePresence>
               </div>
@@ -344,8 +367,8 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   <>
                     {/* Left Column Text */}
                     <div className="flex-[3] flex flex-col justify-center h-full relative z-10 text-left">
-                      <span className="text-[8px] font-black text-eas-blue uppercase tracking-[0.2em] mb-1.5">{sideA.subtitle || t('exclusive_deal')}</span>
-                      <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{sideA.title}</h3>
+                      <span className="text-[8px] font-black text-eas-blue uppercase tracking-[0.2em] mb-1.5">{t_smart(sideA.subtitle) || t('exclusive_deal')}</span>
+                      <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{t_smart(sideA.title)}</h3>
                       <button 
                         onClick={(e) => { e.stopPropagation(); sideA.link && handleBannerClick(sideA.link); }} 
                         className="w-fit px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white hover:text-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-lg"
@@ -380,8 +403,8 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   <>
                     {/* Left Column Text */}
                     <div className="flex-[3] flex flex-col justify-center h-full relative z-10 text-left">
-                      <span className="text-[8px] font-black text-white/70 uppercase tracking-[0.2em] mb-1.5">{sideB.subtitle || t('special_offer')}</span>
-                      <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{sideB.title}</h3>
+                      <span className="text-[8px] font-black text-white/70 uppercase tracking-[0.2em] mb-1.5">{t_smart(sideB.subtitle) || t('special_offer')}</span>
+                      <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{t_smart(sideB.title)}</h3>
                       <button 
                         onClick={(e) => { e.stopPropagation(); sideB.link && handleBannerClick(sideB.link); }} 
                         className="w-fit px-4 py-2 bg-white hover:bg-slate-900 hover:text-white text-eas-blue rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 shadow-xl"
@@ -415,12 +438,12 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
     // Default: Full-Bleed Cover style (Immersive fullscreen)
     return (
-      <section className="max-w-[1600px] mx-auto px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
+      <section className="max-w-[1600px] mx-auto -mx-4 md:mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
            {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
           <div 
             onClick={() => handleBannerClick(mainSlot.link)}
-            className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-slate-950 shadow-2xl border border-white/5 group cursor-pointer"
+            className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-slate-950 shadow-2xl border border-white/5 group cursor-pointer"
           >
             
             {/* Full Bleed Image (Vivid 100% Opacity) */}
@@ -459,7 +482,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   transition={{ duration: 0.3 }}
                   className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none"
                 >
-                  {mainSlot.title}
+                  {t_smart(mainSlot.title)}
                 </motion.h2>
               </AnimatePresence>
               
@@ -472,7 +495,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   transition={{ duration: 0.3 }}
                   className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
                 >
-                  {mainSlot.subtitle}
+                  {t_smart(mainSlot.subtitle)}
                 </motion.p>
               </AnimatePresence>
             </div>
@@ -524,10 +547,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
               {sideA ? (
                 <div className="relative z-20 text-left">
                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1.5 block">
-                    {sideA.subtitle || t('exclusive_deal')}
+                    {t_smart(sideA.subtitle) || t('exclusive_deal')}
                   </span>
                   <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4 uppercase tracking-tighter line-clamp-1 leading-tight">
-                    {sideA.title}
+                    {t_smart(sideA.title)}
                   </h3>
                   <button 
                     onClick={(e) => { e.stopPropagation(); sideA.link && handleBannerClick(sideA.link); }} 
@@ -564,10 +587,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
               {sideB ? (
                 <div className="relative z-20 text-left">
                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1.5 block">
-                    {sideB.subtitle || t('special_offer')}
+                    {t_smart(sideB.subtitle) || t('special_offer')}
                   </span>
                   <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4 uppercase tracking-tighter line-clamp-1 leading-tight">
-                    {sideB.title}
+                    {t_smart(sideB.title)}
                   </h3>
                   <button 
                     onClick={(e) => { e.stopPropagation(); sideB.link && handleBannerClick(sideB.link); }} 
@@ -591,10 +614,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
   // We use the custom wide banner layout for all slider styles as requested by the user
   return (
-    <section className="max-w-[1600px] mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2 select-none">
+    <section className="max-w-[1600px] mx-auto -mx-4 md:mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2 select-none">
       <div 
         onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
-        className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950 cursor-pointer group"
+        className="relative w-full h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950 cursor-pointer group"
       >
         {/* Background Image */}
         {displayBanners[currentSlide]?.image && (
@@ -632,7 +655,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               transition={{ duration: 0.3 }}
               className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none"
             >
-              {displayBanners[currentSlide]?.title}
+              {t_smart(displayBanners[currentSlide]?.title)}
             </motion.h1>
           </AnimatePresence>
           
@@ -646,7 +669,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               transition={{ duration: 0.3 }}
               className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
             >
-              {displayBanners[currentSlide]?.subtitle}
+              {t_smart(displayBanners[currentSlide]?.subtitle)}
             </motion.p>
           </AnimatePresence>
         </div>

@@ -9,32 +9,44 @@ export default function MobileBottomBanner({ settings, products = [], lang, t_sm
 
   const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;
 
-  const initHours = Number(settings?.mobile_bottom_banner_hours) || 16;
-  const initMinutes = Number(settings?.mobile_bottom_banner_minutes) || 22;
-  const initSeconds = Number(settings?.mobile_bottom_banner_seconds) || 0;
-
-  const [timeLeft, setTimeLeft] = useState({ hours: initHours, minutes: initMinutes, seconds: initSeconds });
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const target = Number(settings?.mobile_bottom_banner_target_time) || 
+      (Date.now() + ((Number(settings?.mobile_bottom_banner_hours) || 16) * 3600 + (Number(settings?.mobile_bottom_banner_minutes) || 22) * 60 + (Number(settings?.mobile_bottom_banner_seconds) || 0)) * 1000);
+    const diff = target - Date.now();
+    if (diff <= 0) return { hours: 0, minutes: 0, seconds: 0, expired: true };
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return { hours: h, minutes: m, seconds: s, expired: false };
+  });
 
   useEffect(() => {
-    setTimeLeft({ hours: initHours, minutes: initMinutes, seconds: initSeconds });
-  }, [initHours, initMinutes, initSeconds]);
+    const target = Number(settings?.mobile_bottom_banner_target_time) || 
+      (Date.now() + ((Number(settings?.mobile_bottom_banner_hours) || 16) * 3600 + (Number(settings?.mobile_bottom_banner_minutes) || 22) * 60 + (Number(settings?.mobile_bottom_banner_seconds) || 0)) * 1000);
+    
+    const updateTimer = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, expired: true });
+        return true;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({ hours: h, minutes: m, seconds: s, expired: false });
+      return false;
+    };
 
-  useEffect(() => {
+    updateTimer();
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        } else {
-          return { hours: initHours, minutes: initMinutes, seconds: initSeconds };
-        }
-      });
+      const expired = updateTimer();
+      if (expired) {
+        clearInterval(timer);
+      }
     }, 1000);
+
     return () => clearInterval(timer);
-  }, [initHours, initMinutes, initSeconds]);
+  }, [settings?.mobile_bottom_banner_target_time, settings?.mobile_bottom_banner_hours, settings?.mobile_bottom_banner_minutes, settings?.mobile_bottom_banner_seconds]);
 
   // Retrieve products for slots
   const getProductForSlot = (slotKey) => {
@@ -62,15 +74,15 @@ export default function MobileBottomBanner({ settings, products = [], lang, t_sm
     }
   };
 
-  if (!isEnabled) return null;
+  if (!isEnabled || timeLeft.expired) return null;
 
   return (
-    <section className="w-full px-4 pt-4 pb-6 select-none block lg:hidden">
+    <section className="-mx-4 px-0 pt-4 pb-6 select-none block lg:hidden w-[calc(100%+32px)]">
       <div 
         onClick={() => {
           navigate('/deals');
         }}
-        className="relative w-full min-h-[170px] rounded-[1.5rem] overflow-hidden shadow-xl bg-[#007aff] flex flex-col justify-between p-4 pb-3 select-none text-white cursor-pointer"
+        className="relative w-full min-h-[170px] rounded-none overflow-hidden shadow-xl bg-[#007aff] flex flex-col justify-between p-4 pb-3 select-none text-white cursor-pointer"
       >
         {/* Top Section: Countdown & Shop Now */}
         <div className="flex justify-between items-start w-full z-10 text-left">

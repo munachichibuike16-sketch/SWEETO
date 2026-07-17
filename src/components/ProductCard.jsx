@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Star, Heart, Eye, ShoppingCart, Zap, TrendingUp, Share2 } from 'lucide-react';
+import { Clock, Star, Heart, Eye, ShoppingCart, Zap, TrendingUp, Share2, Scale } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -46,6 +46,38 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [isCompared, setIsCompared] = useState(false);
+
+  React.useEffect(() => {
+    const checkCompared = () => {
+      try {
+        const list = JSON.parse(localStorage.getItem('sweetohub_compare_list') || '[]');
+        setIsCompared(list.includes(product.id));
+      } catch (e) {
+        setIsCompared(false);
+      }
+    };
+    checkCompared();
+    window.addEventListener('sweetohub-compare-change', checkCompared);
+    return () => window.removeEventListener('sweetohub-compare-change', checkCompared);
+  }, [product.id]);
+
+  const handleToggleCompare = (e) => {
+    e.stopPropagation();
+    try {
+      const list = JSON.parse(localStorage.getItem('sweetohub_compare_list') || '[]');
+      let newList;
+      if (list.includes(product.id)) {
+        newList = list.filter(id => id !== product.id);
+      } else {
+        newList = [...list, product.id];
+      }
+      localStorage.setItem('sweetohub_compare_list', JSON.stringify(newList));
+      window.dispatchEvent(new Event('sweetohub-compare-change'));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const isNewArrivalProduct = (() => {
     if (product.created_at) {
@@ -191,8 +223,8 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 </span>
               )}
             </div>
-            {/* Wishlist Button (Floating overlay top-right) */}
-            <div className="absolute top-2.5 right-2.5 z-20">
+            {/* Action Buttons (Floating overlay top-right) */}
+            <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5">
               <button 
                 onClick={handleToggleWishlist}
                 className={`w-8.5 h-8.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
@@ -202,6 +234,17 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 }`}
               >
                 <Heart size={15} fill={isWished ? "currentColor" : "none"} />
+              </button>
+              <button 
+                onClick={handleToggleCompare}
+                className={`w-8.5 h-8.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
+                  isCompared 
+                    ? 'bg-orange-500 border-orange-500 text-white shadow-orange-500/30' 
+                    : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-orange-500'
+                }`}
+                title={lang === 'fr' ? 'Comparer ce produit' : 'Compare this product'}
+              >
+                <Scale size={15} />
               </button>
             </div>
 
@@ -314,6 +357,17 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <Heart size={13} fill={isWished ? "currentColor" : "none"} />
               </button>
             )}
+            <button 
+              onClick={handleToggleCompare}
+              className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
+                isCompared 
+                  ? 'bg-orange-500 border-orange-500 text-white shadow-orange-500/30' 
+                  : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-orange-500 dark:hover:text-orange-400'
+              }`}
+              title={lang === 'fr' ? 'Comparer ce produit' : 'Compare this product'}
+            >
+              <Scale size={13} />
+            </button>
             <button 
               onClick={handleShareProduct}
               className="w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#2563eb] dark:hover:text-[#3b82f6]"

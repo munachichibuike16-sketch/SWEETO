@@ -1,647 +1,312 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Package, 
-  Truck, 
-  CheckCircle2, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  ArrowLeft,
-  RefreshCw,
-  ShieldCheck,
-  Award,
-  Compass
-} from 'lucide-react';
-import Header from '../components/Header';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { MapPin, Phone, MessageSquare, Truck, ArrowLeft, Search, CheckCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../lib/supabase';
-import { apiFetch } from '../utils/api';
+import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
+import MobileDock from '../components/MobileDock';
+import CartDrawer from '../components/CartDrawer';
 
-/* ── Leaflet Dynamic Component with Polyline route trail ── */
-const LeafletMap = ({ destLat, destLng, agentLat, agentLng, history }) => {
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const destMarkerRef = useRef(null);
-  const agentMarkerRef = useRef(null);
-  const polylineRef = useRef(null);
-
-  useEffect(() => {
-    let leafletCss = document.getElementById('leaflet-css');
-    if (!leafletCss) {
-      leafletCss = document.createElement('link');
-      leafletCss.id = 'leaflet-css';
-      leafletCss.rel = 'stylesheet';
-      leafletCss.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(leafletCss);
-    }
-
-    let leafletJs = document.getElementById('leaflet-js');
-    if (!leafletJs) {
-      leafletJs = document.createElement('script');
-      leafletJs.id = 'leaflet-js';
-      leafletJs.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      document.body.appendChild(leafletJs);
-    }
-
-    const initMap = () => {
-      if (!window.L || !mapRef.current) return;
-      if (mapInstanceRef.current) return;
-
-      const defaultLat = destLat || 5.3484;
-      const defaultLng = destLng || -3.9788;
-
-      mapInstanceRef.current = window.L.map(mapRef.current, {
-        zoomControl: false,
-        scrollWheelZoom: true
-      }).setView([defaultLat, defaultLng], 14);
-
-      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-      }).addTo(mapInstanceRef.current);
-
-      const homeIcon = window.L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style="background-color: #0000ff; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
-
-      const motoIcon = window.L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style="background-color: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M3 17.5 8 10h5l4 7.5 M10 10l3-5h4l-3 5 M8 15h9"/></svg></div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
-
-      destMarkerRef.current = window.L.marker([defaultLat, defaultLng], { icon: homeIcon })
-        .addTo(mapInstanceRef.current)
-        .bindPopup("Your Home");
-
-      if (agentLat && agentLng) {
-        agentMarkerRef.current = window.L.marker([agentLat, agentLng], { icon: motoIcon })
-          .addTo(mapInstanceRef.current)
-          .bindPopup("Delivery Courier");
-
-        const group = new window.L.featureGroup([destMarkerRef.current, agentMarkerRef.current]);
-        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.25));
-      }
-    };
-
-    const checkInterval = setInterval(() => {
-      if (window.L && mapRef.current) {
-        initMap();
-        clearInterval(checkInterval);
-      }
-    }, 200);
-
-    return () => {
-      clearInterval(checkInterval);
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!window.L || !mapInstanceRef.current) return;
-
-    if (destLat && destLng && destMarkerRef.current) {
-      destMarkerRef.current.setLatLng([destLat, destLng]);
-    }
-
-    if (agentLat && agentLng) {
-      const end = new window.L.LatLng(agentLat, agentLng);
-      if (agentMarkerRef.current) {
-        agentMarkerRef.current.setLatLng(end);
-      } else {
-        const motoIcon = window.L.divIcon({
-          className: 'custom-div-icon',
-          html: `<div style="background-color: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M3 17.5 8 10h5l4 7.5 M10 10l3-5h4l-3 5 M8 15h9"/></svg></div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
-        });
-        agentMarkerRef.current = window.L.marker([agentLat, agentLng], { icon: motoIcon })
-          .addTo(mapInstanceRef.current)
-          .bindPopup("Delivery Courier");
-      }
-
-      const points = [];
-      if (history && history.length > 0) {
-        history.forEach(p => points.push([parseFloat(p.lat), parseFloat(p.lng)]));
-      }
-      points.push([agentLat, agentLng]);
-
-      if (polylineRef.current) {
-        polylineRef.current.setLatLngs(points);
-      } else {
-        polylineRef.current = window.L.polyline(points, {
-          color: '#10b981',
-          weight: 4,
-          opacity: 0.8,
-          dashArray: '5, 10'
-        }).addTo(mapInstanceRef.current);
-      }
-
-      if (destMarkerRef.current && agentMarkerRef.current) {
-        const group = new window.L.featureGroup([destMarkerRef.current, agentMarkerRef.current]);
-        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.25));
-      }
-    }
-  }, [destLat, destLng, agentLat, agentLng, history]);
-
-  return <div ref={mapRef} style={{ width: '100%', height: '100%', borderRadius: '2rem', zIndex: 1 }} />;
-};
-
-const OrderTrackingPage = () => {
-  const { orderId } = useParams();
+export default function OrderTrackingPage() {
+  const { lang } = useLanguage();
   const navigate = useNavigate();
-  const { t, lang } = useLanguage();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState('');
-  const [trackingData, setTrackingData] = useState(null);
-  const [showMap, setShowMap] = useState(false);
-
-  const expectedPin = ((parseInt(orderId) * 837 + 1492) % 9000 + 1000).toString();
-
-  const handlePinSubmit = async () => {
-    if (pinInput === expectedPin) {
-      try {
-        setLoading(true);
-        const { error } = await supabase
-          .from('orders')
-          .update({ status: 'completed' })
-          .eq('id', orderId);
-        if (!error) {
-          setOrder({ ...order, status: 'completed' });
-          setPinError('');
-        } else {
-          throw error;
-        }
-      } catch (err) {
-        setPinError('Failed to verify delivery. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setPinError('Incorrect code. Please ask the delivery agent.');
-    }
-  };
-
-  const fetchOrder = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-      if (error) throw error;
-      setOrder(data);
-    } catch (err) {
-      console.error('Failed to fetch order:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { orderId } = useParams();
+  const [searchParams] = useSearchParams();
+  const [orderIdInput, setOrderIdInput] = useState('');
+  const [currentOrderId, setCurrentOrderId] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [riderInfo, setRiderInfo] = useState(null);
 
   useEffect(() => {
-    fetchOrder();
-    // Poll for status changes every 30 seconds
-    const interval = setInterval(fetchOrder, 30000);
-    return () => clearInterval(interval);
-  }, [orderId]);
+    const orderIdParam = searchParams.get('orderId') || orderId;
+    if (orderIdParam) {
+      setOrderIdInput(orderIdParam);
+      setCurrentOrderId(orderIdParam);
+      generateRandomRider();
+    }
+  }, [searchParams, orderId]);
 
-  // Fast coordinate and tracking history polling (every 6 seconds)
-  useEffect(() => {
-    let activePoll = null;
+  const generateRandomRider = () => {
+    const riders = [
+      { name: 'Koffi Kouadio', phone: '+225 07 88 44 21 09', vehicle: 'Scooter Yam - Orange' },
+      { name: 'Amadou Touré', phone: '+225 05 47 11 90 32', vehicle: 'Scooter Yam - Noir' },
+      { name: 'Yao N\'Guessan', phone: '+225 01 02 88 56 11', vehicle: 'Scooter Yam - Rouge' }
+    ];
+    setRiderInfo(riders[Math.floor(Math.random() * riders.length)]);
+  };
 
-    const fetchTracking = async () => {
-      try {
-        // 1. Fetch current order coordinates and agent details from Supabase
-        const { data: orderData, error: orderErr } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('id', orderId)
-          .single();
-          
-        if (orderErr) throw orderErr;
-        
-        let agent = null;
-        if (orderData.delivery_agent_id) {
-          const { data: agentData } = await supabase
-            .from('delivery_agents')
-            .select('id, name, phone, zone, avatar, rating')
-            .eq('id', orderData.delivery_agent_id)
-            .single();
-          agent = agentData;
-        }
-        
-        // 2. Fetch location history trail
-        const { data: historyData } = await supabase
-          .from('agent_location_history')
-          .select('lat, lng, created_at')
-          .eq('order_id', orderId)
-          .order('created_at', { ascending: true });
-          
-        const formattedData = {
-          order_id: orderData.id,
-          customer_name: orderData.customer_name,
-          customer_contact: orderData.customer_contact,
-          status: orderData.status,
-          tracking_stage: orderData.tracking_stage || 'placed',
-          estimated_minutes: orderData.estimated_minutes || 20,
-          destination_lat: orderData.destination_lat || 5.3484,
-          destination_lng: orderData.destination_lng || -3.9788,
-          agent_lat: orderData.agent_lat || null,
-          agent_lng: orderData.agent_lng || null,
-          agent,
-          history: historyData || []
-        };
-        
-        setTrackingData(formattedData);
-        
-        // If status changes on the backend, update standard state too
-        if (orderData.status && order && orderData.status !== order.status) {
-          setOrder(orderData);
-        }
-      } catch (err) {
-        console.error("Failed to load tracking data from Supabase:", err);
-      }
-    };
-
-    fetchTracking();
-    activePoll = setInterval(fetchTracking, 6000);
-
-    return () => {
-      if (activePoll) clearInterval(activePoll);
-    };
-  }, [orderId, order?.status]);
-
-  const steps = [
-    { id: 'pending', label: t('order_placed') || 'Order Placed', desc: t('waiting_admin_confirmation') || 'Waiting for admin confirmation', icon: Clock },
-    { id: 'confirmed', label: t('confirmed') || 'Confirmed', desc: t('order_verified') || 'Order verified by our team', icon: ShieldCheck },
-    { id: 'shipping', label: t('on_the_way') || 'On the Way', desc: t('courier_picked_up') || 'Courier has picked up your package', icon: Truck },
-    { id: 'completed', label: t('delivered') || 'Delivered', desc: t('order_successfully_received') || 'Order successfully received', icon: CheckCircle2 },
-  ];
-
-  const currentStatus = order?.status || 'pending';
-  const currentIndex = steps.findIndex(s => s.id === currentStatus);
-
-  if (loading && !order) {
-    return (
-      <div className="min-h-screen bg-eas-light dark:bg-eas-dark flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-eas-blue border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (orderIdInput.trim()) {
+      setCurrentOrderId(orderIdInput.trim());
+      generateRandomRider();
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-eas-light dark:bg-eas-dark pb-20">
-      <Header />
-      
-      <div className="max-w-[1000px] mx-auto px-6 pt-32">
-        <button 
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-3 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-12 group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-white dark:bg-eas-dark border border-slate-100 dark:border-white/5 flex items-center justify-center group-hover:shadow-lg transition-all">
-            <ArrowLeft size={18} />
-          </div>
-          <span className="text-xs font-black uppercase tracking-widest">{t('back') || 'Back'}</span>
-        </button>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-100 font-sans transition-colors duration-300 pb-20">
+      <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Status Column */}
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-eas-dark/60 rounded-[3rem] p-10 md:p-16 shadow-xl border border-slate-100 dark:border-white/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-eas-blue/5 rounded-full -mr-32 -mt-32"></div>
-              
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16 relative z-10">
-                <div>
-                  <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic">{t('track_order') || 'Track Order'}</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">ID: SWT-{orderId}</p>
-                </div>
-                <button 
-                  onClick={fetchOrder}
-                  className="flex items-center gap-2 px-6 py-3 bg-eas-light dark:bg-eas-dark rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-eas-blue/10 dark:hover:bg-eas-blue/20 transition-all border border-slate-100 dark:border-white/5"
-                >
-                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                  {t('live_update') || 'Live Update'}
-                </button>
-              </div>
-
-              {/* Progress Steps */}
-              <div className="space-y-12 relative z-10">
-                {steps.map((step, index) => {
-                  const isCompleted = index <= currentIndex;
-                  const isCurrent = index === currentIndex;
-                  const Icon = step.icon;
-
-                  return (
-                    <div key={step.id} className="relative flex gap-8 group">
-                      {/* Connector Line */}
-                      {index < steps.length - 1 && (
-                        <div className={`absolute left-7 top-14 w-[2px] h-12 ${index < currentIndex ? 'bg-emerald-500' : 'bg-eas-blue/10 dark:bg-white/5'}`}></div>
-                      )}
-
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg ${isCompleted ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-eas-light dark:bg-eas-dark/80 text-slate-400 dark:text-slate-500'}`}>
-                        <Icon size={24} />
-                      </div>
-
-                      <div>
-                        <h4 className={`text-lg font-black tracking-tight uppercase italic ${isCompleted ? 'text-slate-900 dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
-                          {step.label}
-                        </h4>
-                        <p className={`text-xs font-medium ${isCompleted ? 'text-slate-500 dark:text-slate-400' : 'text-slate-300 dark:text-slate-600'}`}>
-                          {step.desc}
-                        </p>
-                        {isCurrent && (
-                          <motion.div 
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-widest"
-                          >
-                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                            {t('current_status') || 'Current Status'}
-                          </motion.div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* LIVE MAP UI */}
-              {currentStatus === 'shipping' && (
-                <div className="mt-12 relative z-10">
-                  <AnimatePresence mode="wait">
-                    {!showMap ? (
-                      <motion.div 
-                        key="track-button"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.4 }}
-                        className="bg-eas-dark/40 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,82,255,0.15)] relative h-[380px] flex flex-col items-center justify-center p-6 text-center select-none group"
-                      >
-                        {/* Pulsing neon tracking circle background */}
-                        <div className="absolute w-[280px] h-[280px] bg-blue-500/5 rounded-full border border-blue-500/10 animate-[ping_4s_infinite] pointer-events-none" />
-                        <div className="absolute w-[180px] h-[180px] bg-indigo-500/5 rounded-full border border-indigo-500/20 animate-[pulse_2s_infinite] pointer-events-none" />
-                        
-                        <div className="relative z-10 flex flex-col items-center gap-4">
-                          {/* Floating glowing Tap Me badge */}
-                          <div className="bg-[#ffc200] text-slate-950 font-black text-[9px] px-3 py-1 rounded-full uppercase tracking-widest animate-bounce shadow-lg shadow-amber-500/20 select-none">
-                            Tap Me! / Cliquez-moi ! 👈
-                          </div>
-
-                          {/* Radar-like glowing tracking map button */}
-                          <button 
-                            type="button"
-                            onClick={() => setShowMap(true)}
-                            className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#0052FF] to-indigo-600 text-white flex items-center justify-center shadow-[0_0_50px_rgba(0,82,255,0.4)] border-2 border-white/20 hover:scale-[1.08] hover:shadow-[0_0_70px_rgba(0,82,255,0.6)] hover:border-white/40 active:scale-95 transition-all duration-500 cursor-pointer relative"
-                          >
-                            <Compass className="w-10 h-10 animate-[spin_10s_linear_infinite]" />
-                            {/* Pulse beacon inside the compass */}
-                            <span className="absolute top-2 right-2 w-3 h-3 bg-emerald-400 rounded-full border border-white shadow-lg flex items-center justify-center">
-                              <span className="w-full h-full bg-emerald-400 rounded-full animate-ping opacity-75" />
-                            </span>
-                          </button>
-
-                          <div className="space-y-1 mt-2">
-                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight">
-                              {t('track_now') || 'Track Now'}
-                            </h3>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              {lang === 'fr' ? 'Cliquez pour ouvrir la carte en direct' : 'Tap to open the live route map'}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div 
-                        key="live-map"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.4 }}
-                        className="bg-eas-dark rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative h-[380px]"
-                      >
-                        {/* Dynamic Leaflet Map Component */}
-                        <div className="absolute inset-0 w-full h-full">
-                          <LeafletMap 
-                            destLat={trackingData?.destination_lat ? parseFloat(trackingData.destination_lat) : 5.3484}
-                            destLng={trackingData?.destination_lng ? parseFloat(trackingData.destination_lng) : -3.9788}
-                            agentLat={trackingData?.agent_lat ? parseFloat(trackingData.agent_lat) : null}
-                            agentLng={trackingData?.agent_lng ? parseFloat(trackingData.agent_lng) : null}
-                            history={trackingData?.history || []}
-                          />
-                        </div>
-
-                        {/* Map Overlay Info */}
-                        <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-[99]">
-                          <div className="bg-eas-dark/90 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-2xl">
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Estimated Arrival</p>
-                            <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">{order?.estimated_minutes || '20'} <span className="text-sm">MINS</span></h4>
-                          </div>
-                          <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 flex items-center gap-2 pointer-events-auto">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                            Live Tracking
-                          </div>
-                        </div>
-
-                        {/* Quick navigation links */}
-                        {trackingData?.agent && (
-                          <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center pointer-events-none z-[99]">
-                            <div className="bg-eas-dark/90 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 shadow-2xl pointer-events-auto">
-                              <img src={trackingData.agent.avatar} alt={trackingData.agent.name} className="w-9 h-9 rounded-xl object-cover" />
-                              <div>
-                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">Your Courier</p>
-                                <p className="text-xs font-black text-white mt-1">{trackingData.agent.name}</p>
-                              </div>
-                            </div>
-                            <a 
-                              href={`tel:${trackingData.agent.phone}`}
-                              className="bg-emerald-500 hover:bg-emerald-400 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/20 border border-white/10 pointer-events-auto transition-transform active:scale-95"
-                              title="Call Courier"
-                            >
-                              <Phone size={18} />
-                            </a>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Delivery PIN Input */}
-              {currentStatus === 'shipping' && (
-                <div className="mt-12 relative z-10 bg-eas-light dark:bg-eas-dark/40 rounded-3xl p-8 border border-slate-200 dark:border-white/5 shadow-inner">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic mb-2">Confirm Delivery</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6 max-w-sm">
-                    When the delivery agent arrives with your package, they will provide a 4-digit code. Enter it here to complete the delivery.
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <input 
-                      type="text" 
-                      maxLength={4}
-                      value={pinInput}
-                      onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
-                      placeholder="Enter 4-Digit Code"
-                      className="flex-1 px-6 py-4 bg-white dark:bg-eas-dark border border-slate-200 dark:border-white/10 rounded-2xl text-xl font-black tracking-[0.5em] placeholder:tracking-normal text-center outline-none focus:border-eas-blue focus:ring-4 focus:ring-eas-blue/10 transition-all text-slate-900 dark:text-white"
-                    />
-                    <button 
-                      onClick={handlePinSubmit}
-                      disabled={pinInput.length !== 4 || loading}
-                      className="px-8 py-4 bg-eas-blue text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-[#0043d0] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-eas-blue/30"
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                  {pinError && <p className="text-red-500 text-xs font-bold mt-3">{pinError}</p>}
-                </div>
-              )}
-
-              {currentStatus === 'completed' && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-12 relative z-10 bg-emerald-50 dark:bg-emerald-900/10 rounded-3xl p-10 border border-emerald-200 dark:border-emerald-900/50 text-center"
-                >
-                  <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20">
-                    <CheckCircle2 size={40} className="text-white" />
-                  </div>
-                  <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase italic mb-2">Mission Complete!</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium mb-4">
-                    Your premium gear has been successfully delivered and verified.
-                  </p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                    <Clock size={14} />
-                    Verified At: {new Date(order?.updated_at || Date.now()).toLocaleTimeString()}
-                  </div>
-
-                  {/* PROMO GIFT CARD */}
-                  <motion.div 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-8 bg-eas-dark rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl"
-                  >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-eas-blue/20 rounded-full blur-[50px] -mr-16 -mt-16"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Award className="text-eas-blue" size={24} />
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-eas-blue">Exclusive Reward</h4>
-                      </div>
-                      <h5 className="text-2xl font-black tracking-tighter italic mb-2">THANK YOU FOR YOUR TRUST!</h5>
-                      <p className="text-xs text-slate-400 font-medium mb-6">Use this code on your next purchase to get 10% OFF everything.</p>
-                      
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center group cursor-pointer hover:bg-white/10 transition-all">
-                        <div>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Your Promo Code</p>
-                          <p className="text-2xl font-black tracking-[0.2em] text-white">SWEETO10</p>
-                        </div>
-                        <div className="w-10 h-10 bg-white text-slate-900 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <CheckCircle2 size={20} />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </div>
-          </div>
-
-          {/* Details Column */}
-          <div className="space-y-8">
-            <div className="bg-eas-dark rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-eas-blue/20 rounded-full blur-[40px] -mr-16 -mt-16"></div>
-              
-              <h3 className="text-[10px] font-black text-eas-blue uppercase tracking-[0.5em] mb-8">{t('delivery_for') || 'Delivery For'}</h3>
-              <div className="space-y-6 relative z-10">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white/40">
-                    <User size={18} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{t('customer') || 'Customer'}</p>
-                    <p className="font-black text-sm uppercase italic">{order?.customer_name || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white/40">
-                    <MapPin size={18} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{t('location') || 'Location'}</p>
-                    <p className="font-black text-sm uppercase italic">Abidjan, Ivory Coast</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white/40">
-                    <Phone size={18} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">{t('contact') || 'Contact'}</p>
-                    <p className="font-black text-sm uppercase italic">{order?.customer_contact?.split('|')[0].trim() || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-eas-dark/60 rounded-[2.5rem] p-10 border border-slate-100 dark:border-white/5 shadow-xl text-slate-900 dark:text-white">
-              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.5em] mb-8 flex items-center gap-3">
-                <Package size={16} className="text-eas-blue" />
-                {t('package_summary') || 'Package Summary'}
-              </h3>
-              
-              <div className="space-y-4 mb-8">
-                {order?.items && JSON.parse(order.items).map((item, i) => (
-                  <div key={i} className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tight">{item.name} x{item.quantity}</span>
-                    <span className="text-xs font-black text-slate-900 dark:text-white">{item.price?.toLocaleString()} FCFA</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-6 border-t border-slate-100 flex justify-between items-end">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.5em] mb-1">{t('total_paid') || 'Total Paid'}</p>
-                  <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter italic">{order?.total?.toLocaleString()} FCFA</h4>
-                </div>
-              </div>
-            </div>
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        
+        {/* Navigation & Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              {lang === 'fr' ? 'Suivi de Commande' : 'Order Tracking'}
+            </h1>
+            <p className="text-xs text-slate-400">
+              {lang === 'fr' ? 'Suivez votre livraison en temps réel' : 'Track your delivery in real-time'}
+            </p>
           </div>
         </div>
-      </div>
+
+        {/* Search Panel */}
+        <form onSubmit={handleSearch} className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-3xl p-6 mb-6 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder={lang === 'fr' ? 'Entrez votre ID de Commande...' : 'Enter your Order ID...'}
+              value={orderIdInput}
+              onChange={(e) => setOrderIdInput(e.target.value)}
+              className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/5 rounded-2xl text-xs font-semibold text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-blue-500/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+          >
+            {lang === 'fr' ? 'Rechercher' : 'Track Now'}
+          </button>
+        </form>
+
+        {currentOrderId ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Map Simulator Panel */}
+            <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-3xl p-6 shadow-sm overflow-hidden flex flex-col items-center">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 self-start">
+                {lang === 'fr' ? 'Carte de Livraison (Abidjan)' : 'Delivery Map (Abidjan)'}
+              </h3>
+              
+              {/* Abidjan Map Simulator SVG */}
+              <div className="w-full h-80 bg-slate-50 dark:bg-slate-950/65 rounded-2xl border border-slate-100 dark:border-white/5 relative overflow-hidden flex items-center justify-center shadow-inner">
+                <svg viewBox="0 0 400 300" className="w-full h-full text-slate-300 dark:text-slate-700 select-none">
+                  {/* Map grid patterns */}
+                  <defs>
+                    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.15" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+
+                  {/* Water / Lagoon representation */}
+                  <path 
+                    d="M 0,220 Q 120,200 240,240 T 400,210 L 400,300 L 0,300 Z" 
+                    fill="rgba(59, 130, 246, 0.08)" 
+                    stroke="rgba(59, 130, 246, 0.15)"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Districts Outline Mock Representation */}
+                  {/* Yopougon */}
+                  <text x="50" y="80" className="text-[10px] font-black uppercase fill-slate-400 dark:fill-slate-600 opacity-60">Yopougon</text>
+                  {/* Plateau */}
+                  <text x="180" y="150" className="text-[10px] font-black uppercase fill-slate-400 dark:fill-slate-600 opacity-60">Plateau</text>
+                  {/* Cocody */}
+                  <text x="310" y="80" className="text-[10px] font-black uppercase fill-slate-400 dark:fill-slate-600 opacity-60">Cocody</text>
+                  {/* Marcory */}
+                  <text x="240" y="270" className="text-[10px] font-black uppercase fill-slate-400 dark:fill-slate-600 opacity-60">Marcory</text>
+
+                  {/* Road Network Paths */}
+                  <path 
+                    d="M 50,120 L 180,120 L 250,220 M 180,120 L 310,120" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="3" 
+                    strokeDasharray="4 4"
+                    opacity="0.3"
+                  />
+
+                  {/* Warehouse dispatch point (Marcory) */}
+                  <g transform="translate(250, 220)">
+                    <circle r="6" fill="#f59e0b" className="animate-ping" />
+                    <circle r="4" fill="#f59e0b" />
+                    <text y="-10" textAnchor="middle" className="text-[8px] font-black fill-[#f59e0b] uppercase">Warehouse Depot</text>
+                  </g>
+
+                  {/* Destination points (Cocody) */}
+                  <g transform="translate(310, 120)">
+                    <circle r="5" fill="#3b82f6" />
+                    <text y="-10" textAnchor="middle" className="text-[8px] font-black fill-[#3b82f6] uppercase">Client</text>
+                  </g>
+
+                  {/* Animated Route Line */}
+                  <path 
+                    id="route-path"
+                    d="M 250,220 Q 220,170 180,120 Q 240,120 310,120" 
+                    fill="none" 
+                    stroke="#10b981" 
+                    strokeWidth="2.5" 
+                    strokeDasharray="5 5"
+                    className="opacity-75"
+                  />
+
+                  {/* Moving Scooter Marker */}
+                  <motion.g
+                    initial={{ x: 250, y: 220 }}
+                    animate={{
+                      x: [250, 220, 180, 240, 310],
+                      y: [220, 170, 120, 120, 120]
+                    }}
+                    transition={{
+                      duration: 15,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  >
+                    {/* Scooter icon representation */}
+                    <circle r="8" fill="#10b981" className="shadow-lg" />
+                    <path d="M-3,-3 L3,0 L-3,3 Z" fill="white" transform="rotate(30)" />
+                  </motion.g>
+                </svg>
+
+                {/* Live Position Overlay Badge */}
+                <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 border border-white/5 rounded-full text-[9px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Rider en mouvement
+                </div>
+              </div>
+            </div>
+
+            {/* Delivery Info Panel */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              
+              {/* Order Status Cards */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-3xl p-6 shadow-sm space-y-5">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  {lang === 'fr' ? 'Statut de Livraison' : 'Delivery Status'}
+                </h4>
+                
+                {/* Tracker Steps */}
+                <div className="space-y-6 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-slate-800">
+                  
+                  {/* Step 1: Confirmed */}
+                  <div className="flex gap-4 items-start relative z-10">
+                    <div className="w-5 h-5 rounded-full bg-blue-600 border-4 border-slate-50 dark:border-[#090d16] flex items-center justify-center shrink-0">
+                      <CheckCircle size={10} className="text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">
+                        {lang === 'fr' ? 'Commande Confirmée' : 'Order Confirmed'}
+                      </p>
+                      <span className="text-[9px] text-slate-400 mt-1 block">12:35 PM</span>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Dispatched */}
+                  <div className="flex gap-4 items-start relative z-10">
+                    <div className="w-5 h-5 rounded-full bg-blue-600 border-4 border-slate-50 dark:border-[#090d16] flex items-center justify-center shrink-0">
+                      <CheckCircle size={10} className="text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">
+                        {lang === 'fr' ? 'Expédié du Dépot' : 'Dispatched from Depot'}
+                      </p>
+                      <span className="text-[9px] text-slate-400 mt-1 block">12:45 PM</span>
+                    </div>
+                  </div>
+
+                  {/* Step 3: En Route */}
+                  <div className="flex gap-4 items-start relative z-10">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500 border-4 border-slate-50 dark:border-[#090d16] flex items-center justify-center shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-emerald-500 leading-none">
+                        {lang === 'fr' ? 'Livraison en cours' : 'Out for Delivery'}
+                      </p>
+                      <span className="text-[9px] text-slate-450 dark:text-slate-400 mt-1 block">
+                        {lang === 'fr' ? 'Arrivée estimée dans ~25 min' : 'Estimated arrival in ~25 min'}
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Rider Info Card */}
+              {riderInfo && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-3xl p-6 shadow-sm space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    {lang === 'fr' ? 'Livreur Attribué' : 'Assigned Rider'}
+                  </h4>
+                  
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/25 shadow-md">
+                      <Truck size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <h5 className="text-xs font-bold text-slate-900 dark:text-white truncate">{riderInfo.name}</h5>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">{riderInfo.vehicle}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <a
+                      href={`tel:${riderInfo.phone}`}
+                      className="flex items-center justify-center gap-1.5 py-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all"
+                    >
+                      <Phone size={12} />
+                      {lang === 'fr' ? 'Appeler' : 'Call'}
+                    </a>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('open-support-chat'))}
+                      className="flex items-center justify-center gap-1.5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-500/15"
+                    >
+                      <MessageSquare size={12} />
+                      {lang === 'fr' ? 'Aide Chat' : 'Chat Help'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        ) : (
+          
+          /* Empty / Instructions Panel */
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-3xl p-12 text-center shadow-sm space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-blue-500/10 text-blue-500 border border-blue-500/25 flex items-center justify-center mx-auto shadow-md">
+              <Truck size={28} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-black text-slate-850 dark:text-white uppercase tracking-wider">
+                {lang === 'fr' ? 'En attente d\'un ID de commande' : 'Awaiting Order ID'}
+              </h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                {lang === 'fr' 
+                  ? 'Veuillez saisir votre identifiant de commande reçu par WhatsApp ou par ticket pour voir la carte de livraison.' 
+                  : 'Please enter your order identifier received via WhatsApp or coupon to track your driver on the map.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      <MobileDock onCartOpen={() => setIsCartOpen(true)} />
     </div>
   );
-};
-
-// Helper for icon since I missed user in imports
-const User = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-  </svg>
-);
-
-export default OrderTrackingPage;
+}

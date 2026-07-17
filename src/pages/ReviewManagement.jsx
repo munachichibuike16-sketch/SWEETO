@@ -4,6 +4,37 @@ import { Star, MessageSquare, ShieldAlert, Check, Trash2, Shield, Plus, Search, 
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 
+const analyzeSentiment = (comment) => {
+  if (!comment) return { score: 0, label: 'Neutral', color: 'text-slate-450 bg-slate-500/10 border-slate-500/10 dark:text-slate-400' };
+  
+  const positiveWords = [
+    'super', 'excellent', 'parfait', 'génial', 'magnifique', 'adore', 'rapide', 'bon', 'bien', 'top', 'conforme', 'qualité', 'recommande',
+    'great', 'perfect', 'awesome', 'amazing', 'love', 'fast', 'good', 'nice', 'quality', 'recommend', 'beautiful'
+  ];
+  
+  const negativeWords = [
+    'mauvais', 'déçu', 'lent', 'cassé', 'nul', 'rembourser', 'pire', 'mauvaise', 'horrible', 'arnaque', 'défaut', 'problème', 'colère',
+    'bad', 'disappointed', 'slow', 'broken', 'worst', 'refund', 'scam', 'defect', 'problem', 'angry', 'terrible', 'useless'
+  ];
+
+  const words = comment.toLowerCase().split(/\s+/);
+  let posCount = 0;
+  let negCount = 0;
+
+  words.forEach(word => {
+    const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+    if (positiveWords.includes(cleanWord)) posCount++;
+    if (negativeWords.includes(cleanWord)) negCount++;
+  });
+
+  if (posCount > negCount) {
+    return { score: 1, label: 'Positive', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+  } else if (negCount > posCount) {
+    return { score: -1, label: 'Negative', color: 'text-red-500 bg-red-500/10 border-red-500/20' };
+  }
+  return { score: 0, label: 'Neutral', color: 'text-slate-450 bg-slate-500/10 border-slate-500/20 dark:text-slate-400' };
+};
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -256,6 +287,87 @@ export default function ReviewManagement() {
         </div>
       </div>
 
+      {/* AI Review Sentiment Analyzer Summary Panel */}
+      {(() => {
+        let positive = 0;
+        let negative = 0;
+        let neutral = 0;
+        
+        reviews.forEach(r => {
+          const sentiment = analyzeSentiment(r.comment);
+          if (sentiment.score > 0) positive++;
+          else if (sentiment.score < 0) negative++;
+          else neutral++;
+        });
+
+        const total = reviews.length || 1;
+        const sentimentStats = {
+          positive,
+          negative,
+          neutral,
+          posPct: Math.round((positive / total) * 100),
+          negPct: Math.round((negative / total) * 100),
+          neuPct: Math.round((neutral / total) * 100),
+          total: reviews.length
+        };
+
+        return (
+          <div className="bg-white dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm text-left space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-850 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
+                <span className="text-blue-500">🤖</span> AI Sentiment Engine Overview
+              </h3>
+              <span className="text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3 py-1 rounded-full">
+                Real-Time Analysis
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              
+              {/* Progress gauge chart */}
+              <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" className="text-slate-200 dark:text-slate-800" fill="transparent" />
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" className="text-emerald-500" fill="transparent" strokeDasharray={251.2} strokeDashoffset={251.2 - (251.2 * (sentimentStats.posPct || 0)) / 100} strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center text-center">
+                    <span className="text-xl font-black text-slate-800 dark:text-white">{sentimentStats.posPct || 0}%</span>
+                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-wider">Positive</span>
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 mt-3 font-semibold uppercase">Customer Satisfaction Index</p>
+              </div>
+
+              {/* Rating meters */}
+              <div className="md:col-span-2 space-y-3">
+                {[
+                  { label: 'Positive Feedback', count: sentimentStats.positive, pct: sentimentStats.posPct, color: 'bg-emerald-500' },
+                  { label: 'Neutral Comments', count: sentimentStats.neutral, pct: sentimentStats.neuPct, color: 'bg-slate-400' },
+                  { label: 'Negative Feedback', count: sentimentStats.negative, pct: sentimentStats.negPct, color: 'bg-red-500' }
+                ].map((meter, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-700 dark:text-slate-350">
+                      <span>{meter.label} ({meter.count})</span>
+                      <span>{meter.pct}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${meter.pct}%` }}
+                        transition={{ duration: 1, delay: idx * 0.1 }}
+                        className={`h-full rounded-full ${meter.color}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Review Type Segment Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800/60 pb-px">
         {[
@@ -393,7 +505,17 @@ export default function ReviewManagement() {
                       {/* Customer info & Stars */}
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h4 className="text-xs font-black text-slate-800 dark:text-white">{r.reviewer_name || r.customer_name || 'Anonymous'}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-black text-slate-800 dark:text-white">{r.reviewer_name || r.customer_name || 'Anonymous'}</h4>
+                            {(() => {
+                              const sentiment = analyzeSentiment(r.comment);
+                              return (
+                                <span className={`text-[7px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${sentiment.color}`}>
+                                  {sentiment.label}
+                                </span>
+                              );
+                            })()}
+                          </div>
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                             {new Date(r.created_at).toLocaleDateString()}
                           </span>

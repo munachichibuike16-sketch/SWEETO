@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, X, User, Phone, ChevronDown } from 'lucide-react';
+import { MessageSquare, Send, X, User, Phone, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useStore } from '../contexts/StoreContext';
 
 export default function CustomerChatWidget() {
   const { lang } = useLanguage();
+  const { settings, products } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   
@@ -19,14 +21,128 @@ export default function CustomerChatWidget() {
   const [messages, setMessages] = useState([]);
   const [newMessageText, setNewMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
 
   const messagesEndRef = useRef(null);
+
+  const [speakingMsgId, setSpeakingMsgId] = useState(null);
+
+  const handleSpeech = (msgText, msgId) => {
+    if (speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(msgText);
+    const isFrench = /[éàèùœç]|(\b(le|la|les|est|vous|pour|dans|une|sur|avec|dans|pour|que)\b)/i.test(msgText);
+    utterance.lang = isFrench ? 'fr-FR' : 'en-US';
+    utterance.onend = () => setSpeakingMsgId(null);
+    utterance.onerror = () => setSpeakingMsgId(null);
+    setSpeakingMsgId(msgId);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const triggerAiResponse = async (userMsgText) => {
+    const apiKey = settings?.gemini_api_key;
+    if (!apiKey) return;
+
+    setIsAiTyping(true);
+
+    try {
+      const currency = settings?.currency || 'FCFA';
+      const productsContext = products && products.length > 0
+        ? products.slice(0, 25).map(p => `- ${p.name} (Catégorie: ${p.category || 'Général'}, Prix: ${p.price} ${currency}, Description: ${p.description || ''}, Stock: ${p.stock_count || 'Disponible'})`).join('\n')
+        : 'Aucun produit disponible pour le moment.';
+
+      const systemInstruction = `Tu es l'Assistant IA Shopping de SWEETO HUB, un magasin d'électronique et de luxe à Abidjan.
+Ton rôle est d'aider les clients à trouver des produits, répondre à leurs questions (FAQ, livraison, retour) et les guider dans leur achat.
+Sois extrêmement chaleureux, amical, concis (maximum 2-3 phrases) et réponds toujours dans la langue de l'utilisateur (français par défaut).
+Voici la liste des produits disponibles en stock :
+${productsContext}
+
+Informations de livraison et paiement :
+- Livraison : À Abidjan (Cocody, Marcory, Yopougon, Riviera, etc.) et à l'intérieur du pays.
+- Paiement : Cash à la livraison, Wave (Automatique et Manuel), Orange Money, MTN Mobile Money.
+- Les prix sont en ${currency}.`;
+
+      const historyContext = messages.slice(-6).map(m => {
+        return `${m.sender_role === 'customer' ? 'Utilisateur' : 'Assistant'}: ${m.message_text}`;
+      }).join('\n');
+
+      const prompt = `${systemInstruction}\n\nHistorique de la conversation :\n${historyContext}\n\nUtilisateur : ${userMsgText}\nAssistant (sois court, direct et en français) :`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+
+      if (!res.ok) throw new Error('Gemini API call failed');
+      const resData = await res.json();
+      const aiReplyText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (aiReplyText) {
+        setTimeout(async () => {
+          const aiReplyClean = aiReplyText.trim();
+          
+          // Append AI response optimistically to local messages state
+          const optimisticAiMsg = {
+            id: 'temp_ai_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now(),
+            session_id: sessionId,
+            customer_name: username || 'Guest',
+            customer_phone: phone || null,
+            sender_role: 'admin',
+            message_text: aiReplyClean,
+            created_at: new Date().toISOString()
+          };
+          setMessages((prev) => [...prev, optimisticAiMsg]);
+
+          try {
+            await supabase.from('chat_messages').insert([
+              {
+                session_id: sessionId,
+                customer_name: username || 'Guest',
+                customer_phone: phone || null,
+                sender_role: 'admin',
+                message_text: aiReplyClean
+              }
+            ]);
+          } catch (e) {
+            console.error('Failed to save AI message:', e);
+          } finally {
+            setIsAiTyping(false);
+          }
+        }, 1500);
+      } else {
+        setIsAiTyping(false);
+      }
+    } catch (err) {
+      console.error('AI assistant error:', err);
+      setIsAiTyping(false);
+    }
+  };
 
   // 1. Initialize session and load credentials
   useEffect(() => {
     let savedSessionId = localStorage.getItem('sweeto_chat_session_id');
-    const savedName = localStorage.getItem('sweeto_chat_name');
-    const savedPhone = localStorage.getItem('sweeto_chat_phone');
+    let savedName = localStorage.getItem('sweeto_chat_name');
+    let savedPhone = localStorage.getItem('sweeto_chat_phone');
+
+    // Inherit logged-in store user credentials if available
+    try {
+      const storeSession = JSON.parse(localStorage.getItem('sweetohub_session'));
+      if (storeSession) {
+        savedName = storeSession.name || storeSession.email || 'Client';
+        savedPhone = storeSession.phone || '';
+        savedSessionId = `user_${storeSession.id || storeSession.email.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      }
+    } catch (e) {}
 
     if (!savedSessionId) {
       savedSessionId = `session_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
@@ -76,8 +192,11 @@ export default function CustomerChatWidget() {
         },
         (payload) => {
           setMessages((prev) => {
-            if (prev.some((m) => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
+            const filtered = prev.filter(m => 
+              !(m.id.startsWith('temp_') && m.message_text === payload.new.message_text && m.sender_role === payload.new.sender_role)
+            );
+            if (filtered.some((m) => m.id === payload.new.id)) return filtered;
+            return [...filtered, payload.new];
           });
 
           // Show notifications if widget is closed and message is from admin
@@ -130,6 +249,18 @@ export default function CustomerChatWidget() {
     setNewMessageText('');
     setIsSending(true);
 
+    const tempMsgId = 'temp_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+    const optimisticMsg = {
+      id: tempMsgId,
+      session_id: sessionId,
+      customer_name: username || 'Guest',
+      customer_phone: phone || null,
+      sender_role: 'customer',
+      message_text: messageText,
+      created_at: new Date().toISOString()
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
     try {
       const { error } = await supabase.from('chat_messages').insert([
         {
@@ -142,9 +273,13 @@ export default function CustomerChatWidget() {
       ]);
 
       if (error) throw error;
+      
+      // Trigger AI assistant response
+      triggerAiResponse(messageText);
     } catch (err) {
       console.error('Failed to send message:', err);
-      // Restore input text if send failed
+      // Remove optimistic message if send failed
+      setMessages((prev) => prev.filter(m => m.id !== tempMsgId));
       setNewMessageText(messageText);
     } finally {
       setIsSending(false);
@@ -152,7 +287,7 @@ export default function CustomerChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-20 sm:bottom-6 right-6 z-50 font-sans">
       <AnimatePresence>
         {/* Chat Widget Panel */}
         {isOpen && (
@@ -187,122 +322,88 @@ export default function CustomerChatWidget() {
             </div>
 
             {/* Content Area */}
-            {!isRegistered ? (
-              /* Registration Form */
-              <form onSubmit={handleRegister} className="flex-1 p-8 flex flex-col justify-center space-y-5">
-                <div className="text-center mb-4">
-                  <p className="text-xs font-black uppercase text-slate-400 tracking-wider">
-                    {lang === 'fr' ? 'Bienvenue au support' : 'Welcome to Support'}
-                  </p>
-                  <p className="text-sm font-bold text-slate-600 dark:text-slate-300 mt-1">
-                    {lang === 'fr' ? 'Dites-nous qui vous êtes pour démarrer :' : 'Tell us who you are to start chatting:'}
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    {lang === 'fr' ? 'Nom complet' : 'Full Name'} *
-                  </label>
-                  <div className="relative">
-                    <User size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      required
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={lang === 'fr' ? 'ex. Yao Kouassi' : 'e.g. Yao Kouassi'}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
-                    />
+            <>
+              {/* Chat Message Logs */}
+              <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/55 dark:bg-slate-950/20 scrollbar-thin">
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                    <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+                      <MessageSquare size={24} className="text-slate-400" />
+                    </div>
+                    <p className="text-xs font-bold uppercase tracking-wider">
+                      {lang === 'fr' ? 'Aucun message' : 'No messages yet'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                      {lang === 'fr' 
+                        ? 'Envoyez un message pour démarrer la conversation avec notre équipe.' 
+                        : 'Send a message to start conversing with our store team.'}
+                    </p>
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    {lang === 'fr' ? 'Téléphone (Optionnel)' : 'Phone (Optional)'}
-                  </label>
-                  <div className="relative">
-                    <Phone size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder={lang === 'fr' ? 'ex. 07070707' : 'e.g. 07070707'}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
-                    />
+                ) : (
+                  messages.map((msg) => {
+                    const isAdmin = msg.sender_role === 'admin';
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col ${isAdmin ? 'items-start' : 'items-end'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-[1.5rem] px-5 py-3 text-xs font-bold leading-relaxed shadow-sm ${
+                            isAdmin
+                              ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-white/5 rounded-tl-none'
+                              : 'bg-blue-600 text-white rounded-tr-none'
+                          }`}
+                        >
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-left select-text">{msg.message_text}</span>
+                            {isAdmin && (
+                              <button
+                                onClick={() => handleSpeech(msg.message_text, msg.id)}
+                                className="self-end mt-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 p-0.5 rounded transition-all bg-transparent border-none cursor-pointer flex items-center justify-center shrink-0"
+                                title={lang === 'fr' ? 'Écouter' : 'Listen'}
+                              >
+                                {speakingMsgId === msg.id ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 px-1.5">
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+                {isAiTyping && (
+                  <div className="flex flex-col items-start mt-2">
+                    <div className="bg-white dark:bg-slate-800 text-slate-400 rounded-[1.5rem] rounded-tl-none px-5 py-3 text-xs font-bold leading-relaxed border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
                   </div>
-                </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
+              {/* Message Input Box */}
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900 flex gap-2">
+                <input
+                  type="text"
+                  value={newMessageText}
+                  onChange={(e) => setNewMessageText(e.target.value)}
+                  placeholder={lang === 'fr' ? 'Écrivez votre message...' : 'Write your message...'}
+                  className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
+                />
                 <button
                   type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  disabled={!newMessageText.trim() || isSending}
+                  className="w-11 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/10 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all cursor-pointer shrink-0"
                 >
-                  {lang === 'fr' ? 'Démarrer le Chat' : 'Start Chatting'}
+                  <Send size={15} />
                 </button>
               </form>
-            ) : (
-              /* Chat Message Logs */
-              <>
-                <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/55 dark:bg-slate-950/20 scrollbar-thin">
-                  {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-                      <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                        <MessageSquare size={24} className="text-slate-400" />
-                      </div>
-                      <p className="text-xs font-bold uppercase tracking-wider">
-                        {lang === 'fr' ? 'Aucun message' : 'No messages yet'}
-                      </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                        {lang === 'fr' 
-                          ? 'Envoyez un message pour démarrer la conversation avec notre équipe.' 
-                          : 'Send a message to start conversing with our store team.'}
-                      </p>
-                    </div>
-                  ) : (
-                    messages.map((msg) => {
-                      const isAdmin = msg.sender_role === 'admin';
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex flex-col ${isAdmin ? 'items-start' : 'items-end'}`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-[1.5rem] px-5 py-3 text-xs font-bold leading-relaxed shadow-sm ${
-                              isAdmin
-                                ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-white/5 rounded-tl-none'
-                                : 'bg-blue-600 text-white rounded-tr-none'
-                            }`}
-                          >
-                            {msg.message_text}
-                          </div>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 px-1.5">
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Message Input Box */}
-                <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-slate-900 flex gap-2">
-                  <input
-                    type="text"
-                    value={newMessageText}
-                    onChange={(e) => setNewMessageText(e.target.value)}
-                    placeholder={lang === 'fr' ? 'Écrivez votre message...' : 'Write your message...'}
-                    className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl text-xs font-bold focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newMessageText.trim() || isSending}
-                    className="w-11 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/10 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all cursor-pointer shrink-0"
-                  >
-                    <Send size={15} />
-                  </button>
-                </form>
-              </>
-            )}
+            </>
           </motion.div>
         )}
       </AnimatePresence>

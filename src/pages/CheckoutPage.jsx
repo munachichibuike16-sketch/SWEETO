@@ -64,7 +64,14 @@ const CheckoutPage = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [shippingZones, setShippingZones] = useState([]);
   const [shippingFee, setShippingFee] = useState(1500);
+  const [isFreeShippingApplied, setIsFreeShippingApplied] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+  // Click & Collect states
+  const [deliveryMethod, setDeliveryMethod] = useState('home'); // 'home' | 'pickup'
+  const [pickupLocation, setPickupLocation] = useState('cocody'); // 'cocody' | 'yopougon' | 'marcory'
+  const [pickupDate, setPickupDate] = useState('');
+  const [pickupTime, setPickupTime] = useState('10:00');
 
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsSuccess, setGpsSuccess] = useState(false);
@@ -283,7 +290,7 @@ const CheckoutPage = () => {
   const subtotal = cartTotal;
   const tax = 0;
   const hasUnsetPrice = cartItems.some(item => !item.price || Number(item.price) === 0);
-  const shipping = hasUnsetPrice ? 0 : shippingFee;
+  const shipping = (hasUnsetPrice || isFreeShippingApplied || deliveryMethod === 'pickup') ? 0 : shippingFee;
   const grandTotal = subtotal + shipping - promoDiscount;
 
   const ADMIN_WHATSAPP_NUMBER = settings?.contactPhone?.replace(/\D/g, '') || "2250500619923";
@@ -323,6 +330,23 @@ const CheckoutPage = () => {
     if (!codeUpper) return;
     
     setPromoError('');
+    
+    // Check against admin-configured free delivery promo code
+    const adminFreeShipCode = settings?.free_delivery_code?.toUpperCase().trim();
+    if (adminFreeShipCode && codeUpper === adminFreeShipCode) {
+      setIsFreeShippingApplied(true);
+      setPromoDiscount(0);
+      setPromoApplied(true);
+      setPromoError('');
+      showToast(
+        lang === 'fr' 
+          ? "Livraison gratuite appliquée !" 
+          : "Free shipping applied!",
+        "success"
+      );
+      return;
+    }
+
     try {
       let promoData = null;
       
@@ -388,12 +412,20 @@ const CheckoutPage = () => {
 
       const session = JSON.parse(localStorage.getItem('sweetohub_session'));
       
-      const fullAddress = [
-        formData.address,
-        formData.street ? `${lang === 'fr' ? 'Rue' : 'Street'}: ${formData.street}` : '',
-        formData.junction ? `${lang === 'fr' ? 'Carrefour' : 'Junction'}: ${formData.junction}` : '',
-        formData.landmark ? `${lang === 'fr' ? 'Repère' : 'Landmark'}: ${formData.landmark}` : ''
-      ].filter(Boolean).join(' | ');
+      const locations = {
+        cocody: 'Cocody Depot (Carrefour Saint Jean, face pharmacie)',
+        yopougon: 'Yopougon Retail Point (Face Cosmos Yopougon)',
+        marcory: 'Marcory Warehouse (Zone 4, Rue du Canal)'
+      };
+
+      const fullAddress = deliveryMethod === 'pickup'
+        ? `RETRAIT EN MAGASIN | Point: ${locations[pickupLocation]} | Date: ${pickupDate} | Heure: ${pickupTime}`
+        : [
+            formData.address,
+            formData.street ? `${lang === 'fr' ? 'Rue' : 'Street'}: ${formData.street}` : '',
+            formData.junction ? `${lang === 'fr' ? 'Carrefour' : 'Junction'}: ${formData.junction}` : '',
+            formData.landmark ? `${lang === 'fr' ? 'Repère' : 'Landmark'}: ${formData.landmark}` : ''
+          ].filter(Boolean).join(' | ');
 
       const paymentMethodText = paymentOption === 'direct' ? 'Wave Direct' : paymentOption === 'manual' ? 'Wave Manual' : 'Paiement à la Livraison';
       const contactInfo = [
@@ -414,7 +446,7 @@ const CheckoutPage = () => {
         total_items: cartItems.reduce((acc, item) => acc + item.quantity, 0),
         status: 'pending',
         promo_code: promoApplied ? promoInput.toUpperCase() : null,
-        city: formData.city,
+        city: deliveryMethod === 'pickup' ? `Retrait (${pickupLocation})` : formData.city,
         address: fullAddress,
         destination_lat: destLat,
         destination_lng: destLng
@@ -697,7 +729,99 @@ const CheckoutPage = () => {
                   {promoError && <p className="text-red-500 text-[9px] font-bold mt-2 ml-1 uppercase">{promoError}</p>}
                 </div>
 
+                 {/* Shipping Method Selector */}
+                 <div className="grid grid-cols-2 gap-3 mb-6">
+                   <button
+                     type="button"
+                     onClick={() => setDeliveryMethod('home')}
+                     className={`py-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
+                       deliveryMethod === 'home'
+                         ? 'bg-eas-blue text-white border-eas-blue shadow-md'
+                         : 'bg-white border-slate-100 hover:border-slate-350 text-slate-700 dark:bg-slate-900 dark:border-white/5 dark:text-slate-350'
+                     }`}
+                   >
+                     <span>🚚 {lang === 'fr' ? 'À Domicile' : 'Home Delivery'}</span>
+                   </button>
+                   <button
+                     type="button"
+                     onClick={() => {
+                       setDeliveryMethod('pickup');
+                       if (!pickupDate) {
+                         const tomorrow = new Date();
+                         tomorrow.setDate(tomorrow.getDate() + 1);
+                         setPickupDate(tomorrow.toISOString().split('T')[0]);
+                       }
+                     }}
+                     className={`py-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
+                       deliveryMethod === 'pickup'
+                         ? 'bg-eas-blue text-white border-eas-blue shadow-md'
+                         : 'bg-white border-slate-100 hover:border-slate-300 text-slate-700 dark:bg-slate-900 dark:border-white/5 dark:text-slate-350'
+                     }`}
+                   >
+                     <span>🏪 {lang === 'fr' ? 'Retrait Magasin' : 'Store Pickup'}</span>
+                   </button>
+                 </div>
+
+                 {/* Click & Collect Scheduler */}
+                 {deliveryMethod === 'pickup' && (
+                   <div className="space-y-4 p-6 bg-white rounded-[2rem] border border-slate-100 mb-6 text-left">
+                     <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">
+                       {lang === 'fr' ? 'Planifier le Retrait' : 'Schedule Pickup'}
+                     </h3>
+                     
+                     <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                         {lang === 'fr' ? 'Point de Retrait' : 'Pickup Location'}
+                       </label>
+                       <select
+                         value={pickupLocation}
+                         onChange={(e) => setPickupLocation(e.target.value)}
+                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-800 outline-none focus:border-eas-blue"
+                       >
+                         <option value="cocody">Cocody Depot (Carrefour Saint Jean, face pharmacie)</option>
+                         <option value="yopougon">Yopougon Retail Point (Face Cosmos Yopougon)</option>
+                         <option value="marcory">Marcory Warehouse (Zone 4, Rue du Canal)</option>
+                       </select>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                           {lang === 'fr' ? 'Date de Retrait' : 'Pickup Date'}
+                         </label>
+                         <input
+                           type="date"
+                           value={pickupDate}
+                           onChange={(e) => setPickupDate(e.target.value)}
+                           className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:border-eas-blue"
+                         />
+                       </div>
+                       
+                       <div className="space-y-2">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                           {lang === 'fr' ? 'Heure de Retrait' : 'Pickup Time'}
+                         </label>
+                         <select
+                           value={pickupTime}
+                           onChange={(e) => setPickupTime(e.target.value)}
+                           className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-800 outline-none focus:border-eas-blue"
+                         >
+                           <option value="09:00">09:00</option>
+                           <option value="10:30">10:30</option>
+                           <option value="12:00">12:00</option>
+                           <option value="14:00">14:00</option>
+                           <option value="15:30">15:30</option>
+                           <option value="17:00">17:00</option>
+                           <option value="18:30">18:30</option>
+                         </select>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
                 {/* Quick Hub Locks (Dynamic City & Area selection) */}
+                {deliveryMethod === 'home' && (
+                <>
                 <div className="space-y-4 p-5 bg-white dark:bg-eas-dark/40 rounded-[2rem] border border-slate-100 dark:border-white/5 mb-6">
                   {/* City Select Row */}
                   <div>
@@ -985,13 +1109,15 @@ const CheckoutPage = () => {
                     </div>
                   </div>
                 </div>
+                </>
+                )}
 
                 <div className="mt-10 space-y-4">
                   <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] ml-2">
                     {t('payment_method') || 'Payment Method'}
                   </h4>
 
-                  {/* Option A: Direct Wave payment Link/QR Code */}
+                  {/* Option A: Direct Mobile Money payment */}
                   <div 
                     onClick={() => setPaymentOption('direct')}
                     className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'direct' ? 'bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/5' : 'bg-eas-light dark:bg-slate-905/40 border-slate-100 dark:border-white/5 hover:border-slate-350 dark:hover:border-white/10'}`}
@@ -1004,10 +1130,10 @@ const CheckoutPage = () => {
                       </div>
                       <div className="text-left">
                         <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                          {lang === 'fr' ? 'Paiement Wave Direct' : 'Direct Wave Payment'}
+                          {lang === 'fr' ? 'Paiement Mobile Money Direct' : 'Direct Mobile Money Payment'}
                         </h5>
                         <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
-                          {lang === 'fr' ? 'Redirection App (Mobile) ou Code QR (PC)' : 'App Redirect (Mobile) or QR Code (PC)'}
+                          {lang === 'fr' ? 'Paiement automatique instantané (Wave, Orange, MTN)' : 'Instant automated payment (Wave, Orange, MTN)'}
                         </p>
                       </div>
                     </div>
@@ -1018,7 +1144,7 @@ const CheckoutPage = () => {
                     </div>
                   </div>
 
-                  {/* Option B: Manual Wave Transfer */}
+                  {/* Option B: Manual Mobile Money Transfer */}
                   <div 
                     onClick={() => setPaymentOption('manual')}
                     className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'manual' ? 'bg-cyan-500/10 border-cyan-500 shadow-md shadow-cyan-500/5' : 'bg-eas-light dark:bg-slate-905/40 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}`}
@@ -1029,10 +1155,10 @@ const CheckoutPage = () => {
                       </div>
                       <div className="text-left">
                         <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                          {lang === 'fr' ? 'Transfert Wave Manuel' : 'Manual Wave Transfer'}
+                          {lang === 'fr' ? 'Transfert Mobile Money Manuel' : 'Manual Mobile Money Transfer'}
                         </h5>
                         <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
-                          {lang === 'fr' ? 'Envoyez les fonds manuellement au numéro' : 'Send funds manually to the merchant number'}
+                          {lang === 'fr' ? 'Envoyez les fonds manuellement à nos numéros marchands' : 'Send funds manually to our merchant numbers'}
                         </p>
                       </div>
                     </div>
@@ -1048,15 +1174,25 @@ const CheckoutPage = () => {
                     <motion.div 
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-5 rounded-[2rem] bg-cyan-500/5 border border-cyan-500/10 flex flex-col items-center text-center mt-2"
+                      className="p-5 rounded-[2rem] bg-cyan-500/5 border border-cyan-500/10 flex flex-col items-center gap-2.5 text-center mt-2"
                     >
-                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold mb-3">
-                        {lang === 'fr' ? 'Effectuez le transfert au numéro suivant :' : 'Please perform the transfer to the following phone number:'}
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold mb-1">
+                        {lang === 'fr' ? 'Effectuez le transfert au numéro de votre choix :' : 'Please perform the transfer to the phone number of your choice:'}
                       </p>
-                      <span className="px-4 py-2.5 rounded-2xl text-xs font-black bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-                        Wave: {settings?.wave_number || '+225 05 00 61 99 23'}
-                      </span>
+                      <div className="flex flex-col gap-2 w-full max-w-xs">
+                        <span className="px-4 py-2.5 rounded-2xl text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-between">
+                          <span>Wave:</span>
+                          <span className="select-all">{settings?.wave_number || '+225 05 00 61 99 23'}</span>
+                        </span>
+                        <span className="px-4 py-2.5 rounded-2xl text-[10px] font-black bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 flex items-center justify-between">
+                          <span>Orange Money:</span>
+                          <span className="select-all">{settings?.loc_phone || '+225 07 07 07 07 07'}</span>
+                        </span>
+                        <span className="px-4 py-2.5 rounded-2xl text-[10px] font-black bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 flex items-center justify-between">
+                          <span>MTN MoMo:</span>
+                          <span className="select-all">{settings?.admin_phone || '+225 05 05 05 05 05'}</span>
+                        </span>
+                      </div>
                     </motion.div>
                   )}
 

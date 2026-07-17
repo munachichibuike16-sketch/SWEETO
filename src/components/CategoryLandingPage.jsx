@@ -285,7 +285,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       </div>
 
       {/* Category Hero Banner (AliExpress Style) */}
-      <div className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
+      <div className="relative w-full h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -305,10 +305,10 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
           </div>
           {/* Main Title */}
           <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none">
-            {t_smart(categoryName)} finds
+            {lang === 'fr' ? `Sélection ${t_smart(categoryName)}` : `${t_smart(categoryName)} finds`}
           </h1>
           <p className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1">
-            Discover {t_smart(categoryName)} collection today
+            {lang === 'fr' ? `Découvrez la collection ${t_smart(categoryName)} aujourd'hui` : `Discover ${t_smart(categoryName)} collection today`}
           </p>
         </div>
       </div>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, CheckCircle2, AlertCircle, X,
   Loader2, Tag, FileText, FolderOpen, Image as ImageIcon,
-  Search, ChevronRight, ChevronDown, Grid, Flame
+  Search, ChevronRight, ChevronDown, Grid, Flame, Sparkles, Bot, Send
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { compressImage } from '../utils/imageCompressor';
@@ -22,7 +22,7 @@ const labelClass =
   'flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-2 ml-1';
 
 const CategoryManagement = () => {
-  const { categories, refreshData } = useStore();
+  const { categories, refreshData, settings } = useStore();
 
   const [formData, setFormData]       = useState(EMPTY_FORM);
   const [editingId, setEditingId]     = useState(null);
@@ -36,6 +36,250 @@ const CategoryManagement = () => {
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name }
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   const [expandedIds, setExpandedIds] = useState({});
+
+  // AI Assistant States
+  const [showAiAssistant, setShowAiAssistant] = useState(false);
+  const [chatInput, setChatInput]             = useState('');
+  const [isGenerating, setIsGenerating]       = useState(false);
+  const [messages, setMessages]               = useState([
+    {
+      sender: 'ai',
+      text: "Hello! I am your Category AI Assistant. Tell me what products you sell, or ask me for suggestions on sub-categories. I can even generate recommendations that you can add with one click!"
+    }
+  ]);
+  const chatEndRef = useRef(null);
+
+  // Auto scroll chat to bottom
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isGenerating, showAiAssistant]);
+
+  const parseSuggestions = (text) => {
+    try {
+      const jsonRegex = /```json\s*([\s\S]*?)\s*```/g;
+      const matches = [...text.matchAll(jsonRegex)];
+      let jsonStr = '';
+      if (matches.length > 0) {
+        jsonStr = matches[0][1];
+      } else {
+        const bracketRegex = /(\[[\s\S]*\])/;
+        const bracketMatches = text.match(bracketRegex);
+        if (bracketMatches) {
+          jsonStr = bracketMatches[1];
+        }
+      }
+      
+      if (jsonStr) {
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => ({
+            name: item.name || '',
+            description: item.description || '',
+            level: Number(item.level) || 1,
+            parent_id: item.parent_id ? Number(item.parent_id) : null
+          })).filter(item => item.name);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to parse AI suggestions:", e);
+    }
+    return null;
+  };
+
+  const handleSendAiMessage = async (e) => {
+    e?.preventDefault();
+    if (!chatInput.trim() || isGenerating) return;
+    
+    const userMsg = chatInput.trim();
+    setChatInput('');
+    setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
+    setIsGenerating(true);
+
+    try {
+      const apiKey = settings?.gemini_api_key || '';
+      if (!apiKey) {
+        throw new Error('API_KEY_MISSING');
+      }
+
+      const prompt = `You are an e-commerce category taxonomy expert assistant.
+The store's current categories are:
+${JSON.stringify(categories.map(c => ({ id: c.id, name: c.name, parent_id: c.parent_id, level: c.level })))}
+
+The user asks: "${userMsg}"
+
+Please provide a helpful, friendly response suggesting how to structure their categories, where to put their items, or what subcategories to add.
+If you recommend adding any new categories or subcategories, please include a JSON block at the end of your response inside \`\`\`json ... \`\`\` with the suggested categories to add.
+Each suggested category in the JSON array must follow this structure:
+{
+  "name": "Category Name",
+  "description": "Short description of the category",
+  "level": 1 | 2 | 3,
+  "parent_id": <id_of_parent_if_level_is_2_or_3_else_null>
+}
+Use the exact integer ID from the existing categories list for the "parent_id" if it is a subcategory.
+Ensure the JSON is valid and stands alone in the block. Keep descriptions short.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!text) {
+        throw new Error('No content returned from AI');
+      }
+
+      const suggestions = parseSuggestions(text);
+      const cleanText = text.replace(/```json[\s\S]*?```/g, '').trim();
+
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: cleanText || "Here are some category recommendations:",
+          suggestions
+        }
+      ]);
+
+    } catch (err) {
+      console.error('Gemini API Error in Category Assistant:', err);
+      let errorMsg = 'Failed to generate response. Please try again.';
+      if (err.message === 'API_KEY_MISSING') {
+        errorMsg = 'Gemini API Key is not configured. Please add your free Gemini API Key in Store Settings to use this feature.';
+      }
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: errorMsg,
+          isError: true
+        }
+      ]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAddSuggestion = async (suggestion) => {
+    setError(''); setSuccess('');
+    try {
+      const slugVal = suggestion.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      
+      const { data: existingCats } = await supabase.from('categories').select('id');
+      const maxId = existingCats && existingCats.length > 0 ? Math.max(...existingCats.map(c => c.id)) : 0;
+      const nextId = maxId + 1;
+
+      const supabasePayload = {
+        id: nextId,
+        name: suggestion.name,
+        slug: slugVal,
+        description: suggestion.description || null,
+        icon: null,
+        parent_id: suggestion.parent_id,
+        position: 0,
+        show_daily_deals: 1
+      };
+
+      let { error: sbErr } = await supabase
+        .from('categories')
+        .insert([supabasePayload]);
+
+      if (sbErr && (sbErr.message?.includes('column "show_daily_deals"') || sbErr.code === 'P0002')) {
+        const fallbackPayload = { ...supabasePayload };
+        delete fallbackPayload.show_daily_deals;
+        const { error: fallbackErr } = await supabase
+          .from('categories')
+          .insert([fallbackPayload]);
+        sbErr = fallbackErr;
+      }
+
+      if (sbErr) throw sbErr;
+
+      const isLocalhost = isLocalHost();
+      if (isLocalhost) {
+        try {
+          const localPayload = {
+            id: nextId,
+            name: suggestion.name,
+            slug: slugVal,
+            description: suggestion.description || null,
+            image_url: null,
+            parent_id: suggestion.parent_id,
+            show_daily_deals: 1
+          };
+          const res = await apiFetch('categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(localPayload)
+          });
+          if (!res.ok) console.warn('SQLite Category insert responded with error status:', res.status);
+        } catch (e) {
+          console.warn('SQLite Category insert failed:', e);
+        }
+      }
+
+      setSuccess(`Added category "${suggestion.name}"!`);
+      refreshData();
+      
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'ai',
+          text: `Success! Added category "${suggestion.name}" to your store.`
+        }
+      ]);
+
+      setTimeout(() => { setSuccess(''); }, 2050);
+    } catch (err) {
+      console.error('Error adding suggested category:', err);
+      setError('Failed to add category: ' + err.message);
+      setTimeout(() => { setError(''); }, 3000);
+    }
+  };
+
+  const handleFillForm = (suggestion) => {
+    let parent1Id = '';
+    let parentId = suggestion.parent_id || '';
+    
+    if (parentId && suggestion.level === 3) {
+      const parent = categories.find(c => Number(c.id) === Number(parentId));
+      if (parent) {
+        parent1Id = parent.parent_id || '';
+      }
+    }
+
+    setFormData({
+      name: suggestion.name,
+      description: suggestion.description || '',
+      level: suggestion.level || 1,
+      parent_id: parentId,
+      parent_level1_id: parent1Id,
+      image_url: '',
+      slug: '',
+      show_daily_deals: 1
+    });
+    setEditingId(null);
+    setShowForm(true);
+    setShowAiAssistant(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const allDealsOff = categories.length > 0 && categories.every(c => Number(c.show_daily_deals) === 0);
 
@@ -452,6 +696,14 @@ const CategoryManagement = () => {
             </button>
 
             <button
+              type="button"
+              onClick={() => setShowAiAssistant(true)}
+              className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-purple-500/20"
+            >
+              <Sparkles size={16} /> Ask Category AI
+            </button>
+
+            <button
               onClick={openAdd}
               className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20"
             >
@@ -853,6 +1105,171 @@ const CategoryManagement = () => {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── AI ASSISTANT DRAWER ── */}
+      <AnimatePresence>
+        {showAiAssistant && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAiAssistant(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[140] lg:bg-black/20"
+            />
+
+            {/* Drawer Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl z-[150] flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-purple-500/20">
+                    <Bot size={20} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-xs font-black text-slate-950 dark:text-white uppercase tracking-wider">Category AI Assistant</h3>
+                    <p className="text-[9px] text-slate-400 font-bold mt-0.5">Powered by Gemini 2.5 Flash</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAiAssistant(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
+                {messages.map((msg, idx) => {
+                  const isAi = msg.sender === 'ai';
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex ${isAi ? 'justify-start' : 'justify-end'} w-full animate-fadeIn`}
+                    >
+                      <div className={`flex gap-3 max-w-[85%] ${isAi ? 'flex-row' : 'flex-row-reverse'}`}>
+                        {isAi && (
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-655 dark:text-slate-300 shrink-0">
+                            <Bot size={15} />
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <div
+                            className={`px-4.5 py-3 rounded-2xl text-xs font-medium leading-relaxed text-left ${
+                              isAi
+                                ? msg.isError
+                                  ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/20'
+                                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-250'
+                                : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-indigo-650/15'
+                            }`}
+                            style={{ whiteSpace: 'pre-line' }}
+                          >
+                            {msg.text}
+                          </div>
+
+                          {/* Suggestions Cards */}
+                          {isAi && msg.suggestions && msg.suggestions.length > 0 && (
+                            <div className="mt-4 space-y-2.5 w-full">
+                              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1 ml-1 text-left">AI Suggestions</p>
+                              {msg.suggestions.map((suggestion, sIdx) => {
+                                const parentName = categories.find(c => Number(c.id) === Number(suggestion.parent_id))?.name || 'Root';
+                                return (
+                                  <div key={sIdx} className="bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 text-left">
+                                    <div className="flex justify-between items-start gap-2">
+                                      <div>
+                                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                          Level {suggestion.level}
+                                        </span>
+                                        <h5 className="font-bold text-slate-900 dark:text-white text-xs mt-1.5">{suggestion.name}</h5>
+                                        {suggestion.parent_id && (
+                                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">
+                                            Parent: {parentName}
+                                          </p>
+                                        )}
+                                        {suggestion.description && (
+                                          <p className="text-[10px] text-slate-450 dark:text-slate-550 mt-1 line-clamp-2">
+                                            {suggestion.description}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-2.5 mt-3.5 pt-2.5 border-t border-slate-100/50 dark:border-slate-800/30">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleFillForm(suggestion)}
+                                        className="flex-1 py-2 text-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9.5px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                                      >
+                                        Fill Form
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddSuggestion(suggestion)}
+                                        className="flex-1 py-2 text-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9.5px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
+                                      >
+                                        Add Instantly
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {isGenerating && (
+                  <div className="flex justify-start w-full animate-pulse">
+                    <div className="flex gap-3 max-w-[85%] items-center">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                        <Bot size={15} className="animate-bounce" />
+                      </div>
+                      <div className="bg-slate-100 dark:bg-slate-800/80 px-4.5 py-3 rounded-2xl text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">
+                        AI is thinking...
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Input Area */}
+              <form
+                onSubmit={handleSendAiMessage}
+                className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2.5 bg-slate-50/50 dark:bg-slate-950/20"
+              >
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  placeholder="Ask AI category ideas..."
+                  disabled={isGenerating}
+                  className="flex-1 px-4.5 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500 font-medium text-slate-900 dark:text-white disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={isGenerating || !chatInput.trim()}
+                  className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl flex items-center justify-center hover:opacity-95 transition-opacity disabled:opacity-50 active:scale-95 shrink-0"
+                >
+                  <Send size={15} />
+                </button>
+              </form>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

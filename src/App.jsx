@@ -37,7 +37,14 @@ import GlobalLightbox from './components/GlobalLightbox';
 import BackToTop from './components/BackToTop';
 import SwipeGestures from './components/SwipeGestures';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
-import FloatingChatButton from './components/FloatingChatButton';
+import CustomerChatWidget from './components/CustomerChatWidget';
+import SpinWheelWidget from './components/SpinWheelWidget';
+import ScratchCardWidget from './components/ScratchCardWidget';
+import SalesPopupNotifier from './components/SalesPopupNotifier';
+import ShoppingQuizWidget from './components/ShoppingQuizWidget';
+import InteractiveHub from './components/InteractiveHub';
+import LoyaltyPointsWidget from './components/LoyaltyPointsWidget';
+import CompareProductsDrawer from './components/CompareProductsDrawer';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -861,7 +868,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
         </div>
 
         {/* Hero Banner (AliExpress Style) */}
-        <div className="relative w-[calc(100%-24px)] mx-3 md:w-full md:mx-0 h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-[1.8rem] sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
+        <div className="relative w-full h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
             <img 
@@ -1402,13 +1409,20 @@ function App() {
       <RealtimeNotification />
       <BackToTop />
       <SwipeGestures />
+      {!getCurrentPath().includes('/dashboard') && <SpinWheelWidget />}
+      {!getCurrentPath().includes('/dashboard') && <ScratchCardWidget />}
+      {!getCurrentPath().includes('/dashboard') && <SalesPopupNotifier />}
+      {!getCurrentPath().includes('/dashboard') && <ShoppingQuizWidget />}
+      {!getCurrentPath().includes('/dashboard') && <InteractiveHub />}
+      {!getCurrentPath().includes('/dashboard') && <LoyaltyPointsWidget />}
+      {!getCurrentPath().includes('/dashboard') && <CompareProductsDrawer />}
       {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/product/') && !['/auth', '/login', '/register'].includes(getCurrentPath()) && <FloatingWhatsApp />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
         <GlobalLightbox />
         <RouteTracker />
-        <FloatingChatButton />
+        {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/chat') && !getCurrentPath().includes('/support') && <CustomerChatWidget />}
         <Routes>
           <Route path="/" element={<Storefront />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
@@ -1431,6 +1445,7 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
+          <Route path="/order-tracking" element={<OrderTrackingPage />} />
           <Route path="/swto-deliver" element={<DeliverPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<ChatPage />} />

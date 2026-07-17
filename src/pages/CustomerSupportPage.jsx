@@ -12,7 +12,7 @@ import { apiFetch } from '../utils/api';
 
 export default function CustomerSupportPage() {
   const { lang } = useLanguage();
-  const { showToast, products } = useStore();
+  const { showToast, products, settings } = useStore();
   const navigate = useNavigate();
 
   // Authentication & session state
@@ -28,6 +28,92 @@ export default function CustomerSupportPage() {
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
+
+  const triggerAiResponse = async (userMsgText) => {
+    const apiKey = settings?.gemini_api_key;
+    if (!apiKey) return;
+
+    setIsAiTyping(true);
+
+    try {
+      const currency = settings?.currency || 'FCFA';
+      const productsContext = products && products.length > 0
+        ? products.slice(0, 25).map(p => `- ${p.name} (Catégorie: ${p.category || 'Général'}, Prix: ${p.price} ${currency}, Description: ${p.description || ''}, Stock: ${p.stock_count || 'Disponible'})`).join('\n')
+        : 'Aucun produit disponible pour le moment.';
+
+      const systemInstruction = `Tu es l'Assistant IA Shopping de SWEETO HUB, un magasin d'électronique et de luxe à Abidjan.
+Ton rôle est d'aider les clients à trouver des produits, répondre à leurs questions (FAQ, livraison, retour) et les guider dans leur achat.
+Sois extrêmement chaleureux, amical, concis (maximum 2-3 phrases) et réponds toujours dans la langue de l'utilisateur (français par défaut).
+Voici la liste des produits disponibles en stock :
+${productsContext}
+
+Informations de livraison et paiement :
+- Livraison : À Abidjan (Cocody, Marcory, Yopougon, Riviera, etc.) et à l'intérieur du pays.
+- Paiement : Cash à la livraison, Wave (Automatique et Manuel), Orange Money, MTN Mobile Money.
+- Les prix sont en ${currency}.`;
+
+      const historyContext = messages.slice(-6).map(m => {
+        return `${m.sender_role === 'customer' ? 'Utilisateur' : 'Assistant'}: ${m.message_text}`;
+      }).join('\n');
+
+      const prompt = `${systemInstruction}\n\nHistorique de la conversation :\n${historyContext}\n\nUtilisateur : ${userMsgText}\nAssistant (sois court, direct et en français) :`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+
+      if (!res.ok) throw new Error('Gemini API call failed');
+      const resData = await res.json();
+      const aiReplyText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (aiReplyText) {
+        setTimeout(async () => {
+          const aiReplyClean = aiReplyText.trim();
+          
+          // Append AI response optimistically to local messages state
+          const optimisticAiMsg = {
+            id: 'temp_ai_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now(),
+            session_id: sessionId,
+            customer_name: username || 'Guest',
+            customer_phone: phone || null,
+            sender_role: 'admin',
+            message_text: aiReplyClean,
+            created_at: new Date().toISOString()
+          };
+          setMessages((prev) => [...prev, optimisticAiMsg]);
+
+          try {
+            await supabase.from('chat_messages').insert([
+              {
+                session_id: sessionId,
+                customer_name: username || 'Guest',
+                customer_phone: phone || null,
+                sender_role: 'admin',
+                message_text: aiReplyClean
+              }
+            ]);
+          } catch (e) {
+            console.error('Failed to save AI message:', e);
+          } finally {
+            setIsAiTyping(false);
+          }
+        }, 1500);
+      } else {
+        setIsAiTyping(false);
+      }
+    } catch (err) {
+      console.error('AI assistant error:', err);
+      setIsAiTyping(false);
+    }
+  };
 
   // Custom dialogs & modals
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
@@ -102,11 +188,16 @@ export default function CustomerSupportPage() {
             .map(m => m.id);
 
           if (unreadAdminMsgIds.length > 0) {
-            supabase
-              .from('chat_messages')
-              .update({ is_read: true })
-              .in('id', unreadAdminMsgIds)
-              .catch(() => {});
+            (async () => {
+              try {
+                await supabase
+                  .from('chat_messages')
+                  .update({ is_read: true })
+                  .in('id', unreadAdminMsgIds);
+              } catch (e) {
+                console.warn('Failed to update message status:', e);
+              }
+            })();
           }
         }
       } catch (err) {
@@ -129,8 +220,11 @@ export default function CustomerSupportPage() {
         },
         (payload) => {
           setMessages((prev) => {
-            if (prev.some((m) => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
+            const filtered = prev.filter(m => 
+              !(m.id.startsWith('temp_') && m.message_text === payload.new.message_text && m.sender_role === payload.new.sender_role)
+            );
+            if (filtered.some((m) => m.id === payload.new.id)) return filtered;
+            return [...filtered, payload.new];
           });
 
           // Play message sound if it is from admin
@@ -142,11 +236,14 @@ export default function CustomerSupportPage() {
             } catch (e) {}
 
             // Automatically mark this incoming admin message as read
-            supabase
-              .from('chat_messages')
-              .update({ is_read: true })
-              .eq('id', payload.new.id)
-              .catch(() => {});
+            (async () => {
+              try {
+                await supabase
+                  .from('chat_messages')
+                  .update({ is_read: true })
+                  .eq('id', payload.new.id);
+              } catch (e) {}
+            })();
           }
         }
       )
@@ -187,6 +284,18 @@ export default function CustomerSupportPage() {
     setNewMessageText('');
     setIsSending(true);
 
+    const tempMsgId = 'temp_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+    const optimisticMsg = {
+      id: tempMsgId,
+      session_id: sessionId,
+      customer_name: username,
+      customer_phone: phone || null,
+      sender_role: 'customer',
+      message_text: messageText,
+      created_at: new Date().toISOString()
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
     try {
       const { error } = await supabase.from('chat_messages').insert([
         {
@@ -200,6 +309,9 @@ export default function CustomerSupportPage() {
 
       if (error) throw error;
       
+      // Trigger AI assistant response
+      triggerAiResponse(messageText);
+
       // Trigger background push notification for admins
       apiFetch('/push/notify-chat-message', {
         method: 'POST',
@@ -213,6 +325,8 @@ export default function CustomerSupportPage() {
       }).catch(err => console.warn('Could not trigger admin push notification:', err));
     } catch (err) {
       console.error('Failed to send message:', err);
+      // Remove optimistic message if send failed
+      setMessages((prev) => prev.filter(m => m.id !== tempMsgId));
       setNewMessageText(messageText);
     } finally {
       setIsSending(false);
@@ -688,6 +802,18 @@ export default function CustomerSupportPage() {
                   </div>
                 );
               })
+            )}
+            {isAiTyping && (
+              <div className="flex items-start gap-3 mt-2">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md font-black text-[10px]">AI</div>
+                <div className="flex flex-col">
+                  <div className="bg-white dark:bg-slate-800 text-slate-400 rounded-2xl rounded-tl-none px-5 py-3 text-xs font-bold leading-relaxed border border-slate-100 dark:border-white/5 shadow-sm flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>

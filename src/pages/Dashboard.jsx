@@ -23,6 +23,7 @@ import AnalysisManagement from './AnalysisManagement';
 import PromoCode from './PromoCode';
 import LiveChatManagement from '../components/LiveChatManagement';
 import AdminPinLock from '../components/AdminPinLock';
+import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { formatDbError } from '../utils/errorHelper';
@@ -230,6 +231,15 @@ const Dashboard = () => {
   }, [isAdminAuthenticated]);
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(() => window.innerWidth >= 1024);
+  const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 1024);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [isAdminDark, setIsAdminDark] = React.useState(() => {
     const saved = localStorage.getItem('admin_theme');
     return saved !== 'light';
@@ -887,7 +897,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`${isAdminDark ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} min-h-screen flex overflow-hidden font-sans selection:bg-blue-500/30`}>
+    <div className={`${isAdminDark ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} min-h-[100dvh] w-full max-w-full flex overflow-hidden font-sans selection:bg-blue-500/30`}>
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -898,9 +908,12 @@ const Dashboard = () => {
 
       {/* SIDEBAR */}
       <motion.aside
-        initial={{ x: -300 }}
-        animate={{ x: isSidebarOpen ? 0 : -300, width: isSidebarOpen ? 280 : 0 }}
-        className="fixed lg:relative h-screen bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-40 overflow-hidden shadow-2xl lg:shadow-none"
+        initial={{ x: window.innerWidth < 1024 ? -300 : 0 }}
+        animate={{ 
+          x: isMobile ? (isSidebarOpen ? 0 : -300) : 0, 
+          width: isMobile ? 280 : (isSidebarOpen ? 280 : 0) 
+        }}
+        className="fixed lg:relative h-[100dvh] bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-40 overflow-hidden shadow-2xl lg:shadow-none"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="p-8 flex items-center gap-3">
@@ -937,7 +950,7 @@ const Dashboard = () => {
           </div>
         </div>
       </motion.aside>
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative min-w-0">
+      <main className="flex-1 w-full max-w-full flex flex-col h-[100dvh] overflow-hidden relative min-w-0">
         <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-400/5 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-400/5 rounded-full blur-[120px] pointer-events-none"></div>
         <header className="h-24 px-4 sm:px-8 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl z-30 shrink-0">
@@ -1094,6 +1107,8 @@ const Dashboard = () => {
                   ))}
                 </div>
               </div>
+
+              <AdminAnalyticsDashboard />
 
               {/* ─── LIVE ACTIVITY (RECENT ORDERS FEED) ─── */}
               <div className="space-y-4">
