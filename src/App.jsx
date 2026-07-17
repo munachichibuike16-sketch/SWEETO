@@ -1409,12 +1409,12 @@ function App() {
       <RealtimeNotification />
       <BackToTop />
       <SwipeGestures />
-      {!getCurrentPath().includes('/dashboard') && <SpinWheelWidget />}
-      {!getCurrentPath().includes('/dashboard') && <ScratchCardWidget />}
-      {!getCurrentPath().includes('/dashboard') && <SalesPopupNotifier />}
-      {!getCurrentPath().includes('/dashboard') && <ShoppingQuizWidget />}
-      {!getCurrentPath().includes('/dashboard') && <InteractiveHub />}
-      {!getCurrentPath().includes('/dashboard') && <LoyaltyPointsWidget />}
+      {getCurrentPath() === '/' && <SpinWheelWidget />}
+      {getCurrentPath() === '/' && <ScratchCardWidget />}
+      {getCurrentPath() === '/' && <SalesPopupNotifier />}
+      {getCurrentPath() === '/' && <ShoppingQuizWidget />}
+      {getCurrentPath() === '/' && <InteractiveHub />}
+      {getCurrentPath() === '/' && <LoyaltyPointsWidget />}
       {!getCurrentPath().includes('/dashboard') && <CompareProductsDrawer />}
       {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/product/') && !['/auth', '/login', '/register'].includes(getCurrentPath()) && <FloatingWhatsApp />}
       {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
