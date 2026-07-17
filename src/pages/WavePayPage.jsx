@@ -46,6 +46,13 @@ const WavePayPage = () => {
   const [waUrl, setWaUrl] = useState('');
   const [operator, setOperator] = useState('wave'); // 'wave'
   const [customTxId, setCustomTxId] = useState('');
+  const [isMobileDevice, setIsMobileDevice] = useState(true);
+  const [payUrl, setPayUrl] = useState('');
+
+  useEffect(() => {
+    const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsMobileDevice(isMob);
+  }, []);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -142,34 +149,48 @@ const WavePayPage = () => {
         body: JSON.stringify({ orderId })
       });
       
+      let targetUrl = '';
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.checkoutUrl) {
+          targetUrl = data.checkoutUrl;
           setPaymentMode('live');
-          window.location.href = data.checkoutUrl;
-          return;
         }
       }
       
-      const orderAmount = orderData?.total || orderData?.total_amount || 0;
-      const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
-      const waveLink = baseLink.includes('?') 
-        ? `${baseLink}&amount=${orderAmount}` 
-        : `${baseLink}?amount=${orderAmount}`;
+      if (!targetUrl) {
+        const orderAmount = orderData?.total || orderData?.total_amount || 0;
+        const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+        targetUrl = baseLink.includes('?') 
+          ? `${baseLink}&amount=${orderAmount}` 
+          : `${baseLink}?amount=${orderAmount}`;
+        setPaymentMode('live_link');
+      }
       
-      setPaymentMode('live_link');
-      window.location.href = waveLink;
+      setPayUrl(targetUrl);
+      
+      const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMob) {
+        window.location.href = targetUrl;
+      }
+      
       setLoading(false);
     } catch (e) {
-      console.warn('Failed to check live Wave session, checking merchant url:', e);
+      console.warn('Failed to check live Wave session:', e);
       const orderAmount = orderData?.total || orderData?.total_amount || 0;
       const baseLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
-      const waveLink = baseLink.includes('?') 
+      const targetUrl = baseLink.includes('?') 
         ? `${baseLink}&amount=${orderAmount}` 
         : `${baseLink}?amount=${orderAmount}`;
       
+      setPayUrl(targetUrl);
       setPaymentMode('live_link');
-      window.location.href = waveLink;
+      
+      const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMob) {
+        window.location.href = targetUrl;
+      }
+      
       setLoading(false);
     }
   };
@@ -342,6 +363,88 @@ const WavePayPage = () => {
   const orderAmount = order?.total || order?.total_amount || 0;
   const currency = settings?.currency || 'FCFA';
   const activeOp = operatorConfigs[operator];
+
+  // RENDER LIVE OFFICIAL PENGUIN/QR SCAN PORTAL ON DESKTOP
+  if (!isMobileDevice && !isSuccess) {
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payUrl || 'https://pay.wave.com')}`;
+    return (
+      <div className="min-h-screen w-full bg-[#19C3FC] flex items-center justify-center p-6 font-sans select-none">
+        <div className="max-w-md w-full flex flex-col items-center text-center text-white relative">
+          
+          {/* Logo & Mascot Header */}
+          <div className="flex flex-col items-center mb-6">
+            <svg className="w-24 h-24 mb-2 drop-shadow-md" viewBox="0 0 100 100" fill="none">
+              <circle cx="35" cy="85" r="8" fill="#FF9F00" />
+              <circle cx="65" cy="85" r="8" fill="#FF9F00" />
+              <ellipse cx="50" cy="55" rx="25" ry="32" fill="#1C1A17" />
+              <ellipse cx="50" cy="58" rx="17" ry="24" fill="white" />
+              <circle cx="42" cy="40" r="3" fill="white" />
+              <circle cx="42" cy="40" r="1.5" fill="black" />
+              <circle cx="58" cy="40" r="3" fill="white" />
+              <circle cx="58" cy="40" r="1.5" fill="black" />
+              <polygon points="50,44 46,48 54,48" fill="#FF9F00" />
+              <ellipse cx="50" cy="22" rx="18" ry="6" fill="#F0F4F8" />
+              <path d="M34 22c0 8 7 10 16 10s16-2 16-10H34z" fill="#E2E8F0" />
+              <path d="M38 20c2-4 6-4 8 0c3-3 8-3 10 0c2-4 6-4 8 0H38z" fill="#22C55E" />
+              <circle cx="50" cy="18" r="3" fill="#EF4444" />
+            </svg>
+            <h1 className="text-3xl font-black tracking-tight leading-none uppercase italic flex items-center gap-1">
+              Pay with <span className="text-slate-900 not-italic font-extrabold lowercase">wave</span>
+            </h1>
+          </div>
+
+          {/* QR Code Container */}
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] mb-6 flex items-center justify-center relative">
+            <img 
+              src={qrCodeUrl} 
+              alt="Scan QR code to pay" 
+              className="w-56 h-56 object-contain"
+            />
+          </div>
+
+          {/* Instructions */}
+          <div className="flex items-center gap-3 mb-6 bg-black/10 px-6 py-3.5 rounded-full backdrop-blur-md">
+            <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-xs font-black uppercase tracking-wider">Scan the QR code to pay</span>
+          </div>
+
+          <p className="text-[11px] font-bold text-white/70 uppercase tracking-widest mb-8">
+            Download the Wave app on your phone
+          </p>
+
+          {/* App Download Badges */}
+          <div className="flex gap-4 mb-10 w-full justify-center">
+            <a href="https://play.google.com/store/apps/details?id=com.wave.personal" target="_blank" rel="noopener noreferrer" className="h-10 hover:scale-[1.03] transition-all">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="h-full" />
+            </a>
+            <a href="https://apps.apple.com/app/wave-mobile-money/id1453479634" target="_blank" rel="noopener noreferrer" className="h-10 hover:scale-[1.03] transition-all">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on the App Store" className="h-full" />
+            </a>
+          </div>
+
+          {/* Action buttons (including Skip!) */}
+          <div className="w-full flex gap-4 max-w-sm">
+            <button
+              onClick={() => navigate('/')}
+              className="flex-1 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none"
+            >
+              {lang === 'fr' ? 'Annuler' : 'Cancel'}
+            </button>
+            <button
+              onClick={() => navigate(`/order-tracking/${orderId}`)}
+              className="flex-[2] py-4 bg-slate-900 hover:bg-slate-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-black/10 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none"
+            >
+              {lang === 'fr' ? 'Passer au Suivi' : 'Skip to Tracking'}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b12] flex items-center justify-center p-4 transition-colors duration-500 font-sans">
