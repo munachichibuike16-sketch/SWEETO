@@ -533,14 +533,16 @@ try {
     vapidPrivateKey = privateKeyRow.value;
   }
 
-  // Sync VAPID keys to Supabase settings table if available to prevent key mismatches
   if (supabaseAdmin) {
     supabaseAdmin.from('settings').upsert([
       { key: 'vapid_public_key', value: vapidPublicKey },
-      { key: 'vapid_private_key', value: vapidPrivateKey }
+      { key: 'vapid_private_key', value: vapidPrivateKey },
+      { key: 'wave_payment_url', value: 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/' },
+      { key: 'wave_number', value: '+2250500619923' },
+      { key: 'admin_phone', value: '+2250500619923' }
     ])
-    .then(() => console.log('✅ Synced active VAPID keys to Supabase settings.'))
-    .catch(err => console.error('⚠️ Failed to sync VAPID keys to Supabase settings:', err));
+    .then(() => console.log('✅ Synced active VAPID keys and Wave settings to Supabase settings.'))
+    .catch(err => console.error('⚠️ Failed to sync settings to Supabase settings:', err));
   }
 
   // Configure Web Push with VAPID keys
