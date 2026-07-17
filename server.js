@@ -1524,7 +1524,8 @@ app.post('/api/payments/wave/checkout-session', (req, res) => {
           amount: String(order.total),
           currency: settings.wave_currency || 'XOF',
           error_url: `${origin}/#/wave-pay/${orderId}?status=error`,
-          success_url: `${origin}/#/wave-pay/${orderId}?status=success`
+          success_url: `${origin}/#/wave-pay/${orderId}?status=success`,
+          client_reference_id: String(orderId)
         })
       })
       .then(async (waveRes) => {
@@ -1548,6 +1549,48 @@ app.post('/api/payments/wave/checkout-session', (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+app.post('/api/payments/wave/webhook', (req, res) => {
+  const event = req.body;
+  
+  console.log('Wave Webhook received:', JSON.stringify(event));
+
+  if (event && event.type === 'checkout.session.completed') {
+    const sessionData = event.data;
+    const orderId = sessionData.client_reference_id;
+    const txId = sessionData.id;
+    const amountPaid = sessionData.amount;
+
+    if (orderId) {
+      try {
+        const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+        if (order) {
+          const currentContact = order.customer_contact || '';
+          const newContact = currentContact 
+            ? `${currentContact} | Wave Webhook Tx: ${txId}`
+            : `Wave Webhook Tx: ${txId}`;
+
+          db.prepare("UPDATE orders SET status = 'paid', customer_contact = ? WHERE id = ?")
+            .run(newContact, orderId);
+
+          console.log(`Wave Webhook: Order #${orderId} marked as paid. Tx ID: ${txId}`);
+          
+          sendBackgroundPushNotification(
+            `💸 Wave Payment Callback!`,
+            `Order SWT-${orderId} from ${order.customer_name} has been paid via Wave: ${Number(amountPaid).toLocaleString()} FCFA.`,
+            `/#/dashboard`,
+            null,
+            'admin'
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.error('Error updating order via Wave webhook:', err);
+      }
+    }
+  }
+
+  res.status(200).send('Webhook processed');
 });
 
 app.post('/api/push/notify-payment', async (req, res) => {
