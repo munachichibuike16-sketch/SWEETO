@@ -539,21 +539,13 @@ const CheckoutPage = () => {
             }
           }
           
-          // Fallback to configured merchant payment link
-          if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
-            window.location.href = settings.wave_payment_url;
-            return;
-          }
-          
-          // Final fallback: show the manual/simulation page
-          navigate(`/wave-pay/${newOrderId}`);
+          // Fallback to configured merchant payment link (hardcoded default as fallback)
+          const waveLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+          window.location.href = waveLink;
         } catch (e) {
           console.warn('Failed to start Wave session from checkout:', e);
-          if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
-            window.location.href = settings.wave_payment_url;
-          } else {
-            navigate(`/wave-pay/${newOrderId}`);
-          }
+          const waveLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+          window.location.href = waveLink;
         }
       } else {
         // Open WhatsApp to finalize checkout (use window.location for reliability)

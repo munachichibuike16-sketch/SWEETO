@@ -151,19 +151,15 @@ const WavePayPage = () => {
         }
       }
       
-      if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
-        setPaymentMode('live_link');
-      } else {
-        setPaymentMode('simulation');
-      }
+      const waveLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+      setPaymentMode('live_link');
+      window.location.href = waveLink;
       setLoading(false);
     } catch (e) {
       console.warn('Failed to check live Wave session, checking merchant url:', e);
-      if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
-        setPaymentMode('live_link');
-      } else {
-        setPaymentMode('simulation');
-      }
+      const waveLink = settings?.wave_payment_url?.trim() || 'https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/';
+      setPaymentMode('live_link');
+      window.location.href = waveLink;
       setLoading(false);
     }
   };
