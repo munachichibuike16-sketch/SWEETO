@@ -524,9 +524,37 @@ const CheckoutPage = () => {
 
       // Open Wave payment link in a new tab if selected
       if (paymentOption === 'direct') {
-        setTimeout(() => {
+        try {
+          const res = await apiFetch('/api/payments/wave/checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: newOrderId })
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.checkoutUrl) {
+              window.location.href = data.checkoutUrl;
+              return;
+            }
+          }
+          
+          // Fallback to configured merchant payment link
+          if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
+            window.location.href = settings.wave_payment_url;
+            return;
+          }
+          
+          // Final fallback: show the manual/simulation page
           navigate(`/wave-pay/${newOrderId}`);
-        }, 500);
+        } catch (e) {
+          console.warn('Failed to start Wave session from checkout:', e);
+          if (settings?.wave_payment_url && settings.wave_payment_url.trim()) {
+            window.location.href = settings.wave_payment_url;
+          } else {
+            navigate(`/wave-pay/${newOrderId}`);
+          }
+        }
       } else {
         // Open WhatsApp to finalize checkout (use window.location for reliability)
         const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${message}`;
