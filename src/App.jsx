@@ -1326,6 +1326,19 @@ const RouteTracker = () => {
 
 function App() {
   const { loading } = useStore();
+  const [currentPath, setCurrentPath] = useState(getCurrentPath());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPath(getCurrentPath());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+    };
+  }, []);
 
   // Handle mobile hardware back button (Cordova, Capacitor, and custom Android WebViews)
   useEffect(() => {
@@ -1409,20 +1422,20 @@ function App() {
       <RealtimeNotification />
       <BackToTop />
       <SwipeGestures />
-      {getCurrentPath() === '/' && <SpinWheelWidget />}
-      {getCurrentPath() === '/' && <ScratchCardWidget />}
-      {getCurrentPath() === '/' && <SalesPopupNotifier />}
-      {getCurrentPath() === '/' && <ShoppingQuizWidget />}
-      {getCurrentPath() === '/' && <InteractiveHub />}
-      {getCurrentPath() === '/' && <LoyaltyPointsWidget />}
-      {!getCurrentPath().includes('/dashboard') && <CompareProductsDrawer />}
-      {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/product/') && !['/auth', '/login', '/register'].includes(getCurrentPath()) && <FloatingWhatsApp />}
-      {!getCurrentPath().includes('/dashboard') && <LoadingScreen isVisible={loading} />}
+      {currentPath === '/' && <SpinWheelWidget />}
+      {currentPath === '/' && <ScratchCardWidget />}
+      {currentPath === '/' && <SalesPopupNotifier />}
+      {currentPath === '/' && <ShoppingQuizWidget />}
+      {currentPath === '/' && <InteractiveHub />}
+      {currentPath === '/' && <LoyaltyPointsWidget />}
+      {!currentPath.includes('/dashboard') && <CompareProductsDrawer />}
+      {!currentPath.includes('/dashboard') && !currentPath.includes('/product/') && !['/auth', '/login', '/register'].includes(currentPath) && <FloatingWhatsApp />}
+      {!currentPath.includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>
         <ScrollToTop />
         <GlobalLightbox />
         <RouteTracker />
-        {!getCurrentPath().includes('/dashboard') && !getCurrentPath().includes('/chat') && !getCurrentPath().includes('/support') && <CustomerChatWidget />}
+        {!currentPath.includes('/dashboard') && !currentPath.includes('/chat') && !currentPath.includes('/support') && <CustomerChatWidget />}
         <Routes>
           <Route path="/" element={<Storefront />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
