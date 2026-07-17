@@ -25,7 +25,12 @@ export default function InteractiveHub() {
   };
 
   return (
-    <div ref={hubRef} className="fixed bottom-36 left-6 sm:bottom-6 sm:left-22 z-40 font-sans">
+    <motion.div
+      ref={hubRef}
+      drag
+      dragMomentum={false}
+      className="fixed bottom-36 left-6 sm:bottom-6 sm:left-22 z-40 font-sans"
+    >
       {/* Expanded Menu Container */}
       <AnimatePresence>
         {isOpen && (
@@ -122,6 +127,6 @@ export default function InteractiveHub() {
         <Gift size={20} className="animate-pulse" />
         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border border-white dark:border-slate-900 rounded-full animate-ping" />
       </motion.button>
-    </div>
+    </motion.div>
   );
 }
