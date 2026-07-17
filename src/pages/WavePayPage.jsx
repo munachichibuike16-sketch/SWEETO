@@ -170,15 +170,19 @@ const WavePayPage = () => {
           .eq('id', orderId);
         if (error) throw error;
 
-        await supabase.from('chat_messages').insert([
-          {
-            session_id: chatSid,
-            customer_name: order.customer_name,
-            customer_phone: order.customer_phone || null,
-            sender_role: 'customer',
-            message_text: `💸 [${activeOp.name} Auto-Payment]: J'ai payé ${Number(orderAmount).toLocaleString()} ${currency} pour la Commande #${orderId}. ID Transaction: ${generatedTxId}.`
-          }
-        ]).catch(err => console.warn('Could not write payment message to Chat:', err));
+        try {
+          await supabase.from('chat_messages').insert([
+            {
+              session_id: chatSid,
+              customer_name: order.customer_name,
+              customer_phone: order.customer_phone || null,
+              sender_role: 'customer',
+              message_text: `💸 [${activeOp.name} Auto-Payment]: J'ai payé ${Number(orderAmount).toLocaleString()} ${currency} pour la Commande #${orderId}. ID Transaction: ${generatedTxId}.`
+            }
+          ]);
+        } catch (chatErr) {
+          console.warn('Could not write payment message to Chat:', chatErr);
+        }
 
       } else {
         const response = await apiFetch(`/api/orders/${orderId}/confirm-payment`, {
