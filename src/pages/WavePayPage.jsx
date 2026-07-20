@@ -55,6 +55,15 @@ const WavePayPage = () => {
   }, []);
 
   useEffect(() => {
+    if (isSuccess && orderId) {
+      const timer = setTimeout(() => {
+        navigate(`/order-tracking/${orderId}`);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, orderId, navigate]);
+
+  useEffect(() => {
     const fetchOrder = async () => {
       try {
         let orderData = null;
@@ -323,11 +332,19 @@ const WavePayPage = () => {
           <p className="text-xs text-slate-400 font-bold tracking-wider uppercase mb-6">
             {lang === 'fr' ? 'Commande' : 'Order'} SWT-{orderId}
           </p>
-          <p className="text-sm text-slate-350 leading-relaxed mb-8">
+          <p className="text-sm text-slate-350 leading-relaxed mb-6">
             {lang === 'fr' ? 
               `Votre paiement via ${activeOp.name} a été validé et enregistré. L’administrateur a été notifié de votre transaction.` : 
               `Your payment via ${activeOp.name} was successfully validated and registered. The administrator has been notified of the transfer.`}
           </p>
+
+          <div className="mb-8 py-3 px-4 bg-emerald-500/10 rounded-2xl text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2">
+            <RefreshCw className="animate-spin text-emerald-400" size={12} />
+            <span>
+              {lang === 'fr' ? 'Redirection vers le suivi dans 3 secondes...' : 'Redirecting to tracking in 3 seconds...'}
+            </span>
+          </div>
+          
           {txId && (
             <div className="p-4 bg-white/5 border border-white/5 rounded-2xl mb-8">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">ID Transaction ({activeOp.name})</span>
@@ -335,21 +352,27 @@ const WavePayPage = () => {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-3">
+            <button 
+              onClick={() => navigate(`/order-tracking/${orderId}`)}
+              className="w-full bg-[#0052FF] text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] hover:bg-[#0043D0] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-lg shadow-blue-500/25"
+            >
+              {lang === 'fr' ? 'Suivre ma commande' : 'Track Order'}
+            </button>
             {waUrl && (
               <button 
                 onClick={() => window.open(waUrl, '_blank')}
-                className="w-full bg-[#25D366] text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                className="w-full bg-[#25D366] text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer border-none"
               >
                 <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.42 9.863-9.864.002-2.637-1.023-5.116-2.887-6.98C15.782 1.896 13.313.864 10.68.864 5.244.864.827 5.285.823 10.724c0 1.687.445 3.328 1.29 4.767l-.992 3.62 3.71-.973zm11.365-6.86c-.302-.15-1.786-.882-2.057-.98-.27-.1-.468-.15-.665.15-.198.3-.765.98-.937 1.18-.173.2-.347.225-.65.075-.302-.15-1.276-.47-2.43-1.498-.897-.8-1.503-1.787-1.68-2.087-.177-.3-.02-.46.13-.61.137-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.665-1.6-.91-2.187-.24-.575-.48-.5-.665-.51-.173-.007-.37-.01-.568-.01-.198 0-.52.075-.79.37-.27.3-1.035 1.01-1.035 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.085 3.18 5.05 4.464.707.306 1.258.489 1.69.626.71.226 1.356.194 1.866.118.57-.085 1.786-.73 2.037-1.435.25-.705.25-1.31.175-1.435-.075-.125-.27-.2-.57-.35z"/>
                 </svg>
-                <span>{lang === 'fr' ? 'Ouvrir WhatsApp pour Finaliser' : 'Open WhatsApp to Finalize'}</span>
+                <span>{lang === 'fr' ? 'Ouvrir WhatsApp pour finaliser' : 'Open WhatsApp to Finalize'}</span>
               </button>
             )}
             <button 
               onClick={() => navigate('/')}
-              className="w-full bg-white/10 text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] hover:bg-white/15 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full bg-white/5 border border-white/10 text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
               {lang === 'fr' ? 'Retourner à la boutique' : 'Back to Store'}
             </button>
