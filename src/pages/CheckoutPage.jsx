@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check, Truck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check, Truck, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -35,7 +35,7 @@ const CheckoutPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [waMessage, setWaMessage] = useState('');
-  const [paymentOption, setPaymentOption] = useState('direct'); // 'direct' | 'manual'
+  const [paymentOption, setPaymentOption] = useState('cod'); // 'cod' (locked method)
   const [formData, setFormData] = useState({
     name: '', phone: '', city: 'Abidjan', address: '', street: '', junction: '', landmark: ''
   });
@@ -501,11 +501,11 @@ const CheckoutPage = () => {
       let newOrderId = null;
 
       if (supabase) {
-        const { data, error } = await supabase
+        const { data, error } = await Promise.resolve(supabase
           .from('orders')
           .insert([orderPayload])
           .select()
-          .single();
+          .single());
         if (error) throw error;
         newOrderId = data?.id;
       } else {
@@ -607,10 +607,7 @@ const CheckoutPage = () => {
     } catch (err) {
       console.error('Order placement failed:', err);
       setIsProcessing(false);
-      setOrderedItems([...cartItems]);
-      setOrderTotal(grandTotal);
-      setIsSuccess(true);
-      clearCart();
+      showToast(lang === 'fr' ? 'Échec de la validation. Veuillez vérifier votre connexion et réessayer.' : 'Order placement failed. Please check your connection and try again.', 'error');
     }
   };
 
@@ -1487,110 +1484,30 @@ const CheckoutPage = () => {
                      className="space-y-6"
                    >
                      <div className="space-y-4">
-                       {/* Option A: Direct Mobile Money payment */}
-                       <div 
-                         onClick={() => setPaymentOption('direct')}
-                         className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'direct' ? 'bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/5' : 'bg-eas-light dark:bg-slate-900 border-slate-100 dark:border-white/5 hover:border-slate-350 dark:hover:border-white/10'}`}
-                       >
-                         <div className="flex items-center gap-4 animate-pulse">
-                           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${paymentOption === 'direct' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                               <path d="M4 4h6v6H4V4zm2 2v2h2V6H6zm8-2h6v6h-6V4zm2 2v2h2V6h-2zM4 14h6v6H4v-6zm2 2v2h2v-2H6zm10 0h2v2h-2v-2zm2-2h2v2h-2v-2zm-2 4h2v2h-2v-2zm2 2h2v-2h-2v2zm0-4h2v-2h-2v2zm-4-2h2v4h-2v-4zm0 6h2v-2h-2v2z"/>
-                             </svg>
-                           </div>
-                           <div className="text-left">
-                             <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                               {lang === 'fr' ? 'Paiement Mobile Money Direct' : 'Direct Mobile Money Payment'}
-                             </h5>
-                             <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
-                               {lang === 'fr' ? 'Paiement automatique instantané (Wave, Orange, MTN)' : 'Instant automated payment (Wave, Orange, MTN)'}
-                             </p>
-                           </div>
-                         </div>
-                         <div className="shrink-0 flex items-center justify-center">
-                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === 'direct' ? 'border-blue-500' : 'border-slate-300 dark:border-slate-700'}`}>
-                             {paymentOption === 'direct' && <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
-                           </div>
-                         </div>
-                       </div>
-
-                       {/* Option B: Manual Mobile Money Transfer */}
-                       <div 
-                         onClick={() => setPaymentOption('manual')}
-                         className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'manual' ? 'bg-cyan-500/10 border-cyan-500 shadow-md shadow-cyan-500/5' : 'bg-eas-light dark:bg-slate-900 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}`}
-                       >
-                         <div className="flex items-center gap-4">
-                           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${paymentOption === 'manual' ? 'bg-cyan-500 text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                             <Phone size={18} />
-                           </div>
-                           <div className="text-left">
-                             <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                               {lang === 'fr' ? 'Transfert Mobile Money Manuel' : 'Manual Mobile Money Transfer'}
-                             </h5>
-                             <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
-                               {lang === 'fr' ? 'Envoyez les fonds manuellement à nos numéros marchands' : 'Send funds manually to our merchant numbers'}
-                             </p>
-                           </div>
-                         </div>
-                         <div className="shrink-0 flex items-center justify-center">
-                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === 'manual' ? 'border-cyan-500' : 'border-slate-300 dark:border-slate-700'}`}>
-                             {paymentOption === 'manual' && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
-                           </div>
-                         </div>
-                       </div>
-
-                       {/* Manual details card (conditional) */}
-                       {paymentOption === 'manual' && (
-                         <motion.div 
-                           initial={{ opacity: 0, y: -10 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           className="p-5 rounded-[2rem] bg-cyan-500/5 border border-cyan-500/10 flex flex-col items-center gap-2.5 text-center mt-2 shadow-inner"
-                         >
-                           <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold mb-1">
-                             {lang === 'fr' ? 'Effectuez le transfert au numéro de votre choix :' : 'Please perform the transfer to the phone number of your choice:'}
-                           </p>
-                           <div className="flex flex-col gap-2 w-full max-w-xs">
-                             <span className="px-4 py-2.5 rounded-2xl text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-between">
-                               <span>Wave:</span>
-                               <span className="select-all">{settings?.wave_number || '+225 05 00 61 99 23'}</span>
-                             </span>
-                             <span className="px-4 py-2.5 rounded-2xl text-[10px] font-black bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 flex items-center justify-between">
-                               <span>Orange Money:</span>
-                               <span className="select-all">{settings?.loc_phone || '+225 07 07 07 07 07'}</span>
-                             </span>
-                             <span className="px-4 py-2.5 rounded-2xl text-[10px] font-black bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 flex items-center justify-between">
-                               <span>MTN MoMo:</span>
-                               <span className="select-all">{settings?.admin_phone || '+225 05 05 05 05 05'}</span>
-                             </span>
-                           </div>
-                         </motion.div>
-                       )}
-
-                       {/* Option C: Pay on Delivery */}
-                       <div 
-                         onClick={() => setPaymentOption('cod')}
-                         className={`p-5 rounded-[2rem] border cursor-pointer transition-all flex items-center justify-between gap-4 ${paymentOption === 'cod' ? 'bg-emerald-500/10 border-emerald-500 shadow-md shadow-emerald-500/5' : 'bg-eas-light dark:bg-slate-900 border-slate-100 dark:border-white/5 hover:border-slate-350 dark:hover:border-white/10'}`}
-                       >
-                         <div className="flex items-center gap-4">
-                           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${paymentOption === 'cod' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                             <Truck size={18} />
-                           </div>
-                           <div className="text-left">
-                             <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                               {lang === 'fr' ? 'Payer à la Livraison' : 'Pay on Delivery'}
-                             </h5>
-                             <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
-                               {lang === 'fr' ? 'Payez en espèces ou par Wave lors de la réception' : 'Pay with cash or Wave money upon receiving your order'}
-                             </p>
-                           </div>
-                         </div>
-                         <div className="shrink-0 flex items-center justify-center">
-                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentOption === 'cod' ? 'border-emerald-500' : 'border-slate-300 dark:border-slate-700'}`}>
-                             {paymentOption === 'cod' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
-                           </div>
-                         </div>
-                       </div>
-                     </div>
+                        {/* Option C: Pay on Delivery (Pre-selected / Locked) */}
+                        <div 
+                          className="p-5 rounded-[2rem] border bg-emerald-500/10 border-emerald-500 shadow-md shadow-emerald-500/5 flex items-center justify-between gap-4 select-none"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-500 text-slate-950">
+                              <Truck size={18} />
+                            </div>
+                            <div className="text-left">
+                              <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                                {lang === 'fr' ? 'Payer à la Livraison' : 'Pay on Delivery'}
+                              </h5>
+                              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold leading-normal mt-0.5">
+                                {lang === 'fr' ? 'Payez en espèces ou par Wave lors de la réception' : 'Pay with cash or Wave money upon receiving your order'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="shrink-0 flex items-center justify-center">
+                            <div className="w-5 h-5 rounded-full border-2 border-emerald-500 flex items-center justify-center">
+                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
                      {/* Terms and Conditions Checkbox */}
                      <div className="mt-8 flex items-start gap-3 p-5 bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-100 dark:border-white/5 rounded-[1.5rem] text-left shadow-sm">

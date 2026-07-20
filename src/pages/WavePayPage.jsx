@@ -65,15 +65,19 @@ const WavePayPage = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
+      if (!orderId || orderId === 'null' || orderId === 'undefined') {
+        navigate('/');
+        return;
+      }
       try {
         let orderData = null;
         
         if (supabase) {
-          const { data, error } = await supabase
+          const { data, error } = await Promise.resolve(supabase
             .from('orders')
             .select('*')
             .eq('id', orderId)
-            .single();
+            .single());
           if (!error && data) {
             orderData = data;
           }
@@ -120,11 +124,11 @@ const WavePayPage = () => {
       try {
         let orderData = null;
         if (supabase) {
-          const { data, error } = await supabase
+          const { data, error } = await Promise.resolve(supabase
             .from('orders')
             .select('*')
             .eq('id', orderId)
-            .single();
+            .single());
           if (!error && data) {
             orderData = data;
           }
@@ -223,17 +227,17 @@ const WavePayPage = () => {
 
       if (supabase) {
         const currentContact = order.customer_contact || '';
-        const { error } = await supabase
+        const { error } = await Promise.resolve(supabase
           .from('orders')
           .update({ 
             status: 'paid',
             customer_contact: currentContact ? `${currentContact} | ${activeOp.name} Tx: ${generatedTxId}` : `${activeOp.name} Tx: ${generatedTxId}`
           })
-          .eq('id', orderId);
+          .eq('id', orderId));
         if (error) throw error;
 
         try {
-          await supabase.from('chat_messages').insert([
+          await Promise.resolve(supabase.from('chat_messages').insert([
             {
               session_id: chatSid,
               customer_name: order.customer_name,
@@ -241,7 +245,7 @@ const WavePayPage = () => {
               sender_role: 'customer',
               message_text: `💸 [${activeOp.name} Auto-Payment]: J'ai payé ${Number(orderAmount).toLocaleString()} ${currency} pour la Commande #${orderId}. ID Transaction: ${generatedTxId}.`
             }
-          ]);
+          ]));
         } catch (chatErr) {
           console.warn('Could not write payment message to Chat:', chatErr);
         }
@@ -578,6 +582,20 @@ const WavePayPage = () => {
             </p>
           </div>
         )}
+
+        {/* Transaction ID input box for Manual Entry */}
+        <div className="px-8 pb-6 space-y-2 text-left">
+          <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+            {lang === 'fr' ? 'ID Transaction / Référence (Facultatif)' : 'Transaction ID / Reference (Optional)'}
+          </label>
+          <input
+            type="text"
+            placeholder={lang === 'fr' ? 'Ex: WAV-88716-XYZ' : 'e.g. WAV-88716-XYZ'}
+            value={customTxId}
+            onChange={(e) => setCustomTxId(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-inner"
+          />
+        </div>
 
         {/* Buttons Row */}
         <div className="p-8 bg-slate-50/50 dark:bg-white/2 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-3">

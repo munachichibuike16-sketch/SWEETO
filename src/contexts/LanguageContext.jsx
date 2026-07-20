@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const LanguageContext = createContext();
+const LanguageContext = createContext({
+  lang: 'fr',
+  changeLanguage: () => {},
+  t: (key) => key,
+  t_smart: (key) => key,
+  isRTL: false,
+  dir: 'ltr'
+});
 
 export const translations = {
   en: {
@@ -995,6 +1002,5 @@ export const LanguageProvider = ({ children }) => {
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (!context) throw new Error('useLanguage must be used within LanguageProvider');
   return context;
 };

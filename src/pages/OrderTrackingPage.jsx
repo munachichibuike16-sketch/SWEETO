@@ -217,7 +217,7 @@ export default function OrderTrackingPage() {
 
   // Query order and rider details
   useEffect(() => {
-    if (!currentOrderId) {
+    if (!currentOrderId || currentOrderId === 'null' || currentOrderId === 'undefined') {
       setOrder(null);
       setRider(null);
       return;
@@ -229,11 +229,11 @@ export default function OrderTrackingPage() {
         let orderData = null;
 
         if (supabase) {
-          const { data, error } = await supabase
+          const { data, error } = await Promise.resolve(supabase
             .from('orders')
             .select('*')
             .eq('id', currentOrderId)
-            .single();
+            .single());
 
           if (!error && data) {
             orderData = data;
@@ -255,11 +255,11 @@ export default function OrderTrackingPage() {
           if (orderData.delivery_agent_id) {
             let riderData = null;
             if (supabase) {
-              const { data: dbRider, error: riderErr } = await supabase
+              const { data: dbRider, error: riderErr } = await Promise.resolve(supabase
                 .from('delivery_agents')
                 .select('*')
                 .eq('id', orderData.delivery_agent_id)
-                .single();
+                .single());
               if (!riderErr && dbRider) {
                 riderData = dbRider;
               }
@@ -342,25 +342,7 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Tracking Search Input */}
-        <form onSubmit={handleSearch} className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-[2rem] p-5 mb-8 shadow-sm dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={18} />
-            <input
-              type="text"
-              placeholder={lang === 'fr' ? 'Entrez l\'ID de votre commande (ex: 5, 12, ...)' : 'Enter your Order ID (e.g. 5, 12, ...)'}
-              value={orderIdInput}
-              onChange={(e) => setOrderIdInput(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-white/5 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-eas-blue focus:bg-white transition-all"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full sm:w-auto px-10 py-4 bg-eas-blue text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all cursor-pointer shadow-lg shadow-blue-500/20 active:scale-95 shrink-0 border-none"
-          >
-            {lang === 'fr' ? 'Suivre Commande' : 'Track Package'}
-          </button>
-        </form>
+
 
         {errorMsg && (
           <div className="p-5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold text-center uppercase tracking-wider mb-8">
@@ -541,7 +523,7 @@ export default function OrderTrackingPage() {
           </div>
         ) : (
           /* Awaiting screen */
-          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-[2.5rem] p-16 text-center shadow-sm dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-6 max-w-2xl mx-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/5 rounded-[2.5rem] p-16 text-center shadow-sm dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-6 max-w-2xl mx-auto animate-fade-in">
             <div className="w-20 h-20 rounded-3xl bg-eas-blue/5 border border-eas-blue/15 flex items-center justify-center mx-auto shadow-md relative">
               <div className="absolute inset-0 bg-eas-blue/10 rounded-3xl blur-xl animate-pulse" />
               <Truck size={36} className="text-eas-blue relative animate-bounce" />
@@ -550,12 +532,18 @@ export default function OrderTrackingPage() {
               <h3 className="text-lg font-black text-slate-850 dark:text-white uppercase tracking-wider italic">
                 {lang === 'fr' ? 'Aucune commande suivie' : 'No Order Tracked'}
               </h3>
-              <p className="text-xs text-slate-450 dark:text-slate-500 max-w-md mx-auto leading-relaxed font-bold">
+              <p className="text-xs text-slate-450 dark:text-slate-500 max-w-md mx-auto leading-relaxed font-bold mb-4">
                 {lang === 'fr' 
                   ? 'Entrez l\'ID de votre commande ci-dessus pour afficher la carte en temps réel et suivre votre livreur.' 
                   : 'Enter your order identifier in the search bar above to see the real-time map and track your driver.'}
               </p>
             </div>
+            <button
+              onClick={() => navigate('/')}
+              className="px-10 py-4.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black rounded-2xl uppercase tracking-widest text-[10px] transition-all cursor-pointer border-none shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {lang === 'fr' ? 'Retourner à la boutique' : 'Back to Store'}
+            </button>
           </div>
         )}
       </main>

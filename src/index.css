@@ -323,3 +323,30 @@ button, a, .category-chip, .product-card, [role="button"] {
     font-size: 7.5px !important;
   }
 }
+
+/* Hide Google Translate dynamic elements and banners */
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body {
+  top: 0 !important;
+  position: static !important;
+}
+
+.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
