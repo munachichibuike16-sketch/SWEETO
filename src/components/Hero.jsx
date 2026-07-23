@@ -4,7 +4,7 @@ import { ArrowRight, ArrowRightCircle, ChevronLeft, ChevronRight, Image as Image
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const Hero = ({ banners, layout = 'slider' }) => {
+const Hero = ({ banners, layout = 'slider', isCategoryPage = false }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [gridMainSlide, setGridMainSlide] = useState(0);
   const { products, settings } = useStore();
@@ -492,9 +492,30 @@ const Hero = ({ banners, layout = 'slider' }) => {
       {/* Mobile Layout (< 640px) */}
       <div 
         onClick={() => handleBannerClick(slideLink)}
-        className="block sm:hidden relative w-full h-[360px] rounded-none sm:rounded-[1.8rem] bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f] text-white overflow-hidden shadow-2xl border border-white/5 cursor-pointer group"
+        className="block sm:hidden relative w-full h-[360px] rounded-none sm:rounded-[1.8rem] bg-slate-950 text-white overflow-hidden shadow-2xl border border-white/5 cursor-pointer group"
       >
-        <div className="w-full px-6 flex flex-col justify-center py-6 h-full z-10 text-left font-sans gap-3">
+        {isCategoryPage ? (
+          /* Full bleed product image background for category page slider on mobile */
+          <div className="absolute inset-0 z-0">
+            <AnimatePresence mode="sync">
+              <motion.img
+                key={currentSlide}
+                src={slideImg}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.6 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full h-full object-cover"
+                alt=""
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/25 z-10" />
+          </div>
+        ) : (
+          /* Original green-to-blue gradient for homepage on mobile */
+          <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f]" />
+        )}
+        <div className="w-full px-6 flex flex-col justify-center py-6 h-full z-10 text-left font-sans gap-3 relative">
           <div className="flex flex-col gap-2">
             {/* Mobile Tag / Badge */}
             <div className="flex sm:hidden items-center gap-1.5 bg-[#20c997]/15 border border-[#20c997]/30 text-[#3dfebc] px-3.5 py-1.5 rounded-full w-fit text-[9px] font-bold tracking-widest uppercase mb-1 select-none">

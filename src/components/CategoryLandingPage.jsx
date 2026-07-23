@@ -309,8 +309,38 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         </div>
       </div>
 
-      {/* Category Hero Banner (Dynamic Product Slider) */}
-      <Hero key={categoryName} banners={dynamicCategoryBanners} layout="slider" />
+      {/* Category Hero Banner (Dynamic Product Slider or Static Fallback) */}
+      {categoryProducts.length === 0 ? (
+        <div className="relative w-full h-[360px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] -mx-4 sm:mx-auto rounded-none sm:rounded-[2.5rem] overflow-hidden shadow-2xl flex items-center bg-slate-950 border border-white/5">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={bannerImage} 
+              alt={categoryName} 
+              className="w-full h-full object-cover opacity-70"
+            />
+            <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent z-10 pointer-events-none"></div>
+          </div>
+
+          {/* Banner Text Overlay */}
+          <div className="relative z-10 pl-6 sm:pl-10 md:pl-16 lg:pl-20 flex flex-col items-start gap-0.5 sm:gap-1 text-left">
+            {/* Angled "VIVA" Badge */}
+            <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
+              VIVA
+            </div>
+            {/* Main Title */}
+            <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none">
+              {lang === 'fr' ? `Sélection ${t_smart(categoryName)}` : `${t_smart(categoryName)} finds`}
+            </h1>
+            <p className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1">
+              {lang === 'fr' ? `Découvrez la collection ${t_smart(categoryName)} aujourd'hui` : `Discover ${t_smart(categoryName)} collection today`}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <Hero key={categoryName} banners={dynamicCategoryBanners} layout="slider" isCategoryPage={true} />
+      )}
 
       {/* Daily Deals Section */}
       {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
