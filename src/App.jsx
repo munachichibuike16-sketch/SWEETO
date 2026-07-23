@@ -269,8 +269,8 @@ const Storefront = ({ viewMode: propViewMode }) => {
 
   const renderHomepageCategoryPills = () => {
     if (!categories || categories.length === 0) return null;
-    const parentCats = categories.filter(c => !c.parent_id && c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout') || [];
-    const displayCats = parentCats.length > 0 ? parentCats : categories.slice(0, 6).filter(c => c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout');
+    const parentCats = categories.filter(c => (!c.parent_id || Number(c.level) === 1) && c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout') || [];
+    const displayCats = parentCats;
     const isAllSelected = !selectedCategory;
 
     const getCategoryEmoji = (name) => {
@@ -460,42 +460,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     };
   }, [isCartOpen, isSidebarOpen, isProductModalOpen, productId, handleProductModalClose]);
 
-  // 5. Manage history state for drawers to capture browser/physical back button (popstate)
-  useEffect(() => {
-    if (isSidebarOpen) {
-      window.history.pushState({ isSidebar: true }, '');
-    }
-    return () => {
-      if (isSidebarOpen && window.history.state?.isSidebar) {
-        window.history.back();
-      }
-    };
-  }, [isSidebarOpen]);
 
-  useEffect(() => {
-    if (isCartOpen) {
-      window.history.pushState({ isCart: true }, '');
-    }
-    return () => {
-      if (isCartOpen && window.history.state?.isCart) {
-        window.history.back();
-      }
-    };
-  }, [isCartOpen]);
-
-  useEffect(() => {
-    const handlePopState = (event) => {
-      if (isSidebarOpen) {
-        setIsSidebarOpen(false);
-      }
-      if (isCartOpen) {
-        setIsCartOpen(false);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isSidebarOpen, isCartOpen]);
 
   useEffect(() => {
     if (!searchQuery) {
@@ -1066,9 +1031,9 @@ const Storefront = ({ viewMode: propViewMode }) => {
           {!['notifications', 'orders', 'wishlist', 'visit', 'privacy', 'terms', 'security', 'refund', 'products', 'trending', 'featured', 'auth', 'login', 'signup', 'deals', 'settings'].includes(viewMode) && <DiscoveryBar />}
           
           <div className={`max-w-[1240px] mx-auto px-4 md:px-6 ${
-            (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand)
+            (viewMode === 'home' && !searchQuery && !activeCategory && !selectedBrand) || viewMode === 'deals' || activeCategory
               ? 'mt-0'
-              : (searchQuery || activeCategory || selectedBrand ? 'mt-4' : 'mt-12')
+              : (searchQuery || selectedBrand ? 'mt-4' : 'mt-12')
           }`}>
             {viewMode === 'wishlist' ? (
               <WishlistContent onProductClick={handleProductClick} />

@@ -161,12 +161,12 @@ export default function DealsContent({ onProductClick }) {
       </div>
 
       {/* Premium Choice Super Deals Hero Banner */}
-      <div className="w-full px-3 md:px-12 pt-16 pb-6 bg-slate-50 dark:bg-slate-950">
+      <div className="w-full px-0 pt-3 pb-6 bg-slate-50 dark:bg-slate-950">
         <motion.div 
-          initial={{ scale: 0.96, opacity: 0 }}
+          initial={{ scale: 0.98, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative w-full rounded-[2.2rem] bg-[#13161c] text-white overflow-hidden shadow-2xl border border-white/5 flex flex-col items-center p-6 sm:p-12 md:p-16 select-none"
+          className="relative w-full rounded-none bg-[#13161c] text-white overflow-hidden shadow-2xl border-y border-white/5 flex flex-col items-center p-6 sm:p-8 md:p-10 select-none -mx-4 sm:mx-auto"
         >
           {/* Subtle Orange/Golden radial glow on the right side */}
           <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#ffc72c]/10 to-transparent blur-3xl pointer-events-none" />

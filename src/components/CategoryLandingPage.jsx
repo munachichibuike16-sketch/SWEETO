@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ChevronRight, Package, ShoppingCart, Heart } from 'lucide-react';
+import { Zap, ChevronRight, Package, ShoppingCart, Heart, ArrowLeft } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
@@ -289,6 +289,25 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
         className="w-full flex flex-col gap-5 px-0 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
       >
+      {/* Flashy & Fantastic Back Navigation Bar */}
+      <div className="w-full -mt-3 flex items-center justify-between py-2.5 px-4 bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border-b border-slate-200/10 dark:border-white/5 select-none shrink-0 z-40">
+        {/* Glowing Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 px-4.5 py-2 rounded-full text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-[#ff2d55] via-[#8b5cf6] to-[#00f2fe] shadow-[0_4px_15px_rgba(255,45,85,0.3)] hover:shadow-[0_6px_20px_rgba(139,92,246,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 cursor-pointer border-none group"
+        >
+          <ArrowLeft size={12} strokeWidth={3} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
+          <span>{lang === 'fr' ? 'Retour' : 'Back'}</span>
+        </button>
+
+        {/* Breadcrumb Info */}
+        <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+          <span>SWEETO HUB</span>
+          <ChevronRight size={10} strokeWidth={3} />
+          <span className="text-slate-800 dark:text-slate-350">{t_smart(categoryName)}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00f2fe] animate-pulse shadow-[0_0_8px_#00f2fe] ml-0.5" />
+        </div>
+      </div>
       {/* Pull-To-Refresh Indicator (AliExpress Style) */}
       <div 
         style={{ height: `${pullDistance}px`, opacity: pullDistance > 0 ? 1 : 0 }}

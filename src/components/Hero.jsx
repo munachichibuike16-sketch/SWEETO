@@ -488,7 +488,7 @@ const Hero = ({ banners, layout = 'slider', isCategoryPage = false }) => {
   const slideLink = activeSlide?.link || (associatedProduct ? `/product/${associatedProduct.id}` : '#');
 
   return (
-    <section className="max-w-[1600px] mx-auto -mx-4 sm:mx-auto px-0 sm:px-4 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
+    <section className="max-w-[1600px] -mx-4 sm:mx-auto px-0 sm:px-4 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
       {/* Mobile Layout (< 640px) */}
       <div 
         onClick={() => handleBannerClick(slideLink)}

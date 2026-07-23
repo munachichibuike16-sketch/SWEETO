@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useStore } from '../contexts/StoreContext';
-import { useLanguage } from '../contexts/LanguageContext';
-import { ArrowRightCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
+import { ArrowRight, Truck } from 'lucide-react';
 
-export default function MobileBottomBanner({ settings, products = [], lang, t_smart }) {
+export default function MobileBottomBanner({ settings, lang, t_smart }) {
   const navigate = useNavigate();
 
   const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;
@@ -48,162 +47,90 @@ export default function MobileBottomBanner({ settings, products = [], lang, t_sm
     return () => clearInterval(timer);
   }, [settings?.mobile_bottom_banner_target_time, settings?.mobile_bottom_banner_hours, settings?.mobile_bottom_banner_minutes, settings?.mobile_bottom_banner_seconds]);
 
-  // Retrieve products for slots
-  const getProductForSlot = (slotKey) => {
-    const pId = settings?.[slotKey];
-    if (!pId) return null;
-    return products.find(p => String(p.id) === String(pId));
-  };
-
-  const prod1 = getProductForSlot('mobile_bottom_banner_slot1_product_id');
-  const prod2 = getProductForSlot('mobile_bottom_banner_slot2_product_id');
-  const prod3 = getProductForSlot('mobile_bottom_banner_slot3_product_id');
-
-  const label1 = settings?.mobile_bottom_banner_slot1_label || 'Brand gallery';
-  const label2 = settings?.mobile_bottom_banner_slot2_label || 'LILYGO';
-  const label3 = settings?.mobile_bottom_banner_slot3_label || 'OnePlus';
-
-  const bannerTitle = settings?.mobile_bottom_banner_title || 'Shop now';
-  const bannerSubtitle = settings?.mobile_bottom_banner_subtitle || 'Sale Ends in:';
-  const bannerImage = settings?.mobile_bottom_banner_image || '/hero_summer_oasis.png';
-
-  const handleProductClick = (product) => {
-    if (product?.id) {
-      navigate(`/product/${product.id}`);
-      window.scrollTo(0, 0);
-    }
-  };
-
   if (!isEnabled || timeLeft.expired) return null;
 
   return (
-    <section className="-mx-4 px-0 pt-4 pb-6 select-none block lg:hidden w-[calc(100%+32px)]">
+    <section className="-mx-4 px-4 pt-4 pb-6 select-none block lg:hidden w-[calc(100%+32px)]">
       <div 
-        onClick={() => {
-          navigate('/deals');
-        }}
-        className="relative w-full min-h-[170px] rounded-none overflow-hidden shadow-xl bg-[#007aff] flex flex-col justify-between p-4 pb-3 select-none text-white cursor-pointer"
+        className="relative w-full rounded-2xl bg-[#13161c] text-white overflow-hidden shadow-2xl border border-white/5 flex flex-col items-center p-6 select-none text-center"
       >
-        {/* Top Section: Countdown & Shop Now */}
-        <div className="flex justify-between items-start w-full z-10 text-left">
-          {/* Countdown & Action */}
-          <div className="flex flex-col gap-1 sm:gap-2">
-            {/* Countdown Title */}
-            <div className="flex items-center gap-1.5 text-white font-black text-[10px] sm:text-xs tracking-wide uppercase">
-              <span>{t_smart(bannerSubtitle)}</span>
-              <div className="flex items-center gap-0.5 sm:gap-1 font-sans">
-                <span className="bg-white text-black text-[10px] font-black px-1.5 py-0.5 rounded leading-none">
-                  {String(timeLeft.hours).padStart(2, '0')}
-                </span>
-                <span className="text-white font-bold leading-none">:</span>
-                <span className="bg-white text-black text-[10px] font-black px-1.5 py-0.5 rounded leading-none">
-                  {String(timeLeft.minutes).padStart(2, '0')}
-                </span>
-                <span className="text-white font-bold leading-none">:</span>
-                <span className="bg-white text-black text-[10px] font-black px-1.5 py-0.5 rounded leading-none">
-                  {String(timeLeft.seconds).padStart(2, '0')}
-                </span>
-              </div>
-            </div>
-            
-            {/* Shop Now Action */}
-            <div className="flex items-center gap-1.5 text-white font-black text-lg sm:text-2xl italic tracking-tighter leading-tight mt-0.5">
-              <span>{t_smart(bannerTitle)}</span>
-              <ArrowRightCircle size={18} className="text-white fill-white/20 shrink-0" />
-            </div>
-          </div>
-          
-          {/* Right Side Brand Logo / Illustration */}
-          <div className="absolute top-0 right-0 h-[65%] w-[45%] flex justify-end items-end pointer-events-none select-none z-0">
-            <img 
-              src={bannerImage} 
-              alt="" 
-              className="h-full w-auto object-contain object-bottom select-none pointer-events-none" 
-            />
-          </div>
+        {/* Subtle Orange/Golden radial glow */}
+        <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#ffc72c]/10 to-transparent blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[120px] h-[120px] bg-[#ff5722]/5 rounded-full blur-[60px] pointer-events-none" />
+
+        {/* Badge */}
+        <div className="flex items-center gap-1 bg-[#f5c71a] text-slate-950 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider select-none mb-3 shadow-[0_4px_12px_rgba(245,199,26,0.25)]">
+          <span>⚡</span>
+          <span>{lang === 'fr' ? 'Super Offres Choix' : 'Choice Super Deals'}</span>
         </div>
 
-        {/* Bottom Section: 3 Product Cards Slots */}
-        <div className="grid grid-cols-3 gap-2 mt-4 z-10">
-          {/* Slot 1 */}
-          <div 
-            onClick={(e) => {
-              if (prod1) {
-                e.stopPropagation();
-                handleProductClick(prod1);
-              }
-            }}
-            className="flex items-center bg-blue-50/90 dark:bg-slate-900/90 border border-blue-100/10 rounded-lg p-1.5 text-[9px] text-slate-800 dark:text-white font-bold h-12 shadow-sm"
-          >
-            {prod1 ? (
-              <>
-                <img 
-                  src={prod1.image_url || prod1.image} 
-                  alt="" 
-                  className="w-8 h-8 object-contain bg-white rounded flex-shrink-0"
-                />
-                <div className="flex flex-col text-left leading-none ml-1.5 overflow-hidden">
-                  <span className="text-[7.5px] opacity-75 font-medium truncate text-blue-700 dark:text-blue-400">{t_smart(label1)}</span>
-                  <span className="text-[9.5px] font-black mt-0.5 text-slate-900 dark:text-white">US ${prod1.price}</span>
-                </div>
-              </>
-            ) : (
-              <div className="w-full text-center text-[7.5px] opacity-40 font-medium">Slot 1</div>
-            )}
-          </div>
+        {/* Heading */}
+        <h3 className="text-base sm:text-lg font-black text-white leading-tight max-w-xs mb-1">
+          {lang === 'fr' ? (
+            <>Jusqu'à <span className="text-[#f5c71a]">-70%</span> sur les essentiels Tech</>
+          ) : (
+            <>Up to <span className="text-[#f5c71a]">70% OFF</span> Tech Essentials</>
+          )}
+        </h3>
 
-          {/* Slot 2 */}
-          <div 
-            onClick={(e) => {
-              if (prod2) {
-                e.stopPropagation();
-                handleProductClick(prod2);
-              }
-            }}
-            className="flex items-center bg-amber-50/95 dark:bg-slate-900/90 border border-amber-100/10 rounded-lg p-1.5 text-[9px] text-slate-800 dark:text-white font-bold h-12 shadow-sm"
-          >
-            {prod2 ? (
-              <>
-                <img 
-                  src={prod2.image_url || prod2.image} 
-                  alt="" 
-                  className="w-8 h-8 object-contain bg-white rounded flex-shrink-0"
-                />
-                <div className="flex flex-col text-left leading-none ml-1.5 overflow-hidden">
-                  <span className="text-[7.5px] opacity-75 font-medium truncate text-amber-700 dark:text-amber-450">{t_smart(label2)}</span>
-                  <span className="text-[9.5px] font-black mt-0.5 text-slate-900 dark:text-white">US ${prod2.price}</span>
-                </div>
-              </>
-            ) : (
-              <div className="w-full text-center text-[7.5px] opacity-40 font-medium">Slot 2</div>
-            )}
-          </div>
+        {/* Subheading */}
+        <p className="text-[8px] sm:text-[9px] text-white/60 max-w-xs mb-4 font-medium leading-normal">
+          {lang === 'fr' 
+            ? "Livraison gratuite dès 10$ • Garantie en 5 jours" 
+            : "Free shipping over $10 • Guaranteed 5-Day Delivery"
+          }
+        </p>
 
-          {/* Slot 3 */}
-          <div 
-            onClick={(e) => {
-              if (prod3) {
-                e.stopPropagation();
-                handleProductClick(prod3);
-              }
-            }}
-            className="flex items-center bg-rose-50/90 dark:bg-slate-900/90 border border-rose-100/10 rounded-lg p-1.5 text-[9px] text-slate-800 dark:text-white font-bold h-12 shadow-sm"
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 mb-4 w-full max-w-[280px]">
+          <button 
+            onClick={() => navigate('/deals')}
+            className="flex-1 py-2 px-3 bg-gradient-to-r from-[#ff5722] to-[#ff2a5f] text-white rounded-full font-black text-[9px] uppercase tracking-wider border-none flex items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
           >
-            {prod3 ? (
-              <>
-                <img 
-                  src={prod3.image_url || prod3.image} 
-                  alt="" 
-                  className="w-8 h-8 object-contain bg-white rounded flex-shrink-0"
-                />
-                <div className="flex flex-col text-left leading-none ml-1.5 overflow-hidden">
-                  <span className="text-[7.5px] opacity-75 font-medium truncate text-rose-700 dark:text-rose-450">{t_smart(label3)}</span>
-                  <span className="text-[9.5px] font-black mt-0.5 text-slate-900 dark:text-white">US ${prod3.price}</span>
-                </div>
-              </>
-            ) : (
-              <div className="w-full text-center text-[7.5px] opacity-40 font-medium">Slot 3</div>
-            )}
+            <span>{lang === 'fr' ? 'Acheter' : 'Shop Now'}</span>
+            <ArrowRight size={10} className="stroke-[3]" />
+          </button>
+
+          <button 
+            onClick={() => navigate('/order-tracking')}
+            className="flex-1 py-2 px-3 bg-white/5 border border-white/15 text-white rounded-full font-black text-[9px] uppercase tracking-wider flex items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
+          >
+            <Truck size={10} className="text-white/80" />
+            <span>{lang === 'fr' ? 'Suivre' : 'Track'}</span>
+          </button>
+        </div>
+
+        {/* Countdown Timer */}
+        <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 w-full max-w-[240px] flex flex-col items-center gap-1.5 shadow-md">
+          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#f5c71a]">
+            {lang === 'fr' ? 'LA VENTE FLASH SE TERMINE DANS' : 'FLASH SALE ENDS IN'}
+          </span>
+          
+          <div className="flex items-center gap-2 text-white select-none">
+            <div className="flex flex-col items-center">
+              <div className="bg-[#0b0f19] border border-white/5 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-mono font-black text-[#f5c71a] shadow-inner">
+                {String(timeLeft.hours).padStart(2, '0')}
+              </div>
+              <span className="text-[6px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">HRS</span>
+            </div>
+            
+            <span className="text-xs font-black text-[#f5c71a] -mt-2.5">:</span>
+            
+            <div className="flex flex-col items-center">
+              <div className="bg-[#0b0f19] border border-white/5 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-mono font-black text-[#f5c71a] shadow-inner">
+                {String(timeLeft.minutes).padStart(2, '0')}
+              </div>
+              <span className="text-[6px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">MIN</span>
+            </div>
+            
+            <span className="text-xs font-black text-[#f5c71a] -mt-2.5">:</span>
+            
+            <div className="flex flex-col items-center">
+              <div className="bg-[#0b0f19] border border-white/5 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-mono font-black text-red-500 shadow-inner animate-pulse">
+                {String(timeLeft.seconds).padStart(2, '0')}
+              </div>
+              <span className="text-[6px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">SEC</span>
+            </div>
           </div>
         </div>
       </div>

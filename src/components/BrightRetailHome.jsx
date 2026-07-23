@@ -409,11 +409,8 @@ export default function BrightRetailHome({ onProductClick }) {
 
   const renderParentCategoriesPills = () => {
     if (!categories || categories.length === 0) return null;
-    const parentCats = categories.filter(c => !c.parent_id && c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout') || [];
-    
-    // Fallback to first 6 categories if no parent categories are explicitly designated
-    const displayCats = parentCats.length > 0 ? parentCats : categories.slice(0, 6).filter(c => c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout');
-
+    const parentCats = categories.filter(c => (!c.parent_id || Number(c.level) === 1) && c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout') || [];
+    const displayCats = parentCats;
     const isAllSelected = !selectedCategory;
 
     const getCategoryEmoji = (name) => {
