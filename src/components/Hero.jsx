@@ -489,69 +489,50 @@ const Hero = ({ banners, layout = 'slider' }) => {
 
   return (
     <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
+      {/* Mobile Layout (< 640px) */}
       <div 
         onClick={() => handleBannerClick(slideLink)}
-        className="relative w-full h-[360px] sm:h-[240px] md:h-[280px] lg:h-[320px] rounded-[1.8rem] sm:rounded-[2.5rem] bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f] sm:bg-[#1e2530] sm:from-transparent sm:to-transparent text-white overflow-hidden shadow-2xl flex flex-row items-center border border-white/5 cursor-pointer group"
+        className="block sm:hidden relative w-full h-[360px] rounded-[1.8rem] bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f] text-white overflow-hidden shadow-2xl border border-white/5 cursor-pointer group"
       >
-        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none hidden sm:block" />
-
-        <div className="w-full sm:w-[60%] lg:w-[55%] px-6 sm:px-0 sm:pl-10 md:pl-14 flex flex-col justify-center py-6 sm:py-8 h-full z-10 text-left font-sans gap-3 sm:gap-2">
-          <div className="flex flex-col gap-2 sm:gap-2">
+        <div className="w-full px-6 flex flex-col justify-center py-6 h-full z-10 text-left font-sans gap-3">
+          <div className="flex flex-col gap-2">
             {/* Mobile Tag / Badge */}
             <div className="flex sm:hidden items-center gap-1.5 bg-[#20c997]/15 border border-[#20c997]/30 text-[#3dfebc] px-3.5 py-1.5 rounded-full w-fit text-[9px] font-bold tracking-widest uppercase mb-1 select-none">
               <span>✨</span>
               <span>{slideBrand || 'WEARABLE ECOSYSTEM'}</span>
             </div>
-
-            {/* Desktop Brand Text */}
-            <span className="hidden sm:inline-block text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
-              {slideBrand}
-            </span>
             
             <AnimatePresence mode="wait">
               <motion.h1 
-                key={`title-${currentSlide}`}
+                key={`title-mob-${currentSlide}`}
                 initial={{ y: 15, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -15, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="text-2xl sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight tracking-tight max-w-[95%] line-clamp-2 font-sans normal-case sm:uppercase sm:italic"
+                className="text-2xl font-black text-white leading-tight tracking-tight max-w-[95%] line-clamp-2 font-sans normal-case"
               >
                 {t_smart(slideTitle)}
               </motion.h1>
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
-              <motion.div
-                key={`price-${currentSlide}`}
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -10, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="hidden sm:block text-[10px] sm:text-base md:text-xl lg:text-2xl font-black text-[#8b5cf6] tracking-tight leading-none"
-              >
-                {slidePrice ? `${settings?.currency || 'FCFA'} ${Number(slidePrice).toLocaleString()}` : ''}
-              </motion.div>
-            </AnimatePresence>
-            
-            <AnimatePresence mode="wait">
               <motion.p 
-                key={`desc-${currentSlide}`}
+                key={`desc-mob-${currentSlide}`}
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -10, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="text-[11px] sm:text-xs md:text-sm font-normal sm:font-medium text-white/80 sm:text-slate-300 leading-relaxed max-w-[95%] sm:max-w-[90%] line-clamp-3 sm:line-clamp-2"
+                className="text-[11px] font-normal text-white/80 leading-relaxed max-w-[95%] line-clamp-3"
               >
                 {t_smart(slideDesc)}
               </motion.p>
             </AnimatePresence>
           </div>
 
-          <div className="mt-2 sm:mt-4 flex">
+          <div className="mt-2 flex">
             <button 
               onClick={(e) => { e.stopPropagation(); handleBannerClick(slideLink); }}
-              className="px-4 py-2.5 sm:px-6 sm:py-3 bg-[#20c997] sm:bg-[#7c3aed] hover:bg-[#1ab288] sm:hover:bg-[#6d28d9] text-black sm:text-white rounded-xl sm:rounded-2xl font-bold sm:font-black text-xs sm:text-[10px] normal-case sm:uppercase tracking-wider sm:tracking-widest transition-all shadow-[0_4px_15px_rgba(32,201,151,0.2)] sm:shadow-[0_4px_15px_rgba(124,58,237,0.3)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
+              className="px-4 py-2.5 bg-[#20c997] hover:bg-[#1ab288] text-black rounded-xl font-bold text-xs normal-case tracking-wider transition-all shadow-[0_4px_15px_rgba(32,201,151,0.2)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
             >
               <span>
                 {slideBrand?.toLowerCase().includes('wearable') 
@@ -560,39 +541,18 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   ? 'View Watches'
                   : (t('view_details') || 'View Details')}
               </span>
-              <span className="w-5 h-5 rounded-full bg-black flex items-center justify-center sm:hidden shrink-0">
+              <span className="w-5 h-5 rounded-full bg-black flex items-center justify-center shrink-0">
                 <ChevronRight size={10} className="text-white" strokeWidth={3} />
               </span>
-              <Eye size={12} className="hidden sm:block sm:size-14" />
             </button>
           </div>
         </div>
 
-        <div className="hidden sm:flex w-[35%] sm:w-[40%] lg:w-[45%] h-full items-center justify-center pr-6 sm:pr-10 relative overflow-hidden z-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSlide}
-              initial={{ scale: 0.94, opacity: 0, x: 20 }}
-              animate={{ scale: 1, opacity: 1, x: 0 }}
-              exit={{ scale: 0.94, opacity: 0, x: 20 }}
-              transition={{ duration: 0.4 }}
-              className="relative w-full h-4/5 flex items-center justify-center"
-            >
-              <div className="absolute w-[120px] h-[120px] sm:w-[200px] sm:h-[200px] bg-[#8b5cf6]/15 rounded-full blur-[40px] pointer-events-none" />
-              <img 
-                src={slideImg} 
-                alt="" 
-                className="max-h-[80%] max-w-full object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform duration-[1200ms] ease-out select-none pointer-events-none"
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Mobile Navigation Dots (Mockup Style, inside card) */}
+        {/* Mobile Navigation Dots inside card */}
         {displayBanners.length > 1 && (
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex sm:hidden items-center justify-center gap-1.5 z-20 select-none"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 z-20 select-none"
           >
             {displayBanners.map((_, idx) => {
               const isActive = idx === currentSlide;
@@ -601,9 +561,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
                   className={`transition-all duration-300 rounded-full cursor-pointer border-none p-0 ${
-                    isActive 
-                      ? 'w-5 h-1.5 bg-white' 
-                      : 'w-1.5 h-1.5 bg-white/45 hover:bg-white/70'
+                    isActive ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/45'
                   }`}
                   title={`Go to slide ${idx + 1}`}
                 />
@@ -612,18 +570,18 @@ const Hero = ({ banners, layout = 'slider' }) => {
           </div>
         )}
 
-        {/* Mobile Faint Navigation Arrows (Mockup Style) */}
+        {/* Mobile Faint Navigation Arrows */}
         {displayBanners.length > 1 && (
           <>
             <button 
               onClick={(e) => { e.stopPropagation(); prevSlide(); }}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex sm:hidden items-center justify-center bg-black/5 hover:bg-black/10 text-white/20 hover:text-white/40 transition-all border-none cursor-pointer z-20"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 text-white/20 hover:text-white/40 transition-all border-none cursor-pointer z-20"
             >
               <ChevronLeft size={16} strokeWidth={2.5} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); nextSlide(); }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex sm:hidden items-center justify-center bg-black/5 hover:bg-black/10 text-white/20 hover:text-white/40 transition-all border-none cursor-pointer z-20"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 text-white/20 hover:text-white/40 transition-all border-none cursor-pointer z-20"
             >
               <ChevronRight size={16} strokeWidth={2.5} />
             </button>
@@ -631,26 +589,132 @@ const Hero = ({ banners, layout = 'slider' }) => {
         )}
       </div>
 
-      {/* Desktop Navigation Dots */}
-      {displayBanners.length > 1 && (
-        <div className="hidden sm:flex items-center justify-center gap-2 mt-4 select-none">
-          {displayBanners.map((_, idx) => {
-            const isActive = idx === currentSlide;
-            return (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`transition-all duration-300 rounded-full cursor-pointer border-none p-0 ${
-                  isActive 
-                    ? 'w-6 h-1.5 bg-[#8b5cf6]' 
-                    : 'w-1.5 h-1.5 bg-slate-600/40 dark:bg-slate-700/60 hover:bg-slate-400'
-                }`}
-                title={`Go to slide ${idx + 1}`}
-              />
-            );
-          })}
+      {/* Advanced Desktop Layout (>= 640px) */}
+      <div 
+        onClick={() => handleBannerClick(slideLink)}
+        className="hidden sm:block relative w-full h-[240px] md:h-[280px] lg:h-[360px] xl:h-[420px] rounded-[2.5rem] bg-slate-950 text-white overflow-hidden shadow-2xl border border-white/5 cursor-pointer group"
+      >
+        {/* Full-bleed Background image */}
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence mode="sync">
+            <motion.img
+              key={currentSlide}
+              src={slideImg}
+              initial={{ opacity: 0, scale: 1.03 }}
+              animate={{ opacity: 0.7, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+              className="w-full h-full object-cover transition-transform duration-[1200ms] group-hover:scale-[1.01]"
+              alt=""
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-black/20 z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent z-10 pointer-events-none" />
         </div>
-      )}
+
+        {/* Floating Glassmorphic Details Card */}
+        <div className="absolute left-8 lg:left-14 top-1/2 -translate-y-1/2 w-[450px] lg:w-[480px] bg-slate-950/60 backdrop-blur-xl rounded-[2rem] p-6 lg:p-8 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-20 flex flex-col gap-3 hover:border-white/20 transition-all duration-500">
+          <div className="absolute -top-12 -left-12 w-[180px] h-[180px] bg-violet-600/10 rounded-full blur-[60px] pointer-events-none" />
+          <div className="absolute -bottom-12 -right-12 w-[180px] h-[180px] bg-cyan-500/5 rounded-full blur-[60px] pointer-events-none" />
+
+          <div className="flex flex-col gap-1.5 z-10">
+            {/* Category / Brand Chip */}
+            <div className="flex items-center gap-1.5 bg-white/10 border border-white/15 text-[#00f2fe] px-3 py-1 rounded-full w-fit text-[9px] font-black uppercase tracking-[0.2em] select-none backdrop-blur-md">
+              <span>✨</span>
+              <span>{slideBrand}</span>
+            </div>
+            
+            <AnimatePresence mode="wait">
+              <motion.h1 
+                key={`title-desk-${currentSlide}`}
+                initial={{ y: 15, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -15, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white leading-tight tracking-tight uppercase italic"
+              >
+                {t_smart(slideTitle)}
+              </motion.h1>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`price-desk-${currentSlide}`}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-sm lg:text-lg xl:text-xl font-black bg-gradient-to-r from-[#00f2fe] to-[#8b5cf6] bg-clip-text text-transparent drop-shadow-sm leading-none"
+              >
+                {slidePrice ? `${settings?.currency || 'FCFA'} ${Number(slidePrice).toLocaleString()}` : ''}
+              </motion.div>
+            </AnimatePresence>
+            
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={`desc-desk-${currentSlide}`}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-[11px] lg:text-xs text-slate-300 font-medium leading-relaxed max-w-[95%] line-clamp-2 lg:line-clamp-3"
+              >
+                {t_smart(slideDesc)}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          <div className="mt-1 flex z-10">
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleBannerClick(slideLink); }}
+              className="px-5 py-3 bg-gradient-to-r from-[#7c3aed] to-[#00f2fe] hover:from-[#6d28d9] hover:to-[#00d8e6] text-white rounded-xl font-black text-[9px] uppercase tracking-widest transition-all duration-300 shadow-[0_4px_15px_rgba(124,58,237,0.3)] hover:shadow-[0_6px_22px_rgba(0,242,254,0.45)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
+            >
+              <Eye size={12} className="animate-pulse" />
+              <span>{t('view_details') || 'View Details'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Navigation Chevrons */}
+        {displayBanners.length > 1 && (
+          <>
+            <button 
+              onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center bg-black/20 hover:bg-black/35 border border-white/10 text-white/40 hover:text-white/80 transition-all z-20 cursor-pointer"
+            >
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center bg-black/20 hover:bg-black/35 border border-white/10 text-white/40 hover:text-white/80 transition-all z-20 cursor-pointer"
+            >
+              <ChevronRight size={20} strokeWidth={2.5} />
+            </button>
+          </>
+        )}
+
+        {/* Desktop Navigation Dots inside card */}
+        {displayBanners.length > 1 && (
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 z-25 bg-black/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/5 shadow-inner"
+          >
+            {displayBanners.map((_, idx) => {
+              const isActive = idx === currentSlide;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`transition-all duration-300 rounded-full cursor-pointer border-none p-0 ${
+                    isActive ? 'w-5 h-1.5 bg-[#00f2fe]' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
+                  }`}
+                  title={`Go to slide ${idx + 1}`}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 };
