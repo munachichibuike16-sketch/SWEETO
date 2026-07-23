@@ -267,6 +267,59 @@ const Storefront = ({ viewMode: propViewMode }) => {
   const { products: liveProducts, categories, searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
   const { t, t_smart, lang } = useLanguage();
 
+  const renderHomepageCategoryPills = () => {
+    if (!categories || categories.length === 0) return null;
+    const parentCats = categories.filter(c => !c.parent_id && c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout') || [];
+    const displayCats = parentCats.length > 0 ? parentCats : categories.slice(0, 6).filter(c => c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout');
+    const isAllSelected = !selectedCategory;
+
+    return (
+      <div className="max-w-[1240px] mx-auto w-full px-4 sm:px-6 lg:px-8 select-none mt-0 sm:mt-4 mb-2">
+        <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1 scroll-smooth w-full">
+          {/* All Items Button - Red pill if active, gray pill if not */}
+          <button
+            onClick={() => {
+              setSelectedCategory(null);
+              setSelectedBrand(null);
+              setSearchQuery('');
+              navigate('/');
+            }}
+            className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer border-none flex items-center justify-center min-h-[38px] leading-none ${
+              isAllSelected 
+                ? 'bg-[#ff2d55] text-white shadow-md' 
+                : 'bg-[#f1f5f9] dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 shadow-sm hover:bg-slate-200/60 dark:hover:bg-slate-800'
+            }`}
+          >
+            {lang === 'fr' ? 'Tous articles' : 'All Items'}
+          </button>
+
+          {/* Individual Category Buttons */}
+          {displayCats.map(cat => {
+            const isSelected = selectedCategory === cat.name;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.name);
+                  setSelectedBrand(null);
+                  setSearchQuery('');
+                  navigate(`/category/${encodeURIComponent(cat.name)}`);
+                }}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer border-none flex items-center justify-center min-h-[38px] leading-none normal-case ${
+                  isSelected 
+                    ? 'bg-[#ff2d55] text-white shadow-md' 
+                    : 'bg-[#f1f5f9] dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 shadow-sm hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                }`}
+              >
+                {t_smart(cat.name)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const shuffledActiveProducts = useMemo(() => {
     const list = liveProducts?.filter(p => p.status === 'active' && p.stock > 0) || [];
     const seed = Math.floor(Date.now() / (30 * 60 * 1000));
@@ -1037,6 +1090,9 @@ const Storefront = ({ viewMode: propViewMode }) => {
                           }
                         })()}
                       </div>
+
+                      {/* Parent Category Pills */}
+                      {renderHomepageCategoryPills()}
 
                       {/* Today's Offers (Deal of the Day) */}
                       <DealOfTheDaySection 
