@@ -488,11 +488,11 @@ const Hero = ({ banners, layout = 'slider' }) => {
   const slideLink = activeSlide?.link || (associatedProduct ? `/product/${associatedProduct.id}` : '#');
 
   return (
-    <section className="max-w-[1600px] mx-auto px-0 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
+    <section className="max-w-[1600px] mx-auto -mx-4 sm:mx-auto px-0 sm:px-4 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
       {/* Mobile Layout (< 640px) */}
       <div 
         onClick={() => handleBannerClick(slideLink)}
-        className="block sm:hidden relative w-full h-[360px] rounded-[1.8rem] bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f] text-white overflow-hidden shadow-2xl border border-white/5 cursor-pointer group"
+        className="block sm:hidden relative w-full h-[360px] rounded-none sm:rounded-[1.8rem] bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f] text-white overflow-hidden shadow-2xl border border-white/5 cursor-pointer group"
       >
         <div className="w-full px-6 flex flex-col justify-center py-6 h-full z-10 text-left font-sans gap-3">
           <div className="flex flex-col gap-2">
