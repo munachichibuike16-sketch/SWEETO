@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowRightCircle, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { ArrowRight, ArrowRightCircle, ChevronLeft, ChevronRight, Image as ImageIcon, Eye } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -79,10 +79,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
     return products?.filter(p => p.status === 'active' && p.stock > 0) || [];
   }, [products]);
 
-  const dealProduct1 = activeProducts[0] || { name: 'Smart Phone', price: 1.36, image_url: '/hero-banner.png' };
-  const dealProduct2 = activeProducts[1] || { name: 'DOOGEE Phone', price: 863.71, image_url: '/hero-banner.png' };
-
-
   // 1. Parse Settings Banners
   const parsedSettingsBanners = typeof banners === 'string' ? JSON.parse(banners) : (banners || []);
   
@@ -93,11 +89,13 @@ const Hero = ({ banners, layout = 'slider' }) => {
   const featuredProducts = products.filter(p => Number(p.is_featured) === 1).sort((a, b) => b.id - a.id).slice(0, 5);
   const productBanners = featuredProducts.map(p => ({
     id: p.id,
-    title: t_smart(p.name),
-    subtitle: t_smart(p.description) || t('big_performance_sleek_design'),
+    title: p.name,
+    subtitle: p.description || t('big_performance_sleek_design'),
     image: p.image_url || p.image || '/hero-banner.png',
     link: `/product/${p.id}`,
-    price: p.price
+    price: p.price,
+    brand: p.brand || 'SWEETO',
+    product_id: p.id
   }));
 
   // 4. Combine: Prioritize Manual Banners if they exist and are populated
@@ -136,103 +134,16 @@ const Hero = ({ banners, layout = 'slider' }) => {
     }
   }, [layout, products.length]);
 
-  if (!isMobile) {
-    if (layout !== 'grid' && timeLeft.expired) {
-      return null;
-    }
-    return (
-      <section className="w-full px-4 md:px-10 pt-3 pb-2 select-none bg-transparent">
-        <div 
-          onClick={() => handleBannerClick(displayBanners[currentSlide]?.link || '/deals')}
-          className="relative w-full h-[150px] sm:h-[220px] md:h-[240px] rounded-2xl overflow-hidden shadow-lg bg-[#007aff] flex flex-row items-center justify-between select-none cursor-pointer"
-        >
-          {/* Left Side Info */}
-          <div className="w-[60%] pl-5 sm:pl-8 flex flex-col justify-between py-4 sm:py-6 h-full text-white z-10 text-left">
-            <div className="flex flex-col gap-1.5 sm:gap-2.5">
-              {/* Countdown */}
-              <div className="flex items-center gap-1.5 text-white font-bold text-[9px] sm:text-[11px] tracking-wide">
-                <span>{lang === 'fr' ? 'Fin de la promo dans :' : 'End of promo in:'}</span>
-                <div className="flex items-center gap-0.5 sm:gap-1 font-sans">
-                  <span className="bg-white text-black text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-                  <span className="text-white font-bold leading-none">:</span>
-                  <span className="bg-white text-black text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                  <span className="text-white font-bold leading-none">:</span>
-                  <span className="bg-white text-black text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                </div>
-              </div>
-              
-              {/* Headline */}
-              <div className="flex items-center gap-1 text-white font-black text-base sm:text-2xl md:text-3xl italic tracking-tighter leading-tight">
-                <span>{lang === 'fr' ? 'Faites vos achats sans souci' : 'Shop worry-free'}</span>
-                <ArrowRightCircle size={18} className="text-white fill-white/20 shrink-0" />
-              </div>
-            </div>
-
-            {/* Slashed Coupon Card & Product Deal slots */}
-            <div className="flex items-center gap-2 mt-auto">
-              {/* Coupon */}
-              <div className="relative px-3 py-1.5 bg-white rounded-lg border border-red-105 flex items-center gap-2 text-center shadow-md select-none text-red-500 font-black text-[9px] sm:text-[10px] leading-none">
-                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#007aff] rounded-full"></div>
-                <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#007aff] rounded-full"></div>
-                <span>-US $4 Coupon</span>
-              </div>
-              
-              {/* Brands slot */}
-              <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-1 text-[10px] text-white font-bold pl-2 pr-3">
-                <img 
-                  src={dealProduct1.image_url} 
-                  alt="" 
-                  className="w-6 h-6 object-contain bg-white rounded"
-                />
-                <div className="flex flex-col text-left leading-none">
-                  <span className="text-[8px] opacity-75">{lang === 'fr' ? 'Galerie des marques' : 'Brand gallery'}</span>
-                  <span className="text-[10px] font-black mt-0.5">US ${dealProduct1.price}</span>
-                </div>
-              </div>
-
-              {/* DOOGEE slot */}
-              <div className="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-1 text-[10px] text-white font-bold pl-2 pr-3">
-                <img 
-                  src={dealProduct2.image_url} 
-                  alt="" 
-                  className="w-6 h-6 object-contain bg-white rounded"
-                />
-                <div className="flex flex-col text-left leading-none">
-                  <span className="text-[8px] opacity-75">DOOGEE</span>
-                  <span className="text-[10px] font-black mt-0.5">US ${dealProduct2.price}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side Illustration */}
-          <div className="w-[40%] h-full flex flex-col justify-between items-end relative overflow-hidden">
-            <div className="pt-4 pr-5 sm:pr-8 text-white font-black text-sm sm:text-xl md:text-2xl tracking-tight leading-none text-right z-10 italic">
-              {lang === 'fr' ? 'Plaisir d\'été' : 'Summer pleasure'}
-            </div>
-            <div className="absolute bottom-0 right-0 h-[85%] w-full flex justify-end items-end pointer-events-none select-none z-0">
-              <img 
-                src="/hero_summer_oasis.png" 
-                alt="" 
-                className="h-[95%] w-auto object-contain object-bottom select-none pointer-events-none" 
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
+  // Grid Layout logic
   if (layout === 'grid') {
-    // Main: auto-cycles through ALL active products
     const activeProducts = products.filter(p => p.status !== 'draft');
     const mainProduct = activeProducts.length > 0
       ? activeProducts[gridMainSlide % activeProducts.length]
       : null;
     const mainSlot = mainProduct
       ? {
-          title: t_smart(mainProduct.name),
-          subtitle: t_smart(mainProduct.description) || mainProduct.category || '',
+          title: mainProduct.name,
+          subtitle: mainProduct.description || mainProduct.category || '',
           image: mainProduct.image_url || mainProduct.image || '',
           link: `/product/${mainProduct.id}`,
           price: mainProduct.price,
@@ -240,32 +151,23 @@ const Hero = ({ banners, layout = 'slider' }) => {
         }
       : (displayBanners[0] || {});
 
-    // Side A and Side B are the 2 products the admin picked
     const sideA = parsedSettingsBanners[0] || null;
     const sideB = parsedSettingsBanners[1] || null;
-
     const gridStyle = settings?.hero_grid_style || 'cover';
 
     if (gridStyle === 'glass') {
       return (
         <section className="max-w-[1600px] mx-auto -mx-4 md:mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 lg:h-[600px]">
-            {/* Main Large Banner — auto-cycles all products */}
             <div 
               onClick={() => handleBannerClick(mainSlot.link)}
-              className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-row items-center p-5 sm:p-10 md:p-16 gap-6 md:gap-10 group cursor-pointer"
+              className="lg:col-span-8 h-[360px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-gradient-to-br from-[#0c162b] via-[#020617] to-[#080f20] shadow-[0_30px_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-row items-center p-5 sm:p-10 md:p-16 gap-6 md:gap-10 group cursor-pointer"
             >
-              
-              {/* Ambient Background Light Spot */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[350px] sm:h-[350px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-              {/* Left Content Area */}
               <div className="flex-1 flex flex-col justify-center relative z-10 w-full text-left">
-                {/* Angled "VIVA" Badge */}
                 <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
                   VIVA
                 </div>
-                
                 <AnimatePresence mode="wait">
                   <motion.h2
                     key={`title-${gridMainSlide}`}
@@ -278,7 +180,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     {t_smart(mainSlot.title)}
                   </motion.h2>
                 </AnimatePresence>
-                
                 <AnimatePresence mode="wait">
                   <motion.p
                     key={`desc-${gridMainSlide}`}
@@ -292,8 +193,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   </motion.p>
                 </AnimatePresence>
               </div>
-
-              {/* Right Product Image Area — Structured Glass Showcase Frame */}
               <div className="hidden sm:flex flex-1 justify-center items-center relative h-full w-full z-10">
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -304,12 +203,9 @@ const Hero = ({ banners, layout = 'slider' }) => {
                     transition={{ duration: 0.5 }}
                     className="relative w-full h-full flex justify-center items-center"
                   >
-                    {/* Glowing halo behind studio frame */}
                     <div className="absolute w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] bg-eas-blue/20 rounded-full blur-3xl opacity-60 group-hover:scale-110 transition-transform duration-700" />
-                    
                     {mainSlot.image ? (
                       <div className="relative p-3 md:p-6 bg-slate-900/60 backdrop-blur-md rounded-[1.8rem] sm:rounded-[2.5rem] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.4)] group-hover:border-white/20 transition-all duration-500 overflow-hidden flex items-center justify-center max-w-[220px] sm:max-w-[280px] md:max-w-[340px] aspect-square w-full">
-                        {/* Internal glossy highlight */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent pointer-events-none" />
                         <img
                           src={mainSlot.image}
@@ -322,7 +218,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                         <ImageIcon className="text-slate-600" size={24}/>
                       </div>
                     )}
-
                     {mainSlot.discount > 0 && (
                       <div className="absolute top-0 right-0 md:top-4 md:right-4 bg-[#ff3b30] text-white text-[9px] font-black px-3.5 py-1.5 rounded-full shadow-[0_8px_20px_rgba(255,59,48,0.3)] z-20">
                         -{mainSlot.discount}%
@@ -331,8 +226,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   </motion.div>
                 </AnimatePresence>
               </div>
-
-              {/* Slide Navigation Pill Capsule (Bottom Center) */}
               {activeProducts.length > 1 && (
                 <div 
                   onClick={(e) => e.stopPropagation()}
@@ -344,7 +237,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   >
                     <ChevronLeft size={14} sm:size={16} strokeWidth={3} />
                   </button>
-                  
                   <button 
                     onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev + 1) % activeProducts.length); }} 
                     className="text-white hover:text-blue-400 transition-colors p-1"
@@ -354,18 +246,13 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 </div>
               )}
             </div>
-
-            {/* Right Column — Side A & Side B Bento Panels */}
             <div className="hidden lg:flex lg:col-span-4 flex-col gap-4 sm:gap-8 h-auto lg:h-full">
-              
-              {/* Side A Banner */}
               <div 
                 onClick={() => sideA && handleBannerClick(sideA.link)}
                 className="flex-1 bg-gradient-to-br from-[#0b1424] to-[#020617] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/5 p-5 md:p-8 flex items-center gap-4 hover:border-white/10 transition-all duration-300 min-h-[140px] cursor-pointer"
               >
                 {sideA ? (
                   <>
-                    {/* Left Column Text */}
                     <div className="flex-[3] flex flex-col justify-center h-full relative z-10 text-left">
                       <span className="text-[8px] font-black text-eas-blue uppercase tracking-[0.2em] mb-1.5">{t_smart(sideA.subtitle) || t('exclusive_deal')}</span>
                       <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{t_smart(sideA.title)}</h3>
@@ -376,7 +263,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                         {t('view_product')}
                       </button>
                     </div>
-                    {/* Right Column Structured Studio Image Frame */}
                     <div className="flex-[2] flex justify-center items-center h-full relative z-10">
                       {sideA.image ? (
                         <div className="relative p-2 bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden aspect-square w-[80px] sm:w-[110px] flex items-center justify-center shadow-lg group-hover:border-white/20 transition-all">
@@ -393,15 +279,12 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   </div>
                 )}
               </div>
-
-              {/* Side B Banner */}
               <div 
                 onClick={() => sideB && handleBannerClick(sideB.link)}
                 className="flex-1 bg-[#0f111a] rounded-3xl relative overflow-hidden group shadow-2xl p-5 md:p-8 flex items-center gap-4 hover:shadow-blue-500/10 transition-shadow border border-white/5 hover:border-white/10 min-h-[140px] cursor-pointer"
               >
                 {sideB ? (
                   <>
-                    {/* Left Column Text */}
                     <div className="flex-[3] flex flex-col justify-center h-full relative z-10 text-left">
                       <span className="text-[8px] font-black text-white/70 uppercase tracking-[0.2em] mb-1.5">{t_smart(sideB.subtitle) || t('special_offer')}</span>
                       <h3 className="text-base md:text-xl font-black text-white mb-4 uppercase italic tracking-tighter line-clamp-2 leading-tight">{t_smart(sideB.title)}</h3>
@@ -412,7 +295,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                         {t('claim_offer')}
                       </button>
                     </div>
-                    {/* Right Column Structured Studio Image Frame */}
                     <div className="flex-[2] flex justify-center items-center h-full relative z-10">
                       {sideB.image ? (
                         <div className="relative p-2 bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden aspect-square w-[80px] sm:w-[110px] flex items-center justify-center shadow-lg group-hover:border-white/20 transition-all">
@@ -429,24 +311,20 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   </div>
                 )}
               </div>
-
             </div>
           </div>
         </section>
       );
     }
 
-    // Default: Full-Bleed Cover style (Immersive fullscreen)
+    // Default Full-Bleed Cover style (Immersive fullscreen)
     return (
       <section className="max-w-[1600px] mx-auto -mx-4 md:mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[600px]">
-           {/* 1. Main Large Banner — Full-Bleed Studio Showcase */}
           <div 
             onClick={() => handleBannerClick(mainSlot.link)}
-            className="lg:col-span-8 h-[140px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-slate-950 shadow-2xl border border-white/5 group cursor-pointer"
+            className="lg:col-span-8 h-[360px] sm:h-[220px] md:h-[300px] lg:h-full relative rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden bg-slate-950 shadow-2xl border border-white/5 group cursor-pointer"
           >
-            
-            {/* Full Bleed Image (Vivid 100% Opacity) */}
             {mainSlot.image && (
               <AnimatePresence mode="sync">
                 <motion.img
@@ -461,18 +339,12 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 />
               </AnimatePresence>
             )}
-
-            {/* Left Dark Gradient Overlay for perfect text contrast */}
             <div className="absolute inset-0 bg-black/30 z-10 pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/30 to-transparent z-10 pointer-events-none" />
-
-            {/* Content Overlays */}
             <div className="absolute inset-0 pl-6 sm:pl-10 md:pl-16 lg:pl-20 flex flex-col justify-center items-start gap-0.5 sm:gap-1 max-w-lg md:max-w-2xl z-20 text-left">
-              {/* Angled "VIVA" Badge */}
               <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
                 VIVA
               </div>
-              
               <AnimatePresence mode="wait">
                 <motion.h2
                   key={`title-${gridMainSlide}`}
@@ -485,7 +357,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   {t_smart(mainSlot.title)}
                 </motion.h2>
               </AnimatePresence>
-              
               <AnimatePresence mode="wait">
                 <motion.p
                   key={`desc-${gridMainSlide}`}
@@ -499,8 +370,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 </motion.p>
               </AnimatePresence>
             </div>
-
-            {/* Slide Navigation Pill Capsule (Bottom Center) */}
             {activeProducts.length > 1 && (
               <div 
                 onClick={(e) => e.stopPropagation()}
@@ -512,7 +381,6 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 >
                   <ChevronLeft size={16} strokeWidth={3} />
                 </button>
-                
                 <button 
                   onClick={(e) => { e.stopPropagation(); setGridMainSlide(prev => (prev + 1) % activeProducts.length); }} 
                   className="text-white hover:text-blue-400 transition-colors p-1"
@@ -522,17 +390,11 @@ const Hero = ({ banners, layout = 'slider' }) => {
               </div>
             )}
           </div>
-
-          {/* 2. Right Column — Side A & Side B Bento Panels */}
           <div className="hidden lg:flex lg:col-span-4 flex-col gap-8 h-auto lg:h-full">
-            
-            {/* Side A Banner */}
             <div 
               onClick={() => sideA && handleBannerClick(sideA.link)}
               className="flex-1 bg-gradient-to-tr from-[#9600ff] via-[#ae00ff] to-[#00b7ff] rounded-3xl relative overflow-hidden group shadow-2xl border border-white/10 p-8 flex flex-col justify-center min-h-[190px] cursor-pointer"
             >
-              
-              {/* Full Bleed Image (Vivid 100% Opacity) */}
               {sideA && sideA.image && (
                 <img 
                   src={sideA.image} 
@@ -540,10 +402,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   alt="" 
                 />
               )}
-
-              {/* Left Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-transparent z-10 pointer-events-none" />
-
               {sideA ? (
                 <div className="relative z-20 text-left">
                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1.5 block">
@@ -565,14 +424,10 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 </div>
               )}
             </div>
-
-            {/* Side B Banner */}
             <div 
               onClick={() => sideB && handleBannerClick(sideB.link)}
               className="flex-1 bg-[#0f111a] rounded-3xl relative overflow-hidden group shadow-2xl p-8 flex flex-col justify-center min-h-[190px] border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
             >
-              
-              {/* Full Bleed Image (Vivid 100% Opacity) */}
               {sideB && sideB.image && (
                 <img 
                   src={sideB.image} 
@@ -580,10 +435,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   alt="" 
                 />
               )}
-
-              {/* Left Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-transparent z-10 pointer-events-none" />
-
               {sideB ? (
                 <div className="relative z-20 text-left">
                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1.5 block">
@@ -605,93 +457,200 @@ const Hero = ({ banners, layout = 'slider' }) => {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </section>
     );
   }
 
-  // We use the custom wide banner layout for all slider styles as requested by the user
-  return (
-    <section className="max-w-[1600px] mx-auto -mx-4 md:mx-auto md:px-6 pt-1.5 pb-0 md:pt-3 md:pb-2 select-none">
-      <div 
-        onClick={() => handleBannerClick(displayBanners[currentSlide]?.link)}
-        className="relative w-full h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950 cursor-pointer group"
-      >
-        {/* Background Image */}
-        {displayBanners[currentSlide]?.image && (
-          <div className="absolute inset-0 z-0">
-            <AnimatePresence mode="wait">
-              <motion.img 
-                key={currentSlide}
-                src={displayBanners[currentSlide]?.image} 
-                alt=""
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.8 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-[1200ms] ease-out"
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-black/30 z-10 pointer-events-none"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/30 to-transparent z-10 pointer-events-none"></div>
-          </div>
-        )}
+  // Overhauled Card-Based Hero Slider Layout
+  const activeSlide = displayBanners[currentSlide];
 
-        {/* Banner Text Overlay */}
-        <div className="relative z-10 pl-6 sm:pl-10 md:pl-16 lg:pl-20 flex flex-col items-start gap-0.5 sm:gap-1 max-w-lg md:max-w-2xl">
-          {/* Angled "VIVA" Badge */}
-          <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
-            VIVA
+  // Try to find matching product details dynamically
+  const associatedProduct = React.useMemo(() => {
+    if (!activeSlide) return null;
+    if (activeSlide.product_id) {
+      return products.find(p => String(p.id) === String(activeSlide.product_id));
+    }
+    if (activeSlide.link && activeSlide.link.includes('/product/')) {
+      const parts = activeSlide.link.split('/product/');
+      const id = parts[parts.length - 1];
+      return products.find(p => String(p.id) === String(id));
+    }
+    return null;
+  }, [activeSlide, products]);
+
+  const slideTitle = activeSlide?.title || associatedProduct?.name || 'SWEETO PREMIUM GADGET';
+  const slideBrand = activeSlide?.brand || associatedProduct?.brand || 'SWEETO';
+  const slidePrice = activeSlide?.price || associatedProduct?.price || '';
+  const slideDesc = activeSlide?.subtitle || associatedProduct?.description || '';
+  const slideImg = activeSlide?.image || associatedProduct?.image_url || associatedProduct?.image || '/hero-banner.png';
+  const slideLink = activeSlide?.link || (associatedProduct ? `/product/${associatedProduct.id}` : '#');
+
+  return (
+    <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
+      <div 
+        onClick={() => handleBannerClick(slideLink)}
+        className="relative w-full h-[360px] sm:h-[240px] md:h-[280px] lg:h-[320px] rounded-[1.8rem] sm:rounded-[2.5rem] bg-gradient-to-br from-[#006f4c] via-[#054354] to-[#1c296f] sm:bg-[#1e2530] sm:from-transparent sm:to-transparent text-white overflow-hidden shadow-2xl flex flex-row items-center border border-white/5 cursor-pointer group"
+      >
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none hidden sm:block" />
+
+        <div className="w-full sm:w-[60%] lg:w-[55%] px-6 sm:px-0 sm:pl-10 md:pl-14 flex flex-col justify-center py-6 sm:py-8 h-full z-10 text-left font-sans gap-3 sm:gap-2">
+          <div className="flex flex-col gap-2 sm:gap-2">
+            {/* Mobile Tag / Badge */}
+            <div className="flex sm:hidden items-center gap-1.5 bg-[#20c997]/15 border border-[#20c997]/30 text-[#3dfebc] px-3.5 py-1.5 rounded-full w-fit text-[9px] font-bold tracking-widest uppercase mb-1 select-none">
+              <span>✨</span>
+              <span>{slideBrand || 'WEARABLE ECOSYSTEM'}</span>
+            </div>
+
+            {/* Desktop Brand Text */}
+            <span className="hidden sm:inline-block text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
+              {slideBrand}
+            </span>
+            
+            <AnimatePresence mode="wait">
+              <motion.h1 
+                key={`title-${currentSlide}`}
+                initial={{ y: 15, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -15, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-2xl sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight tracking-tight max-w-[95%] line-clamp-2 font-sans normal-case sm:uppercase sm:italic"
+              >
+                {t_smart(slideTitle)}
+              </motion.h1>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`price-${currentSlide}`}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="hidden sm:block text-[10px] sm:text-base md:text-xl lg:text-2xl font-black text-[#8b5cf6] tracking-tight leading-none"
+              >
+                {slidePrice ? `${settings?.currency || 'FCFA'} ${Number(slidePrice).toLocaleString()}` : ''}
+              </motion.div>
+            </AnimatePresence>
+            
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={`desc-${currentSlide}`}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-[11px] sm:text-xs md:text-sm font-normal sm:font-medium text-white/80 sm:text-slate-300 leading-relaxed max-w-[95%] sm:max-w-[90%] line-clamp-3 sm:line-clamp-2"
+              >
+                {t_smart(slideDesc)}
+              </motion.p>
+            </AnimatePresence>
           </div>
-          {/* Main Title */}
-          <AnimatePresence mode="wait">
-            <motion.h1 
-              key={`title-${currentSlide}`}
-              initial={{ y: 15, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -15, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none"
+
+          <div className="mt-2 sm:mt-4 flex">
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleBannerClick(slideLink); }}
+              className="px-4 py-2.5 sm:px-6 sm:py-3 bg-[#20c997] sm:bg-[#7c3aed] hover:bg-[#1ab288] sm:hover:bg-[#6d28d9] text-black sm:text-white rounded-xl sm:rounded-2xl font-bold sm:font-black text-xs sm:text-[10px] normal-case sm:uppercase tracking-wider sm:tracking-widest transition-all shadow-[0_4px_15px_rgba(32,201,151,0.2)] sm:shadow-[0_4px_15px_rgba(124,58,237,0.3)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
             >
-              {t_smart(displayBanners[currentSlide]?.title)}
-            </motion.h1>
-          </AnimatePresence>
-          
-          {/* Subtitle */}
+              <span>
+                {slideBrand?.toLowerCase().includes('wearable') 
+                  ? 'View Wearables' 
+                  : slideBrand?.toLowerCase().includes('watch')
+                  ? 'View Watches'
+                  : (t('view_details') || 'View Details')}
+              </span>
+              <span className="w-5 h-5 rounded-full bg-black flex items-center justify-center sm:hidden shrink-0">
+                <ChevronRight size={10} className="text-white" strokeWidth={3} />
+              </span>
+              <Eye size={12} className="hidden sm:block sm:size-14" />
+            </button>
+          </div>
+        </div>
+
+        <div className="hidden sm:flex w-[35%] sm:w-[40%] lg:w-[45%] h-full items-center justify-center pr-6 sm:pr-10 relative overflow-hidden z-10">
           <AnimatePresence mode="wait">
-            <motion.p 
-              key={`desc-${currentSlide}`}
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -10, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1 line-clamp-1"
+            <motion.div
+              key={currentSlide}
+              initial={{ scale: 0.94, opacity: 0, x: 20 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0.94, opacity: 0, x: 20 }}
+              transition={{ duration: 0.4 }}
+              className="relative w-full h-4/5 flex items-center justify-center"
             >
-              {t_smart(displayBanners[currentSlide]?.subtitle)}
-            </motion.p>
+              <div className="absolute w-[120px] h-[120px] sm:w-[200px] sm:h-[200px] bg-[#8b5cf6]/15 rounded-full blur-[40px] pointer-events-none" />
+              <img 
+                src={slideImg} 
+                alt="" 
+                className="max-h-[80%] max-w-full object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform duration-[1200ms] ease-out select-none pointer-events-none"
+              />
+            </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Navigation arrows (floating overlay) */}
+        {/* Mobile Navigation Dots (Mockup Style, inside card) */}
         {displayBanners.length > 1 && (
-          <div className="absolute right-4 bottom-4 z-20 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={prevSlide}
-              className="w-7 h-7 rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer border border-white/5 active:scale-95"
-            >
-              <ChevronLeft size={14} strokeWidth={2.5} />
-            </button>
-            <button 
-              onClick={nextSlide}
-              className="w-7 h-7 rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-md text-white flex items-center justify-center transition-all cursor-pointer border border-white/5 active:scale-95"
-            >
-              <ChevronRight size={14} strokeWidth={2.5} />
-            </button>
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex sm:hidden items-center justify-center gap-1.5 z-20 select-none"
+          >
+            {displayBanners.map((_, idx) => {
+              const isActive = idx === currentSlide;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`transition-all duration-300 rounded-full cursor-pointer border-none p-0 ${
+                    isActive 
+                      ? 'w-5 h-1.5 bg-white' 
+                      : 'w-1.5 h-1.5 bg-white/45 hover:bg-white/70'
+                  }`}
+                  title={`Go to slide ${idx + 1}`}
+                />
+              );
+            })}
           </div>
         )}
+
+        {/* Mobile Faint Navigation Arrows (Mockup Style) */}
+        {displayBanners.length > 1 && (
+          <>
+            <button 
+              onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex sm:hidden items-center justify-center bg-black/5 hover:bg-black/10 text-white/20 hover:text-white/40 transition-all border-none cursor-pointer z-20"
+            >
+              <ChevronLeft size={16} strokeWidth={2.5} />
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex sm:hidden items-center justify-center bg-black/5 hover:bg-black/10 text-white/20 hover:text-white/40 transition-all border-none cursor-pointer z-20"
+            >
+              <ChevronRight size={16} strokeWidth={2.5} />
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Desktop Navigation Dots */}
+      {displayBanners.length > 1 && (
+        <div className="hidden sm:flex items-center justify-center gap-2 mt-4 select-none">
+          {displayBanners.map((_, idx) => {
+            const isActive = idx === currentSlide;
+            return (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`transition-all duration-300 rounded-full cursor-pointer border-none p-0 ${
+                  isActive 
+                    ? 'w-6 h-1.5 bg-[#8b5cf6]' 
+                    : 'w-1.5 h-1.5 bg-slate-600/40 dark:bg-slate-700/60 hover:bg-slate-400'
+                }`}
+                title={`Go to slide ${idx + 1}`}
+              />
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

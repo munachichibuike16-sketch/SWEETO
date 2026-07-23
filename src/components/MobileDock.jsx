@@ -63,12 +63,7 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[95%] max-w-md h-16 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl border border-slate-200/50 dark:border-eas-blue/15 rounded-3xl shadow-[0_20px_50px_rgba(0,82,255,0.05)] flex items-center justify-between px-5 overflow-hidden select-none">
-      {/* Faint Watermark Background */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-        <span className="text-[2.2rem] font-black tracking-[0.2em] text-slate-900/5 dark:text-white/3 uppercase italic">
-          @sweeto
-        </span>
-      </div>
+
 
       {/* Navigation Items */}
       {/* Home tab */}

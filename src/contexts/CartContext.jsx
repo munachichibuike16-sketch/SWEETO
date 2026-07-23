@@ -5,7 +5,7 @@ import { useStore } from './StoreContext';
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const { products } = useStore();
+  const { products, showToast } = useStore();
   const [cartItems, setCartItems] = useState(() => {
     const saved = localStorage.getItem('sweeto_cart');
     return saved ? JSON.parse(saved) : [];
@@ -26,10 +26,17 @@ export const CartProvider = ({ children }) => {
       }
       return [...prev, { ...product, quantity }];
     });
+    if (showToast) {
+      showToast(`${product.name} added to cart! 🛒✨`, 'success');
+    }
   };
 
   const removeFromCart = (productId) => {
+    const item = cartItems.find(i => i.id === productId);
     setCartItems(prev => prev.filter(item => item.id !== productId));
+    if (showToast && item) {
+      showToast(`${item.name} removed from cart.`, 'info');
+    }
   };
 
   const updateQuantity = (productId, quantity) => {
@@ -39,7 +46,12 @@ export const CartProvider = ({ children }) => {
     ));
   };
 
-  const clearCart = () => setCartItems([]);
+  const clearCart = () => {
+    setCartItems([]);
+    if (showToast) {
+      showToast('Cart cleared.', 'info');
+    }
+  };
 
   const mappedCartItems = useMemo(() => {
     return cartItems.map(item => {

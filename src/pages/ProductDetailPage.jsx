@@ -11,7 +11,6 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
-import MobileDock from '../components/MobileDock';
 import CartDrawer from '../components/CartDrawer';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
@@ -40,14 +39,19 @@ const ProductDetailPage = () => {
   const { addToCart: originalAddToCart, cartCount } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
+  const [isAdding, setIsAdding] = useState(false);
 
   const addToCart = (prod, qty = 1) => {
+    setIsAdding(true);
     const finalProduct = {
       ...prod,
       name: selectedVariant ? `${prod.name} (${selectedVariant.name})` : prod.name,
       price: prod.price + (selectedVariant?.priceAdjust || 0)
     };
     originalAddToCart(finalProduct, qty);
+    setTimeout(() => {
+      setIsAdding(false);
+    }, 800);
   };
 
   const [product, setProduct] = useState(null);
@@ -645,36 +649,7 @@ const ProductDetailPage = () => {
         id="product-overview"
         className="relative lg:hidden w-full h-[100vw] bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
       >
-        {/* 3D/AR Toggle Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowThreeD(!showThreeD);
-            setShowVideo(false);
-          }}
-          className="absolute top-4 left-4 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer animate-pulse"
-        >
-          <span>{showThreeD ? (lang === 'fr' ? 'Standard' : 'Standard') : (lang === 'fr' ? 'Vue 3D/AR' : '3D/AR View')}</span>
-        </button>
 
-        {/* Video Toggle Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowVideo(!showVideo);
-            setShowThreeD(false);
-          }}
-          className="absolute top-4 right-16 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer"
-        >
-          <svg className={`w-3 h-3 fill-current ${showVideo ? 'text-red-500' : 'text-emerald-400'}`} viewBox="0 0 24 24">
-            {showVideo ? (
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-            ) : (
-              <path d="M8 5v14l11-7z"/>
-            )}
-          </svg>
-          <span>{showVideo ? (lang === 'fr' ? 'Photo' : 'Photo') : (lang === 'fr' ? 'Vidéo' : 'Video')}</span>
-        </button>
 
         {showThreeD ? (
           <div className="absolute inset-0 bg-white dark:bg-slate-950 z-[20] flex items-center justify-center p-4">
@@ -781,36 +756,7 @@ const ProductDetailPage = () => {
               }}
               className="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden group cursor-zoom-in"
             >
-              {/* 3D/AR Toggle Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowThreeD(!showThreeD);
-                  setShowVideo(false);
-                }}
-                className="absolute top-4 right-28 sm:right-32 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer animate-pulse"
-              >
-                <span>{showThreeD ? (lang === 'fr' ? 'Standard' : 'Standard') : (lang === 'fr' ? 'Vue 3D/AR' : '3D/AR View')}</span>
-              </button>
 
-              {/* Video Toggle Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowVideo(!showVideo);
-                  setShowThreeD(false);
-                }}
-                className="absolute top-4 left-4 z-[25] px-4 py-2 rounded-full bg-slate-900/85 hover:bg-slate-900/95 text-white border border-white/10 backdrop-blur-md shadow-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all text-[9px] font-black uppercase tracking-widest cursor-pointer"
-              >
-                <svg className={`w-3 h-3 fill-current ${showVideo ? 'text-red-500' : 'text-emerald-400'}`} viewBox="0 0 24 24">
-                  {showVideo ? (
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                  ) : (
-                    <path d="M8 5v14l11-7z"/>
-                  )}
-                </svg>
-                <span>{showVideo ? (lang === 'fr' ? 'Photo' : 'Photo') : (lang === 'fr' ? 'Vidéo' : 'Video')}</span>
-              </button>
 
               {showThreeD ? (
                 <div className="absolute inset-0 bg-slate-50 dark:bg-slate-955 z-[20] flex items-center justify-center p-4">
@@ -1011,13 +957,18 @@ const ProductDetailPage = () => {
               {/* Action Buttons (Desktop) */}
               <div className="flex gap-4 pt-2">
                 <button 
-                  onClick={() => {
-                    addToCart(product, quantity);
-                    showToast("Added to shopping cart! 🛒", "success");
-                  }}
-                  className="flex-1 py-3.5 px-6 bg-[#ff9500] hover:bg-[#e08200] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center border-none"
+                  onClick={() => addToCart(product, quantity)}
+                  disabled={isAdding}
+                  className="flex-1 py-3.5 px-6 bg-[#ff9500] hover:bg-[#e08200] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center border-none flex items-center justify-center gap-2 disabled:opacity-85"
                 >
-                  Add to Cart
+                  {isAdding ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>{lang === 'fr' ? 'Ajout... 🛒' : 'Adding... 🛒'}</span>
+                    </>
+                  ) : (
+                    <span>{lang === 'fr' ? 'Ajouter au Panier' : 'Add to Cart'}</span>
+                  )}
                 </button>
                 <button 
                   onClick={() => {
@@ -1574,12 +1525,19 @@ const ProductDetailPage = () => {
                 setIsVariantSheetOpen(true);
               } else {
                 addToCart(product);
-                showToast("Added to shopping cart! 🛒", "success");
               }
             }}
-            className="flex-1 py-3 px-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center whitespace-nowrap bg-transparent"
+            disabled={isAdding}
+            className="flex-1 py-3 px-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center whitespace-nowrap bg-transparent flex items-center justify-center gap-1.5 disabled:opacity-85"
           >
-            Add to Cart
+            {isAdding ? (
+              <>
+                <div className="w-3 h-3 border-2 border-slate-900 dark:border-white border-t-transparent rounded-full animate-spin" />
+                <span>{lang === 'fr' ? 'Ajout...' : 'Adding...'}</span>
+              </>
+            ) : (
+              <span>{lang === 'fr' ? 'Panier' : 'Add to Cart'}</span>
+            )}
           </button>
           <button 
             onClick={() => {
@@ -1767,12 +1725,19 @@ const ProductDetailPage = () => {
                     <button 
                       onClick={() => {
                         addToCart(product);
-                        showToast("Added to shopping cart! 🛒", "success");
-                        setIsVariantSheetOpen(false);
+                        setTimeout(() => setIsVariantSheetOpen(false), 800);
                       }}
-                      className="flex-1 py-3.5 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center bg-transparent"
+                      disabled={isAdding}
+                      className="flex-1 py-3.5 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center bg-transparent flex items-center justify-center gap-1.5 disabled:opacity-85"
                     >
-                      Add to Cart
+                      {isAdding ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-slate-900 dark:border-white border-t-transparent rounded-full animate-spin" />
+                          <span>{lang === 'fr' ? 'Ajout...' : 'Adding...'}</span>
+                        </>
+                      ) : (
+                        <span>{lang === 'fr' ? 'Ajouter au Panier' : 'Add to Cart'}</span>
+                      )}
                     </button>
                     <button 
                       onClick={() => {

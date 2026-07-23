@@ -165,7 +165,7 @@ export default function DeliverPage() {
 
     // Watch location only if an active order is in progress
     const activeOrder = orders.find(o => o.stage === 'picked_up' || o.stage === 'on_the_way' || o.stage === 'nearby');
-    if (!activeOrder) return;
+    if (!activeOrder || !activeOrder.db_id) return;
 
     console.log("📍 Geolocation watcher active for order ID:", activeOrder.db_id);
 

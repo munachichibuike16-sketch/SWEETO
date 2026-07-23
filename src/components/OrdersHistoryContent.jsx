@@ -10,7 +10,7 @@ import orderEmptyMascot from '../assets/order_empty_mascot.png';
 
 const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
   const { settings, showToast, products } = useStore();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
   
   const [currentUser, setCurrentUser] = useState(null);
@@ -24,6 +24,8 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showTrashConfirm, setShowTrashConfirm] = useState(false);
   const [timeframe, setTimeframe] = useState('all'); // all, 30_days, 6_months
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Get current logged-in user from localStorage on mount
   useEffect(() => {
@@ -221,9 +223,12 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
 
     // 2. Tab filter
     if (activeTab === 'all') return true;
-    if (activeTab === 'to_pay') return order.status === 'pending';
-    if (activeTab === 'processing') return order.status === 'confirmed' || order.status === 'processing';
-    if (activeTab === 'processed') return order.status === 'shipping' || order.status === 'completed';
+    if (activeTab === 'pending') return order.status === 'pending' || order.status === 'to_pay';
+    if (activeTab === 'confirmed') return order.status === 'confirmed';
+    if (activeTab === 'processing') return order.status === 'processing';
+    if (activeTab === 'shipping') return order.status === 'shipping' || order.status === 'shipped';
+    if (activeTab === 'delivered') return order.status === 'completed' || order.status === 'delivered';
+    if (activeTab === 'cancelled') return order.status === 'cancelled';
     
     // 3. Timeframe filter
     if (timeframe !== 'all') {
@@ -254,18 +259,33 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
           className="sticky z-30 bg-white dark:bg-[#0f172a] shadow-sm w-full"
           style={{ top: 'var(--header-height, 0px)' }}
         >
-          {/* Header Row: Back button, Search input, sorting/help/trash icons */}
-          <div className="border-b border-slate-100 dark:border-white/5 px-4 py-3 flex items-center gap-3 w-full">
-            {/* Back button */}
-            <button 
-              onClick={onBack}
-              className="text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer"
-            >
-              <ArrowLeft size={20} />
-            </button>
+          {/* Header Row: Back button, Title & Icon, Search input, sorting/help/trash icons */}
+          <div className="border-b border-slate-100 dark:border-white/5 px-4 py-3.5 flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-3">
+              {/* Back button */}
+              <button 
+                onClick={onBack}
+                className="text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              
+              {/* Icon & Title */}
+              <div className="flex items-center gap-2 select-none">
+                <div className="w-8 h-8 rounded-xl bg-violet-500/10 dark:bg-violet-500/20 text-[#8b5cf6] flex items-center justify-center flex-shrink-0">
+                  <ShoppingBag size={18} />
+                </div>
+                <h1 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider hidden sm:inline-block">
+                  My Orders
+                </h1>
+                <span className="px-2 py-0.5 bg-[#8b5cf6] text-white text-[10px] font-black rounded-full leading-none">
+                  {orders.length}
+                </span>
+              </div>
+            </div>
             
             {/* Search bar input container */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 max-w-[200px] sm:max-w-xs">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                 type="text"
@@ -303,27 +323,30 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
           </div>
 
           {/* Tabs Row */}
-          <div className="border-b border-slate-100 dark:border-white/5 w-full flex items-center justify-between px-6 py-2.5 relative">
+          <div className="border-b border-slate-100 dark:border-white/5 w-full flex items-center gap-6 px-6 py-2.5 overflow-x-auto no-scrollbar scroll-smooth relative select-none">
             {[
-              { id: 'all', label: 'View all' },
-              { id: 'to_pay', label: 'To pay' },
+              { id: 'all', label: 'All' },
+              { id: 'pending', label: 'Pending' },
+              { id: 'confirmed', label: 'Confirmed' },
               { id: 'processing', label: 'Processing' },
-              { id: 'processed', label: 'Processed' }
+              { id: 'shipping', label: 'Shipped' },
+              { id: 'delivered', label: 'Delivered' },
+              { id: 'cancelled', label: 'Cancelled' }
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="relative py-2 text-[13px] font-bold transition-all duration-300 flex-1 text-center cursor-pointer"
+                  className="relative py-2 text-[13px] font-bold transition-all duration-300 whitespace-nowrap cursor-pointer shrink-0"
                 >
-                  <span className={isActive ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-400 dark:text-slate-500"}>
+                  <span className={isActive ? "text-slate-900 dark:text-white font-extrabold" : "text-slate-405"}>
                     {tab.label}
                   </span>
                   {isActive && (
                     <motion.div 
                       layoutId="activeOrderTabIndicator"
-                      className="absolute bottom-0 left-[20%] right-[20%] h-[3px] bg-slate-900 dark:bg-white rounded-full"
+                      className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-900 dark:bg-white rounded-full"
                       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -362,10 +385,11 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ delay: index * 0.05 }}
-                      className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 rounded-3xl p-5 shadow-sm relative overflow-hidden"
+                      onClick={() => { setSelectedOrder(order); setIsDetailsModalOpen(true); }}
+                      className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 rounded-3xl p-5 shadow-sm relative overflow-hidden cursor-pointer hover:border-[#8b5cf6]/30 hover:shadow-md transition-all flex flex-col text-left group"
                     >
                       {/* Status indicator bar */}
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eas-blue to-purple-500" />
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eas-blue to-[#8b5cf6]" />
                       
                       {/* Header row */}
                       <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b border-slate-50 dark:border-slate-700/40">
@@ -398,22 +422,38 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
 
                       {/* Delivery and action */}
                       <div className="flex justify-between items-center pt-3 border-t border-slate-50 dark:border-slate-700/40">
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold truncate max-w-[200px]">
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold truncate max-w-[140px] sm:max-w-[200px]">
                           <MapPin size={12} className="text-eas-blue" />
                           <span className="truncate">{order.city || 'Abidjan'} - {order.address || 'Address unspecified'}</span>
                         </div>
-                        {order.status !== 'completed' ? (
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <button
-                            onClick={() => navigate(`/order-tracking/${order.id}`)}
-                            className="bg-eas-blue hover:bg-blue-600 text-white font-black text-[9px] uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-md shadow-eas-blue/10 flex items-center gap-1 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedOrder(order);
+                              setIsDetailsModalOpen(true);
+                            }}
+                            className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-650 text-slate-800 dark:text-white font-black text-[9px] uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 cursor-pointer border border-slate-100 dark:border-slate-600/40"
                           >
-                            Track Live <ArrowRight size={12} />
+                            Details
                           </button>
-                        ) : (
-                          <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-black uppercase tracking-wider">
-                            <CheckCircle2 size={12} /> Done
-                          </div>
-                        )}
+                          {order.status !== 'completed' ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/order-tracking/${order.id}`);
+                              }}
+                              className="bg-eas-blue hover:bg-blue-600 text-white font-black text-[9px] uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all shadow-md shadow-eas-blue/10 flex items-center gap-1 cursor-pointer"
+                            >
+                              Track Live <ArrowRight size={12} />
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-black uppercase tracking-wider">
+                              <CheckCircle2 size={12} /> Done
+                            </div>
+                          )}
+                          <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                        </div>
                       </div>
                     </motion.div>
                   );
@@ -824,10 +864,11 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2rem] p-6 hover:shadow-2xl hover:shadow-slate-900/5 transition-all duration-300 relative overflow-hidden"
+                  onClick={() => { setSelectedOrder(order); setIsDetailsModalOpen(true); }}
+                  className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2rem] p-6 hover:shadow-2xl hover:shadow-slate-900/5 transition-all duration-300 relative overflow-hidden cursor-pointer hover:border-[#8b5cf6]/30 text-left group"
                 >
                   {/* Status Indicator Bar */}
-                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eas-blue to-purple-500`} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eas-blue to-[#8b5cf6]`} />
 
                   {/* Header Row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-50 dark:border-slate-700/50">
@@ -891,21 +932,37 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                   </div>
 
                   {/* Actions Row */}
-                  <div className="flex justify-end pt-4 border-t border-slate-50 dark:border-slate-700/50">
-                    {order.status !== 'completed' ? (
-                      <button
-                        onClick={() => navigate(`/order-tracking/${order.id}`)}
-                        className="bg-eas-blue hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-eas-blue/10 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                      >
-                        Track Live Delivery
-                        <ArrowRight size={14} />
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2 text-emerald-500 text-[11px] font-black uppercase tracking-widest">
-                        <CheckCircle2 size={16} />
-                        Order Completed
-                      </div>
-                    )}
+                  <div className="flex justify-between items-center pt-4 border-t border-slate-50 dark:border-slate-700/50">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedOrder(order);
+                        setIsDetailsModalOpen(true);
+                      }}
+                      className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-650 text-slate-800 dark:text-white font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all border border-slate-100 dark:border-slate-600/40 cursor-pointer"
+                    >
+                      View Details
+                    </button>
+                    <div className="flex items-center gap-3">
+                      {order.status !== 'completed' ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/order-tracking/${order.id}`);
+                          }}
+                          className="bg-eas-blue hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-eas-blue/10 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        >
+                          Track Live Delivery
+                          <ArrowRight size={14} />
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 text-emerald-500 text-[11px] font-black uppercase tracking-widest">
+                          <CheckCircle2 size={16} />
+                          Order Completed
+                        </div>
+                      )}
+                      <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -943,6 +1000,213 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
           </button>
         </div>
       )}
+
+      {/* Order Details Drawer / Modal */}
+      <AnimatePresence>
+        {isDetailsModalOpen && selectedOrder && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDetailsModalOpen(false)}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[9999] cursor-pointer"
+            />
+            
+            {/* Details Modal Container */}
+            <motion.div
+              initial={isMobile ? { y: '100%' } : { scale: 0.95, opacity: 0 }}
+              animate={isMobile ? { y: 0 } : { scale: 1, opacity: 1 }}
+              exit={isMobile ? { y: '100%' } : { scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className={`fixed z-[10000] bg-white dark:bg-[#0b1324] border border-slate-100 dark:border-slate-800/80 p-6 flex flex-col justify-between overflow-hidden shadow-2xl ${
+                isMobile 
+                  ? 'inset-x-0 bottom-0 rounded-t-[2.5rem] max-h-[92vh] h-auto' 
+                  : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl rounded-[2.5rem]'
+              }`}
+            >
+              {/* Top Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/5 select-none">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 dark:bg-violet-500/20 text-[#8b5cf6] flex items-center justify-center flex-shrink-0">
+                    <ShoppingBag size={16} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                      {lang === 'fr' ? 'Détails de la commande' : 'Order Details'}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                      Order #{selectedOrder.id} • {new Date(selectedOrder.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsDetailsModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center cursor-pointer transition-colors border-none"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto py-5 space-y-6 max-h-[60vh] pr-1.5 custom-scrollbar text-left select-none">
+                {/* 4-Stage Stepper Progress Timeline */}
+                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2.5xl border border-slate-100 dark:border-slate-850 p-4 sm:p-5">
+                  <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-4">
+                    {lang === 'fr' ? 'Statut de livraison' : 'Delivery Status'}
+                  </span>
+                  
+                  {/* Stepper Visuals */}
+                  <div className="relative flex items-center justify-between mt-6 mb-2">
+                    {/* Background Progress Line */}
+                    <div className="absolute left-[8%] right-[8%] top-1/2 -translate-y-1/2 h-1 bg-slate-250 dark:bg-slate-800 -z-10 rounded-full" />
+                    
+                    {/* Colored Active Line */}
+                    <div 
+                      className="absolute left-[8%] top-1/2 -translate-y-1/2 h-1 bg-[#8b5cf6] -z-10 rounded-full transition-all duration-500" 
+                      style={{
+                        width: (() => {
+                          const status = selectedOrder.status;
+                          if (status === 'completed' || status === 'delivered') return '84%';
+                          if (status === 'shipping' || status === 'shipped') return '56%';
+                          if (status === 'processing' || status === 'confirmed') return '28%';
+                          return '0%';
+                        })()
+                      }}
+                    />
+
+                    {/* Steps */}
+                    {[
+                      { key: 'pending', label: lang === 'fr' ? 'Reçue' : 'Placed', icon: Clock, activeThreshold: ['pending', 'confirmed', 'processing', 'shipping', 'completed', 'delivered'] },
+                      { key: 'confirmed', label: lang === 'fr' ? 'Confirmée' : 'Confirmed', icon: Package, activeThreshold: ['confirmed', 'processing', 'shipping', 'completed', 'delivered'] },
+                      { key: 'processing', label: lang === 'fr' ? 'En Cours' : 'Processing', icon: Truck, activeThreshold: ['processing', 'shipping', 'completed', 'delivered'] },
+                      { key: 'completed', label: lang === 'fr' ? 'Livrée' : 'Delivered', icon: CheckCircle2, activeThreshold: ['completed', 'delivered'] }
+                    ].map((step, idx) => {
+                      const isActive = step.activeThreshold.includes(selectedOrder.status);
+                      const StepIcon = step.icon;
+                      return (
+                        <div key={idx} className="flex flex-col items-center gap-1.5 flex-1 relative">
+                          <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${
+                            isActive 
+                              ? 'bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' 
+                              : 'bg-white border-slate-200 text-slate-350 dark:bg-slate-900 dark:border-slate-800'
+                          }`}>
+                            <StepIcon size={14} />
+                          </div>
+                          <span className={`text-[10px] font-black uppercase tracking-wider ${isActive ? 'text-slate-850 dark:text-white' : 'text-slate-400 dark:text-slate-505'}`}>
+                            {step.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Items details */}
+                <div className="space-y-3">
+                  <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                    {lang === 'fr' ? 'Articles commandés' : 'Ordered Items'}
+                  </span>
+                  <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2.5xl border border-slate-100/60 dark:border-slate-850 p-4 space-y-3">
+                    {(() => {
+                      let items = [];
+                      try {
+                        items = typeof selectedOrder.items === 'string' ? JSON.parse(selectedOrder.items) : (selectedOrder.items || []);
+                      } catch (e) {}
+                      return items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-xs font-bold">
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-slate-800 dark:text-slate-200 truncate pr-4">
+                              {item.name}
+                            </span>
+                            <span className="text-slate-400 text-[10px] font-semibold mt-0.5">
+                              {Number(item.price).toLocaleString()} {settings?.currency || 'FCFA'} × {item.quantity}
+                            </span>
+                          </div>
+                          <span className="text-slate-900 dark:text-white shrink-0 font-extrabold">
+                            {Number(item.price * item.quantity).toLocaleString()} {settings?.currency || 'FCFA'}
+                          </span>
+                        </div>
+                      ));
+                    })()}
+                    
+                    {/* Financial summary */}
+                    <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-2 space-y-1.5 text-xs font-bold text-slate-500">
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span className="text-slate-700 dark:text-slate-300">
+                          {Number((selectedOrder.total_amount || selectedOrder.total || 0) - (selectedOrder.delivery_fee || 0)).toLocaleString()} {settings?.currency || 'FCFA'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{lang === 'fr' ? 'Livraison' : 'Delivery'}</span>
+                        <span className="text-emerald-500 font-extrabold uppercase">
+                          {Number(selectedOrder.delivery_fee || 0) === 0 ? 'Free' : `${Number(selectedOrder.delivery_fee).toLocaleString()} ${settings?.currency || 'FCFA'}`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-slate-800 dark:text-white font-extrabold border-t border-slate-100 dark:border-white/5 pt-2 mt-2">
+                        <span>Total</span>
+                        <span className="text-[#8b5cf6] font-black">
+                          {Number(selectedOrder.total_amount || selectedOrder.total || 0).toLocaleString()} {settings?.currency || 'FCFA'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recipient details */}
+                <div className="space-y-3">
+                  <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                    {lang === 'fr' ? 'Détails de livraison' : 'Delivery Details'}
+                  </span>
+                  <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2.5xl border border-slate-100/60 dark:border-slate-850 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Recipient</span>
+                      <span className="text-slate-800 dark:text-slate-200 block">{selectedOrder.customer_name || 'Guest Customer'}</span>
+                      <span className="text-slate-550 dark:text-slate-400 font-medium block">{selectedOrder.customer_phone}</span>
+                    </div>
+                    <div className="space-y-1 border-t sm:border-t-0 sm:border-l border-slate-100 dark:border-white/5 pt-3 sm:pt-0 sm:pl-4">
+                      <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Address</span>
+                      <span className="text-slate-800 dark:text-slate-200 block uppercase italic">{selectedOrder.city || 'Abidjan'}</span>
+                      <span className="text-slate-550 dark:text-slate-400 font-medium leading-tight block">{selectedOrder.address || 'Address unspecified'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Footer Buttons */}
+              <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-3">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setIsDetailsModalOpen(false);
+                      navigate(`/order-tracking/${selectedOrder.id}`);
+                    }}
+                    className="flex-1 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-2xl py-3.5 font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_15px_rgba(124,58,237,0.2)] hover:scale-[1.01] active:scale-[0.99] cursor-pointer border-none flex items-center justify-center gap-2"
+                  >
+                    <Truck size={14} />
+                    <span>{lang === 'fr' ? 'Suivre en Direct' : 'Track Live on Map'}</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const msg = encodeURIComponent(`Bonjour Sweeto-Hub, je souhaite des informations sur ma commande #${selectedOrder.id}`);
+                      window.open(`https://wa.me/${settings?.whatsapp_number || '22507070707'}?text=${msg}`, '_blank');
+                    }}
+                    className="flex-1 bg-[#25D366] hover:bg-[#1fbe57] text-white font-black py-3.5 rounded-2xl uppercase tracking-widest text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer border-none hover:scale-[1.01] active:scale-[0.99] transition-all"
+                  >
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.859-4.42 9.863-9.864.002-2.637-1.023-5.116-2.887-6.98C15.782 1.896 13.313.864 10.68.864 5.244.864.827 5.285.823 10.724c0 1.687.445 3.328 1.29 4.767l-.992 3.62 3.71-.973zm11.365-6.86c-.302-.15-1.786-.882-2.057-.98-.27-.1-.468-.15-.665.15-.198.3-.765.98-.937 1.18-.173.2-.347.225-.65.075-.302-.15-1.276-.47-2.43-1.498-.897-.8-1.503-1.787-1.68-2.087-.177-.3-.02-.46.13-.61.137-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.665-1.6-.91-2.187-.24-.575-.48-.5-.665-.51-.173-.007-.37-.01-.568-.01-.198 0-.52.074-.79.37-.27.3-1.035 1.01-1.035 2.47 0 1.46 1.06 2.87 1.21 3.07.15.2 2.085 3.18 5.05 4.464.707.306 1.258.489 1.69.626.71.226 1.356.194 1.866.118.57-.085 1.786-.73 2.037-1.435.25-.705.25-1.31.175-1.435-.075-.125-.27-.2-.57-.35z"/>
+                    </svg>
+                    <span>WhatsApp</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

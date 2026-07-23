@@ -285,7 +285,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       </div>
 
       {/* Category Hero Banner (AliExpress Style) */}
-      <div className="relative w-full h-[140px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
+      <div className="relative w-full h-[360px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 

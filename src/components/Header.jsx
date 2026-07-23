@@ -989,7 +989,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center select-none cursor-pointer group shrink-0"
             >
-              <SweetoLogo size={90} className="drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]" />
+              <SweetoLogo size={90} className="max-h-8 object-contain drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]" />
             </div>
 
             {/* Compact Search Bar in the middle */}
@@ -1041,65 +1041,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
               </button>
             </div>
           </div>
- 
-           <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1.5 pt-1.5 snap-x snap-mandatory scroll-smooth select-none h-10 opacity-100 mt-2 scale-y-100 w-full items-center">
-             <button
-               type="button"
-               onClick={() => {
-                 setSelectedCategory(null);
-                 setSelectedBrand(null);
-                 setSearchQuery('');
-                 navigate('/');
-               }}
-               className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
-                 !activeParentName 
-                   ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
-                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-               }`}
-             >
-               {lang === 'fr' ? 'Tout' : 'All'}
-             </button>
-              {categories
-                .filter((cat) => {
-                  // If custom visible categories are set, render only those.
-                  // Otherwise, default to showing Level 1 parent categories.
-                  if (settings?.visible_homepage_categories) {
-                    try {
-                      let visibleIds = settings.visible_homepage_categories;
-                      if (typeof visibleIds === 'string') {
-                        visibleIds = JSON.parse(visibleIds);
-                      }
-                      if (Array.isArray(visibleIds) && visibleIds.length > 0) {
-                        return visibleIds.includes(cat.id) || visibleIds.includes(String(cat.id)) || visibleIds.includes(Number(cat.id));
-                      }
-                    } catch (e) {}
-                  }
-                  return !cat.parent_id;
-                })
-                .map((cat) => {
-                  const isSelected = activeParentName?.toLowerCase() === cat.name?.toLowerCase() || selectedCategory?.toLowerCase() === cat.name?.toLowerCase();
-                  return (
-                    <button
-                      key={cat.id || cat.name}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategory(null);
-                        setSelectedBrand(null);
-                        setSearchQuery('');
-                        navigate(`/category/${encodeURIComponent(cat.name)}`);
-                      }}
-                      className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-300 snap-start cursor-pointer capitalize ${
-                        isSelected 
-                          ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold' 
-                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                      }`}
-                    >
-                      {t_smart ? t_smart(cat.name) : cat.name}
-                    </button>
-                  );
-                })
-              }
-           </div>
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Search, Share2, Package } from 'lucide-react';
+import { ChevronLeft, Search, Share2, Package, Truck, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -11,7 +11,7 @@ export default function DealsContent({ onProductClick }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
-  const { products = [], categories = [], settings } = useStore();
+  const { products = [], categories = [], settings, showToast } = useStore();
   const { lang, t, t_smart } = useLanguage();
 
   const [scrolled, setScrolled] = useState(false);
@@ -92,7 +92,11 @@ export default function DealsContent({ onProductClick }) {
       }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert(lang === 'fr' ? 'Lien copié dans le presse-papiers !' : 'Link copied to clipboard!');
+      if (showToast) {
+        showToast(lang === 'fr' ? 'Lien copié dans le presse-papiers ! 🔗' : 'Link copied to clipboard! 🔗', 'success');
+      } else {
+        alert(lang === 'fr' ? 'Lien copié dans le presse-papiers !' : 'Link copied to clipboard!');
+      }
     }
   };
 
@@ -156,65 +160,100 @@ export default function DealsContent({ onProductClick }) {
         </div>
       </div>
 
-      {/* Premium AliExpress-Style Ticket Envelope Banner */}
-      <div className="relative w-full aspect-[375/170] sm:aspect-[2.2/1] bg-gradient-to-tr from-sky-100 via-sky-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center overflow-hidden pt-12">
-        {/* Envelope back container */}
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-200/20 via-sky-50/5 to-white dark:to-slate-950" />
-        
-        {/* Envelope flap visual */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-white dark:bg-slate-950 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] border-t border-slate-100/50 dark:border-slate-850" 
-             style={{ clipPath: 'polygon(0 100%, 50% 0, 100% 100%)' }} />
-        
-        {/* Sparkle details */}
-        <div className="absolute top-16 right-[15%] text-sky-200 dark:text-sky-850 select-none animate-pulse text-2xl font-black">✦</div>
-        <div className="absolute bottom-4 left-[10%] text-sky-200 dark:text-sky-850 select-none text-xl font-black">⚡</div>
-
-        {/* Tilted Holographic Coupon Ticket */}
+      {/* Premium Choice Super Deals Hero Banner */}
+      <div className="w-full px-3 md:px-12 pt-16 pb-6 bg-slate-50 dark:bg-slate-950">
         <motion.div 
-          initial={{ scale: 0.9, rotate: -6, opacity: 0 }}
-          animate={{ scale: 1, rotate: -2, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 100, damping: 15 }}
-          whileHover={{ scale: 1.03, rotate: 0 }}
-          className="relative w-[88%] max-w-md bg-gradient-to-r from-[#d90429] via-[#ef233c] to-[#d90429] text-white py-5 px-7 rounded-3xl shadow-[0_20px_50px_rgba(217,4,41,0.3)] border border-white/20 transform z-10 overflow-hidden group cursor-pointer"
+          initial={{ scale: 0.96, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative w-full rounded-[2.2rem] bg-[#13161c] text-white overflow-hidden shadow-2xl border border-white/5 flex flex-col items-center p-6 sm:p-12 md:p-16 select-none"
         >
-          {/* Holographic Shimmer Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
-          
-          {/* Ticket punch hole details */}
-          <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f1f5f9] dark:bg-[#020617] z-10 shadow-inner" />
-          <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f1f5f9] dark:bg-[#020617] z-10 shadow-inner" />
+          {/* Subtle Orange/Golden radial glow on the right side */}
+          <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#ffc72c]/10 to-transparent blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-[200px] h-[200px] bg-[#ff5722]/5 rounded-full blur-[100px] pointer-events-none" />
 
-          {/* Dashed Golden Divider */}
-          <div className="absolute left-[70%] top-0 bottom-0 border-l border-dashed border-white/25 z-0" />
+          {/* Badge */}
+          <div className="flex items-center gap-1.5 bg-[#f5c71a] text-slate-950 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider select-none mb-4 shadow-[0_4px_15px_rgba(245,199,26,0.3)]">
+            <span className="text-slate-950">⚡</span>
+            <span>{lang === 'fr' ? 'Super Offres Choix' : 'Choice Super Deals'}</span>
+          </div>
 
-          <div className="relative z-10 flex items-center justify-between w-full h-full pr-[30%]">
-            <div className="flex flex-col items-start text-left">
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-amber-300 mb-1">
-                {categoryParam ? `${t_smart(categoryParam)} VIP DEAL` : "Today's special offers"}
-              </p>
-              
-              <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                <span className="text-base sm:text-lg font-black uppercase tracking-tight leading-none text-white/90">UP TO</span>
-                <span className="text-4xl sm:text-6xl font-black tracking-tighter leading-none font-mono text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]">70%</span>
-                <div className="flex flex-col justify-center items-start leading-none">
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-amber-300">%</span>
-                  <span className="text-[10px] sm:text-xs font-black tracking-tight leading-none text-white/90">OFF</span>
+          {/* Heading */}
+          <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white text-center tracking-tight leading-tight max-w-3xl mb-3">
+            {lang === 'fr' ? (
+              <>Jusqu'à <span className="text-[#f5c71a]">-70%</span> sur les essentiels Tech</>
+            ) : (
+              <>Up to <span className="text-[#f5c71a]">70% OFF</span> Tech Essentials</>
+            )}
+          </h1>
+
+          {/* Subheading */}
+          <p className="text-[10px] sm:text-xs md:text-sm text-white/70 text-center max-w-2xl mb-6 font-medium leading-relaxed">
+            {lang === 'fr' 
+              ? "Livraison gratuite dès 10$ • Livraison garantie en 5 jours • Protection acheteur 75 jours" 
+              : "Free shipping on orders over $10 • Guaranteed 5-Day Delivery • 75-Day Buyer Protection"
+            }
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-8">
+            {/* Button 1: Shop Deals Now */}
+            <button 
+              onClick={() => {
+                const element = document.getElementById('deals-product-grid');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="px-6 py-3 bg-gradient-to-r from-[#ff5722] to-[#ff2a5f] hover:from-[#ff6b3d] hover:to-[#ff4575] text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-[0_6px_20px_rgba(255,87,34,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
+            >
+              <span>{lang === 'fr' ? 'Acheter maintenant' : 'Shop Deals Now'}</span>
+              <ArrowRight size={14} className="stroke-[3]" />
+            </button>
+
+            {/* Button 2: Track Existing Order */}
+            <button 
+              onClick={() => navigate('/order-tracking')}
+              className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-wider transition-all border border-white/15 hover:scale-[1.03] active:scale-[0.97] cursor-pointer flex items-center gap-2 shadow-lg"
+            >
+              <Truck size={14} className="text-white/80" />
+              <span>{lang === 'fr' ? 'Suivre ma commande' : 'Track Existing Order'}</span>
+            </button>
+          </div>
+
+          {/* Countdown timer card inside the banner */}
+          <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-5 w-full max-w-[340px] sm:max-w-[400px] flex flex-col items-center gap-3 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[#f5c71a]">
+              {lang === 'fr' ? 'LA VENTE FLASH SE TERMINE DANS' : 'FLASH SALE ENDS IN'}
+            </span>
+            
+            <div className="flex items-center gap-2.5 sm:gap-3 text-white select-none">
+              <div className="flex flex-col items-center">
+                <div className="bg-[#0b0f19] border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-[#f5c71a] shadow-inner">
+                  {String(timeLeft.hours).padStart(2, '0')}
                 </div>
+                <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 uppercase tracking-widest">HRS</span>
+              </div>
+              
+              <span className="text-lg sm:text-2xl font-black text-[#f5c71a] -mt-4">:</span>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-[#0b0f19] border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-[#f5c71a] shadow-inner">
+                  {String(timeLeft.minutes).padStart(2, '0')}
+                </div>
+                <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 uppercase tracking-widest">MIN</span>
+              </div>
+              
+              <span className="text-lg sm:text-2xl font-black text-[#f5c71a] -mt-4">:</span>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-[#0b0f19] border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-red-500 shadow-inner animate-[pulse_1s_infinite]">
+                  {String(timeLeft.seconds).padStart(2, '0')}
+                </div>
+                <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 uppercase tracking-widest">SEC</span>
               </div>
             </div>
           </div>
-
-          {/* Golden text on the right side of the divider */}
-          <div className="absolute right-0 top-0 bottom-0 w-[30%] flex flex-col items-center justify-center text-center z-10 select-none px-1">
-            <span className="text-[12px] sm:text-sm font-black uppercase tracking-wider text-amber-300 transform rotate-90 leading-none">
-              VIP
-            </span>
-            <span className="text-[7px] font-black uppercase tracking-widest text-white/70 mt-4 leading-none">
-              SUPER
-            </span>
-          </div>
-
-          <div className="absolute bottom-1.5 left-7 text-[7px] font-black uppercase tracking-widest text-white/40">Limited Slots Only</div>
         </motion.div>
       </div>
 
@@ -249,7 +288,7 @@ export default function DealsContent({ onProductClick }) {
       </div>
 
       {/* Grid container with full bleed mobile styling */}
-      <div className="w-full relative px-0 md:px-12 py-3 bg-white dark:bg-slate-950">
+      <div id="deals-product-grid" className="w-full relative px-0 md:px-12 py-3 bg-white dark:bg-slate-950">
         {dealProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-6">
             {dealProducts.map((prod, idx) => (

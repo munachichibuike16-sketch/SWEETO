@@ -1,3 +1,28 @@
+// Monkey-patch Node.prototype.removeChild and insertBefore to handle Google Translate crashes in React
+if (typeof window !== 'undefined') {
+  const originalRemoveChild = Node.prototype.removeChild;
+  Node.prototype.removeChild = function (child) {
+    if (child.parentNode !== this) {
+      if (console) {
+        console.warn('Prevented React removeChild error on translated DOM:', child, 'parent:', this);
+      }
+      return child;
+    }
+    return originalRemoveChild.call(this, child);
+  };
+
+  const originalInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function (newNode, referenceNode) {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      if (console) {
+        console.warn('Prevented React insertBefore error on translated DOM:', newNode, 'ref:', referenceNode, 'parent:', this);
+      }
+      return newNode;
+    }
+    return originalInsertBefore.call(this, newNode, referenceNode);
+  };
+}
+
 // Auto-redirect legacy non-hash URLs to HashRouter format
 (function() {
   const pathname = window.location.pathname;
@@ -47,7 +72,7 @@ function updatePWAManifestAndIcons() {
     faviconLink.rel = 'icon';
     document.head.appendChild(faviconLink);
   }
-  const targetFavicon = isAdminRoute ? '/admin-favicon.svg' : '/favicon.svg';
+  const targetFavicon = isAdminRoute ? '/admin-favicon.svg' : '/sweeto_logo.png';
   if (faviconLink.getAttribute('href') !== targetFavicon) {
     faviconLink.setAttribute('href', targetFavicon);
   }

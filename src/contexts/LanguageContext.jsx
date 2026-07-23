@@ -910,6 +910,34 @@ export const LanguageProvider = ({ children }) => {
       document.cookie = `googtrans=${cookieVal}; path=/;`;
       document.cookie = `googtrans=${cookieVal}; path=/; domain=${window.location.hostname};`;
     }
+
+    // 4. Injected auto-hide style after 10 seconds to avoid blocking the header
+    const timer = setTimeout(() => {
+      const style = document.createElement('style');
+      style.id = 'goog-translate-override-style';
+      style.innerHTML = `
+        .goog-te-banner-frame,
+        iframe.goog-te-banner-frame,
+        .goog-te-banner,
+        .goog-te-menu-value,
+        #goog-gt-tt {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          height: 0 !important;
+        }
+        body {
+          top: 0px !important;
+          position: static !important;
+        }
+        .skiptranslate {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }, 10000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const changeLanguage = (newLang) => {

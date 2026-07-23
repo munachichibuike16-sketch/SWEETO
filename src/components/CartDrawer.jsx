@@ -6,13 +6,16 @@ import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import cartEmptyMascot from '../assets/cart_empty_mascot.png';
+import ProductCard from './ProductCard';
 
 const CartDrawer = ({ isOpen, onClose }) => {
-  const { settings, showToast, openGlobalLightbox } = useStore();
+  const { settings, showToast, openGlobalLightbox, products } = useStore();
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const { t, isRTL } = useLanguage();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const navigate = useNavigate();
+
+  const currencySymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency === 'USD' ? '$' : (settings?.currency || 'FCFA'));
 
   const handleGoToCheckout = () => {
     onClose();
@@ -60,42 +63,20 @@ const CartDrawer = ({ isOpen, onClose }) => {
             </div>
 
             {/* Header */}
-            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex justify-between items-center bg-white/50 dark:bg-slate-900/30 z-10">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={onClose}
-                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer text-slate-800 dark:text-white"
-                >
-                  <ArrowLeft size={22} />
-                </button>
-                <h2 className="text-[17px] font-black text-slate-900 dark:text-white uppercase italic tracking-tight">
-                  Cart ({totalItemsCount})
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 flex justify-between items-center bg-white dark:bg-slate-900 z-10">
+              <div className="flex items-center gap-2.5">
+                <ShoppingBag className="text-indigo-600 dark:text-indigo-400 animate-pulse" size={20} />
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                  Your Shopping Cart
                 </h2>
               </div>
               
-              <div className="flex items-center gap-2.5">
-                <div className="flex items-center gap-1 text-[10px] font-black text-slate-600 dark:text-slate-405 bg-slate-100 dark:bg-slate-800/80 px-3 py-1 rounded-full border border-slate-200/30 dark:border-white/5 shadow-sm">
-                  <MapPin size={12} className="text-[#e61e25]" />
-                  <span>Cote D'Ivoire</span>
-                </div>
-                <button 
-                  onClick={() => {
-                    onClose();
-                    navigate('/wishlist');
-                  }}
-                  className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
-                  title="Wishlist"
-                >
-                  <Heart size={20} />
-                </button>
-                <button 
-                  onClick={handleClearCart}
-                  className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
-                  title="Clear Cart"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
+              <button 
+                onClick={onClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer border-none font-bold text-base"
+              >
+                ✕
+              </button>
             </div>
 
             {/* Cart Items List */}
@@ -132,142 +113,145 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     </button>
                   </motion.div>
                 )}
-
                 {cartItems.length > 0 && (
-                  <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-[1.8rem] sm:rounded-[2rem] border border-slate-100 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm space-y-4">
-                    {/* Store Header */}
-                    <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800/40 select-none">
-                      <div className="w-[18px] h-[18px] rounded-full bg-[#e61e25] flex items-center justify-center text-white shadow-sm shrink-0">
-                        <Check size={11} strokeWidth={4} />
-                      </div>
-                      <span className="text-xs font-black text-slate-850 dark:text-slate-100 uppercase tracking-tight italic">
-                        Sweeto Official Store
-                      </span>
-                    </div>
-
-                    {/* Products List */}
-                    <div className="space-y-4">
-                      {cartItems.map((item, i) => (
-                        <motion.div 
-                          key={item.id} 
-                          layout
-                          initial={{ x: isRTL ? -30 : 30, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          exit={{ x: isRTL ? -30 : 30, opacity: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-white/70 dark:bg-slate-900/40 rounded-[1.2rem] sm:rounded-[1.5rem] border border-slate-100 dark:border-slate-850/60 group hover:shadow-md transition-all items-stretch"
+                  <div className="space-y-4 text-left">
+                    {cartItems.map((item, i) => (
+                      <motion.div 
+                        key={item.id} 
+                        layout
+                        initial={{ x: isRTL ? -30 : 30, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: isRTL ? -30 : 30, opacity: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm items-center relative group"
+                      >
+                        {/* Product Image */}
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onClose();
+                            navigate(`/product/${item.id}`);
+                          }}
+                          className="w-20 h-20 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center justify-center p-2 shrink-0 cursor-pointer overflow-hidden border border-slate-100 dark:border-slate-800/60"
                         >
-                          {/* Checked selection icon on the far left */}
-                          <div className="flex items-center justify-center pr-1 select-none">
-                            <div className="w-[18px] h-[18px] rounded-full bg-[#e61e25] flex items-center justify-center text-white shadow-sm shrink-0">
-                              <Check size={11} strokeWidth={4} />
-                            </div>
+                          <img 
+                            src={item.image_url || item.image || '/hero-banner.png'} 
+                            alt={item.name} 
+                            className="w-full h-full object-contain" 
+                          />
+                        </div>
+
+                        {/* Product Details */}
+                        <div className="flex-1 min-w-0 text-left">
+                          <h4 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate mb-1">
+                            {item.name}
+                          </h4>
+                          <span className="font-extrabold text-indigo-655 dark:text-indigo-400 text-xs sm:text-sm block mb-2">
+                            {currencySymbol} {item.price?.toLocaleString()}
+                          </span>
+                          
+                          {/* Stepper */}
+                          <div className="flex items-center gap-3">
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="w-6 h-6 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer bg-transparent"
+                            >
+                              -
+                            </button>
+                            <span className="text-xs font-bold text-slate-805 dark:text-white w-4 text-center">
+                              {item.quantity}
+                            </span>
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="w-6 h-6 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer bg-transparent"
+                            >
+                              +
+                            </button>
                           </div>
+                        </div>
 
-                          {/* Product Image */}
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-3 shadow-sm group-hover:scale-102 transition-transform shrink-0">
-                            <img 
-                              src={item.image_url || item.image || '/hero-banner.png'} 
-                              alt="" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                onClose();
-                                navigate(`/product/${item.id}`);
-                              }}
-                              className="w-full h-full object-contain mix-blend-multiply cursor-pointer" 
-                            />
-                          </div>
-
-                          {/* Product Details */}
-                          <div className="flex-1 flex flex-col justify-between py-0.5">
-                            <div>
-                              <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm uppercase italic tracking-tighter leading-tight group-hover:text-[#e61e25] transition-colors line-clamp-2 mb-1">{item.name}</h4>
-                              
-                              {/* Variant specification box */}
-                              <div className="inline-block text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/20 dark:border-white/5 mb-1.5">
-                                Category: {item.category || 'Official'} • Official Warranty
-                              </div>
-                              
-                              {/* Paid shipping status */}
-                              <div className="text-[10px] font-black text-[#e61e25] tracking-wide mb-2 uppercase italic">
-                                Shipping: {settings?.currency || 'XOF'} 1,500
-                              </div>
-                            </div>
-
-                            {/* Bottom row containing the price on the left and the stepper + trash delete button on the right */}
-                            <div className="flex justify-between items-center gap-2 mt-auto">
-                              <span className="font-black text-slate-950 dark:text-white text-sm sm:text-base italic tracking-tighter leading-none">{settings?.currency || 'XOF'} {item.price?.toLocaleString()}</span>
-                              
-                              <div className="flex items-center gap-2 shrink-0">
-                                {/* Stepper */}
-                                <div className="flex items-center gap-2 bg-white dark:bg-slate-950 px-2 py-1 rounded-lg border border-slate-150 dark:border-slate-800/80 shadow-sm">
-                                  <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-slate-400 hover:text-[#e61e25] transition-colors cursor-pointer">
-                                    <Minus className="w-[10px] h-[10px] sm:w-[12px] sm:h-[12px]" strokeWidth={3} />
-                                  </motion.button>
-                                  <span className="text-[10px] sm:text-xs font-black text-slate-900 dark:text-white min-w-[12px] text-center italic">{item.quantity}</span>
-                                  <motion.button whileTap={{ scale: 0.8 }} onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-slate-400 hover:text-[#e61e25] transition-colors cursor-pointer">
-                                    <Plus className="w-[10px] h-[10px] sm:w-[12px] sm:h-[12px]" strokeWidth={3} />
-                                  </motion.button>
-                                </div>
-
-                                {/* Trash button */}
-                                <motion.button 
-                                  whileHover={{ scale: 1.1, color: '#ef4444' }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => removeFromCart(item.id)} 
-                                  className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
-                                  title="Remove from cart"
-                                >
-                                  <Trash2 className="w-[15px] h-[15px] sm:w-[16px] sm:h-[16px]" />
-                                </motion.button>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                        {/* Delete Trash Button */}
+                        <button 
+                          onClick={() => removeFromCart(item.id)} 
+                          className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer bg-transparent border-none shrink-0"
+                          title="Remove from cart"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </motion.div>
+                    ))}
                   </div>
                 )}
               </AnimatePresence>
+
+              {/* More to Love Recommendations */}
+              {(() => {
+                const moreToLove = (products || [])
+                  .filter(p => !cartItems.some(item => item.id === p.id))
+                  .slice(0, 4);
+                
+                if (moreToLove.length === 0) return null;
+                
+                return (
+                  <div className="mt-8 select-none">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="w-1 h-3 bg-[#e61e25] rounded-full" />
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        More to Love
+                      </h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      {moreToLove.map((p, idx) => (
+                        <ProductCard
+                          key={p.id}
+                          product={p}
+                          index={idx}
+                          onProductClick={(prod) => {
+                            onClose();
+                            navigate(`/product/${prod.id}`);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Footer / Checkout Area */}
             {cartItems.length > 0 && (
-              <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0f172a] flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-20">
-                {/* Left: Checked select all */}
-                <div className="flex items-center gap-2 select-none">
-                  <div className="w-5 h-5 rounded-full bg-[#e61e25] flex items-center justify-center text-white shadow-sm shadow-red-500/20">
-                    <Check size={12} strokeWidth={3.5} />
-                  </div>
-                  <span className="text-[12px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">All</span>
-                </div>
-
-                {/* Middle: Pricing & Savings */}
-                <div className="flex flex-col items-end pr-2">
-                  <div className="flex items-center gap-1 cursor-pointer" onClick={() => showToast(`Total includes ${settings?.currency || 'XOF'} 1,500 shipping fee 📦`, "info")}>
-                    <span className="font-extrabold text-[15px] text-slate-900 dark:text-white tracking-tight leading-none">
-                      {settings?.currency || 'XOF'} {grandTotal.toLocaleString()}
-                    </span>
-                    <ChevronDown size={14} className="text-slate-500 dark:text-slate-400" />
-                  </div>
-                  <span className="text-[9px] font-black text-[#e61e25] mt-1 tracking-tight">
-                    Saved: {settings?.currency || 'XOF'} {Math.round(cartTotal * 0.15).toLocaleString()}
+              <div className="p-5 border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0f172a] flex flex-col gap-4 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-20 text-left">
+                {/* Row 1: Subtotal */}
+                <div className="flex justify-between items-center select-none">
+                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Subtotal</span>
+                  <span className="font-extrabold text-base text-slate-900 dark:text-white">
+                    {currencySymbol} {cartTotal.toLocaleString()}
                   </span>
                 </div>
 
-                {/* Right: Checkout button & urgency indicator */}
-                <div className="flex flex-col items-center gap-1">
+                {/* Row 2: Helper shipping tip */}
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold select-none leading-none mt-[-4px]">
+                  Taxes and shipping calculated at checkout stage.
+                </p>
+
+                {/* Row 3: Action Buttons */}
+                <div className="flex gap-3 pt-1">
+                  <button 
+                    onClick={handleClearCart}
+                    className="flex-1 py-3.5 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-350 font-extrabold text-[11px] uppercase tracking-wider rounded-2xl transition-all cursor-pointer border-none shadow-sm active:scale-95"
+                  >
+                    Clear Cart
+                  </button>
+                  
                   <button 
                     onClick={handleGoToCheckout}
-                    className="px-6 py-2.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-[13px] rounded-full transition-all shadow-md shadow-red-500/10 hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
+                    className="flex-[1.2] py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer border-none flex items-center justify-center gap-1.5"
                   >
-                    Checkout ({totalItemsCount})
+                    <span>Checkout</span>
+                    <span>➔</span>
                   </button>
-                  <div className="flex items-center gap-1 text-[9px] font-bold text-[#e61e25] uppercase tracking-wide">
-                    <Hourglass size={10} className="animate-pulse" />
-                    <span>Almost sold out!</span>
-                  </div>
                 </div>
               </div>
             )}

@@ -65,7 +65,8 @@ const WavePayPage = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!orderId || orderId === 'null' || orderId === 'undefined') {
+      const cleanId = String(orderId).toLowerCase().trim();
+      if (!orderId || cleanId === 'null' || cleanId === 'undefined' || cleanId === '') {
         navigate('/');
         return;
       }
@@ -118,7 +119,8 @@ const WavePayPage = () => {
 
   // Polling effect to check for automated webhook/payment confirmation
   useEffect(() => {
-    if (!orderId || isSuccess) return;
+    const cleanId = String(orderId).toLowerCase().trim();
+    if (!orderId || cleanId === 'null' || cleanId === 'undefined' || cleanId === '' || isSuccess) return;
 
     const interval = setInterval(async () => {
       try {

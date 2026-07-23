@@ -412,7 +412,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   onClick={handleToggleWishlist}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg backdrop-blur-md border ${isWishlisted ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/40' : 'bg-white/80 border-slate-100 text-slate-400 hover:text-[#ff3b30]'}`}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-lg backdrop-blur-md border cursor-pointer ${isWishlisted ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/40' : 'bg-white/80 border-slate-100 text-slate-400 hover:text-[#ff3b30]'}`}
                 >
                   <Heart className="w-[18px] h-[18px] sm:w-5 sm:h-5" fill={isWishlisted ? "currentColor" : "none"} />
                 </motion.button>
@@ -420,7 +420,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   onClick={handleShare}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-md border border-slate-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-400 hover:text-eas-blue transition-colors shadow-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/80 backdrop-blur-md border border-slate-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-400 hover:text-eas-blue transition-colors shadow-lg cursor-pointer"
                 >
                   <Share2 className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 </motion.button>
@@ -428,7 +428,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                   onClick={onClose}
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 text-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl"
+                  className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 text-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer"
                 >
                   <X className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
                 </motion.button>

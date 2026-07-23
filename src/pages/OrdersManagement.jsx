@@ -207,7 +207,7 @@ export default function OrdersManagement({ preselectedOrderId }) {
 
   // Dynamic coordinates tracking poller for admin dashboard overview
   useEffect(() => {
-    if (!selectedOrder) return;
+    if (!selectedOrder || !selectedOrder.id) return;
     setTrackingData(null);
 
     const loadTracking = async () => {

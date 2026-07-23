@@ -9,6 +9,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import QuickViewModal from './QuickViewModal';
 import { logVisitorEvent } from '../utils/analytics';
+import { API_BASE_URL } from '../utils/api';
 
 const trackVisit = (page_path, event_type, product_name = '') => {
   logVisitorEvent(page_path, event_type, product_name);
@@ -40,7 +41,7 @@ const getSoldCount = (product) => {
 };
 
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
-  const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike, incrementProductView } = useStore();
+  const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike, incrementProductView, showToast } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
   const { addToCart } = useCart();
@@ -185,7 +186,11 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
       // Fallback: Copy link to clipboard
       navigator.clipboard.writeText(shareUrl)
         .then(() => {
-          alert(lang === 'fr' ? 'Lien de partage copié dans le presse-papiers !' : 'Share link copied to clipboard!');
+          if (showToast) {
+            showToast(lang === 'fr' ? 'Lien de partage copié dans le presse-papiers ! 🔗' : 'Share link copied to clipboard! 🔗', 'success');
+          } else {
+            alert(lang === 'fr' ? 'Lien de partage copié dans le presse-papiers !' : 'Share link copied to clipboard!');
+          }
         })
         .catch((err) => {
           console.error('Failed to copy: ', err);
@@ -370,7 +375,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
             </button>
             <button 
               onClick={handleShareProduct}
-              className="w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#2563eb] dark:hover:text-[#3b82f6]"
+              className="w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#2563eb] dark:hover:text-[#3b82f6] cursor-pointer"
             >
               <Share2 size={13} />
             </button>

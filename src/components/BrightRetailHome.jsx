@@ -22,6 +22,7 @@ import SweetoLogo from './SweetoLogo';
 import ForYouSection from './ForYouSection';
 import DealOfTheDaySection from './DealOfTheDaySection';
 import ShopByCategorySection from './ShopByCategorySection';
+import Hero from './Hero';
 
 const getImagesList = (prod) => {
   if (!prod) return [];
@@ -42,8 +43,39 @@ const getImagesList = (prod) => {
   return list;
 };
 
+const ProductCardSkeleton = () => {
+  return (
+    <div className="bg-white dark:bg-slate-850 border border-slate-100 dark:border-slate-800 rounded-[1.8rem] p-4 flex flex-col justify-between relative overflow-hidden select-none animate-pulse w-full aspect-[3/4]">
+      <style>{`
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
+      {/* Product Image Skeleton */}
+      <div className="w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+      </div>
+
+      {/* Brand & Badge Skeleton */}
+      <div className="mt-3.5 space-y-2 text-left">
+        <div className="h-2 w-1/3 bg-slate-100 dark:bg-slate-800 rounded-full" />
+        <div className="h-3 w-11/12 bg-slate-150 dark:bg-slate-800/80 rounded-full" />
+        <div className="h-3 w-3/4 bg-slate-150 dark:bg-slate-800/80 rounded-full" />
+      </div>
+
+      {/* Bottom Price & Add button Row */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="h-4 w-1/2 bg-slate-150 dark:bg-slate-800/85 rounded-full" />
+        <div className="w-7 h-7 bg-slate-150 dark:bg-slate-800/85 rounded-full" />
+      </div>
+    </div>
+  );
+};
+
 export default function BrightRetailHome({ onProductClick }) {
-  const { products, categories, settings, sections, openGlobalLightbox, showToast } = useStore();
+  const { products, categories, settings, sections, openGlobalLightbox, showToast, loading, setSelectedCategory, setSelectedBrand, setSearchQuery } = useStore();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { t, lang, t_smart } = useLanguage();
@@ -53,6 +85,10 @@ export default function BrightRetailHome({ onProductClick }) {
 
   // Time remaining countdown for Deal of the Day
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 22, seconds: 45 });
+
+  const renderSkeletons = (count = 6) => {
+    return Array(count).fill(0).map((_, idx) => <ProductCardSkeleton key={`skeleton-${idx}`} />);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -254,12 +290,12 @@ export default function BrightRetailHome({ onProductClick }) {
     );
   };
 
-  const renderProductCard = (product) => {
+  const renderProductCard = (product, idx = 0, prefix = 'p') => {
     const discount = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
     const isWished = isInWishlist(product.id);
     return (
       <div 
-        key={product.id}
+        key={`${prefix}-${product.id}-${idx}`}
         onClick={() => onProductClick(product)}
         className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl overflow-hidden flex flex-col p-4 relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 dark:hover:border-[#ffc200]/50 transition-all duration-300"
       >
@@ -371,53 +407,67 @@ export default function BrightRetailHome({ onProductClick }) {
     );
   };
 
-  const renderHero = (section) => {
-    const title = section.title || settings?.bright_hero_title || 'SUMMER 10% SALE';
-    const subtitle = section.subtitle || settings?.bright_hero_subtitle || 'Under Favorable Smart Gadgets';
-    const image = section.headerImage || settings?.bright_hero_image || 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&q=80&w=500';
-    const priceText = settings?.bright_hero_price || 'FROM $399.99';
-    const promoCode = settings?.bright_hero_promo_code || 'SUMMER10';
+  const renderParentCategoriesPills = () => {
+    if (!categories || categories.length === 0) return null;
+    const parentCats = categories.filter(c => !c.parent_id && c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout') || [];
+    
+    // Fallback to first 6 categories if no parent categories are explicitly designated
+    const displayCats = parentCats.length > 0 ? parentCats : categories.slice(0, 6).filter(c => c.name && c.name.toLowerCase() !== 'all' && c.name.toLowerCase() !== 'tout');
+
+    const isAllSelected = !selectedCategory;
 
     return (
-      <div key="hero-slider" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="w-full bg-white dark:bg-[#0b1329] rounded-[1.5rem] border border-slate-200/50 dark:border-slate-800/60 overflow-hidden shadow-sm relative grid grid-cols-1 md:grid-cols-2 min-h-[340px] sm:min-h-[460px] p-6 sm:p-12 items-center">
-          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[radial-gradient(#000_1px,transparent_1px)] dark:bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
-          
-          <div className="z-10 space-y-4 text-center md:text-left">
-            <span className="inline-block px-3 py-1 bg-[#ffc200] text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-full">
-              {t_smart(subtitle)}
-            </span>
-            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none italic">
-              {t_smart(title)}
-            </h1>
-            <p className="text-xs font-black tracking-widest uppercase text-slate-450 dark:text-slate-400">
-              {t_smart(priceText)}
-            </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <span className="px-4 py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#020617]">
-                PROMO CODE : <span className="text-[#ffc200] font-mono">{promoCode}</span>
-              </span>
-              <button 
-                onClick={() => {
-                  const event = new CustomEvent('view-all-products');
-                  window.dispatchEvent(event);
-                }}
-                className="px-6 py-3 bg-slate-950 dark:bg-white text-white dark:text-slate-955 hover:bg-[#ffc200] dark:hover:bg-[#ffc200] hover:text-slate-955 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
-              >
-                {t('start_shopping') || 'Start Shopping'}
-              </button>
-            </div>
-          </div>
+      <div className="max-w-[1240px] mx-auto w-full px-4 sm:px-6 lg:px-8 select-none mt-0 sm:mt-4 mb-2">
+        <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1 scroll-smooth w-full">
+          {/* All Items Button - Red pill if active, gray pill if not */}
+          <button
+            onClick={() => {
+              setSelectedCategory(null);
+              setSelectedBrand(null);
+              setSearchQuery('');
+              navigate('/');
+            }}
+            className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer border-none flex items-center justify-center min-h-[38px] leading-none ${
+              isAllSelected 
+                ? 'bg-[#ff2d55] text-white shadow-md' 
+                : 'bg-[#f1f5f9] dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 shadow-sm hover:bg-slate-200/60 dark:hover:bg-slate-800'
+            }`}
+          >
+            {lang === 'fr' ? 'Tous articles' : 'All Items'}
+          </button>
 
-          <div className="relative h-64 sm:h-80 w-full flex items-center justify-center mt-6 md:mt-0">
-            <div className="absolute w-48 h-48 sm:w-72 sm:h-72 rounded-full bg-slate-100 dark:bg-[#020617] blur-3xl -z-10" />
-            <img 
-              src={image} 
-              alt={title} 
-              className="max-h-full max-w-[85%] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
-            />
-          </div>
+          {/* Individual Category Buttons */}
+          {displayCats.map(cat => {
+            const isSelected = selectedCategory === cat.name;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.name);
+                  setSelectedBrand(null);
+                  setSearchQuery('');
+                  navigate(`/category/${encodeURIComponent(cat.name)}`);
+                }}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer border-none flex items-center justify-center min-h-[38px] leading-none normal-case ${
+                  isSelected 
+                    ? 'bg-[#ff2d55] text-white shadow-md' 
+                    : 'bg-[#f1f5f9] dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 shadow-sm hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                }`}
+              >
+                {t_smart(cat.name)}
+              </button>
+            );
+          })}
         </div>
+      </div>
+    );
+  };
+
+  const renderHero = (section) => {
+    return (
+      <div key="hero-section-wrapper" className="w-full flex flex-col">
+        <Hero key="hero-slider-main" banners={settings?.hero_banners} layout={settings?.hero_mode} />
+        {renderParentCategoriesPills()}
       </div>
     );
   };
@@ -559,44 +609,124 @@ export default function BrightRetailHome({ onProductClick }) {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {currentTabProducts.map(product => renderProductCard(product))}
+          {loading 
+            ? renderSkeletons(6) 
+            : currentTabProducts.map((product, idx) => renderProductCard(product, idx, 'tab'))}
         </div>
       </div>
     );
   };
 
   const renderBillboard = (section) => {
-    const title = section.title || settings?.bright_wide_banner_title || 'Get Up To 85% OFF on big billion day 2021';
-    const subtitle = section.subtitle || settings?.bright_wide_banner_subtitle || 'Big Saving on Top selling Smartphone';
-    const image = section.headerImage || settings?.bright_wide_banner_image || 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&q=80&w=1200';
+    const title = section.title || settings?.bright_wide_banner_title || 'Up to 70% OFF Tech Essentials';
+    const subtitle = section.subtitle || settings?.bright_wide_banner_subtitle || 'Free shipping on orders over $10 • Guaranteed 5-Day Delivery • 75-Day Buyer Protection';
+
+    const formatTitle = (rawText) => {
+      const regex = /(\d+%\s*(?:OFF|de\s*réduction)?)/gi;
+      const parts = rawText.split(regex);
+      return parts.map((part, index) => {
+        if (part.match(regex)) {
+          return <span key={index} className="text-[#ffd200]">{part}</span>;
+        }
+        return part;
+      });
+    };
 
     return (
-      <div key="billboard" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="w-full bg-[#3c4da3] rounded-[1.5rem] p-6 sm:p-12 text-white flex flex-col md:flex-row justify-between items-center relative overflow-hidden shadow-sm">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-white/10 opacity-30 pointer-events-none" />
+      <div key="billboard" className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="w-full bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#251e18] border border-white/5 rounded-[2rem] px-6 py-10 sm:py-14 sm:px-12 text-white flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl">
+          {/* Subtle Ambient Light Gradients */}
+          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#ffd200]/5 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[250px] h-[250px] bg-[#ff4136]/5 rounded-full blur-[80px] pointer-events-none" />
           
-          <div className="z-10 space-y-3 text-center md:text-left md:max-w-[55%]">
-            <p className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full inline-block">{t_smart(subtitle)}</p>
-            <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight leading-none italic">
-              {t_smart(title)}
-            </h2>
-            <button 
-              onClick={() => {
-                const event = new CustomEvent('view-all-products');
-                window.dispatchEvent(event);
-              }}
-              className="mt-2 px-6 py-3 bg-[#ffc200] hover:bg-white text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95"
-            >
-              {t('shop_now') || 'Shop Now'}
-            </button>
-          </div>
+          <div className="z-10 flex flex-col items-center max-w-[800px] w-full">
+            {/* Top Choice Badge */}
+            <span className="bg-gradient-to-r from-[#ffd200] to-[#ffae00] text-black font-extrabold text-[10px] sm:text-xs tracking-wider px-4 py-1.5 rounded-full inline-flex items-center gap-1.5 uppercase shadow-sm select-none">
+              <Zap size={12} fill="currentColor" /> {lang === 'fr' ? 'Super Offres Choix' : 'Choice Super Deals'}
+            </span>
 
-          <div className="relative h-44 sm:h-52 w-full md:w-[35%] flex items-center justify-center mt-6 md:mt-0 z-10">
-            <img 
-              src={image} 
-              alt={title} 
-              className="max-h-full object-contain filter drop-shadow-2xl hover:scale-105 transition-transform duration-500 rounded-lg"
-            />
+            {/* Headline */}
+            <h2 className="text-2xl sm:text-[38px] font-black uppercase tracking-tight leading-tight select-none mt-5">
+              {formatTitle(t_smart(title))}
+            </h2>
+
+            {/* Subtitle */}
+            <p className="text-[11px] sm:text-xs text-slate-350 dark:text-slate-400 font-medium tracking-wide max-w-[90%] sm:max-w-[80%] leading-relaxed select-none mt-3.5">
+              {t_smart(subtitle)}
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full mt-8">
+              {/* Button 1: Shop Deals Now */}
+              <button
+                onClick={() => {
+                  navigate('/deals');
+                  window.scrollTo(0, 0);
+                }}
+                className="w-full sm:w-auto px-7 py-3 rounded-full text-xs font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#ff4136] via-[#ff2d55] to-[#ff3b30] shadow-[0_4px_16px_rgba(255,45,85,0.35)] hover:shadow-[0_6px_20px_rgba(255,45,85,0.5)] transition-all hover:scale-[1.03] active:scale-95 cursor-pointer border-none flex items-center justify-center gap-2"
+              >
+                <span>{lang === 'fr' ? 'Acheter maintenant' : 'Shop Deals Now'}</span>
+                <span>➔</span>
+              </button>
+
+              {/* Button 2: Track Order */}
+              <button
+                onClick={() => {
+                  navigate('/order-tracking');
+                  window.scrollTo(0, 0);
+                }}
+                className="w-full sm:w-auto px-7 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.03] active:scale-95 cursor-pointer flex items-center justify-center gap-2.5"
+              >
+                <Truck size={15} className="text-white opacity-90 shrink-0" />
+                <span>{lang === 'fr' ? 'Suivre ma commande' : 'Track Existing Order'}</span>
+              </button>
+            </div>
+
+            {/* Premium Countdown Panel */}
+            <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-[20px] px-6 py-4.5 w-full max-w-[380px] sm:max-w-[400px] flex flex-col items-center mt-9 shadow-inner select-none">
+              <span className="text-[#ffd200] font-black uppercase text-[10px] sm:text-[11px] tracking-[0.25em] mb-4">
+                {lang === 'fr' ? 'LA VENTE FLASH FINIT DANS' : 'FLASH SALE ENDS IN'}
+              </span>
+              
+              <div className="flex items-center justify-center gap-3.5 w-full">
+                {/* Hours Box */}
+                <div className="flex flex-col items-center justify-center bg-[#090d16] border border-white/5 rounded-xl px-4 py-2.5 min-w-[62px] shadow-md">
+                  <span className="text-xl sm:text-2xl font-black text-[#ffd200] leading-none font-mono">
+                    {String(timeLeft.hours).padStart(2, '0')}
+                  </span>
+                  <span className="text-[7.5px] sm:text-[8px] font-extrabold text-slate-400 mt-1.5 uppercase tracking-wider">
+                    {lang === 'fr' ? 'HRES' : 'HRS'}
+                  </span>
+                </div>
+                
+                {/* Colon */}
+                <span className="text-lg font-black text-[#ffd200] animate-pulse self-center">:</span>
+                
+                {/* Minutes Box */}
+                <div className="flex flex-col items-center justify-center bg-[#090d16] border border-white/5 rounded-xl px-4 py-2.5 min-w-[62px] shadow-md">
+                  <span className="text-xl sm:text-2xl font-black text-[#ffd200] leading-none font-mono">
+                    {String(timeLeft.minutes).padStart(2, '0')}
+                  </span>
+                  <span className="text-[7.5px] sm:text-[8px] font-extrabold text-slate-400 mt-1.5 uppercase tracking-wider">
+                    MIN
+                  </span>
+                </div>
+                
+                {/* Colon */}
+                <span className="text-lg font-black text-[#ffd200] animate-pulse self-center">:</span>
+                
+                {/* Seconds Box */}
+                <div className="flex flex-col items-center justify-center bg-[#090d16] border border-white/5 rounded-xl px-4 py-2.5 min-w-[62px] shadow-md">
+                  <span className="text-xl sm:text-2xl font-black text-[#ffd200] leading-none font-mono">
+                    {String(timeLeft.seconds).padStart(2, '0')}
+                  </span>
+                  <span className="text-[7.5px] sm:text-[8px] font-extrabold text-slate-400 mt-1.5 uppercase tracking-wider">
+                    SEC
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -830,7 +960,7 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
             {renderBrightHeader(displayTitleA, null, { headerStyle: section.headerStyle, showViewAll: section.showViewAll !== false }, null, true)}
             <div className="grid grid-cols-2 gap-4">
-              {productsA.map(p => renderProductCard(p))}
+              {loading ? renderSkeletons(4) : productsA.map((p, idx) => renderProductCard(p, idx, 'sideA'))}
             </div>
           </div>
 
@@ -838,7 +968,7 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
             {renderBrightHeader(displayTitleB, null, { headerStyle: section.headerStyleB || 'bright_outlined', showViewAll: section.showViewAll !== false }, null, true)}
             <div className="grid grid-cols-2 gap-4">
-              {productsB.map(p => renderProductCard(p))}
+              {loading ? renderSkeletons(4) : productsB.map((p, idx) => renderProductCard(p, idx, 'sideB'))}
             </div>
           </div>
         </div>
@@ -862,7 +992,7 @@ export default function BrightRetailHome({ onProductClick }) {
         {renderBrightHeader(title, subtitle, section)}
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {displayProducts.map(p => renderProductCard(p))}
+          {loading ? renderSkeletons(maxProducts) : displayProducts.map((p, idx) => renderProductCard(p, idx, 'custom'))}
         </div>
       </div>
     );
@@ -884,9 +1014,13 @@ export default function BrightRetailHome({ onProductClick }) {
     return (
       <div key={section.id || `featured-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {renderBrightHeader(title, subtitle, section)}
-        {displayProducts.length > 0 ? (
+        {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {displayProducts.map(p => renderProductCard(p))}
+            {renderSkeletons(maxProducts)}
+          </div>
+        ) : displayProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {displayProducts.map((p, idx) => renderProductCard(p, idx, 'featured'))}
           </div>
         ) : (
           <div className="text-center py-12 text-slate-450 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#0b1329] rounded-2xl border border-slate-200/50 dark:border-slate-800/60">
@@ -913,9 +1047,13 @@ export default function BrightRetailHome({ onProductClick }) {
     return (
       <div key={section.id || `trending-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {renderBrightHeader(title, subtitle, section)}
-        {displayProducts.length > 0 ? (
+        {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {displayProducts.map(p => renderProductCard(p))}
+            {renderSkeletons(maxProducts)}
+          </div>
+        ) : displayProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {displayProducts.map((p, idx) => renderProductCard(p, idx, 'trending'))}
           </div>
         ) : (
           <div className="text-center py-12 text-slate-450 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#0b1329] rounded-2xl border border-slate-200/50 dark:border-slate-800/60">
