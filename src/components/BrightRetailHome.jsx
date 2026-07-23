@@ -23,6 +23,7 @@ import ForYouSection from './ForYouSection';
 import DealOfTheDaySection from './DealOfTheDaySection';
 import ShopByCategorySection from './ShopByCategorySection';
 import Hero from './Hero';
+import MobileBottomBanner from './MobileBottomBanner';
 
 const getImagesList = (prod) => {
   if (!prod) return [];
@@ -1133,6 +1134,13 @@ export default function BrightRetailHome({ onProductClick }) {
         }
         return element;
       })}
+
+      {/* Mobile Bottom Banner */}
+      <MobileBottomBanner 
+        settings={settings}
+        lang={lang}
+        t_smart={t_smart}
+      />
     </div>
   );
 }

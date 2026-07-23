@@ -6,13 +6,14 @@ import { ArrowRight, Truck } from 'lucide-react';
 export default function MobileBottomBanner({ settings, lang, t_smart }) {
   const navigate = useNavigate();
 
-  const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;
+  const isEnabled = settings?.mobile_bottom_banner_enabled !== false && settings?.mobile_bottom_banner_enabled !== 'false';
 
   const [timeLeft, setTimeLeft] = useState(() => {
-    const target = Number(settings?.mobile_bottom_banner_target_time) || 
-      (Date.now() + ((Number(settings?.mobile_bottom_banner_hours) || 16) * 3600 + (Number(settings?.mobile_bottom_banner_minutes) || 22) * 60 + (Number(settings?.mobile_bottom_banner_seconds) || 0)) * 1000);
+    let target = Number(settings?.mobile_bottom_banner_target_time);
+    if (!target || target - Date.now() <= 0) {
+      target = Date.now() + 16 * 3600 * 1000;
+    }
     const diff = target - Date.now();
-    if (diff <= 0) return { hours: 0, minutes: 0, seconds: 0, expired: true };
     const h = Math.floor(diff / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
     const s = Math.floor((diff % 60000) / 1000);
@@ -20,14 +21,16 @@ export default function MobileBottomBanner({ settings, lang, t_smart }) {
   });
 
   useEffect(() => {
-    const target = Number(settings?.mobile_bottom_banner_target_time) || 
-      (Date.now() + ((Number(settings?.mobile_bottom_banner_hours) || 16) * 3600 + (Number(settings?.mobile_bottom_banner_minutes) || 22) * 60 + (Number(settings?.mobile_bottom_banner_seconds) || 0)) * 1000);
+    let target = Number(settings?.mobile_bottom_banner_target_time);
+    if (!target || target - Date.now() <= 0) {
+      target = Date.now() + 16 * 3600 * 1000;
+    }
     
     const updateTimer = () => {
       const diff = target - Date.now();
       if (diff <= 0) {
-        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, expired: true });
-        return true;
+        target = Date.now() + 16 * 3600 * 1000;
+        return false;
       }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
@@ -38,16 +41,13 @@ export default function MobileBottomBanner({ settings, lang, t_smart }) {
 
     updateTimer();
     const timer = setInterval(() => {
-      const expired = updateTimer();
-      if (expired) {
-        clearInterval(timer);
-      }
+      updateTimer();
     }, 1000);
 
     return () => clearInterval(timer);
   }, [settings?.mobile_bottom_banner_target_time, settings?.mobile_bottom_banner_hours, settings?.mobile_bottom_banner_minutes, settings?.mobile_bottom_banner_seconds]);
 
-  if (!isEnabled || timeLeft.expired) return null;
+  if (!isEnabled) return null;
 
   return (
     <section className="-mx-4 px-4 pt-4 pb-6 select-none block lg:hidden w-[calc(100%+32px)]">
@@ -82,21 +82,13 @@ export default function MobileBottomBanner({ settings, lang, t_smart }) {
         </p>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 mb-4 w-full max-w-[280px]">
+        <div className="mb-4 w-full max-w-[240px]">
           <button 
             onClick={() => navigate('/deals')}
-            className="flex-1 py-2 px-3 bg-gradient-to-r from-[#ff5722] to-[#ff2a5f] text-white rounded-full font-black text-[9px] uppercase tracking-wider border-none flex items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
+            className="w-full py-2.5 px-4 bg-gradient-to-r from-[#ff5722] to-[#ff2a5f] text-white rounded-full font-black text-[10px] uppercase tracking-wider border-none flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer shadow-lg shadow-[#ff2a5f]/25"
           >
-            <span>{lang === 'fr' ? 'Acheter' : 'Shop Now'}</span>
-            <ArrowRight size={10} className="stroke-[3]" />
-          </button>
-
-          <button 
-            onClick={() => navigate('/order-tracking')}
-            className="flex-1 py-2 px-3 bg-white/5 border border-white/15 text-white rounded-full font-black text-[9px] uppercase tracking-wider flex items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
-          >
-            <Truck size={10} className="text-white/80" />
-            <span>{lang === 'fr' ? 'Suivre' : 'Track'}</span>
+            <span>{lang === 'fr' ? 'Acheter Maintenant' : 'Shop Deals Now'}</span>
+            <ArrowRight size={12} className="stroke-[3]" />
           </button>
         </div>
 

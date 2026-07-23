@@ -211,14 +211,6 @@ export default function DealsContent({ onProductClick }) {
               <ArrowRight size={14} className="stroke-[3]" />
             </button>
 
-            {/* Button 2: Track Existing Order */}
-            <button 
-              onClick={() => navigate('/order-tracking')}
-              className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-wider transition-all border border-white/15 hover:scale-[1.03] active:scale-[0.97] cursor-pointer flex items-center gap-2 shadow-lg"
-            >
-              <Truck size={14} className="text-white/80" />
-              <span>{lang === 'fr' ? 'Suivre ma commande' : 'Track Existing Order'}</span>
-            </button>
           </div>
 
           {/* Countdown timer card inside the banner */}
