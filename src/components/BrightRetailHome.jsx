@@ -416,9 +416,22 @@ export default function BrightRetailHome({ onProductClick }) {
 
     const isAllSelected = !selectedCategory;
 
+    const getCategoryEmoji = (name) => {
+      const lower = name?.toLowerCase() || '';
+      if (lower.includes('audio') || lower.includes('headphone') || lower.includes('sound') || lower.includes('ecouteur')) return '🎧';
+      if (lower.includes('watch') || lower.includes('wearable') || lower.includes('telemetry') || lower.includes('montre')) return '⌚';
+      if (lower.includes('game') || lower.includes('gaming') || lower.includes('pc') || lower.includes('console')) return '🎮';
+      if (lower.includes('accessory') || lower.includes('desk') || lower.includes('accessoire')) return '⌨️';
+      if (lower.includes('phone') || lower.includes('mobile') || lower.includes('smartphone')) return '📱';
+      if (lower.includes('laptop') || lower.includes('computer') || lower.includes('ordinateur')) return '💻';
+      if (lower.includes('tv') || lower.includes('screen') || lower.includes('video')) return '📺';
+      if (lower.includes('camera') || lower.includes('photo')) return '📷';
+      return '✨';
+    };
+
     return (
       <div className="max-w-[1240px] mx-auto w-full px-4 sm:px-6 lg:px-8 select-none mt-0 sm:mt-4 mb-2">
-        <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1 scroll-smooth w-full">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 scroll-smooth w-full">
           {/* All Items Button - Red pill if active, gray pill if not */}
           <button
             onClick={() => {
@@ -427,13 +440,14 @@ export default function BrightRetailHome({ onProductClick }) {
               setSearchQuery('');
               navigate('/');
             }}
-            className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer border-none flex items-center justify-center min-h-[38px] leading-none ${
+            className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none ${
               isAllSelected 
-                ? 'bg-[#ff2d55] text-white shadow-md' 
-                : 'bg-[#f1f5f9] dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 shadow-sm hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
+                : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
             }`}
           >
-            {lang === 'fr' ? 'Tous articles' : 'All Items'}
+            <span>🛍️</span>
+            <span>{lang === 'fr' ? 'Tous articles' : 'All Items'}</span>
           </button>
 
           {/* Individual Category Buttons */}
@@ -448,13 +462,14 @@ export default function BrightRetailHome({ onProductClick }) {
                   setSearchQuery('');
                   navigate(`/category/${encodeURIComponent(cat.name)}`);
                 }}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer border-none flex items-center justify-center min-h-[38px] leading-none normal-case ${
+                className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none normal-case ${
                   isSelected 
-                    ? 'bg-[#ff2d55] text-white shadow-md' 
-                    : 'bg-[#f1f5f9] dark:bg-slate-900/80 text-slate-800 dark:text-slate-200 shadow-sm hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                    ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
+                    : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
                 }`}
               >
-                {t_smart(cat.name)}
+                <span>{getCategoryEmoji(cat.name)}</span>
+                <span>{t_smart(cat.name)}</span>
               </button>
             );
           })}
