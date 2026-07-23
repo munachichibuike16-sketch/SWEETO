@@ -287,49 +287,51 @@ const Storefront = ({ viewMode: propViewMode }) => {
     };
 
     return (
-      <div className="max-w-[1240px] mx-auto w-full px-4 sm:px-6 lg:px-8 select-none mt-0 sm:mt-4 mb-2">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 scroll-smooth w-full">
-          {/* All Items Button - Red pill if active, gray pill if not */}
-          <button
-            onClick={() => {
-              setSelectedCategory(null);
-              setSelectedBrand(null);
-              setSearchQuery('');
-              navigate('/');
-            }}
-            className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none ${
-              isAllSelected 
-                ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
-                : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
-            }`}
-          >
-            <span>🛍️</span>
-            <span>{lang === 'fr' ? 'Tous articles' : 'All Items'}</span>
-          </button>
+      <div className="sticky top-[var(--header-height,96px)] z-30 w-full bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/10 dark:border-white/5 py-1">
+        <div className="max-w-[1240px] mx-auto w-full px-4 sm:px-6 lg:px-8 select-none">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 scroll-smooth w-full">
+            {/* All Items Button - Red pill if active, gray pill if not */}
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedBrand(null);
+                setSearchQuery('');
+                navigate('/');
+              }}
+              className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none ${
+                isAllSelected 
+                  ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
+                  : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
+              }`}
+            >
+              <span>🛍️</span>
+              <span>{lang === 'fr' ? 'Tous articles' : 'All Items'}</span>
+            </button>
 
-          {/* Individual Category Buttons */}
-          {displayCats.map(cat => {
-            const isSelected = selectedCategory === cat.name;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(cat.name);
-                  setSelectedBrand(null);
-                  setSearchQuery('');
-                  navigate(`/category/${encodeURIComponent(cat.name)}`);
-                }}
-                className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none normal-case ${
-                  isSelected 
-                    ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
-                    : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
-                }`}
-              >
-                <span>{getCategoryEmoji(cat.name)}</span>
-                <span>{t_smart(cat.name)}</span>
-              </button>
-            );
-          })}
+            {/* Individual Category Buttons */}
+            {displayCats.map(cat => {
+              const isSelected = selectedCategory === cat.name;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat.name);
+                    setSelectedBrand(null);
+                    setSearchQuery('');
+                    navigate(`/category/${encodeURIComponent(cat.name)}`);
+                  }}
+                  className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none normal-case ${
+                    isSelected 
+                      ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
+                      : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
+                  }`}
+                >
+                  <span>{getCategoryEmoji(cat.name)}</span>
+                  <span>{t_smart(cat.name)}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
