@@ -23,6 +23,21 @@ const categoryBanners = {
   "default": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1000"
 };
 
+const getTabEmoji = (tabName) => {
+  const name = tabName.toLowerCase();
+  if (name.includes('pour vous') || name.includes('for you')) return '✨';
+  if (name.includes('smartphones') || name.includes('téléphones')) return '📱';
+  if (name.includes('laptop') || name.includes('ordinateur')) return '💻';
+  if (name.includes('audio') || name.includes('écouteur') || name.includes('casques') || name.includes('earphones') || name.includes('headphones')) return '🎧';
+  if (name.includes('tv') || name.includes('vidéo') || name.includes('cinema')) return '📺';
+  if (name.includes('speakers') || name.includes('haut-parleurs')) return '🔊';
+  if (name.includes('refrigerator') || name.includes('frigo') || name.includes('réfrigérateur')) return '❄️';
+  if (name.includes('watch') || name.includes('montre')) return '⌚';
+  if (name.includes('accessory') || name.includes('accessoire')) return '🔌';
+  if (name.includes('camera') || name.includes('appareil')) return '📷';
+  return '🏷️';
+};
+
 export default function CategoryLandingPage({ categoryName, products = [], categories = [], settings, onProductClick }) {
   const { lang, t, t_smart } = useLanguage();
   const navigate = useNavigate();
@@ -293,7 +308,13 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       <div className="w-full -mt-3 flex items-center justify-between py-2.5 px-4 bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border-b border-slate-200/10 dark:border-white/5 select-none shrink-0 z-40">
         {/* Glowing Back Button */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }}
           className="flex items-center gap-1.5 px-4.5 py-2 rounded-full text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-[#ff2d55] via-[#8b5cf6] to-[#00f2fe] shadow-[0_4px_15px_rgba(255,45,85,0.3)] hover:shadow-[0_6px_20px_rgba(139,92,246,0.45)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 cursor-pointer border-none group"
         >
           <ArrowLeft size={12} strokeWidth={3} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
@@ -417,19 +438,21 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
                 key={pill}
                 type="button"
                 onClick={() => setActivePill(pill)}
-                className={`text-[12px] font-semibold px-4.5 py-1.5 rounded-full whitespace-nowrap transition-all shadow-sm cursor-pointer select-none flex items-center justify-center ${
+                className={`text-[11px] font-extrabold px-4.5 py-2 rounded-full whitespace-nowrap transition-all duration-300 border flex items-center gap-1.5 active:scale-[0.93] cursor-pointer select-none ${
                   isSelected 
-                    ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold scale-105' 
-                    : 'bg-white dark:bg-slate-900 text-slate-650 dark:text-slate-300 border border-slate-100 dark:border-slate-800 hover:bg-slate-50'
+                    ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_4px_12px_rgba(255,45,85,0.28)] font-black scale-[1.02]' 
+                    : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white dark:hover:bg-slate-900'
                 }`}
               >
-                {pill === 'All' && (
+                {pill === 'All' ? (
                   <Heart 
-                    size={12} 
-                    className={`mr-1 shrink-0 ${isSelected ? 'text-[#ff3b30] fill-[#ff3b30]' : 'text-slate-400'}`} 
+                    size={11} 
+                    className={`shrink-0 ${isSelected ? 'text-white fill-white' : 'text-[#ff2d55]'}`} 
                   />
+                ) : (
+                  <span>{getTabEmoji(pill)}</span>
                 )}
-                {t_smart(pill)}
+                <span>{t_smart(pill)}</span>
               </button>
             );
           })}

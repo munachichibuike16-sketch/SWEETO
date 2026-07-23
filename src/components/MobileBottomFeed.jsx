@@ -3,6 +3,21 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from './ProductCard';
 
+const getTabEmoji = (tabName) => {
+  const name = tabName.toLowerCase();
+  if (name.includes('pour vous') || name.includes('for you')) return '✨';
+  if (name.includes('smartphones') || name.includes('téléphones')) return '📱';
+  if (name.includes('laptop') || name.includes('ordinateur')) return '💻';
+  if (name.includes('audio') || name.includes('écouteur') || name.includes('casques') || name.includes('earphones') || name.includes('headphones')) return '🎧';
+  if (name.includes('tv') || name.includes('vidéo') || name.includes('cinema')) return '📺';
+  if (name.includes('speakers') || name.includes('haut-parleurs')) return '🔊';
+  if (name.includes('refrigerator') || name.includes('frigo') || name.includes('réfrigérateur')) return '❄️';
+  if (name.includes('watch') || name.includes('montre')) return '⌚';
+  if (name.includes('accessory') || name.includes('accessoire')) return '🔌';
+  if (name.includes('camera') || name.includes('appareil')) return '📷';
+  return '🏷️';
+};
+
 export default function MobileBottomFeed({ settings, products = [], categories = [], lang, t_smart, onProductClick }) {
 
   const isEnabled = settings?.mobile_bottom_banner_enabled === 'true' || settings?.mobile_bottom_banner_enabled === true;
@@ -141,13 +156,14 @@ export default function MobileBottomFeed({ settings, products = [], categories =
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`px-4.5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+              className={`px-4.5 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 whitespace-nowrap shrink-0 border flex items-center gap-1.5 active:scale-[0.93] cursor-pointer ${
                 isSelected
-                  ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-800'
+                  ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_4px_12px_rgba(255,45,85,0.28)] font-black scale-[1.02]'
+                  : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white dark:hover:bg-slate-900'
               }`}
             >
-              {tab === forYouText ? tab : t_smart(tab)}
+              <span>{getTabEmoji(tab)}</span>
+              <span>{tab === forYouText ? tab : t_smart(tab)}</span>
             </button>
           );
         })}
