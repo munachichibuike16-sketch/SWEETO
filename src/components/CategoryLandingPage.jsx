@@ -287,7 +287,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: swipeDir === 'next' ? -100 : 100 }}
         transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
-        className="w-full flex flex-col gap-5 px-0 md:px-12 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
+        className="w-full flex flex-col gap-5 px-0 py-3 bg-slate-50 dark:bg-slate-950 min-h-screen relative overflow-x-hidden"
       >
       {/* Pull-To-Refresh Indicator (AliExpress Style) */}
       <div 
