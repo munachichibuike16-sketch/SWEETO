@@ -7,6 +7,7 @@ import { useStore } from '../contexts/StoreContext';
 import { getCategoryDescendants } from '../utils/categoryHelpers';
 import ProductCard from './ProductCard';
 import { SectionHeader } from './ProductSection';
+import Hero from './Hero';
 
 const categoryBanners = {
   "smartphones": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=1000",
@@ -253,6 +254,30 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   // Get banner image url (prioritize custom uploaded category image)
   const bannerImage = categoryInfo?.image_url || categoryInfo?.icon || categoryBanners[categoryName.toLowerCase()] || categoryBanners.default;
 
+  const dynamicCategoryBanners = useMemo(() => {
+    if (categoryProducts.length === 0) {
+      return [{
+        id: 'fallback',
+        title: categoryName,
+        subtitle: lang === 'fr' ? `Découvrez la collection ${t_smart(categoryName)} aujourd'hui` : `Discover ${t_smart(categoryName)} collection today`,
+        image: bannerImage,
+        link: '#',
+        brand: categoryName,
+        price: ''
+      }];
+    }
+    return categoryProducts.slice(0, 5).map(p => ({
+      id: p.id,
+      title: p.name,
+      subtitle: p.description || (lang === 'fr' ? 'Découvrez notre collection premium' : 'Discover our premium collection'),
+      image: p.image_url || p.image || '/hero-banner.png',
+      link: `/product/${p.id}`,
+      price: p.price,
+      brand: p.brand || categoryName || 'SWEETO',
+      product_id: p.id
+    }));
+  }, [categoryProducts, categoryName, bannerImage, lang, t_smart]);
+
   return (
     <AnimatePresence mode="popLayout">
       <motion.div 
@@ -284,34 +309,8 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         </div>
       </div>
 
-      {/* Category Hero Banner (AliExpress Style) */}
-      <div className="relative w-full h-[360px] sm:h-[220px] md:h-[300px] lg:h-[380px] xl:h-[450px] rounded-none sm:rounded-[2.2rem] md:rounded-[2.8rem] overflow-hidden shadow-2xl flex items-center bg-slate-950">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={bannerImage} 
-            alt={categoryName} 
-            className="w-full h-full object-cover opacity-80"
-          />
-          <div className="absolute inset-0 bg-black/30 z-10 pointer-events-none"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/30 to-transparent z-10 pointer-events-none"></div>
-        </div>
-
-        {/* Banner Text Overlay */}
-        <div className="relative z-10 pl-6 sm:pl-10 md:pl-16 lg:pl-20 flex flex-col items-start gap-0.5 sm:gap-1">
-          {/* Angled "VIVA" Badge */}
-          <div className="bg-[#00f2fe] text-slate-950 font-black text-[9px] sm:text-xs md:text-sm px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-wider transform -rotate-[6deg] select-none shadow-md mb-2 sm:mb-3 md:mb-4 w-fit">
-            VIVA
-          </div>
-          {/* Main Title */}
-          <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg leading-none">
-            {lang === 'fr' ? `Sélection ${t_smart(categoryName)}` : `${t_smart(categoryName)} finds`}
-          </h1>
-          <p className="text-[9px] sm:text-[11px] md:text-sm lg:text-base font-bold text-white/90 uppercase tracking-[0.2em] sm:tracking-[0.25em] md:tracking-[0.3em] font-sans mt-1">
-            {lang === 'fr' ? `Découvrez la collection ${t_smart(categoryName)} aujourd'hui` : `Discover ${t_smart(categoryName)} collection today`}
-          </p>
-        </div>
-      </div>
+      {/* Category Hero Banner (Dynamic Product Slider) */}
+      <Hero key={categoryName} banners={dynamicCategoryBanners} layout="slider" />
 
       {/* Daily Deals Section */}
       {categoryDeals.length > 0 && Number(categoryInfo?.show_daily_deals) !== 0 && (
