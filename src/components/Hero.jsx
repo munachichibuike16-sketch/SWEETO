@@ -488,7 +488,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
   const slideLink = activeSlide?.link || (associatedProduct ? `/product/${associatedProduct.id}` : '#');
 
   return (
-    <section className="max-w-[1600px] mx-auto px-4 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
+    <section className="max-w-[1600px] mx-auto px-0 md:px-6 pt-3 pb-0 sm:pb-6 select-none bg-transparent">
       {/* Mobile Layout (< 640px) */}
       <div 
         onClick={() => handleBannerClick(slideLink)}
@@ -539,7 +539,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
                   ? 'View Wearables' 
                   : slideBrand?.toLowerCase().includes('watch')
                   ? 'View Watches'
-                  : (t('view_details') || 'View Details')}
+                  : t('view_details')}
               </span>
               <span className="w-5 h-5 rounded-full bg-black flex items-center justify-center shrink-0">
                 <ChevronRight size={10} className="text-white" strokeWidth={3} />
@@ -670,7 +670,7 @@ const Hero = ({ banners, layout = 'slider' }) => {
               className="px-5 py-3 bg-gradient-to-r from-[#7c3aed] to-[#00f2fe] hover:from-[#6d28d9] hover:to-[#00d8e6] text-white rounded-xl font-black text-[9px] uppercase tracking-widest transition-all duration-300 shadow-[0_4px_15px_rgba(124,58,237,0.3)] hover:shadow-[0_6px_22px_rgba(0,242,254,0.45)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
             >
               <Eye size={12} className="animate-pulse" />
-              <span>{t('view_details') || 'View Details'}</span>
+              <span>{t('view_details')}</span>
             </button>
           </div>
         </div>

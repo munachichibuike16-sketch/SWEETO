@@ -134,7 +134,8 @@ export const translations = {
     secure_sign_out: "Secure Sign Out",
     currency: "Currency",
     clear_cache: "Clear Cache",
-    sign_in_register: "Sign In / Register"
+    sign_in_register: "Sign In / Register",
+    view_details: "View Details"
   },
   fr: {
     // Header & Nav
@@ -152,6 +153,7 @@ export const translations = {
     // Hero & Banners
     featured_selection: "Sélection Vedette", explore_now: "Explorer", exclusive_showcase: "Vitrine Exclusive",
     starting_at: "À partir de", discount: "Remise", active_now: "Actif maintenant", view_product: "Voir le Produit",
+    view_details: "Afficher les détails",
     claim_offer: "Profiter de l'offre", video_commercial: "Publicité Vidéo", premium_banner: "Bannière Premium",
     exclusive_tech_deals: "Offres Tech Exclusives", discover_deals: "Découvrir les Offres",
     // Products & Cart
