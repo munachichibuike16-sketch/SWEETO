@@ -657,11 +657,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center cursor-pointer"
             >
-              <img 
-                src="/sweeto_logo.png" 
-                alt="Sweeto Hub" 
-                className="h-9 max-h-9 w-auto object-contain select-none cursor-pointer" 
-              />
+              <span className="font-black text-xl sm:text-2xl tracking-tighter uppercase italic bg-gradient-to-r from-[#ff2d55] via-[#8b5cf6] to-[#00f2fe] bg-clip-text text-transparent drop-shadow-sm select-none hover:scale-[1.02] transition-transform duration-300">
+                SWEETO HUB
+              </span>
             </div>
           </div>
 
@@ -989,7 +987,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center select-none cursor-pointer group shrink-0"
             >
-              <SweetoLogo size={90} className="max-h-8 object-contain drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]" />
+              <span className="font-black text-base sm:text-lg tracking-tighter uppercase italic bg-gradient-to-r from-[#ff2d55] via-[#8b5cf6] to-[#00f2fe] bg-clip-text text-transparent drop-shadow-sm select-none">
+                SWEETO HUB
+              </span>
             </div>
 
             {/* Compact Search Bar in the middle */}
