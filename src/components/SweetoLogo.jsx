@@ -3,7 +3,7 @@ import React from 'react';
 const SweetoLogo = ({ size = 120, className = '', animate = true }) => {
   return (
     <img 
-      src="/sweeto_logo.png"
+      src="/sweeto_logo.png?v=2"
       alt="Sweeto Hub"
       style={{ width: size }}
       className={`select-none cursor-pointer object-contain max-h-full ${className}`}

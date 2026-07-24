@@ -72,7 +72,7 @@ function updatePWAManifestAndIcons() {
     faviconLink.rel = 'icon';
     document.head.appendChild(faviconLink);
   }
-  const targetFavicon = isAdminRoute ? '/admin-favicon.png' : '/sweeto_logo.png';
+  const targetFavicon = isAdminRoute ? '/admin-favicon.png?v=2' : '/sweeto_logo.png?v=2';
   if (faviconLink.getAttribute('href') !== targetFavicon) {
     faviconLink.setAttribute('href', targetFavicon);
   }
@@ -84,7 +84,7 @@ function updatePWAManifestAndIcons() {
     appleIconLink.rel = 'apple-touch-icon';
     document.head.appendChild(appleIconLink);
   }
-  const targetAppleIcon = isAdminRoute ? '/admin-apple-touch-icon.png' : '/apple-touch-icon.png';
+  const targetAppleIcon = isAdminRoute ? '/admin-apple-touch-icon.png?v=2' : '/apple-touch-icon.png?v=2';
   if (appleIconLink.getAttribute('href') !== targetAppleIcon) {
     appleIconLink.setAttribute('href', targetAppleIcon);
   }
