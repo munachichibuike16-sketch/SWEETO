@@ -428,7 +428,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     setSelectedProduct(p);
     setIsProductModalOpen(true);
     // Push path to history stack to support back button modal dismissal
-    navigate(`/product/swt-${p.id}`);
+    navigate(`/product/${p.id}`);
   };
 
   // 4. Expose mobile hardware back button handler for app wrappers

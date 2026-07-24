@@ -7,7 +7,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function handler(req, res) {
   // Try to get 'id' from query parameter (rewritten from /share/product/:id)
-  const { id } = req.query;
+  const { id: rawId } = req.query;
+  const id = rawId ? rawId.toLowerCase().replace(/^swt-/, '') : '';
 
   if (!id) {
     return res.status(400).send('Product ID is required');

@@ -179,7 +179,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
+    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
     const shareData = {
       title: product.name,
       text: lang === 'fr' 

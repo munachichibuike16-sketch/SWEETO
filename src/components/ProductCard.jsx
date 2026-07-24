@@ -196,7 +196,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     const baseShareUrl = (API_BASE_URL && !API_BASE_URL.includes('your-backend-service.onrender.com'))
       ? API_BASE_URL 
       : window.location.origin;
-    const shareUrl = `${baseShareUrl}/share/product/swt-${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
+    const shareUrl = `${baseShareUrl}/share/product/${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
     const shareTitle = product.name;
     const shareText = product.description || `Check out ${product.name} on SWEETO!`;
 

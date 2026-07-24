@@ -1079,7 +1079,7 @@ const ProductDetailPage = () => {
                 <DealOfTheDaySection 
                   products={dailyDealsProducts}
                   onProductClick={(p) => {
-                    navigate(`/product/swt-${p.id}`);
+                    navigate(`/product/${p.id}`);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   videoAdId="none"
@@ -1841,7 +1841,7 @@ const ProductDetailPage = () => {
                 {/* WhatsApp */}
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
                     const text = lang === 'fr'
                       ? `Découvrez ${product.name} sur SWEETO ! ⚡ ${shareUrl}`
                       : `Check out ${product.name} on SWEETO! ⚡ ${shareUrl}`;
@@ -1857,7 +1857,7 @@ const ProductDetailPage = () => {
                 {/* Facebook */}
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
                     setIsShareModalOpen(false);
                   }}
@@ -1870,7 +1870,7 @@ const ProductDetailPage = () => {
                 {/* Copy Link */}
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
                     navigator.clipboard.writeText(shareUrl);
                     showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
                     setIsShareModalOpen(false);
@@ -1885,7 +1885,7 @@ const ProductDetailPage = () => {
                 {navigator.share && (
                   <button
                     onClick={() => {
-                      const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
+                      const shareUrl = `${window.location.origin}/share/product/${product.id}`;
                       navigator.share({
                         title: product.name,
                         text: lang === 'fr' 
@@ -1908,12 +1908,12 @@ const ProductDetailPage = () => {
                 <input
                   type="text"
                   readOnly
-                  value={`${window.location.origin}/share/product/swt-${product.id}`}
+                  value={`${window.location.origin}/share/product/${product.id}`}
                   className="flex-1 bg-transparent border-none text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 outline-none select-all"
                 />
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
                     navigator.clipboard.writeText(shareUrl);
                     showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
                   }}

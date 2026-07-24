@@ -266,7 +266,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
         {/* Left Image */}
         <div 
           onClick={() => {
-            navigate(`/product/swt-${product.id}`);
+            navigate(`/product/${product.id}`);
             onClose();
           }}
           className="w-16 h-16 bg-slate-50 dark:bg-slate-850 rounded-xl overflow-hidden shrink-0 cursor-pointer"
@@ -282,7 +282,7 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3 
             onClick={() => {
-              navigate(`/product/swt-${product.id}`);
+              navigate(`/product/${product.id}`);
               onClose();
             }}
             className="font-bold text-[11px] text-slate-800 dark:text-white line-clamp-2 cursor-pointer hover:text-[#2563EB] transition-colors text-left leading-tight"
