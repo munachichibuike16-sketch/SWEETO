@@ -111,7 +111,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
   };
 
   // Pull-to-refresh & Swipe Category Navigation State (AliExpress Style)
-  const { refreshData } = useStore();
+  const { refreshData, setSelectedCategory, setSelectedBrand } = useStore();
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
@@ -309,6 +309,8 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         {/* Glowing Back Button */}
         <button
           onClick={() => {
+            if (setSelectedCategory) setSelectedCategory(null);
+            if (setSelectedBrand) setSelectedBrand(null);
             const entryReferrer = window.category_entry_referrer;
             if (entryReferrer) {
               navigate(entryReferrer);
