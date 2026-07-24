@@ -695,13 +695,13 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
               }`}
             >
               {isBatchUpdating ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin pointer-events-none" />
               ) : allDealsOff ? (
-                <AlertCircle size={14} className="text-slate-400 dark:text-slate-500" />
+                <AlertCircle size={14} className="text-slate-400 dark:text-slate-500 pointer-events-none" />
               ) : (
-                <Flame size={14} className="text-amber-100 fill-amber-100 animate-pulse" />
+                <Flame size={14} className="text-amber-100 fill-amber-100 animate-pulse pointer-events-none" />
               )}
-              <span>
+              <span className="pointer-events-none">
                 {isBatchUpdating ? 'Updating...' : allDealsOff ? 'Deals: OFF' : 'Deals: ON'}
               </span>
             </button>
@@ -711,16 +711,16 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
               onClick={() => setShowAiAssistant(true)}
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-6 sm:py-4 flex-1 sm:flex-initial bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-purple-500/20 cursor-pointer"
             >
-              <Sparkles size={14} />
-              <span>Ask Category AI</span>
+              <Sparkles size={14} className="pointer-events-none" />
+              <span className="pointer-events-none">Ask Category AI</span>
             </button>
 
             <button
               onClick={openAdd}
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-6 sm:py-4 flex-1 sm:flex-initial bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 cursor-pointer"
             >
-              <Plus size={14} />
-              <span>New Category</span>
+              <Plus size={14} className="pointer-events-none" />
+              <span className="pointer-events-none">New Category</span>
             </button>
           </div>
         )}
