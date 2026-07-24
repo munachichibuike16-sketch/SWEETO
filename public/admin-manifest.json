@@ -10,8 +10,8 @@
   "categories": ["business", "productivity"],
   "icons": [
     {
-      "src": "/admin-favicon.svg",
-      "type": "image/svg+xml",
+      "src": "/admin-favicon.png",
+      "type": "image/png",
       "sizes": "any",
       "purpose": "any"
     },

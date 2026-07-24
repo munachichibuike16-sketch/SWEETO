@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, CheckCircle2, AlertCircle, X,
@@ -16,7 +17,7 @@ import { formatDbError } from '../utils/errorHelper';
 const EMPTY_FORM = { name: '', description: '', parent_id: '', image_url: '', slug: '', level: 1, parent_level1_id: '', show_daily_deals: 1 };
 
 const inputClass =
-  'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
+  'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
 
 const labelClass =
   'flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 mb-2 ml-1';
@@ -36,6 +37,13 @@ const CategoryManagement = () => {
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name }
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   const [expandedIds, setExpandedIds] = useState({});
+
+  const toggleExpand = (id) => {
+    setExpandedIds(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   // AI Assistant States
   const [showAiAssistant, setShowAiAssistant] = useState(false);
@@ -566,7 +574,10 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
 
     return (
       <div key={cat.id} className="space-y-2">
-        <div className={`group relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-3xl p-4 md:p-6 transition-all duration-300 hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 ${indentClass} ${borderColors}`}>
+        <div 
+          onClick={() => hasChildren && toggleExpand(cat.id)}
+          className={`group relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-3xl p-4 md:p-6 transition-all duration-300 hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 select-none ${indentClass} ${borderColors} ${hasChildren ? 'cursor-pointer' : ''}`}
+        >
           
           {/* Left side: Icon, Name, Desc */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -607,10 +618,10 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
             )}
 
             {/* Edit / Delete Buttons */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
               <button 
                 type="button"
-                onClick={() => openEdit(cat)} 
+                onClick={(e) => { e.stopPropagation(); openEdit(cat); }} 
                 className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-xl transition-colors cursor-pointer"
                 title="Edit"
               >
@@ -618,7 +629,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
               </button>
               <button 
                 type="button"
-                onClick={() => setConfirmDelete({ id: cat.id, name: cat.name })} 
+                onClick={(e) => { e.stopPropagation(); setConfirmDelete({ id: cat.id, name: cat.name }); }} 
                 disabled={deletingId === cat.id} 
                 className="p-2 bg-red-55 hover:bg-red-100 text-red-650 dark:bg-red-950/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
                 title="Delete"
@@ -631,7 +642,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
             {hasChildren && (
               <button
                 type="button"
-                onClick={() => toggleExpand(cat.id)}
+                onClick={(e) => { e.stopPropagation(); toggleExpand(cat.id); }}
                 className={`p-2 rounded-xl transition-colors cursor-pointer ${
                   isExpanded 
                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
@@ -671,43 +682,45 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
           </p>
         </div>
         {!showForm && (
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto mt-2 sm:mt-0">
             {/* Global Categories Deals Toggle Button */}
             <button
               type="button"
               onClick={handleGlobalDealsToggle}
               disabled={isBatchUpdating}
-              className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all shadow-xl disabled:opacity-50 ${
+              className={`flex items-center justify-center gap-2 px-3 py-2.5 sm:px-6 sm:py-4 flex-1 sm:flex-initial rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs active:scale-95 transition-all shadow-xl disabled:opacity-50 ${
                 allDealsOff
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-500 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400 shadow-slate-200/20 dark:shadow-none border border-slate-200 dark:border-slate-700'
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-550 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400 shadow-slate-200/20 dark:shadow-none border border-slate-200 dark:border-slate-700'
                   : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 shadow-orange-500/20'
               }`}
             >
               {isBatchUpdating ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin" />
               ) : allDealsOff ? (
-                <AlertCircle size={16} className="text-slate-400 dark:text-slate-500" />
+                <AlertCircle size={14} className="text-slate-400 dark:text-slate-500" />
               ) : (
-                <Flame size={16} className="text-amber-100 fill-amber-100 animate-pulse" />
+                <Flame size={14} className="text-amber-100 fill-amber-100 animate-pulse" />
               )}
               <span>
-                {isBatchUpdating ? 'Updating...' : allDealsOff ? 'All Deals: OFF' : 'All Deals: ON'}
+                {isBatchUpdating ? 'Updating...' : allDealsOff ? 'Deals: OFF' : 'Deals: ON'}
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowAiAssistant(true)}
-              className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-purple-500/20"
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-6 sm:py-4 flex-1 sm:flex-initial bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-purple-500/20 cursor-pointer"
             >
-              <Sparkles size={16} /> Ask Category AI
+              <Sparkles size={14} />
+              <span>Ask Category AI</span>
             </button>
 
             <button
               onClick={openAdd}
-              className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20"
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-6 sm:py-4 flex-1 sm:flex-initial bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-widest text-[10px] sm:text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 cursor-pointer"
             >
-              <Plus size={16} /> New Category
+              <Plus size={14} />
+              <span>New Category</span>
             </button>
           </div>
         )}
@@ -1110,7 +1123,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
 
       {/* ── AI ASSISTANT DRAWER ── */}
       <AnimatePresence>
-        {showAiAssistant && (
+        {showAiAssistant && createPortal(
           <>
             {/* Backdrop */}
             <motion.div
@@ -1118,7 +1131,8 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAiAssistant(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[140] lg:bg-black/20"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm lg:bg-black/20"
+              style={{ zIndex: 99998 }}
             />
 
             {/* Drawer Panel */}
@@ -1127,10 +1141,11 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl z-[150] flex flex-col"
+              className="fixed inset-y-0 right-0 h-[100dvh] w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-l border-slate-200/50 dark:border-slate-800/50 shadow-2xl flex flex-col overflow-hidden"
+              style={{ zIndex: 99999 }}
             >
               {/* Header */}
-              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/20 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-purple-500/20">
                     <Bot size={20} />
@@ -1141,8 +1156,9 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowAiAssistant(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-colors"
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -1159,7 +1175,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
                     >
                       <div className={`flex gap-3 max-w-[85%] ${isAi ? 'flex-row' : 'flex-row-reverse'}`}>
                         {isAi && (
-                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-655 dark:text-slate-300 shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
                             <Bot size={15} />
                           </div>
                         )}
@@ -1168,8 +1184,8 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
                             className={`px-4.5 py-3 rounded-2xl text-xs font-medium leading-relaxed text-left ${
                               isAi
                                 ? msg.isError
-                                  ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/20'
-                                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-250'
+                                  ? 'bg-red-55 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/20'
+                                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200'
                                 : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-indigo-650/15'
                             }`}
                             style={{ whiteSpace: 'pre-line' }}
@@ -1197,7 +1213,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
                                           </p>
                                         )}
                                         {suggestion.description && (
-                                          <p className="text-[10px] text-slate-450 dark:text-slate-550 mt-1 line-clamp-2">
+                                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                                             {suggestion.description}
                                           </p>
                                         )}
@@ -1208,14 +1224,14 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
                                       <button
                                         type="button"
                                         onClick={() => handleFillForm(suggestion)}
-                                        className="flex-1 py-2 text-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9.5px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                                        className="flex-1 py-2 text-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[9.5px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
                                       >
                                         Fill Form
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => handleAddSuggestion(suggestion)}
-                                        className="flex-1 py-2 text-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9.5px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95"
+                                        className="flex-1 py-2 text-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9.5px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 cursor-pointer"
                                       >
                                         Add Instantly
                                       </button>
@@ -1250,7 +1266,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
               {/* Input Area */}
               <form
                 onSubmit={handleSendAiMessage}
-                className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2.5 bg-slate-50/50 dark:bg-slate-950/20"
+                className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2.5 bg-slate-50/50 dark:bg-slate-950/20 shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]"
               >
                 <input
                   type="text"
@@ -1263,13 +1279,14 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
                 <button
                   type="submit"
                   disabled={isGenerating || !chatInput.trim()}
-                  className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl flex items-center justify-center hover:opacity-95 transition-opacity disabled:opacity-50 active:scale-95 shrink-0"
+                  className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl flex items-center justify-center hover:opacity-95 transition-opacity disabled:opacity-50 active:scale-95 shrink-0 cursor-pointer"
                 >
                   <Send size={15} />
                 </button>
               </form>
             </motion.div>
-          </>
+          </>,
+          document.body
         )}
       </AnimatePresence>
 

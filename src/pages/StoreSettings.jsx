@@ -361,6 +361,9 @@ const StoreSettings = () => {
     wave_payment_url: '',
     wave_api_key: '',
     wave_currency: 'XOF',
+    payment_method_card_enabled: true,
+    payment_method_wave_enabled: true,
+    payment_method_cod_enabled: true,
     facebook_page_id: '',
     facebook_access_token: '',
     gemini_api_key: '',
@@ -379,6 +382,7 @@ const StoreSettings = () => {
     mobile_bottom_banner_slot3_label: 'OnePlus',
     mobile_bottom_banner_target_time: '',
     free_delivery_code: '',
+    checkout_mode: 'standard',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -424,6 +428,9 @@ const StoreSettings = () => {
         wave_payment_url: settings.wave_payment_url || '',
         wave_api_key: settings.wave_api_key || '',
         wave_currency: settings.wave_currency || 'XOF',
+        payment_method_card_enabled: settings.payment_method_card_enabled !== 'false' && settings.payment_method_card_enabled !== false,
+        payment_method_wave_enabled: settings.payment_method_wave_enabled !== 'false' && settings.payment_method_wave_enabled !== false,
+        payment_method_cod_enabled: settings.payment_method_cod_enabled !== 'false' && settings.payment_method_cod_enabled !== false,
         facebook_page_id: settings.facebook_page_id || '',
         facebook_access_token: settings.facebook_access_token || '',
         gemini_api_key: settings.gemini_api_key || '',
@@ -442,6 +449,7 @@ const StoreSettings = () => {
         mobile_bottom_banner_slot3_label: settings.mobile_bottom_banner_slot3_label || 'OnePlus',
         mobile_bottom_banner_target_time: settings.mobile_bottom_banner_target_time || '',
         free_delivery_code: settings.free_delivery_code || '',
+        checkout_mode: settings.checkout_mode || 'standard',
       });
     }
   }, [settings, isDirty]);
@@ -1139,81 +1147,221 @@ const StoreSettings = () => {
             >
               <SectionHeader 
                 icon={Coins} 
-                title="Payment Settings (Wave)" 
+                title="Payment Methods & Settings" 
                 color="blue" 
-                subtitle="Configure Wave Mobile Money payment method"
+                subtitle="Configure and enable/disable checkout payment methods"
               />
               
               <div className="space-y-6 mt-6">
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Phone Number</span>
-                  <input 
-                    type="tel" 
-                    name="wave_number" 
-                    placeholder="+2250500619923"
-                    value={formData.wave_number} 
-                    onChange={(e) => {
-                      setIsDirty(true);
-                      setFormData(prev => ({ ...prev, wave_number: e.target.value }));
-                    }}
-                    className={inputStyle} 
-                  />
-                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
-                    Enter your official Wave phone number to receive customer transfers at checkout.
-                  </p>
+                {/* Checkout Flow Mode Selector */}
+                <div className="space-y-4 border-b border-slate-100 dark:border-white/10 pb-6">
+                  <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mb-2">
+                    Checkout Flow Mode
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Standard Mode Card */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDirty(true);
+                        setFormData(prev => ({ ...prev, checkout_mode: 'standard' }));
+                      }}
+                      className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                        formData.checkout_mode === 'standard'
+                          ? 'border-[#3b82f6] bg-[#3b82f6]/5 dark:bg-[#3b82f6]/10'
+                          : 'border-slate-100 dark:border-slate-800 bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-900/20'
+                      }`}
+                    >
+                      <span className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider block mb-1">
+                        Standard Checkout Flow
+                      </span>
+                      <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                        Customers fill out order forms and pay directly on the site via Card, Wave, or Cash on Delivery.
+                      </p>
+                    </button>
+
+                    {/* WhatsApp Mode Card */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDirty(true);
+                        setFormData(prev => ({ ...prev, checkout_mode: 'whatsapp' }));
+                      }}
+                      className={`p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                        formData.checkout_mode === 'whatsapp'
+                          ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10'
+                          : 'border-slate-100 dark:border-slate-800 bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-900/20'
+                      }`}
+                    >
+                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">
+                        Direct WhatsApp Checkout
+                      </span>
+                      <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                        Skip forms. Redirect directly to WhatsApp with the cart contents ready for chat validation.
+                      </p>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Payment Link / QR Link</span>
-                  <input 
-                    type="url" 
-                    name="wave_payment_url" 
-                    placeholder="https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/"
-                    value={formData.wave_payment_url} 
-                    onChange={(e) => {
-                      setIsDirty(true);
-                      setFormData(prev => ({ ...prev, wave_payment_url: e.target.value }));
-                    }}
-                    className={inputStyle} 
-                  />
-                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
-                    Enter your official Wave pay link (e.g. Wave QR code checkout URL). Mobile users will be redirected to their Wave app, and desktop users will scan the QR code.
-                  </p>
-                </div>
+                {formData.checkout_mode !== 'whatsapp' ? (
+                  <>
+                    {/* Active Payment Methods Toggles */}
+                    <div className="space-y-4 border-b border-slate-100 dark:border-white/10 pb-6">
+                      <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mb-2">
+                        Active Checkout Payment Methods
+                      </h4>
+                      
+                      {/* Card Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/60 dark:border-slate-800/50 rounded-2xl">
+                        <div className="space-y-0.5 max-w-[75%]">
+                          <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Credit Card Payment</span>
+                          <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                            Show and allow credit card inputs at checkout.
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            name="payment_method_card_enabled"
+                            checked={formData.payment_method_card_enabled}
+                            onChange={(e) => {
+                              setIsDirty(true);
+                              setFormData(prev => ({ ...prev, payment_method_card_enabled: e.target.checked }));
+                            }}
+                            className="sr-only peer" 
+                          />
+                          <div className="w-11 h-6 bg-slate-200 dark:bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                      </div>
 
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Launch API Key (Secret Key)</span>
-                  <input 
-                    type="password" 
-                    name="wave_api_key" 
-                    placeholder="wave_la_prod_..."
-                    value={formData.wave_api_key} 
-                    onChange={(e) => {
-                      setIsDirty(true);
-                      setFormData(prev => ({ ...prev, wave_api_key: e.target.value }));
-                    }}
-                    className={inputStyle} 
-                  />
-                  <p className="text-[9px] text-slate-400 font-bold leading-normal">
-                    Enter your Wave Launch API secret key to dynamically generate amount-locked checkout URLs. If left blank, Wave simulation mode will be used.
-                  </p>
-                </div>
+                      {/* Wave Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/60 dark:border-slate-800/50 rounded-2xl">
+                        <div className="space-y-0.5 max-w-[75%]">
+                          <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Mobile Money</span>
+                          <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                            Show and allow Wave payment options at checkout.
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            name="payment_method_wave_enabled"
+                            checked={formData.payment_method_wave_enabled}
+                            onChange={(e) => {
+                              setIsDirty(true);
+                              setFormData(prev => ({ ...prev, payment_method_wave_enabled: e.target.checked }));
+                            }}
+                            className="sr-only peer" 
+                          />
+                          <div className="w-11 h-6 bg-slate-200 dark:bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                      </div>
 
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Checkout Currency</span>
-                  <select 
-                    name="wave_currency" 
-                    value={formData.wave_currency || 'XOF'} 
-                    onChange={(e) => {
-                      setIsDirty(true);
-                      setFormData(prev => ({ ...prev, wave_currency: e.target.value }));
-                    }}
-                    className={inputStyle}
-                  >
-                    <option value="XOF">XOF (West African CFA franc - CI, SN, etc.)</option>
-                    <option value="XAF">XAF (Central African CFA franc)</option>
-                  </select>
-                </div>
+                      {/* COD Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/60 dark:border-slate-800/50 rounded-2xl">
+                        <div className="space-y-0.5 max-w-[75%]">
+                          <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Cash on Delivery (COD)</span>
+                          <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                            Show and allow Cash on Delivery option at checkout.
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            name="payment_method_cod_enabled"
+                            checked={formData.payment_method_cod_enabled}
+                            onChange={(e) => {
+                              setIsDirty(true);
+                              setFormData(prev => ({ ...prev, payment_method_cod_enabled: e.target.checked }));
+                            }}
+                            className="sr-only peer" 
+                          />
+                          <div className="w-11 h-6 bg-slate-200 dark:bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Phone Number</span>
+                      <input 
+                        type="tel" 
+                        name="wave_number" 
+                        placeholder="+2250500619923"
+                        value={formData.wave_number} 
+                        onChange={(e) => {
+                          setIsDirty(true);
+                          setFormData(prev => ({ ...prev, wave_number: e.target.value }));
+                        }}
+                        className={inputStyle} 
+                      />
+                      <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                        Enter your official Wave phone number to receive customer transfers at checkout.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Payment Link / QR Link</span>
+                      <input 
+                        type="url" 
+                        name="wave_payment_url" 
+                        placeholder="https://pay.wave.com/m/M_ci_fZ7c2kHGPRKo/c/ci/"
+                        value={formData.wave_payment_url} 
+                        onChange={(e) => {
+                          setIsDirty(true);
+                          setFormData(prev => ({ ...prev, wave_payment_url: e.target.value }));
+                        }}
+                        className={inputStyle} 
+                      />
+                      <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                        Enter your official Wave pay link (e.g. Wave QR code checkout URL). Mobile users will be redirected to their Wave app, and desktop users will scan the QR code.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Launch API Key (Secret Key)</span>
+                      <input 
+                        type="password" 
+                        name="wave_api_key" 
+                        placeholder="wave_la_prod_..."
+                        value={formData.wave_api_key} 
+                        onChange={(e) => {
+                          setIsDirty(true);
+                          setFormData(prev => ({ ...prev, wave_api_key: e.target.value }));
+                        }}
+                        className={inputStyle} 
+                      />
+                      <p className="text-[9px] text-slate-400 font-bold leading-normal">
+                        Enter your Wave Launch API secret key to dynamically generate amount-locked checkout URLs. If left blank, Wave simulation mode will be used.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Wave Checkout Currency</span>
+                      <select 
+                        name="wave_currency" 
+                        value={formData.wave_currency || 'XOF'} 
+                        onChange={(e) => {
+                          setIsDirty(true);
+                          setFormData(prev => ({ ...prev, wave_currency: e.target.value }));
+                        }}
+                        className={inputStyle}
+                      >
+                        <option value="XOF">XOF (West African CFA franc - CI, SN, etc.)</option>
+                        <option value="XAF">XAF (Central African CFA franc)</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl text-xs font-bold leading-relaxed text-left flex items-start gap-3 mt-4">
+                    <span className="text-base">💡</span>
+                    <div>
+                      <p className="font-black uppercase tracking-wider text-[10px] mb-1">Direct WhatsApp Checkout Enabled</p>
+                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                        In Direct WhatsApp mode, customers bypass order collection forms and payments on the site. Clicking checkout redirects them immediately to WhatsApp with a pre-filled list of their products and images, allowing direct chat and payment coordination.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
 

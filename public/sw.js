@@ -81,9 +81,13 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => {
+        .catch(async () => {
           // Offline fallback
-          return caches.match(OFFLINE_URL) || caches.match('/index.html');
+          const offlineRes = await caches.match(OFFLINE_URL);
+          if (offlineRes) return offlineRes;
+          const indexRes = await caches.match('/index.html');
+          if (indexRes) return indexRes;
+          return new Response('Offline', { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'text/html' } });
         })
     );
     return;
@@ -109,9 +113,6 @@ self.addEventListener('fetch', (event) => {
                 .catch(() => {});
             }
             return networkResponse;
-          })
-          .catch(() => {
-            // Ignore offline image errors
           });
       })
     );
@@ -130,9 +131,6 @@ self.addEventListener('fetch', (event) => {
               .catch(() => {});
           }
           return networkResponse;
-        })
-        .catch(() => {
-          // Ignore network errors, just rely on cache
         });
 
       return cachedResponse || fetchPromise;

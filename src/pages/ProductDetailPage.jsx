@@ -15,6 +15,7 @@ import CartDrawer from '../components/CartDrawer';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
 import ProductThreeDView from '../components/ProductThreeDView';
+import DealOfTheDaySection from '../components/DealOfTheDaySection';
 
 const getColorFilter = (variantName) => {
   if (!variantName) return 'none';
@@ -29,7 +30,8 @@ const getColorFilter = (variantName) => {
 };
 
 const ProductDetailPage = () => {
-  const { productId } = useParams();
+  const { productId: rawProductId } = useParams();
+  const productId = rawProductId ? rawProductId.toLowerCase().replace(/^swt-/, '') : '';
   const navigate = useNavigate();
   const { 
     products: liveProducts, settings, showToast, addToRecent, 
@@ -402,6 +404,18 @@ const ProductDetailPage = () => {
     }
     return arr.slice(0, 12);
   }, [product, liveProducts, relatedProducts]);
+
+  // Daily Deals (filtered or active fallback)
+  const dailyDealsProducts = React.useMemo(() => {
+    if (!Array.isArray(liveProducts)) return [];
+    const deals = liveProducts.filter(p => 
+      p.status === 'active' && 
+      (p.is_daily_deal === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true')
+    );
+    if (deals.length > 0) return deals;
+    // Fallback to active products if none are marked daily deal
+    return liveProducts.filter(p => p.status === 'active').slice(0, 8);
+  }, [liveProducts]);
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -839,44 +853,71 @@ const ProductDetailPage = () => {
                 )}
               </div>
 
-              {/* Pricing card (AliExpress Style) */}
-              <div className="bg-slate-50 dark:bg-slate-950/40 p-4.5 rounded-2xl border border-slate-150/60 dark:border-slate-800/60 space-y-2.5">
-                <div className="flex items-center gap-2">
-                  {(product.is_daily_deal === 1 || product.is_daily_deal === true || String(product.is_daily_deal) === '1' || String(product.is_daily_deal) === 'true') && (
-                    <span className="text-[10px] bg-[#e61e25] text-white px-2 py-0.5 rounded font-black uppercase tracking-wide">
-                      {lang === 'fr' ? 'SuperOffres' : 'SuperDeals'}
-                    </span>
-                  )}
-                  {product.old_price && product.old_price > product.price && (
-                    <span className="text-[10px] text-[#e61e25] font-black">
-                      {Math.round(((product.old_price - product.price) / product.old_price) * 100)}% OFF
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl sm:text-4xl font-black text-[#e61e25] italic tracking-tighter">
-                    {settings?.currency || 'XOF'} {((product.price || 0) + (selectedVariant?.priceAdjust || 0)).toLocaleString()}
-                  </span>
-                  {product.old_price && (
-                    <span className="text-sm text-slate-400 dark:text-slate-500 line-through font-bold">
-                      {settings?.currency || 'XOF'} {product.old_price.toLocaleString()}
-                    </span>
-                  )}
-                </div>
-                {product.old_price && product.old_price > product.price && (
-                  <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">
-                    You save: {settings?.currency || 'XOF'} {(product.old_price - product.price).toLocaleString()}
-                  </p>
-                )}
-                
-                {/* Store Coupons info */}
-                <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">
-                  <span>Store Coupons:</span>
-                  <span className="text-[#e61e25] bg-[#e61e25]/5 px-2 py-1 rounded border border-dashed border-[#e61e25]/30">
-                    Claim 1,000 XOF Coupon at Checkout
-                  </span>
-                </div>
-              </div>
+              {/* Pricing card (Ultra-Premium Redesign) */}
+              {(() => {
+                const finalPrice = (product.price || 0) + (selectedVariant?.priceAdjust || 0);
+                const oldPrice = product.old_price || (product.price * 1.25);
+                const savings = oldPrice - finalPrice;
+                const discount = Math.round(((oldPrice - finalPrice) / oldPrice) * 100);
+                const currSymbol = settings?.currency || 'FCFA';
+
+                return (
+                  <div className="bg-white/80 dark:bg-slate-900/40 backdrop-blur-md p-5 rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-md relative overflow-hidden space-y-3.5 text-left">
+                    {/* Header Tag / Discount Indicator */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] bg-red-500 text-white px-2 py-0.5 rounded-[5px] font-black uppercase tracking-wider shadow-sm shadow-red-500/10">
+                          {lang === 'fr' ? 'SuperOffres' : 'SuperDeals'}
+                        </span>
+                        <span className="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-[5px] font-black uppercase tracking-wider shadow-sm shadow-amber-500/10">
+                          {lang === 'fr' ? 'Vente Flash' : 'Flash Sale'}
+                        </span>
+                      </div>
+                      
+                      {/* Discount percentage tag */}
+                      <span className="text-[10px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded-[5px] font-black uppercase tracking-wide border border-red-500/20">
+                        -{discount}% OFF
+                      </span>
+                    </div>
+
+                    {/* Price Display Block */}
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl sm:text-4xl font-black text-red-500 italic tracking-tighter select-all">
+                        {finalPrice.toLocaleString()} {currSymbol}
+                      </span>
+                      <span className="text-sm text-slate-450 dark:text-slate-500 line-through font-bold">
+                        {Math.round(oldPrice).toLocaleString()} {currSymbol}
+                      </span>
+                    </div>
+
+                    {/* Savings helper block */}
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {lang === 'fr' ? 'Économie :' : 'You save :'} {Math.round(savings).toLocaleString()} {currSymbol}
+                    </p>
+                    
+                    {/* Store Coupons ticket */}
+                    <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 select-none">
+                        {lang === 'fr' ? 'Bons de réduction :' : 'Store Coupons :'}
+                      </span>
+                      
+                      {/* Interactive Coupon Ticket */}
+                      <div className="flex items-center justify-between gap-3 bg-[#e61e25]/5 border border-dashed border-[#e61e25]/30 rounded-2xl px-3.5 py-1.5 relative overflow-hidden">
+                        {/* Left Coupon Cutout Dot */}
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-3 bg-white dark:bg-[#090d16] rounded-r-full border-r border-dashed border-[#e61e25]/30 -ml-1" />
+                        
+                        <span className="text-[10px] font-black text-[#e61e25] uppercase tracking-wide leading-none">
+                          {lang === 'fr' ? '1 000 FCFA DE RÉDUCTION' : 'Claim 1,000 FCFA Coupon'}
+                        </span>
+                        
+                        {/* Right Coupon Cutout Dot */}
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-3 bg-white dark:bg-[#090d16] rounded-l-full border-l border-dashed border-[#e61e25]/30 -mr-1" />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Rating + Sold proof */}
               <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 pt-1.5">
@@ -1002,74 +1043,54 @@ const ProductDetailPage = () => {
             {/* Variant tag / Specification Details */}
             <div id="product-details" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Details & Warranty</span>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                  {lang === 'fr' ? 'Détails et Garantie' : 'Details & Warranty'}
+                </span>
               </div>
               <div className="grid grid-cols-2 gap-4 text-xs font-bold">
                 {product.category && (
                   <div className="space-y-1">
-                    <span className="text-slate-400 uppercase text-[9px]">Category</span>
+                    <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Catégorie' : 'Category'}</span>
                     <p className="text-slate-700 dark:text-slate-200">{product.category}</p>
                   </div>
                 )}
                 <div className="space-y-1">
-                  <span className="text-slate-400 uppercase text-[9px]">Status</span>
-                  <p className="text-emerald-500 uppercase">In Stock</p>
+                  <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Statut' : 'Status'}</span>
+                  <p className="text-emerald-500 uppercase">{lang === 'fr' ? 'En Stock' : 'In Stock'}</p>
                 </div>
-                {product.warranty && (
-                  <div className="space-y-1">
-                    <span className="text-slate-400 uppercase text-[9px]">Warranty</span>
-                    <p className="text-slate-700 dark:text-slate-200">{product.warranty}</p>
-                  </div>
-                )}
+                <div className="space-y-1">
+                  <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Garantie' : 'Warranty'}</span>
+                  <p className="text-slate-700 dark:text-slate-200">
+                    {product.warranty || (lang === 'fr' ? '1 semaine de garantie' : '1 week warranty')}
+                  </p>
+                </div>
                 {product.brand && (
                   <div className="space-y-1">
-                    <span className="text-slate-400 uppercase text-[9px]">Brand</span>
+                    <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Marque' : 'Brand'}</span>
                     <p className="text-slate-700 dark:text-slate-200">{product.brand}</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Logistics shipping box */}
-            <div className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-3 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                <MapPin size={16} className="text-[#e61e25]" />
-                <span>Shipping Details</span>
+            {/* Deal of the Day Section */}
+            {dailyDealsProducts.length > 0 && (
+              <div className="w-full">
+                <DealOfTheDaySection 
+                  products={dailyDealsProducts}
+                  onProductClick={(p) => {
+                    navigate(`/product/swt-${p.id}`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  videoAdId="none"
+                  onCartClick={() => {}}
+                  title={lang === 'fr' ? 'Offre du Jour' : 'Deal of the day'}
+                  subtitle={lang === 'fr' ? 'Vente Flash & Offres exclusives' : 'Elite Flash Deals'}
+                />
               </div>
-              <div className="text-xs font-bold space-y-1.5 text-slate-600 dark:text-slate-350">
-                <p className="flex justify-between">
-                  <span>Destination:</span>
-                  <span className="text-slate-900 dark:text-white">Cote D'Ivoire</span>
-                </p>
-                <p className="flex justify-between text-[#e61e25]">
-                  <span>Shipping Cost:</span>
-                  <span className="font-extrabold">{settings?.currency || 'XOF'} 1,500</span>
-                </p>
-                <p className="flex justify-between text-[10px] text-slate-400 uppercase">
-                  <span>Tracking:</span>
-                  <span>Full tracking available</span>
-                </p>
-              </div>
-            </div>
+            )}
 
-            {/* Store details banner */}
-            <div className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 flex justify-between items-center text-left shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-100 dark:bg-slate-950 rounded-xl flex items-center justify-center font-black text-sm text-eas-blue border border-slate-200/50">
-                  SW
-                </div>
-                <div>
-                  <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white">Sweeto Official Store</h4>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">98.4% Positive Feedback</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => showToast("WhatsApp Support active! 💬", "success")}
-                className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                Chat
-              </button>
-            </div>
+
 
             {/* Tabbed view: specs/faqs */}
             <div id="product-description" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left shadow-sm">
@@ -1446,14 +1467,16 @@ const ProductDetailPage = () => {
 
         {/* Related Products Grid */}
         {relatedProducts.length > 0 && (
-          <div id="product-recommendations" className="mt-12 space-y-6 text-left border-t border-slate-100 dark:border-white/5 pt-12">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
-                {lang === 'fr' ? 'Produits Associés' : 'Related Products'}
-              </h3>
-              <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-                {lang === 'fr' ? 'Dans la même catégorie' : 'In the same category'}
-              </span>
+          <div id="product-recommendations" className="mt-4 pt-4 text-left border-t border-slate-100/50 dark:border-white/5 space-y-5">
+            <div className="flex items-center justify-between border-l-4 border-[#2563EB] pl-3.5 select-none">
+              <div className="text-left">
+                <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white italic leading-tight">
+                  {lang === 'fr' ? 'Produits Associés' : 'Related Products'}
+                </h3>
+                <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-widest mt-1">
+                  {lang === 'fr' ? 'Dans la même catégorie' : 'In the same category'}
+                </p>
+              </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {relatedProducts.map((p, idx) => (
@@ -1473,14 +1496,16 @@ const ProductDetailPage = () => {
 
         {/* More to Love Grid */}
         {moreToLoveProducts.length > 0 && (
-          <div className="mt-12 space-y-6 text-left border-t border-slate-100 dark:border-white/5 pt-12">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">
-                {lang === 'fr' ? 'Plus à aimer' : 'More to love'}
-              </h3>
-              <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-                {lang === 'fr' ? 'Produits recommandés' : 'Recommended products'}
-              </span>
+          <div className="mt-4 pt-4 text-left border-t border-slate-100/50 dark:border-white/5 space-y-5">
+            <div className="flex items-center justify-between border-l-4 border-[#2563EB] pl-3.5 select-none">
+              <div className="text-left">
+                <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white italic leading-tight">
+                  {lang === 'fr' ? 'Plus à aimer' : 'More to love'}
+                </h3>
+                <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-widest mt-1">
+                  {lang === 'fr' ? 'Produits recommandés' : 'Recommended products'}
+                </p>
+              </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {moreToLoveProducts.map((p, idx) => (
@@ -1816,7 +1841,7 @@ const ProductDetailPage = () => {
                 {/* WhatsApp */}
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
                     const text = lang === 'fr'
                       ? `Découvrez ${product.name} sur SWEETO ! ⚡ ${shareUrl}`
                       : `Check out ${product.name} on SWEETO! ⚡ ${shareUrl}`;
@@ -1832,7 +1857,7 @@ const ProductDetailPage = () => {
                 {/* Facebook */}
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
                     setIsShareModalOpen(false);
                   }}
@@ -1845,7 +1870,7 @@ const ProductDetailPage = () => {
                 {/* Copy Link */}
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
                     navigator.clipboard.writeText(shareUrl);
                     showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
                     setIsShareModalOpen(false);
@@ -1860,7 +1885,7 @@ const ProductDetailPage = () => {
                 {navigator.share && (
                   <button
                     onClick={() => {
-                      const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                      const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
                       navigator.share({
                         title: product.name,
                         text: lang === 'fr' 
@@ -1883,12 +1908,12 @@ const ProductDetailPage = () => {
                 <input
                   type="text"
                   readOnly
-                  value={`${window.location.origin}/share/product/${product.id}`}
+                  value={`${window.location.origin}/share/product/swt-${product.id}`}
                   className="flex-1 bg-transparent border-none text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 outline-none select-all"
                 />
                 <button
                   onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+                    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
                     navigator.clipboard.writeText(shareUrl);
                     showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
                   }}

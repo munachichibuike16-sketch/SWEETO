@@ -40,6 +40,25 @@ const getSoldCount = (product) => {
   return product.sold_count || 0;
 };
 
+const getImagesList = (prod) => {
+  if (!prod) return [];
+  const list = [];
+  const mainImg = prod.image_url || prod.image;
+  if (mainImg) list.push(mainImg);
+  if (prod.images) {
+    try {
+      const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
+      if (Array.isArray(imgs)) {
+        imgs.forEach(img => {
+          if (img && !list.includes(img)) list.push(img);
+        });
+      }
+    } catch (e) {}
+  }
+  if (list.length === 0) list.push('/hero-banner.png');
+  return list;
+};
+
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
   const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike, incrementProductView, showToast } = useStore();
   const { isDarkMode } = useTheme();
@@ -48,6 +67,30 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
+  
+  const images = getImagesList(product);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageFade, setImageFade] = useState(true);
+
+  React.useEffect(() => {
+    if (images.length <= 1) return;
+    const initialDelay = 1000 + Math.random() * 4000;
+    let intervalId;
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(() => {
+        setImageFade(false);
+        setTimeout(() => {
+          setCurrentImageIndex(prev => (prev + 1) % images.length);
+          setImageFade(true);
+        }, 300);
+      }, 4000 + Math.random() * 2000);
+    }, initialDelay);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [images.length]);
 
   React.useEffect(() => {
     const checkCompared = () => {
@@ -89,24 +132,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     return Number(product.is_new_arrival) === 1 || product.is_new_arrival === true || String(product.is_new_arrival) === '1' || String(product.is_new_arrival) === 'true';
   })();
 
-  const getImagesList = (prod) => {
-    if (!prod) return [];
-    const list = [];
-    const mainImg = prod.image_url || prod.image;
-    if (mainImg) list.push(mainImg);
-    if (prod.images) {
-      try {
-        const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
-        if (Array.isArray(imgs)) {
-          imgs.forEach(img => {
-            if (img && !list.includes(img)) list.push(img);
-          });
-        }
-      } catch (e) {}
-    }
-    if (list.length === 0) list.push('/hero-banner.png');
-    return list;
-  };
+
 
   const handleCardClick = (e) => {
     if (onProductClick) {
@@ -170,7 +196,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     const baseShareUrl = (API_BASE_URL && !API_BASE_URL.includes('your-backend-service.onrender.com'))
       ? API_BASE_URL 
       : window.location.origin;
-    const shareUrl = `${baseShareUrl}/share/product/${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
+    const shareUrl = `${baseShareUrl}/share/product/swt-${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
     const shareTitle = product.name;
     const shareText = product.description || `Check out ${product.name} on SWEETO!`;
 
@@ -232,24 +258,13 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
             <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5">
               <button 
                 onClick={handleToggleWishlist}
-                className={`w-8.5 h-8.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
+                className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${
                   isWished 
-                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
-                    : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
+                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30 shadow-md scale-105' 
+                    : 'bg-white/75 dark:bg-slate-900/75 border-slate-200/40 dark:border-slate-800/40 text-slate-700 dark:text-slate-300 hover:bg-[#ff3b30] hover:text-white hover:border-[#ff3b30] hover:scale-105'
                 }`}
               >
-                <Heart size={15} fill={isWished ? "currentColor" : "none"} />
-              </button>
-              <button 
-                onClick={handleToggleCompare}
-                className={`w-8.5 h-8.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
-                  isCompared 
-                    ? 'bg-orange-500 border-orange-500 text-white shadow-orange-500/30' 
-                    : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-orange-500'
-                }`}
-                title={lang === 'fr' ? 'Comparer ce produit' : 'Compare this product'}
-              >
-                <Scale size={15} />
+                <Heart size={14} fill={isWished ? "currentColor" : "none"} />
               </button>
             </div>
 
@@ -257,20 +272,22 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
             <div className="absolute bottom-2.5 right-2.5 z-20">
               <button 
                 onClick={handleAddToCart}
-                className="w-8.5 h-8.5 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all text-slate-900 dark:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/75 dark:bg-slate-900/75 backdrop-blur-md shadow-md flex items-center justify-center border border-slate-200/40 dark:border-slate-800/40 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] hover:scale-105 active:scale-95 transition-all text-slate-750 dark:text-white cursor-pointer group"
               >
-                <ShoppingCart size={15} className="text-slate-900 dark:text-white" />
+                <ShoppingCart size={14} className="text-slate-750 dark:text-white group-hover:text-white" />
               </button>
             </div>
 
             <img 
-              src={product.image_url || product.image || '/hero-banner.png'} 
+              src={images[currentImageIndex] || '/hero-banner.png'} 
               alt={product.name} 
               onError={(e) => {
                 e.target.onerror = null; 
                 e.target.src = '/hero-banner.png';
               }}
-              className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 rounded-lg"
+              className={`w-full h-full object-contain p-1 group-hover:scale-105 transition-all duration-300 rounded-lg ${
+                imageFade ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           </div>
 
@@ -353,29 +370,18 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
             {layout !== 'aliexpress' && (
               <button 
                 onClick={handleToggleWishlist}
-                className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
+                className={`w-7.5 h-7.5 rounded-full shadow-md flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${
                   isWished 
-                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
-                    : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
+                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30 shadow-sm scale-105' 
+                    : 'bg-white/75 dark:bg-slate-900/75 border-slate-200/40 dark:border-slate-800/40 text-slate-700 dark:text-slate-350 hover:bg-[#ff3b30] hover:text-white hover:border-[#ff3b30] hover:scale-105'
                 }`}
               >
                 <Heart size={13} fill={isWished ? "currentColor" : "none"} />
               </button>
             )}
             <button 
-              onClick={handleToggleCompare}
-              className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
-                isCompared 
-                  ? 'bg-orange-500 border-orange-500 text-white shadow-orange-500/30' 
-                  : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-orange-500 dark:hover:text-orange-400'
-              }`}
-              title={lang === 'fr' ? 'Comparer ce produit' : 'Compare this product'}
-            >
-              <Scale size={13} />
-            </button>
-            <button 
               onClick={handleShareProduct}
-              className="w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#2563eb] dark:hover:text-[#3b82f6] cursor-pointer"
+              className="w-7.5 h-7.5 rounded-full shadow-md flex items-center justify-center transition-all duration-300 backdrop-blur-md border bg-white/75 dark:bg-slate-900/75 border-slate-200/40 dark:border-slate-800/40 text-slate-700 dark:text-slate-355 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] hover:scale-105 cursor-pointer"
             >
               <Share2 size={13} />
             </button>
@@ -385,22 +391,22 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
           <div className="absolute bottom-2.5 right-2.5 z-20">
             <button 
               onClick={handleAddToCart}
-              className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all text-slate-900 dark:text-white cursor-pointer"
+              className="w-7.5 h-7.5 rounded-full bg-white/75 dark:bg-slate-900/75 backdrop-blur-md shadow-md flex items-center justify-center border border-slate-200/40 dark:border-slate-800/40 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] hover:scale-105 active:scale-95 transition-all text-slate-750 dark:text-white cursor-pointer group"
             >
-              <ShoppingCart size={13} className="text-slate-900 dark:text-white" />
+              <ShoppingCart size={13} className="text-slate-750 dark:text-white group-hover:text-white" />
             </button>
           </div>
 
           <img 
-            src={product.image_url || product.image || '/hero-banner.png'} 
+            src={images[currentImageIndex] || '/hero-banner.png'} 
             alt={product.name} 
             onError={(e) => {
               e.target.onerror = null; 
               e.target.src = '/hero-banner.png';
             }}
-            className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${
+            className={`w-full h-full group-hover:scale-105 transition-all duration-500 ${
               layout === 'aliexpress' ? 'object-cover' : 'object-contain'
-            }`} 
+            } ${imageFade ? 'opacity-100' : 'opacity-0'}`} 
           />
         </div>
 

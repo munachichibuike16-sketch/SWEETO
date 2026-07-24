@@ -10,8 +10,8 @@
   "categories": ["shopping", "technology"],
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
+      "src": "/favicon.png",
+      "type": "image/png",
       "sizes": "any",
       "purpose": "any"
     },

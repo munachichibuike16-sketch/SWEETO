@@ -72,7 +72,7 @@ function updatePWAManifestAndIcons() {
     faviconLink.rel = 'icon';
     document.head.appendChild(faviconLink);
   }
-  const targetFavicon = isAdminRoute ? '/admin-favicon.svg' : '/sweeto_logo.png';
+  const targetFavicon = isAdminRoute ? '/admin-favicon.png' : '/sweeto_logo.png';
   if (faviconLink.getAttribute('href') !== targetFavicon) {
     faviconLink.setAttribute('href', targetFavicon);
   }

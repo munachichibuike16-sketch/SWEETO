@@ -179,7 +179,7 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+    const shareUrl = `${window.location.origin}/share/product/swt-${product.id}`;
     const shareData = {
       title: product.name,
       text: lang === 'fr' 
@@ -640,10 +640,6 @@ const ProductModal = ({ product, allProducts = [], isOpen, onClose, onProductCli
                           <span className="text-base">{isInWishlist(product.id) ? '❤️' : '🤍'}</span>
                           <span>{productLikesMap[product.id] || 0} {lang === 'fr' ? 'likes' : 'likes'}</span>
                         </button>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        {t('in_stock')}
                       </div>
                     </div>
 

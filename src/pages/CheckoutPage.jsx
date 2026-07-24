@@ -33,6 +33,16 @@ const CheckoutPage = () => {
   const { t, isRTL, lang } = useLanguage();
   const currencySymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency === 'USD' ? '$' : (settings?.currency || 'FCFA'));
   
+  const isCardEnabled = settings?.payment_method_card_enabled !== 'false' && settings?.payment_method_card_enabled !== false;
+  const isWaveEnabled = settings?.payment_method_wave_enabled !== 'false' && settings?.payment_method_wave_enabled !== false;
+  const isCodEnabled = settings?.payment_method_cod_enabled !== 'false' && settings?.payment_method_cod_enabled !== false;
+  const activeMethodsCount = [isCardEnabled, isWaveEnabled, isCodEnabled].filter(Boolean).length;
+  const gridColsClass = activeMethodsCount === 3 
+    ? 'grid-cols-3' 
+    : activeMethodsCount === 2 
+      ? 'grid-cols-2' 
+      : 'grid-cols-1';
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderId, setOrderId] = useState(null);
@@ -42,6 +52,32 @@ const CheckoutPage = () => {
   useEffect(() => {
     setIsPaymentVerified(false);
   }, [paymentOption]);
+
+  useEffect(() => {
+    if (settings) {
+      const cardActive = settings.payment_method_card_enabled !== 'false' && settings.payment_method_card_enabled !== false;
+      const waveActive = settings.payment_method_wave_enabled !== 'false' && settings.payment_method_wave_enabled !== false;
+      const codActive = settings.payment_method_cod_enabled !== 'false' && settings.payment_method_cod_enabled !== false;
+
+      if (!cardActive && paymentOption === 'card') {
+        if (waveActive) setPaymentOption('wave');
+        else if (codActive) setPaymentOption('cod');
+        else setPaymentOption('');
+      } else if (!waveActive && paymentOption === 'wave') {
+        if (cardActive) setPaymentOption('card');
+        else if (codActive) setPaymentOption('cod');
+        else setPaymentOption('');
+      } else if (!codActive && paymentOption === 'cod') {
+        if (cardActive) setPaymentOption('card');
+        else if (waveActive) setPaymentOption('wave');
+        else setPaymentOption('');
+      } else if (!paymentOption) {
+        if (cardActive) setPaymentOption('card');
+        else if (waveActive) setPaymentOption('wave');
+        else if (codActive) setPaymentOption('cod');
+      }
+    }
+  }, [settings, paymentOption]);
   const [orderShipping, setOrderShipping] = useState(0);
   const [orderSubtotal, setOrderSubtotal] = useState(0);
   const [formData, setFormData] = useState({
@@ -128,6 +164,10 @@ const CheckoutPage = () => {
       return true;
     }
     if (currentStep === 2) {
+      if (!paymentOption) {
+        showToast(lang === 'fr' ? "Veuillez sélectionner un moyen de paiement." : "Please select a payment method.", "error");
+        return false;
+      }
       if (paymentOption === 'card') {
         if (!cardholderName.trim()) {
           showToast(lang === 'fr' ? "Nom sur la carte requis." : "Please enter cardholder name.", "error");
@@ -409,8 +449,8 @@ const CheckoutPage = () => {
   }, [isSuccess]);
 
   const subtotal = cartTotal;
-  const estimatedTax = Math.round(subtotal * 0.08);
-  const tax = estimatedTax;
+  const estimatedTax = 0;
+  const tax = 0;
   const hasUnsetPrice = cartItems.some(item => !item.price || Number(item.price) === 0);
   const shipping = (hasUnsetPrice || isFreeShippingApplied || deliveryMethod === 'pickup') ? 0 : shippingFee;
   const grandTotal = subtotal + shipping - promoDiscount + tax;
@@ -856,13 +896,13 @@ const CheckoutPage = () => {
                     <Home size={14} />
                     <span>{lang === 'fr' ? 'Continuer mes achats' : 'Continue Shopping'}</span>
                   </button>
-                  
+
                   <button 
-                    onClick={() => navigate('/settings?tab=orders')}
+                    onClick={() => navigate(orderId ? `/order-tracking/${orderId}` : '/order-tracking')}
                     className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl py-4 font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <Package size={14} />
-                    <span>{lang === 'fr' ? 'Voir mes commandes' : 'View Orders'}</span>
+                    <Compass size={14} />
+                    <span>{lang === 'fr' ? 'Suivre ma commande' : 'Track Order'}</span>
                   </button>
                 </div>
 
@@ -1018,6 +1058,126 @@ const CheckoutPage = () => {
 
       </div>
     );
+  }
+
+  const renderWhatsAppCheckout = () => {
+    const handleConfirmWhatsAppOrder = () => {
+      const itemsText = cartItems.map(item => {
+        return `• ${item.name} (${item.quantity}x) - ${settings?.currency || 'FCFA'} ${(item.price * item.quantity).toLocaleString()}`;
+      }).join('\n');
+
+      const totalText = `${settings?.currency || 'FCFA'} ${grandTotal.toLocaleString()}`;
+      const productLinks = cartItems.map(item => {
+        return `${window.location.origin}/product/${item.id}`;
+      }).join('\n');
+
+      const message = lang === 'fr' 
+        ? `Bonjour ! Je souhaite valider la commande suivante :\n\n${itemsText}\n\nSous-total : ${settings?.currency || 'FCFA'} ${subtotal.toLocaleString()}\nFrais de transport : ${settings?.currency || 'FCFA'} ${shipping.toLocaleString()}\n*Total : ${totalText}*\n\nLiens des produits :\n${productLinks}`
+        : `Hello! I would like to validate the following order:\n\n${itemsText}\n\nSubtotal: ${settings?.currency || 'FCFA'} ${subtotal.toLocaleString()}\nTransport fees: ${settings?.currency || 'FCFA'} ${shipping.toLocaleString()}\n*Total: ${totalText}*\n\nProduct links:\n${productLinks}`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const waNumber = settings?.admin_phone?.replace(/\D/g, '') || settings?.contactPhone?.replace(/\D/g, '') || settings?.loc_phone?.replace(/\D/g, '') || "2250500619923";
+      
+      // Clear cart
+      clearCart();
+      
+      // Redirect to home
+      navigate('/');
+      showToast(lang === 'fr' ? 'Redirection vers WhatsApp...' : 'Redirecting to WhatsApp...', 'success');
+      
+      window.open(`https://wa.me/${waNumber}?text=${encodedMessage}`, '_blank');
+    };
+
+    return (
+      <div className="min-h-screen w-full bg-[#f8fafc] dark:bg-[#080d19] py-8 sm:py-12 px-4 sm:px-6 md:px-8 overflow-y-auto flex flex-col items-center justify-center">
+        <div className="max-w-3xl w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 sm:p-10 border border-slate-100 dark:border-slate-800 shadow-2xl space-y-8 text-center relative overflow-hidden before:absolute before:top-0 before:left-0 before:w-full before:h-[3px] before:bg-gradient-to-r before:from-emerald-400 before:via-teal-400 before:to-emerald-500">
+          
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/10 animate-pulse">
+              <svg className="w-9 h-9 fill-current" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              {lang === 'fr' ? 'Valider sur WhatsApp' : 'Confirm via WhatsApp'}
+            </h2>
+            <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold max-w-md mx-auto">
+              {lang === 'fr' 
+                ? 'Votre commande sera envoyée directement sur notre ligne WhatsApp afin de convenir du mode de livraison ou du retrait en magasin.'
+                : 'Your order will be sent directly to our WhatsApp line to coordinate the delivery method or in-store pickup.'}
+            </p>
+          </div>
+
+          {/* Cart Items List */}
+          <div className="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 text-left space-y-4">
+            <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3">
+              {lang === 'fr' ? 'Articles dans votre panier' : 'Items in your cart'}
+            </h3>
+            <div className="divide-y divide-slate-100 dark:divide-white/5 max-h-[300px] overflow-y-auto pr-2 space-y-3">
+              {cartItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                  <img 
+                    src={item.image_url || item.image || '/hero-banner.png'} 
+                    alt={item.name} 
+                    className="w-14 h-14 rounded-2xl object-contain bg-white dark:bg-slate-900 p-1 border border-slate-100 dark:border-white/5 shrink-0" 
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</h4>
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-505 mt-0.5">
+                      {item.quantity} x {settings?.currency || 'FCFA'} {item.price?.toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="text-sm font-black text-slate-905 dark:text-white shrink-0">
+                    {settings?.currency || 'FCFA'} {(item.price * item.quantity).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Detailed Price Breakdown */}
+            <div className="border-t border-slate-100 dark:border-white/5 pt-4 space-y-2.5 text-xs font-bold font-mono">
+              <div className="flex items-center justify-between text-slate-450 dark:text-slate-400">
+                <span>{lang === 'fr' ? 'SOUS-TOTAL' : 'SUBTOTAL'}</span>
+                <span>{settings?.currency || 'FCFA'} {subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-450 dark:text-slate-400">
+                <span>{lang === 'fr' ? 'FRAIS DE TRANSPORT' : 'TRANSPORT FEES'}</span>
+                <span>{settings?.currency || 'FCFA'} {shipping.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-slate-100 dark:border-white/5 pt-2.5 flex items-center justify-between text-base font-black text-slate-900 dark:text-white">
+                <span>{lang === 'fr' ? 'TOTAL ESTIMÉ' : 'ESTIMATED TOTAL'}</span>
+                <span>{settings?.currency || 'FCFA'} {grandTotal.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action button */}
+          <div className="pt-4 flex flex-col gap-3">
+            <button
+              onClick={handleConfirmWhatsAppOrder}
+              className="w-full py-4.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all cursor-pointer border-none flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/25 text-center"
+            >
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              <span>{lang === 'fr' ? 'Confirmer sur WhatsApp' : 'Confirm Order on WhatsApp'}</span>
+            </button>
+            
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full py-3.5 bg-transparent border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+            >
+              {lang === 'fr' ? 'Retour au panier' : 'Back to Cart'}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
+  if (settings?.checkout_mode === 'whatsapp') {
+    return renderWhatsAppCheckout();
   }
 
    return (
@@ -1352,49 +1512,61 @@ const CheckoutPage = () => {
                 </div>
 
                 {/* Payment Option Buttons */}
-                <div className="grid grid-cols-3 gap-3">
-                  {/* Card */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption('card')}
-                    className={`py-4 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      paymentOption === 'card'
-                        ? 'border-indigo-650 bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 font-bold'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    <CreditCard size={18} />
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider">Card</span>
-                  </button>
+                {activeMethodsCount > 0 ? (
+                  <div className={`grid ${gridColsClass} gap-3`}>
+                    {/* Card */}
+                    {isCardEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption('card')}
+                        className={`py-4 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          paymentOption === 'card'
+                            ? 'border-indigo-650 bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 font-bold'
+                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        <CreditCard size={18} />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider">Card</span>
+                      </button>
+                    )}
 
-                  {/* Wave */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption('wave')}
-                    className={`py-4 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      paymentOption === 'wave'
-                        ? 'border-indigo-650 bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 font-bold'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    <Zap size={18} className={paymentOption === 'wave' ? 'text-indigo-600 fill-current' : ''} />
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider">Wave</span>
-                  </button>
+                    {/* Wave */}
+                    {isWaveEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption('wave')}
+                        className={`py-4 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          paymentOption === 'wave'
+                            ? 'border-indigo-650 bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 font-bold'
+                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        <Zap size={18} className={paymentOption === 'wave' ? 'text-indigo-600 fill-current' : ''} />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider">Wave</span>
+                      </button>
+                    )}
 
-                  {/* Pay on Delivery */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption('cod')}
-                    className={`py-4 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      paymentOption === 'cod'
-                        ? 'border-indigo-650 bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 font-bold'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    <Truck size={18} />
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider">On Delivery</span>
-                  </button>
-                </div>
+                    {/* Pay on Delivery */}
+                    {isCodEnabled && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption('cod')}
+                        className={`py-4 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          paymentOption === 'cod'
+                            ? 'border-indigo-650 bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 font-bold'
+                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        <Truck size={18} />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider">On Delivery</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-center text-xs font-bold">
+                    No payment methods are currently available. Please contact support.
+                  </div>
+                )}
 
                 {/* Sub Forms based on Payment Option */}
                 {paymentOption === 'card' && (
@@ -1512,7 +1684,15 @@ const CheckoutPage = () => {
                     Back
                   </button>
 
-                  {paymentOption !== 'cod' && !isPaymentVerified ? (
+                  {activeMethodsCount === 0 ? (
+                    <button
+                      type="button"
+                      disabled={true}
+                      className="flex-[2] bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 py-4 rounded-2xl font-extrabold uppercase tracking-wider text-xs cursor-not-allowed border-none transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>No Payment Methods</span>
+                    </button>
+                  ) : paymentOption !== 'cod' && !isPaymentVerified ? (
                     <button
                       type="button"
                       disabled={verifyingPayment}

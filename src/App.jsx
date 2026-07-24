@@ -44,7 +44,6 @@ import SalesPopupNotifier from './components/SalesPopupNotifier';
 import ShoppingQuizWidget from './components/ShoppingQuizWidget';
 import InteractiveHub from './components/InteractiveHub';
 import LoyaltyPointsWidget from './components/LoyaltyPointsWidget';
-import CompareProductsDrawer from './components/CompareProductsDrawer';
 import { useStore } from './contexts/StoreContext';
 import { useLanguage } from './contexts/LanguageContext';
 import { supabase } from './lib/supabase';
@@ -365,7 +364,8 @@ const Storefront = ({ viewMode: propViewMode }) => {
 
   const [activeSubCategory, setActiveSubCategory] = useState('All');
   const [sortBy, setSortBy] = useState('name_az');
-  const { productId, categoryName } = useParams();
+  const { productId: rawProductId, categoryName } = useParams();
+  const productId = rawProductId ? rawProductId.toLowerCase().replace(/^swt-/, '') : '';
   const navigate = useNavigate();
 
   const activeCategory = viewMode === 'category' 
@@ -428,7 +428,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     setSelectedProduct(p);
     setIsProductModalOpen(true);
     // Push path to history stack to support back button modal dismissal
-    navigate(`/product/${p.id}`);
+    navigate(`/product/swt-${p.id}`);
   };
 
   // 4. Expose mobile hardware back button handler for app wrappers
@@ -1466,7 +1466,6 @@ function App() {
       {currentPath === '/' && <ShoppingQuizWidget />}
       {currentPath === '/' && <InteractiveHub />}
       {currentPath === '/' && <LoyaltyPointsWidget />}
-      {!currentPath.includes('/dashboard') && <CompareProductsDrawer />}
       {currentPath === '/' && <FloatingWhatsApp />}
       {!currentPath.includes('/dashboard') && <LoadingScreen isVisible={loading} />}
       <Router>

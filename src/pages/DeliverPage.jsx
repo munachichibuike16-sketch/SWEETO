@@ -259,6 +259,12 @@ export default function DeliverPage() {
     const cur = stageIdx(order.stage);
     const nextKey = STAGES[Math.min(cur + 1, STAGES.length - 1)].key;
 
+    if (nextKey === 'delivered') {
+      const code = ((parseInt(order.db_id) * 837 + 1492) % 9000 + 1000).toString();
+      alert(`Pour compléter la livraison, veuillez saisir le code de confirmation "${code}" sur le téléphone du client.\n\nTo complete delivery, please enter confirmation code "${code}" on the customer's phone.`);
+      return;
+    }
+
     try {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, stage: nextKey } : o));
       if (selected?.id === orderId) setSel({ ...selected, stage: nextKey });
@@ -430,6 +436,20 @@ export default function DeliverPage() {
                         <span className="ml-auto text-[9px] font-black text-emerald-400 uppercase tracking-widest">{t('call') || 'Call'}</span>
                       </a>
                     </div>
+                    
+                    {/* Delivery Verification Code Box */}
+                    {selected.stage !== 'delivered' && (
+                      <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-4 py-3 flex items-center justify-between text-left">
+                        <div className="max-w-[70%]">
+                          <span className="text-[9px] font-black text-indigo-400 uppercase tracking-wider block">Delivery Verification Code</span>
+                          <span className="text-[10px] font-bold text-slate-400 mt-0.5 block leading-normal">Customer must type this on their screen:</span>
+                        </div>
+                        <div className="bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 font-black text-sm px-3 py-1.5 rounded-xl tracking-wider select-all">
+                          {((parseInt(selected.db_id) * 837 + 1492) % 9000 + 1000).toString()}
+                        </div>
+                      </div>
+                    )}
+
                     <button onClick={() => notifyWA(selected)} className="w-full py-3 bg-[#25D366] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#25D366]/30">
                       <MessageCircle size={18} /> {t('notify_customer_wa') || 'Notify Customer on WhatsApp'}
                     </button>

@@ -211,6 +211,8 @@ export default function OrderTrackingPage() {
   const [enteredPin, setEnteredPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [isValidatingPin, setIsValidatingPin] = useState(false);
+  const [deliveryCodeInput, setDeliveryCodeInput] = useState('');
+  const [verifyingCode, setVerifyingCode] = useState(false);
   const { showToast, settings } = useStore();
   const currencySymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency === 'USD' ? '$' : (settings?.currency || 'FCFA'));
 
@@ -435,6 +437,63 @@ export default function OrderTrackingPage() {
     }
   };
 
+  const handleVerifyDeliveryCode = async (e) => {
+    if (e) e.preventDefault();
+    if (!order) return;
+    if (deliveryCodeInput.trim().length < 4) {
+      showToast(lang === 'fr' ? 'Veuillez saisir un code à 4 chiffres.' : 'Please enter a 4-digit code.', 'error');
+      return;
+    }
+
+    setVerifyingCode(true);
+    try {
+      const expectedCode = ((parseInt(order.id) * 837 + 1492) % 9000 + 1000).toString();
+
+      if (deliveryCodeInput.trim() !== expectedCode) {
+        showToast(lang === 'fr' ? 'Code de confirmation incorrect. Veuillez vérifier avec le livreur.' : 'Incorrect confirmation code. Please check with your delivery rider.', 'error');
+        setVerifyingCode(false);
+        return;
+      }
+
+      if (supabase) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ 
+            status: 'delivered', 
+            tracking_stage: 'delivered' 
+          })
+          .eq('id', order.id);
+
+        if (error) throw error;
+      }
+
+      // Local SQLite fallback API
+      await apiFetch(`/api/orders/${order.id}/complete-with-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: deliveryCodeInput })
+      }).catch(() => {
+        return apiFetch(`/api/orders/${order.id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'delivered', tracking_stage: 'delivered' })
+        });
+      });
+
+      setOrder(prev => prev ? { ...prev, status: 'delivered', tracking_stage: 'delivered' } : null);
+      if (typeof showToast === 'function') {
+        showToast(lang === 'fr' ? 'Livraison validée avec succès ! 🎉' : 'Delivery successfully confirmed! 🎉', 'success');
+      }
+      playSound('success');
+      setDeliveryCodeInput('');
+    } catch (err) {
+      console.error('Error confirming delivery with code:', err);
+      showToast(lang === 'fr' ? 'Erreur lors de la validation.' : 'Error validating code: ' + err.message, 'error');
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const formatPlacedDate = (dateStr) => {
     try {
       const d = new Date(dateStr);
@@ -476,7 +535,7 @@ export default function OrderTrackingPage() {
     
     if (stepIdx === 1) return true;
     if (stepIdx === 2) {
-      return ['processing', 'assigned', 'picked_up', 'on_the_way', 'nearby', 'delivered'].includes(status) || 
+      return ['assigned', 'picked_up', 'on_the_way', 'nearby', 'delivered'].includes(status) || 
              ['assigned', 'picked_up', 'on_the_way', 'nearby', 'delivered'].includes(stage);
     }
     if (stepIdx === 3) {
@@ -484,10 +543,6 @@ export default function OrderTrackingPage() {
              ['picked_up', 'on_the_way', 'nearby', 'delivered'].includes(stage);
     }
     if (stepIdx === 4) {
-      return ['on_the_way', 'nearby', 'delivered'].includes(status) || 
-             ['on_the_way', 'nearby', 'delivered'].includes(stage);
-    }
-    if (stepIdx === 5) {
       return status === 'delivered' || stage === 'delivered';
     }
     return false;
@@ -697,22 +752,21 @@ export default function OrderTrackingPage() {
                   <div 
                     className="absolute left-8 top-[18px] h-0.5 bg-emerald-500 transition-all duration-500 z-0" 
                     style={{ 
-                      width: order.status === 'delivered' 
+                      width: order.status === 'delivered' || order.tracking_stage === 'delivered'
                         ? '100%' 
-                        : order.status === 'on_the_way' || order.tracking_stage === 'on_the_way'
-                        ? '75%'
-                        : order.status === 'picked_up' || order.tracking_stage === 'picked_up'
-                        ? '50%'
-                        : '25%' 
+                        : order.status === 'picked_up' || order.status === 'on_the_way' || order.status === 'nearby' || order.tracking_stage === 'picked_up' || order.tracking_stage === 'on_the_way' || order.tracking_stage === 'nearby'
+                        ? '66%'
+                        : order.status === 'assigned' || order.tracking_stage === 'assigned'
+                        ? '33%'
+                        : '0%' 
                     }}
                   />
 
                   {[
-                    { labelEn: 'Order Placed', labelFr: 'COMMANDE PASSÉE', offset: 0, index: 1 },
-                    { labelEn: 'Processing & Packed', labelFr: 'TRAITEMENT ET EMBALLAGE', offset: 45, index: 2 },
-                    { labelEn: 'In Transit', labelFr: 'EN TRANSIT', offset: 120, index: 3 },
-                    { labelEn: 'Out for Delivery', labelFr: 'EN COURS DE LIVRAISON', offset: 285, index: 4 },
-                    { labelEn: 'Delivered', labelFr: 'LIVRÉ', offset: 420, index: 5, last: true }
+                    { labelEn: 'Waiting for Confirmation', labelFr: 'EN ATTENTE DE CONFIRMATION', offset: 0, index: 1 },
+                    { labelEn: 'Waiting for Pickup', labelFr: 'EN ATTENTE DU LIVREUR', offset: 45, index: 2 },
+                    { labelEn: 'Waiting for Arrival', labelFr: 'EN COURS DE LIVRAISON', offset: 180, index: 3 },
+                    { labelEn: 'Complete', labelFr: 'LIVRÉ', offset: 360, index: 4, last: true }
                   ].map((stepItem, idx) => {
                     const isDone = isStepDone(stepItem.index);
                     const stepTime = isDone 
@@ -726,13 +780,13 @@ export default function OrderTrackingPage() {
                             ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
                             : 'bg-slate-200 dark:bg-slate-800 text-slate-405'
                         }`}>
-                          {isDone ? '✓' : (stepItem.last ? '5' : stepItem.index)}
+                          {isDone ? '✓' : (stepItem.last ? '4' : stepItem.index)}
                         </div>
                         <div className="text-center">
                           <p className={`text-[10px] font-black uppercase tracking-wider ${
                             isDone ? 'text-slate-805 dark:text-slate-200' : 'text-slate-450 dark:text-slate-500'
                           }`}>{lang === 'fr' ? stepItem.labelFr : stepItem.labelEn}</p>
-                          <p className="text-[9px] text-slate-400 dark:text-slate-505 mt-1 font-semibold">{stepTime}</p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-550 mt-1 font-semibold">{stepTime}</p>
                         </div>
                       </div>
                     );
@@ -741,46 +795,50 @@ export default function OrderTrackingPage() {
               </div>
             </div>
 
-            {/* Grid 3: Courier details & GPS simulation */}
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-              {/* Courier Details Card */}
-              <div className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-[2rem] p-6 shadow-sm text-left">
-                <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-4">
-                  {lang === 'fr' ? 'DÉTAILS DU TRANSPORTEUR' : 'Courier Details'}
-                </span>
-                
-                <div className="flex items-center gap-4 text-left">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-650 flex items-center justify-center shrink-0 shadow-inner">
-                    <User size={24} className="text-indigo-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white truncate uppercase">{rider?.name || 'Marcus Vance'}</h4>
-                      <span className="text-[10px] font-black text-amber-500 flex items-center shrink-0">
-                        <Star size={11} className="fill-current text-amber-500" />
-                        <span className="ml-0.5">{rider?.rating || '4.9'}</span>
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-505 font-bold uppercase tracking-wider mt-1 truncate">
-                      {lang === 'fr' && rider?.vehicle_name?.toLowerCase().includes('van')
-                        ? `FOURGONNETTE ${rider?.plate_number || 'APEX EXP'}`
-                        : rider?.vehicle_name || 'FOURGONNETTE APEX EXP'}
+            {/* Delivery Code Verification Card */}
+            {(['picked_up', 'on_the_way', 'nearby'].includes(String(order.status).toLowerCase()) || 
+              ['picked_up', 'on_the_way', 'nearby'].includes(String(order.tracking_stage).toLowerCase())) && (
+              <div className="max-w-4xl mx-auto bg-indigo-500/5 dark:bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 rounded-[2rem] p-6 sm:p-8 text-left relative overflow-hidden shadow-inner">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                  <div className="space-y-1.5 max-w-xl">
+                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block">
+                      {lang === 'fr' ? 'CONFIRMATION DE LIVRAISON' : 'DELIVERY VERIFICATION'}
+                    </span>
+                    <h4 className="text-sm sm:text-base font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                      {lang === 'fr' ? 'Saisir le code de confirmation' : 'Enter Delivery Confirmation Code'}
+                    </h4>
+                    <p className="text-xs text-slate-505 dark:text-slate-400 font-bold leading-relaxed">
+                      {lang === 'fr' 
+                        ? 'Le livreur doit saisir le code de confirmation sur votre téléphone pour valider et finaliser la livraison de votre commande.' 
+                        : 'The delivery agent must input the confirmation code on your phone to validate and finalize the delivery of your order.'}
                     </p>
                   </div>
+                  
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <input 
+                      type="text" 
+                      maxLength={4}
+                      placeholder="••••"
+                      value={deliveryCodeInput}
+                      onChange={(e) => setDeliveryCodeInput(e.target.value.replace(/\D/g, ''))}
+                      className="w-28 text-center px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-black text-base outline-none focus:border-indigo-500 text-slate-905 dark:text-white tracking-[0.2em]"
+                    />
+                    <button
+                      onClick={handleVerifyDeliveryCode}
+                      disabled={verifyingCode}
+                      className="px-6 py-3.5 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:bg-slate-350 dark:disabled:bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer border-none flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20"
+                    >
+                      {verifyingCode ? '...' : (lang === 'fr' ? 'VALIDER' : 'VERIFY')}
+                    </button>
+                  </div>
                 </div>
-
-                {/* Contact Courier button */}
-                <a
-                  href={`tel:${rider?.phone || '0700009824'}`}
-                  className="mt-6 w-full flex items-center justify-center gap-2 py-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer border-none text-center block"
-                >
-                  <Phone size={13} className="text-indigo-600" />
-                  <span>{lang === 'fr' ? 'CONTACTER LE COURSIER' : 'Contact Courier'}</span>
-                </a>
               </div>
+            )}
 
+            {/* Grid 3: GPS simulation */}
+            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-8">
               {/* Live GPS Simulation Card */}
-              <div className="md:col-span-8 bg-[#040814] rounded-[2rem] p-6 border border-slate-850 text-white relative min-h-[260px] overflow-hidden flex flex-col justify-between shadow-sm text-left select-none">
+              <div className="md:col-span-12 bg-[#040814] rounded-[2rem] p-6 border border-slate-850 text-white relative min-h-[260px] overflow-hidden flex flex-col justify-between shadow-sm text-left select-none">
                 {/* Simulated GPS grid path background */}
                 <div className="absolute inset-0 z-0 opacity-15 pointer-events-none bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] [background-size:16px_16px]"></div>
                 

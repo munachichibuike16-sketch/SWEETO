@@ -1285,7 +1285,8 @@ app.post('/api/products/describe-image', async (req, res) => {
 });
 
 app.get('/share/product/:id', (req, res) => {
-  const { id } = req.params;
+  const { id: rawId } = req.params;
+  const id = rawId ? rawId.toLowerCase().replace(/^swt-/, '') : '';
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.get('host');
   
@@ -1326,7 +1327,7 @@ app.get('/share/product/:id', (req, res) => {
       ? `${priceFormatted} - Découvrez ce produit sur SWEETO!` 
       : 'Découvrez ce produit sur SWEETO!';
 
-    const shareUrl = `${redirect}/#/product/${product.id}`;
+    const shareUrl = `${redirect}/#/product/swt-${product.id}`;
 
     res.send(`<!DOCTYPE html>
 <html lang="fr">
@@ -1353,13 +1354,13 @@ app.get('/share/product/:id', (req, res) => {
   
   <!-- Redirect immediately to frontend route -->
   <script>
-    window.location.replace("${redirect}/#/product/${product.id}");
+    window.location.replace("${redirect}/#/product/swt-${product.id}");
   </script>
 </head>
 <body>
   <div style="font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #090d16; color: white;">
     <h2 style="margin-bottom: 8px;">Redirecting you to ${product.name}...</h2>
-    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="${redirect}/#/product/${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
+    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="${redirect}/#/product/swt-${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
   </div>
 </body>
 </html>`);
@@ -2011,6 +2012,28 @@ app.put('/api/brands/:id', authenticateAdmin, (req, res) => {
     db.prepare('UPDATE brands SET name = ?, logo_url = ?, description = ? WHERE id = ?').run(name, logo_url, description, req.params.id);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Complete order using verification code (public endpoint)
+app.post('/api/orders/:id/complete-with-code', (req, res) => {
+  const { id } = req.params;
+  const { code } = req.body;
+
+  try {
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const expectedPin = ((parseInt(order.id) * 837 + 1492) % 9000 + 1000).toString();
+
+    if (String(code).trim() !== expectedPin) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    db.prepare("UPDATE orders SET status = 'delivered', tracking_stage = 'delivered' WHERE id = ?").run(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Update order status/tracking

@@ -1046,8 +1046,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
       {/* --- Mobile Bottom Navigation --- */}
       {showBottomNav && (
-        <nav className={`fixed bottom-0 left-0 right-0 w-full h-[4.1rem] pb-[env(safe-area-inset-bottom,10px)] pt-1.5 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-8px_30px_rgba(0,0,0,0.04)] transition-all duration-500 transform ${
-          showBottomNavScroll ? 'translate-y-0' : 'translate-y-full shadow-none border-t-transparent'
+        <nav className={`fixed bottom-4 left-4 right-4 h-[4.3rem] pb-1 pt-1.5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/60 z-[100] lg:hidden px-3 flex justify-between items-center select-none shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.3)] rounded-2xl transition-all duration-500 transform ${
+          showBottomNavScroll ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0 shadow-none pointer-events-none'
         }`}>
         {/* Accueil */}
         <motion.button 
@@ -1059,20 +1059,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           }} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            isHomePage ? 'text-eas-blue dark:text-blue-450' : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+            isHomePage ? 'text-[#2563EB]' : 'text-slate-500 dark:text-slate-400 hover:text-[#2563EB]'
           }`}
         >
           {isHomePage && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-1 inset-y-1.5 bg-[#2563EB]/8 dark:bg-[#2563EB]/12 rounded-xl -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {isHomePage && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
+              className="absolute top-[1.5px] left-1/2 -translate-x-1/2 w-7 h-[3px] bg-[#2563EB] rounded-full shadow-[0_1px_8px_rgba(37,99,235,0.6)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -1080,7 +1080,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             animate={{ scale: isHomePage ? 1.12 : 1, y: isHomePage ? -1 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <Home size={20} strokeWidth={2.5} />
+            <Home size={19} strokeWidth={2.5} />
           </motion.div>
           <span className="text-[8.5px] font-black uppercase tracking-widest">{t('home')}</span>
         </motion.button>
@@ -1089,19 +1089,19 @@ const Header = ({ onMenuClick, onCartClick }) => {
         <motion.button 
           onClick={onCartClick} 
           whileTap={{ scale: 0.92 }} 
-          className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 text-slate-500 dark:text-slate-400 hover:text-eas-blue"
+          className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 text-slate-500 dark:text-slate-400 hover:text-[#2563EB]"
         >
           <motion.div
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="relative"
           >
             <ShoppingCart 
-              size={20} 
+              size={19} 
               strokeWidth={2.5} 
               className="transition-all"
             />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-eas-blue text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-eas-blue/20">
+              <span className="absolute -top-1.5 -right-2 bg-[#2563EB] text-white text-[7px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-black shadow-md shadow-[#2563EB]/25">
                 {cartCount}
               </span>
             )}
@@ -1118,20 +1118,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           }} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            location.pathname === '/support' ? 'text-eas-blue dark:text-blue-450' : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+            location.pathname === '/support' ? 'text-[#2563EB]' : 'text-slate-500 dark:text-slate-400 hover:text-[#2563EB]'
           }`}
         >
           {location.pathname === '/support' && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-1 inset-y-1.5 bg-[#2563EB]/8 dark:bg-[#2563EB]/12 rounded-xl -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {location.pathname === '/support' && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
+              className="absolute top-[1.5px] left-1/2 -translate-x-1/2 w-7 h-[3px] bg-[#2563EB] rounded-full shadow-[0_1px_8px_rgba(37,99,235,0.6)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -1139,7 +1139,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             animate={{ scale: location.pathname === '/support' ? 1.12 : 1, y: location.pathname === '/support' ? -1 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <MessageSquare size={20} strokeWidth={2.5} className="transition-all" />
+            <MessageSquare size={19} strokeWidth={2.5} className="transition-all" />
           </motion.div>
           <span className="text-[8.5px] font-black uppercase tracking-widest">{t('chat_tab')}</span>
         </motion.button>
@@ -1148,12 +1148,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
         <motion.button 
           onClick={onMenuClick} 
           whileTap={{ scale: 0.92 }} 
-          className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative text-slate-550 dark:text-slate-400 hover:text-eas-blue transition-colors duration-300"
+          className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative text-slate-500 dark:text-slate-400 hover:text-[#2563EB] transition-colors duration-300"
         >
           <motion.div
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <Menu size={20} strokeWidth={2.5} className="transition-all" />
+            <Menu size={19} strokeWidth={2.5} className="transition-all" />
           </motion.div>
           <span className="text-[8.5px] font-black uppercase tracking-widest">
             {lang === 'fr' ? 'Catégorie' : 'Category'}
@@ -1165,20 +1165,20 @@ const Header = ({ onMenuClick, onCartClick }) => {
           whileTap={{ scale: 0.92 }} 
           onClick={() => navigate('/auth')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
-            isProfilePage ? 'text-eas-blue dark:text-blue-450' : 'text-slate-500 dark:text-slate-400 hover:text-eas-blue'
+            isProfilePage ? 'text-[#2563EB]' : 'text-slate-500 dark:text-slate-400 hover:text-[#2563EB]'
           }`}
         >
           {isProfilePage && (
             <motion.div 
               layoutId="activeTabGlow"
-              className="absolute inset-x-2 inset-y-1 bg-eas-blue/8 dark:bg-eas-blue/10 rounded-xl blur-sm -z-10"
+              className="absolute inset-x-1 inset-y-1.5 bg-[#2563EB]/8 dark:bg-[#2563EB]/12 rounded-xl -z-10"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
           {isProfilePage && (
             <motion.div 
               layoutId="activeTabLine"
-              className="absolute top-[-6px] left-3 right-3 h-[3px] bg-gradient-to-r from-eas-blue to-blue-700 dark:from-blue-700 dark:to-blue-500 rounded-b-md shadow-[0_2px_8px_rgba(0,82,255,0.4)]"
+              className="absolute top-[1.5px] left-1/2 -translate-x-1/2 w-7 h-[3px] bg-[#2563EB] rounded-full shadow-[0_1px_8px_rgba(37,99,235,0.6)]"
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             />
           )}
@@ -1190,10 +1190,10 @@ const Header = ({ onMenuClick, onCartClick }) => {
               <img 
                 src={user.avatarUrl || user.picture} 
                 alt="" 
-                className={`w-5.5 h-5.5 rounded-full object-cover border-2 ${isProfilePage ? 'border-eas-blue dark:border-blue-450' : 'border-transparent'}`} 
+                className={`w-5.5 h-5.5 rounded-full object-cover border-2 ${isProfilePage ? 'border-[#2563EB]' : 'border-transparent'}`} 
               />
             ) : (
-              <User size={20} strokeWidth={2.5} />
+              <User size={19} strokeWidth={2.5} />
             )}
           </motion.div>
           <span className="text-[8.5px] font-black uppercase tracking-widest">{user ? t('me') : t('profile')}</span>
@@ -1223,33 +1223,33 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
               <form 
                 onSubmit={handleSearchTrigger}
-                className="flex-1 flex items-center bg-[#f4f4f4] dark:bg-slate-900/60 border border-slate-950 dark:border-slate-800 rounded-full p-1 pl-4 pr-1 gap-2.5 relative"
+                className="flex-1 flex items-center bg-slate-50 dark:bg-slate-900/60 border border-[#2563EB]/20 focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/10 rounded-full p-1 pl-4.5 pr-1 gap-2.5 transition-all duration-300 relative"
               >
                 {/* Camera Icon */}
                 <button 
                   type="button" 
                   onClick={() => imageInputRef.current?.click()}
-                  className="text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400 shrink-0 cursor-pointer"
+                  className="text-slate-400 dark:text-slate-550 hover:text-[#2563EB] dark:hover:text-[#2563EB] shrink-0 cursor-pointer transition-colors duration-200"
                 >
-                  <Camera size={19} strokeWidth={2} />
+                  <Camera size={18} strokeWidth={2} />
                 </button>
                 
                 {/* Voice Search Button */}
                 <button
                   type="button"
                   onClick={startVoiceSearch}
-                  className={`shrink-0 cursor-pointer transition-all ${
+                  className={`shrink-0 cursor-pointer transition-all duration-200 ${
                     isListening 
                       ? 'text-red-500 animate-pulse scale-110' 
-                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-650 dark:hover:text-slate-400'
+                      : 'text-slate-400 dark:text-slate-550 hover:text-[#2563EB] dark:hover:text-[#2563EB]'
                   }`}
                   title="Voice Search"
                 >
-                  <Mic size={19} strokeWidth={2} />
+                  <Mic size={18} strokeWidth={2} />
                 </button>
                 
                 {/* Separator line */}
-                <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-850 shrink-0"></div>
+                <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
 
                 <input 
                   type="text"
@@ -1257,24 +1257,24 @@ const Header = ({ onMenuClick, onCartClick }) => {
                   value={inputValue}
                   onChange={handleInputChange}
                   placeholder={placeholders[currentPlaceholderIndex]}
-                  className="w-full bg-transparent border-none outline-none font-semibold text-sm text-slate-850 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1"
+                  className="w-full bg-transparent border-none outline-none font-bold text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 px-0 py-1"
                 />
 
                 {inputValue && (
                   <button 
                     type="button" 
                     onClick={() => setInputValue('')} 
-                    className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 p-1 shrink-0 cursor-pointer"
+                    className="text-slate-450 hover:text-[#2563EB] dark:hover:text-[#2563EB] p-1 shrink-0 cursor-pointer transition-colors duration-200"
                   >
-                    <X size={15} />
+                    <X size={14} />
                   </button>
                 )}
 
                 <button 
                   type="submit" 
-                  className="bg-slate-950 dark:bg-slate-800 text-white rounded-full h-8 px-4 flex items-center justify-center transition-all hover:bg-slate-900 active:scale-95 shrink-0 cursor-pointer"
+                  className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full h-8 w-8 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 shrink-0 cursor-pointer shadow-md shadow-[#2563EB]/10 hover:shadow-lg hover:shadow-[#2563EB]/25"
                 >
-                  <Search size={16} strokeWidth={2.5} />
+                  <Search size={15} strokeWidth={2.5} />
                 </button>
               </form>
             </div>
@@ -1307,10 +1307,12 @@ const Header = ({ onMenuClick, onCartClick }) => {
                 /* Discover More grid (when input is empty or no suggestions) */
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Search size={14} className="text-slate-400" />
-                      {t('discover_more') || 'Discover more'}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
+                      <h3 className="text-[12px] font-black text-slate-800 dark:text-slate-200 tracking-wider uppercase">
+                        {t('discover_more') && t('discover_more') !== 'DISCOVER_MORE' ? t('discover_more') : (lang === 'fr' ? 'Découvrir plus' : 'Discover more')}
+                      </h3>
+                    </div>
 
                     {/* 2-Column Grid of Actual Categories */}
                     <div className="grid grid-cols-2 gap-3 mb-6">
@@ -1359,17 +1361,17 @@ const Header = ({ onMenuClick, onCartClick }) => {
                                 navigate(`/category/${encodeURIComponent(cat.name)}`);
                                 setIsSearchOpen(false);
                               }}
-                              className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl cursor-pointer transition-all border border-slate-100/50 dark:border-slate-800/40 select-none group"
+                              className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-[#2563EB]/5 dark:hover:bg-[#2563EB]/10 rounded-2xl cursor-pointer transition-all border border-slate-100 dark:border-slate-800/40 select-none group shadow-sm hover:shadow-md hover:border-[#2563EB]/20 hover:-translate-y-0.5 duration-300 relative overflow-hidden"
                             >
-                              <div className="flex-1 flex flex-col items-start text-start">
-                                <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight group-hover:text-eas-blue line-clamp-1">
+                              <div className="flex-1 flex flex-col items-start text-start mr-2 overflow-hidden">
+                                <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight group-hover:text-[#2563EB] line-clamp-1 transition-colors">
                                   {t_smart ? t_smart(cat.name) : cat.name}
                                 </span>
-                                <span className="text-[8px] font-bold text-[#ff3b30] mt-0.5 tracking-wider uppercase leading-none">
+                                <span className="text-[8px] font-black text-[#2563EB] bg-[#2563EB]/8 px-2 py-0.5 rounded-full mt-1.5 tracking-wide uppercase leading-none">
                                   {label}
                                 </span>
                               </div>
-                              <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-sm border border-slate-100/50 dark:border-slate-800/20">
+                              <div className="w-11 h-11 bg-white dark:bg-slate-850 rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1.5 shadow-sm border border-slate-100/80 dark:border-slate-800/40 group-hover:scale-105 transition-transform duration-300">
                                 <img src={imageUrl} alt={cat.name} className="max-h-full max-w-full object-contain" />
                               </div>
                             </div>
@@ -1384,9 +1386,9 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     <button 
                       type="button"
                       onClick={() => imageInputRef.current?.click()}
-                      className="px-5 py-2.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all active:scale-95 cursor-pointer"
+                      className="px-6 py-3 rounded-full bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-[#2563EB]/15 hover:border-[#2563EB]/40 shadow-[0_4px_20px_rgba(37,99,235,0.06)] flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-widest text-[#2563EB] hover:text-white hover:bg-[#2563EB] dark:hover:bg-[#2563EB] transition-all duration-300 active:scale-95 cursor-pointer group"
                     >
-                      <Camera size={14} className="text-slate-500" />
+                      <Camera size={14} className="text-[#2563EB] group-hover:text-white transition-colors duration-300 animate-pulse" />
                       <span>{lang === 'fr' ? 'Recherche par image' : 'Search by image'}</span>
                     </button>
                   </div>
