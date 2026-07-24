@@ -3,7 +3,7 @@
  * Handles dynamic push events and provides PWA asset caching capabilities.
  */
 
-const CACHE_NAME = 'sweeto-cache-v1';
+const CACHE_NAME = 'sweeto-cache-v2';
 const OFFLINE_URL = '/';
 
 // Core assets to cache immediately upon installation

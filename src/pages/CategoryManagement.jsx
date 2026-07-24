@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, CheckCircle2, AlertCircle, X,
@@ -1123,7 +1123,7 @@ Ensure the JSON is valid and stands alone in the block. Keep descriptions short.
 
       {/* ── AI ASSISTANT DRAWER ── */}
       <AnimatePresence>
-        {showAiAssistant && createPortal(
+        {showAiAssistant && ReactDOM.createPortal(
           <>
             {/* Backdrop */}
             <motion.div
