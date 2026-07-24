@@ -68,7 +68,13 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
       {/* Navigation Items */}
       {/* Home tab */}
       <button 
-        onClick={() => navigate('/')}
+        onClick={() => {
+          if (isHome) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            navigate('/');
+          }
+        }}
         className={`flex flex-col items-center justify-center transition-all duration-300 z-10 ${
           isHome 
             ? 'text-eas-blue dark:text-blue-450 font-black scale-105 drop-shadow-[0_0_8px_rgba(0,82,255,0.15)]' 

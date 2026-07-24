@@ -1055,7 +1055,11 @@ const Header = ({ onMenuClick, onCartClick }) => {
             setSearchQuery('');
             setSelectedCategory(null);
             setSelectedBrand(null);
-            navigate('/');
+            if (isHomePage) {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              navigate('/');
+            }
           }} 
           whileTap={{ scale: 0.92 }} 
           className={`flex-1 flex flex-col items-center justify-center gap-1 h-full relative transition-colors duration-300 ${
