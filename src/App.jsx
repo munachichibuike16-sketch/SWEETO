@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon, Heart, Truck, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1326,9 +1326,16 @@ const Storefront = ({ viewMode: propViewMode }) => {
 const RouteTracker = () => {
   const location = useLocation();
   const { products } = useStore();
+  const prevPathRef = useRef(null);
 
   useEffect(() => {
     const pagePath = location.pathname + location.search;
+
+    // Record the original entry page before entering category page routes
+    if (!pagePath.startsWith('/category/') && prevPathRef.current !== pagePath) {
+      sessionStorage.setItem('category_entry_referrer', pagePath);
+    }
+    prevPathRef.current = pagePath;
 
     // Ignore dashboard / admin pages to keep logs focused on customers
     if (pagePath.includes('/dashboard') || pagePath.includes('/admin')) return;
