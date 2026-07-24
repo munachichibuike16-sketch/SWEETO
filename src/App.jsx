@@ -1333,7 +1333,7 @@ const RouteTracker = () => {
 
     // Record the original entry page before entering category page routes
     if (!pagePath.startsWith('/category/') && prevPathRef.current !== pagePath) {
-      sessionStorage.setItem('category_entry_referrer', pagePath);
+      window.category_entry_referrer = pagePath;
     }
     prevPathRef.current = pagePath;
 

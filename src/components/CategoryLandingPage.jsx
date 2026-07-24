@@ -309,7 +309,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
         {/* Glowing Back Button */}
         <button
           onClick={() => {
-            const entryReferrer = sessionStorage.getItem('category_entry_referrer');
+            const entryReferrer = window.category_entry_referrer;
             if (entryReferrer) {
               navigate(entryReferrer);
             } else {
