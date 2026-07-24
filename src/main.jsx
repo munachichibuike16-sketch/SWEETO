@@ -60,7 +60,7 @@ function updatePWAManifestAndIcons() {
     manifestLink.rel = 'manifest';
     document.head.appendChild(manifestLink);
   }
-  const targetManifest = isAdminRoute ? '/admin-manifest.json' : '/manifest.json';
+  const targetManifest = isAdminRoute ? '/admin-manifest.json?v=2' : '/manifest.json?v=2';
   if (manifestLink.getAttribute('href') !== targetManifest) {
     manifestLink.setAttribute('href', targetManifest);
   }
