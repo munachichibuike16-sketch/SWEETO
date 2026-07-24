@@ -1046,7 +1046,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
       {/* --- Mobile Bottom Navigation --- */}
       {showBottomNav && (
-        <nav className={`fixed bottom-4 left-4 right-4 h-[4.3rem] pb-1 pt-1.5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/60 z-[100] lg:hidden px-3 flex justify-between items-center select-none shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.3)] rounded-2xl transition-all duration-500 transform ${
+        <nav className={`fixed bottom-0 left-0 right-0 h-[calc(4.6rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] pt-2 bg-white/85 dark:bg-slate-950/90 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_35px_rgba(0,0,0,0.35)] rounded-t-[2rem] transition-all duration-500 transform ${
           showBottomNavScroll ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0 shadow-none pointer-events-none'
         }`}>
         {/* Accueil */}
