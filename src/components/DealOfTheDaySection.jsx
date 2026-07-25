@@ -170,16 +170,9 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
         <section className="pt-2 pb-0 px-4 select-none">
           <div className="grid grid-cols-1 flex flex-col relative group/deals">
             <div className="flex items-center justify-center gap-3 w-full select-none mb-5 mt-3 px-2">
-              <style dangerouslySetInnerHTML={{__html: `
-                @keyframes hueRotateAnimation {
-                  0% { filter: hue-rotate(0deg); }
-                  100% { filter: hue-rotate(360deg); }
-                }
-              `}} />
               {/* Left Line */}
               <div 
-                className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[#ff0055] to-[#ff3b30] rounded-full shadow-[0_0_6px_rgba(255,0,85,0.3)]"
-                style={{ animation: 'hueRotateAnimation 4s linear infinite' }}
+                className="h-[2px] flex-1 bg-gradient-to-r from-transparent to-blue-500 rounded-full shadow-[0_0_6px_rgba(59,130,246,0.3)]"
               />
               {/* Title */}
               <h2 className="animate-title-shining text-[14px] uppercase tracking-wider whitespace-nowrap shrink-0">
@@ -187,8 +180,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               </h2>
               {/* Right Line */}
               <div 
-                className="h-[2px] flex-1 bg-gradient-to-r from-[#ff3b30] via-[#ff0055] to-transparent rounded-full shadow-[0_0_6px_rgba(255,0,85,0.3)]"
-                style={{ animation: 'hueRotateAnimation 4s linear infinite' }}
+                className="h-[2px] flex-1 bg-gradient-to-r from-blue-500 to-transparent rounded-full shadow-[0_0_6px_rgba(59,130,246,0.3)]"
               />
             </div>
             
@@ -366,8 +358,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
           <div className="flex items-center justify-center gap-4 max-w-xl mx-auto mb-6 mt-4 select-none">
             {/* Left Line */}
             <div 
-              className="h-[3px] flex-1 bg-gradient-to-r from-transparent via-[#ff0055] to-[#ff3b30] rounded-full shadow-[0_0_8px_rgba(255,0,85,0.4)]"
-              style={{ animation: 'hueRotateAnimation 4s linear infinite' }}
+              className="h-[3px] flex-1 bg-gradient-to-r from-transparent to-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]"
             />
             {/* Title */}
             <h2 className="animate-title-shining text-2xl uppercase tracking-wider whitespace-nowrap shrink-0">
@@ -375,8 +366,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
             </h2>
             {/* Right Line */}
             <div 
-              className="h-[3px] flex-1 bg-gradient-to-r from-[#ff3b30] via-[#ff0055] to-transparent rounded-full shadow-[0_0_8px_rgba(255,0,85,0.4)]"
-              style={{ animation: 'hueRotateAnimation 4s linear infinite' }}
+              className="h-[3px] flex-1 bg-gradient-to-r from-blue-500 to-transparent rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)]"
             />
           </div>
 

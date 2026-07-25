@@ -481,7 +481,7 @@ export default function BrightRetailHome({ onProductClick }) {
   const renderHero = (section) => {
     return (
       <div key="hero-section-wrapper" className="w-full flex flex-col">
-        <Hero key="hero-slider-main" banners={settings?.hero_banners} layout={settings?.hero_mode} />
+        <Hero key="hero-slider-main" banners={settings?.hero_banners} layout={settings?.hero_mode} onProductClick={onProductClick} />
         {renderParentCategoriesPills()}
       </div>
     );

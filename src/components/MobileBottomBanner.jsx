@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useStore } from '../contexts/StoreContext';
 import { ArrowRight, Truck } from 'lucide-react';
 
 export default function MobileBottomBanner({ settings, lang, t_smart }) {
   const navigate = useNavigate();
+  const { products } = useStore();
 
   const isEnabled = settings?.mobile_bottom_banner_enabled !== false && settings?.mobile_bottom_banner_enabled !== 'false';
+  const deals = products?.filter(p => p.status === 'active' && p.stock > 0 && (Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true')) || [];
 
   const [timeLeft, setTimeLeft] = useState(() => {
     let target = Number(settings?.mobile_bottom_banner_target_time);
@@ -52,7 +55,7 @@ export default function MobileBottomBanner({ settings, lang, t_smart }) {
   return (
     <section className="-mx-4 px-4 pt-4 pb-6 select-none block lg:hidden w-[calc(100%+32px)]">
       <div 
-        className="relative w-full rounded-2xl bg-[#13161c] text-white overflow-hidden shadow-2xl border border-white/5 flex flex-col items-center p-6 select-none text-center"
+        className="relative w-full rounded-2xl bg-slate-900/95 backdrop-blur-3xl text-white overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.25)] border border-white/10 flex flex-col items-center p-6 select-none text-center"
       >
         {/* Subtle Orange/Golden radial glow */}
         <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#ffc72c]/10 to-transparent blur-2xl pointer-events-none" />
@@ -80,6 +83,30 @@ export default function MobileBottomBanner({ settings, lang, t_smart }) {
             : "Free shipping over $10 • Guaranteed 5-Day Delivery"
           }
         </p>
+
+        {/* Deal Products Horizontal Scroll */}
+        {deals.length > 0 && (
+          <div className="w-full max-w-full overflow-x-auto no-scrollbar flex gap-3 pb-2 mb-4 snap-x px-1">
+            {deals.slice(0, 8).map(product => {
+              const img = product.image_url || product.image || (product.images ? (typeof product.images === 'string' ? (() => { try { return JSON.parse(product.images)[0]; } catch(e) { return null; } })() : product.images[0]) : null) || '/placeholder.png';
+              return (
+                <div 
+                  key={product.id} 
+                  onClick={() => navigate(`/product/${product.id}`)}
+                  className="min-w-[100px] w-[100px] shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex flex-col items-center gap-1.5 cursor-pointer snap-start hover:bg-white/10 transition-colors shadow-lg"
+                >
+                  <div className="w-full aspect-square rounded-xl overflow-hidden bg-white/5">
+                    <img src={img} alt={product.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="w-full flex flex-col items-center px-1">
+                    <span className="text-[9px] font-medium text-white/90 line-clamp-1 text-center w-full leading-tight">{product.name}</span>
+                    <span className="text-[10px] font-black text-[#f5c71a] mt-0.5">{parseFloat(product.price).toLocaleString()} {settings?.currency || 'FCFA'}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="mb-4 w-full max-w-[240px]">

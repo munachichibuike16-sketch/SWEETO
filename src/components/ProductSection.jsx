@@ -10,84 +10,41 @@ import { useStore } from '../contexts/StoreContext';
 import { getCategoryDescendants } from '../utils/categoryHelpers';
 import ProductCard from './ProductCard';
 
-export const SectionBanner = ({ title, subtitle, viewAllLink, bannerImage = "/hero-banner.png", onViewAllClick }) => {
+export const SectionBanner = ({ title, subtitle, viewAllLink, onViewAllClick }) => {
   const { t, isRTL } = useLanguage();
-  const titleVariants = {
-    hidden: { opacity: 0, x: isRTL ? 30 : -30 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
-    }
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="relative w-full h-auto py-4 md:py-0 md:h-56 flex items-center justify-center mb-3 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-xl group transition-all"
-    >
-      {/* Background with Parallax */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={bannerImage}
-          className="w-full h-full object-cover opacity-60 mix-blend-overlay"
-          alt="banner"
-        />
-        {/* Dynamic Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#020617] via-[#020617]/80 to-blue-500/20"></div>
-      </div>
-
-      <div className="relative z-10 px-3 md:px-16 w-full flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-
-        {/* Glassmorphism Title Card */}
-        <div className={`text-center ${isRTL ? 'md:text-right' : 'md:text-left'} backdrop-blur-md bg-white/5 border border-white/10 p-3 md:p-8 rounded-xl md:rounded-[2rem] shadow-2xl relative overflow-hidden w-full md:w-auto`}>
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-
-          <motion.h2
-            variants={titleVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="text-lg sm:text-4xl md:text-6xl font-black tracking-tighter uppercase italic mb-1.5 md:mb-3 text-white drop-shadow-lg"
-          >
-            {title}
-          </motion.h2>
-
-          <motion.div
-            initial={{ opacity: 0, x: isRTL ? 10 : -10 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className={`flex items-center gap-2 md:gap-4 justify-center ${isRTL ? 'md:justify-end' : 'md:justify-start'}`}
-          >
-            <div className="w-6 md:w-12 h-1 bg-gradient-to-r from-eas-blue to-blue-700 rounded-full shadow-[0_0_15px_rgba(0,82,255,0.8)]"></div>
-            <p className="text-[8px] md:text-xs font-black text-white uppercase tracking-[0.2em] md:tracking-[0.5em]">{subtitle}</p>
-          </motion.div>
-        </div>
-
-        {/* Action Button */}
-        {(viewAllLink || onViewAllClick) && (
-          onViewAllClick ? (
-            <button
-              onClick={onViewAllClick}
-              className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-eas-blue/15 shadow-md px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-3xl flex items-center gap-2 pointer-events-auto cursor-pointer text-[10px] md:text-sm font-bold"
-            >
-              <span className="relative z-10">{t('view_all') || 'View All'}</span>
-              <ArrowRight size={14} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />
-            </button>
-          ) : (
-            <Link
-              to={viewAllLink}
-              className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-eas-blue/15 shadow-md px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-3xl flex items-center gap-2 pointer-events-auto text-[10px] md:text-sm font-bold"
-            >
-              <span className="relative z-10">{t('view_all') || 'View All'}</span>
-              <ArrowRight size={14} className="relative z-10 group-hover/btn:translate-x-1 transition-transform" />
-            </Link>
-          )
+    <div className={`w-full flex items-center justify-between mb-6 md:mb-8 px-2 md:px-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex flex-col ${isRTL ? 'items-end' : 'items-start'}`}>
+        <h2 className="text-2xl md:text-4xl font-black text-blue-600 dark:text-blue-500 uppercase tracking-tight">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-sm md:text-base font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+            {subtitle}
+          </p>
         )}
       </div>
-    </motion.div>
+      
+      {(viewAllLink || onViewAllClick) && (
+        onViewAllClick ? (
+          <button
+            onClick={onViewAllClick}
+            className={`flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-blue-50/80 dark:bg-blue-900/20 px-4 md:px-5 py-2 md:py-2.5 rounded-full ${isRTL ? 'flex-row-reverse' : ''}`}
+          >
+            <span>{t('view_all') || 'View All'}</span>
+            {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+          </button>
+        ) : (
+          <Link
+            to={viewAllLink}
+            className={`flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-blue-50/80 dark:bg-blue-900/20 px-4 md:px-5 py-2 md:py-2.5 rounded-full ${isRTL ? 'flex-row-reverse' : ''}`}
+          >
+            <span>{t('view_all') || 'View All'}</span>
+            {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+          </Link>
+        )
+      )}
+    </div>
   );
 };
 
@@ -332,7 +289,13 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
   };
 
   return (
-    <section className="pt-2 pb-0 md:py-2 px-0 md:px-12">
+    <motion.section 
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      viewport={{ once: true, margin: "-50px" }}
+      className="pt-2 pb-0 md:py-2 px-0 md:px-12"
+    >
       {!hideHeader && (
         <div className="px-3 md:px-0">
           <SectionHeader 
@@ -379,7 +342,7 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
           ))}
         </div>
       )}
-    </section>
+    </motion.section>
   );
 };
 

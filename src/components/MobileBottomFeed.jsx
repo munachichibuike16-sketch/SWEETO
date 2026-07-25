@@ -62,7 +62,7 @@ export default function MobileBottomFeed({ settings, products = [], categories =
     const header = document.querySelector('header');
     const feedPills = document.getElementById('mobile-bottom-feed-pills');
     const sentinel = document.getElementById('mobile-bottom-feed-sentinel');
-    const spacer = document.getElementById('mobile-bottom-feed-spacer');
+    
     if (!header || !feedPills || !sentinel) return;
 
     const H = header.offsetHeight || 96;
@@ -70,6 +70,8 @@ export default function MobileBottomFeed({ settings, products = [], categories =
     const handleScroll = () => {
       const rect = sentinel.getBoundingClientRect();
       const H_dynamic = header.offsetHeight || H;
+      
+      // Push header up as sentinel reaches the top
       const translateY = Math.max(-H_dynamic, Math.min(0, rect.top - H_dynamic));
       
       header.style.transform = `translateY(${translateY}px)`;
@@ -79,37 +81,13 @@ export default function MobileBottomFeed({ settings, products = [], categories =
         header.style.transition = 'none';
       }
 
-      // If sentinel has scrolled past the header bottom threshold, stick it using position: fixed
-      if (rect.top <= H_dynamic) {
-        feedPills.style.position = 'fixed';
-        feedPills.style.top = `${H_dynamic + translateY}px`;
-        feedPills.style.left = '0';
-        feedPills.style.right = '0';
-        feedPills.style.paddingLeft = '16px';
-        feedPills.style.paddingRight = '16px';
-        
-        feedPills.classList.add('border-slate-150', 'dark:border-slate-800/80', 'shadow-sm');
-        feedPills.classList.remove('border-transparent');
-
-        if (spacer) {
-          spacer.style.display = 'block';
-          spacer.style.height = `${feedPills.offsetHeight}px`;
-        }
+      // When sentinel is above the viewport (meaning pills are sticking at top: 0)
+      if (rect.top <= 0) {
+        feedPills.classList.add('backdrop-blur-xl', 'bg-white/80', 'dark:bg-slate-950/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.1)]');
+        feedPills.classList.remove('bg-eas-light', 'dark:bg-eas-dark');
       } else {
-        // Reset to default flow
-        feedPills.style.position = '';
-        feedPills.style.top = '';
-        feedPills.style.left = '';
-        feedPills.style.right = '';
-        feedPills.style.paddingLeft = '';
-        feedPills.style.paddingRight = '';
-
-        feedPills.classList.remove('border-slate-150', 'dark:border-slate-800/80', 'shadow-sm');
-        feedPills.classList.add('border-transparent');
-
-        if (spacer) {
-          spacer.style.display = 'none';
-        }
+        feedPills.classList.remove('backdrop-blur-xl', 'bg-white/80', 'dark:bg-slate-950/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.1)]');
+        feedPills.classList.add('bg-eas-light', 'dark:bg-eas-dark');
       }
     };
 
@@ -123,15 +101,8 @@ export default function MobileBottomFeed({ settings, products = [], categories =
         header.style.transition = '';
       }
       if (feedPills) {
-        feedPills.style.position = '';
-        feedPills.style.top = '';
-        feedPills.style.left = '';
-        feedPills.style.right = '';
-        feedPills.style.paddingLeft = '';
-        feedPills.style.paddingRight = '';
-      }
-      if (spacer) {
-        spacer.style.display = 'none';
+        feedPills.classList.remove('backdrop-blur-xl', 'bg-white/80', 'dark:bg-slate-950/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.1)]');
+        feedPills.classList.add('bg-eas-light', 'dark:bg-eas-dark');
       }
     };
   }, [isEnabled, tabsList]);
@@ -147,7 +118,7 @@ export default function MobileBottomFeed({ settings, products = [], categories =
       {/* Horizontal Scrollable Tabs */}
       <div 
         id="mobile-bottom-feed-pills"
-        className="w-full flex gap-2.5 overflow-x-auto no-scrollbar py-2.5 select-none bg-eas-light dark:bg-eas-dark transition-colors duration-300 border-b border-transparent z-[90]"
+        className="w-[calc(100%+2rem)] -mx-4 flex gap-2.5 overflow-x-auto no-scrollbar py-2.5 px-4 select-none bg-eas-light dark:bg-eas-dark transition-colors duration-300 border-b border-transparent sticky top-0 z-[100]"
       >
         {tabsList.map(tab => {
           const isSelected = activeTab === tab;
@@ -158,7 +129,7 @@ export default function MobileBottomFeed({ settings, products = [], categories =
               onClick={() => setActiveTab(tab)}
               className={`px-4.5 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 whitespace-nowrap shrink-0 border flex items-center gap-1.5 active:scale-[0.93] cursor-pointer ${
                 isSelected
-                  ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_4px_12px_rgba(255,45,85,0.28)] font-black scale-[1.02]'
+                  ? 'backdrop-blur-xl bg-gradient-to-r from-cyan-500/90 to-blue-600/90 text-white border-cyan-400/30 shadow-[0_8px_24px_rgba(6,182,212,0.3)] font-black scale-[1.02]'
                   : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white dark:hover:bg-slate-900'
               }`}
             >

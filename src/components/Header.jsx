@@ -657,8 +657,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center cursor-pointer"
             >
-              <span className="font-black text-xl sm:text-2xl tracking-tighter uppercase italic bg-gradient-to-r from-[#ff2d55] via-[#8b5cf6] to-[#00f2fe] bg-clip-text text-transparent drop-shadow-sm select-none hover:scale-[1.02] transition-transform duration-300">
-                SWEETO HUB
+              <span className="font-black text-xl sm:text-2xl tracking-tighter uppercase italic drop-shadow-sm select-none hover:scale-[1.02] transition-transform duration-300">
+                <span className="text-blue-600">S</span> <span className="text-black dark:text-white">SWEETO-HUB</span>
               </span>
             </div>
           </div>
@@ -987,8 +987,8 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center select-none cursor-pointer group shrink-0"
             >
-              <span className="font-black text-base sm:text-lg tracking-tighter uppercase italic bg-gradient-to-r from-[#ff2d55] via-[#8b5cf6] to-[#00f2fe] bg-clip-text text-transparent drop-shadow-sm select-none">
-                SWEETO HUB
+              <span className="font-black text-base sm:text-lg tracking-tighter uppercase italic drop-shadow-sm select-none">
+                <span className="text-blue-600">S</span> <span className="text-black dark:text-white">SWEETO-HUB</span>
               </span>
             </div>
 

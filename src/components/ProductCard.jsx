@@ -235,10 +235,11 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     return (
       <>
         <motion.div 
-          whileHover={{ y: -4 }}
-          onClick={handleCardClick}
-          className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none select-none text-left"
-        >
+        whileHover={{ y: -6, scale: 1.01 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        onClick={handleCardClick}
+        className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none select-none text-left"
+      >
           {/* Image Container */}
           <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-2.5 rounded-2xl bg-[#f4f4f4] dark:bg-slate-905 p-1">
             {/* Top-left Badges Container */}
@@ -343,7 +344,8 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   return (
     <>
       <motion.div 
-        whileHover={{ y: -4 }}
+        whileHover={{ y: -6, scale: 1.01 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         onClick={handleCardClick}
         className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none"
       >

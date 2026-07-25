@@ -49,10 +49,10 @@ export default function LoadingScreen({ isVisible }) {
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.02 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#ffffff] via-[#f0f9ff] to-[#e0f2fe] flex flex-col items-center justify-center overflow-hidden px-6 select-none"
+          initial={{ opacity: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, scale: 1.05, filter: 'blur(15px)' }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#ffffff] via-[#f0f9ff] to-[#e0f2fe] dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center overflow-hidden px-6 select-none"
         >
           {/* Futuristic subtle tech-grid background pattern (soft blue) */}
           <div 

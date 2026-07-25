@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Fira+Code:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -8,7 +7,8 @@
   --color-eas-dark: #020617;
   --color-eas-light: #f0f5ff;
   --color-eas-accent: #3333ff;
-  --font-sans: 'Outfit', 'Plus Jakarta Sans', 'Inter', 'Poppins', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Space Grotesk', sans-serif;
   --font-mono: 'Fira Code', monospace;
 }
 
@@ -26,13 +26,74 @@
 @layer base {
   body {
     @apply antialiased text-slate-900 dark:text-slate-100 bg-white dark:bg-[#020617] transition-colors duration-500;
-    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
     font-feature-settings: "cv02", "cv05", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
   }
 
   ::selection {
     @apply bg-blue-500/30 text-blue-500;
   }
+}
+
+/* Ambient Grain Texture */
+.bg-grain {
+  position: relative;
+}
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: -150%;
+  width: 400%;
+  height: 400%;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIi8+PC9zdmc+');
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.dark .bg-grain::before {
+  opacity: 0.04;
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+/* Cinematic Slow Mesh Gradient */
+.bg-mesh-gradient {
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.02) 0%, transparent 50%);
+}
+
+.dark .bg-mesh-gradient {
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.07) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.04) 0%, transparent 50%);
+}
+
+@keyframes mesh-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
 }
 
 /* Premium Custom Scrollbar */
@@ -247,12 +308,20 @@ button, a, .category-chip, .product-card, [role="button"] {
 .animate-title-shining {
   font-family: 'Outfit', sans-serif !important;
   font-weight: 900 !important;
-  font-style: italic !important;
-  background: linear-gradient(to right, #ff0055, #00f2fe, #d946ef, #ff0055) !important;
-  background-size: 200% auto !important;
+  font-style: normal !important;
+  background: linear-gradient(90deg, #2563eb, #020617) !important; /* blue to black */
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
-  animation: textHueRotate 8s linear infinite !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+.dark .animate-title-shining {
+  background: linear-gradient(90deg, #60a5fa, #ffffff) !important; /* light blue to white for dark mode */
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
 }
 
 /* ─── Mobile Admin UI Scaling & Responsiveness Override ─── */
