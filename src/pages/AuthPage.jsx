@@ -49,6 +49,8 @@ import {
   Trash2,
   ShieldAlert
 } from 'lucide-react';
+import WishlistContent from '../components/WishlistContent';
+import DesktopAccountSidebar from '../components/DesktopAccountSidebar';
 import './AuthPage.css';
 import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
@@ -70,6 +72,33 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   
   const [currentTab, setCurrentTab] = useState(tabParam || initialTab || 'login');
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const wrapContent = (content) => {
+    if (isDesktop && sessionUser && !showAuthForm) {
+      return (
+        <div className="flex w-full min-h-screen bg-[#f8fafc] dark:bg-[#090d16]">
+          <DesktopAccountSidebar 
+            user={sessionUser} 
+            currentTab={currentTab} 
+            activeSettingsSection={activeSettingsSection}
+            onTabChange={setCurrentTab}
+            onSectionChange={setActiveSettingsSection}
+            onLogout={handleLogout}
+          />
+          <div className="flex-1 w-full max-w-[1000px] px-4 lg:px-12 py-8 h-screen overflow-y-auto pb-32">
+            {content}
+          </div>
+        </div>
+      );
+    }
+    return content;
+  };
 
   useEffect(() => {
     if (tabParam) {
@@ -1013,14 +1042,14 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   const isGoogleUser = sessionUser?.provider === 'google';
 
   if (sessionUser && currentTab === 'overview') {
-    return (
+    return wrapContent(
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
 
 
-        <div className="main-container max-w-[480px] w-full">
+        <div className="main-container max-w-[480px] lg:max-w-none w-full mx-auto">
           {/* Header Row (Signed In): Avatar, Name, and Icons */}
           <div 
-            className="fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
+            className="lg:hidden fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
             style={{ top: 'var(--header-height, 96px)' }}
           >
             <div className="flex items-center gap-3">
@@ -1085,7 +1114,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
             </div>
           </div>
           {/* Spacer to push content below the fixed header */}
-          <div className="h-[80px] w-full shrink-0" />
+          <div className="lg:hidden h-[80px] w-full shrink-0" />
 
           {/* My Orders Section */}
           <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
@@ -1154,7 +1183,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               </button>
 
               <button 
-                onClick={() => navigate('/wishlist')}
+                onClick={() => setCurrentTab('wishlist')}
                 className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
@@ -1214,7 +1243,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   }
 
   if (currentTab === 'coupons') {
-    return (
+    return wrapContent(
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
         <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
           <CouponsContent onBack={() => setCurrentTab('overview')} onCartClick={onCartClick} />
@@ -1224,7 +1253,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   }
 
   if (sessionUser && currentTab === 'orders') {
-    return (
+    return wrapContent(
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
         <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
           <OrdersHistoryContent isProfileTab={true} onBack={() => setCurrentTab('overview')} />
@@ -1233,12 +1262,31 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     );
   }
 
+  if (sessionUser && currentTab === 'wishlist') {
+    return wrapContent(
+      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
+        <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
+           <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-[60] bg-white dark:bg-[#0f172a] shadow-sm flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-800">
+             <button onClick={() => setCurrentTab('overview')} className="p-2 -ml-2 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 dark:bg-slate-800">
+               <ArrowLeft size={20} />
+             </button>
+             <h1 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">My Wishlist</h1>
+             <div className="w-9"></div>
+           </div>
+           <div className="pt-20 px-2 min-h-screen">
+             <WishlistContent onProductClick={(p) => navigate(`/product/${p.id}`)} />
+           </div>
+        </div>
+      </div>
+    );
+  }
+
   if (currentTab === 'settings') {
-    return (
+    return wrapContent(
       <div className="settings-body dark:bg-[#020617] transition-colors duration-500 pb-20 sm:pt-4 flex justify-center w-full min-h-screen">
-        <div className="w-full max-w-[800px] flex flex-col relative bg-white dark:bg-[#090d16] sm:border border-none border-slate-100 dark:border-slate-800/40 rounded-none sm:rounded-[2.5rem] overflow-hidden my-0 sm:my-6 shadow-none sm:shadow-xl min-h-screen sm:min-h-0">
+        <div className="w-full max-w-[800px] flex flex-col relative bg-white lg:bg-transparent dark:bg-[#090d16] sm:border lg:border-none border-none border-slate-100 dark:border-slate-800/40 rounded-none sm:rounded-[2.5rem] overflow-hidden my-0 sm:my-6 lg:my-0 shadow-none sm:shadow-xl lg:shadow-none min-h-screen sm:min-h-0">
           {/* Cover Banner */}
-          <div className="relative w-full h-[140px] sm:h-[180px] bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700">
+          <div className="lg:hidden relative w-full h-[140px] sm:h-[180px] bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700">
             {/* Back button overlay */}
             <button 
               onClick={() => {
@@ -1255,7 +1303,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
           </div>
           
           {/* Profile Header Info Block */}
-          <div className="relative px-6 sm:px-8 pb-6 border-b border-slate-100 dark:border-white/5">
+          <div className="lg:hidden relative px-6 sm:px-8 pb-6 border-b border-slate-100 dark:border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-[-48px] sm:mt-[-56px] relative z-10">
               {/* Avatar overlapping */}
               <div 
@@ -1308,7 +1356,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
           </div>
 
           {/* Navigation Tabs Selector */}
-          <div className="flex border-b border-slate-100 dark:border-white/5 px-2 bg-slate-50/50 dark:bg-[#0c101b]/50 w-full overflow-x-auto scrollbar-none">
+          <div className="lg:hidden flex border-b border-slate-100 dark:border-white/5 px-2 bg-slate-50/50 dark:bg-[#0c101b]/50 w-full overflow-x-auto scrollbar-none">
             {[
               { id: 'personal', icon: User },
               { id: 'address', icon: MapPin },
@@ -1348,8 +1396,16 @@ const AuthPage = ({ initialTab, onCartClick }) => {
             })}
           </div>
           {/* Settings Tab Content Container */}
-          <div className="p-6 sm:p-8 text-left bg-white dark:bg-[#090d16] flex-1">
+          <div className="p-6 sm:p-8 lg:p-0 text-left bg-white lg:bg-transparent dark:bg-[#090d16] flex-1">
 
+            {/* Desktop Settings Header */}
+            <div className="hidden lg:block mb-8 pb-4 border-b border-slate-100 dark:border-slate-800/60">
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white">Account Settings</h2>
+              <div className="flex items-center gap-2 mt-2 text-sm text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Signed in as <strong>{sessionUser?.email}</strong></span>
+              </div>
+            </div>
             {/* LEGAL INFORMATION SECTION SUBMENU */}
             {activeSettingsSection === 'legal' && (
               <div className="animate-fade-in text-left space-y-4">
@@ -2228,10 +2284,10 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   if (!showAuthForm) {
     return (
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
-        <div className="main-container max-w-[480px] w-full">
+        <div className="main-container max-w-[480px] lg:max-w-none w-full mx-auto">
           {/* Header Row: Sign in/Register and icons */}
           <div 
-            className="fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
+            className="lg:hidden fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-5 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
             style={{ top: 'var(--header-height, 96px)' }}
           >
             <span 
@@ -2360,7 +2416,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
               </button>
 
               <button 
-                onClick={() => navigate('/wishlist')}
+                onClick={() => setCurrentTab('wishlist')}
                 className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
               >
                 <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
@@ -2750,3 +2806,10 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 };
 
 export default AuthPage;
+
+
+
+
+
+
+

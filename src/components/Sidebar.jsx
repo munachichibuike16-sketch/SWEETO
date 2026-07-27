@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Box, Sparkles, ChevronRight, Globe,
   Smartphone, Laptop, Headphones, Watch, Gamepad2,
-  Heart, Zap, LayoutGrid, Star, ArrowRight
+  Heart, Zap, LayoutGrid, Star, ArrowRight, Tag, Grid, Flame, Folder
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
@@ -14,7 +14,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { playSound } from '../utils/sound';
 import { getCategoryDescendants } from '../utils/categoryHelpers';
 
-const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded = false, products = [] }) => {
+const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded = false, products = [], desktopMode = false }) => {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const { addToCart } = useCart();
@@ -251,6 +251,23 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
 
   // Group categories into parent-child hierarchy
   const parentCategories = categories.filter(cat => (!cat.parent_id || Number(cat.level) === 1) && getProductCountForCategory(cat.name) > 0);
+  const getCategoryImage = (cat) => {
+    if (cat.image_url) return cat.image_url;
+    if (cat.image) return cat.image;
+    const catProducts = storeProducts?.filter(p => p.category === cat.name || Number(p.category_id) === Number(cat.id)) || [];
+    if (catProducts.length > 0) {
+      return catProducts[0].image_url || catProducts[0].image;
+    }
+    const fallbacks = [
+      'https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&q=80&w=300',
+      'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=300',
+      'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&q=80&w=300',
+      'https://images.unsplash.com/photo-1559251606-c623743a6d76?auto=format&fit=crop&q=80&w=300'
+    ];
+    const idHash = Number(cat.id) || 0;
+    return fallbacks[idHash % fallbacks.length];
+  };
+
   const getSubcategories = (parentId) => {
     return categories.filter(cat => cat.parent_id && Number(cat.parent_id) === Number(parentId) && getProductCountForCategory(cat.name) > 0);
   };
@@ -470,10 +487,10 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       {/* Header label: Recommended */}
                       <div className="flex items-center justify-between px-3.5 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800/80">
                         <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                          <i className="fa-solid fa-tag text-[#2563EB] text-[10px]" />
-                          <span className="text-[11.5px] font-bold">SWEETO-KINS</span>
+                          {desktopMode ? <Tag size={14} className="text-[#8B5CF6]" /> : <i className="fa-solid fa-tag text-[#2563EB] text-[10px]" />}
+                          <span className="text-[11.5px] font-bold">{desktopMode ? 'Recommended' : 'SWEETO-KINS'}</span>
                         </div>
-                        <span className="text-[10px] font-black text-slate-400">256</span>
+                        <span className="text-[10px] font-black text-slate-400">{desktopMode ? '20' : '256'}</span>
                       </div>
 
                       {/* All Pill (Top of lists) */}
@@ -483,13 +500,32 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                             playSound('click');
                             setSelectedSidebarCategory('All');
                           }}
-                          className={`w-full text-left pl-3.5 pr-2 py-2 rounded-r-xl text-[12px] font-bold transition-all cursor-pointer border-l-3 ${
-                            selectedSidebarCategory === 'All'
-                              ? 'bg-[#2563EB]/10 text-[#2563EB] border-[#2563EB] shadow-sm'
-                              : 'bg-transparent text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/20'
-                          }`}
+                          className={desktopMode 
+                            ? `w-full flex items-center justify-between pl-2 pr-2 py-2 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
+                                selectedSidebarCategory === 'All'
+                                  ? 'bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/30'
+                                  : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                              }`
+                            : `w-full text-left pl-3.5 pr-2 py-2 rounded-r-xl text-[12px] font-bold transition-all cursor-pointer border-l-3 ${
+                                selectedSidebarCategory === 'All'
+                                  ? 'bg-[#2563EB]/10 text-[#2563EB] border-[#2563EB] shadow-sm'
+                                  : 'bg-transparent text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/20'
+                              }`
+                          }
                         >
-                          All
+                          {desktopMode ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <Grid size={14} className={selectedSidebarCategory === 'All' ? 'text-white' : 'text-[#8B5CF6]'} />
+                                <span className="truncate">All</span>
+                              </div>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${selectedSidebarCategory === 'All' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                {storeProducts?.length || 1000}
+                              </span>
+                            </>
+                          ) : (
+                            'All'
+                          )}
                         </button>
                       </div>
 
@@ -510,14 +546,36 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                                     playSound('click');
                                     setSelectedSidebarCategory(cat.name);
                                   }}
-                                  className={`flex-1 text-left pl-3.5 pr-2 py-2 rounded-r-xl text-[12px] font-bold transition-all cursor-pointer border-l-3 truncate ${
-                                    isActive
-                                      ? 'bg-[#2563EB]/10 text-[#2563EB] border-[#2563EB] shadow-sm'
-                                      : 'bg-transparent text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/20'
-                                  }`}
+                                  className={desktopMode
+                                    ? `flex-1 flex items-center justify-between pl-2 pr-2 py-2 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
+                                        isActive
+                                          ? 'bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/30'
+                                          : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                                      }`
+                                    : `flex-1 text-left pl-3.5 pr-2 py-2 rounded-r-xl text-[12px] font-bold transition-all cursor-pointer border-l-3 truncate flex items-center gap-2 ${
+                                        isActive
+                                          ? 'bg-[#2563EB]/10 text-[#2563EB] border-[#2563EB] shadow-sm'
+                                          : 'bg-transparent text-slate-700 dark:text-slate-300 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/20'
+                                      }`
+                                  }
                                   title={t_smart(cat.name)}
                                 >
-                                  {cat.name}
+                                  {desktopMode ? (
+                                    <>
+                                      <div className="flex items-center gap-2 overflow-hidden">
+                                        <Folder size={14} className={isActive ? 'text-white shrink-0' : 'text-[#8B5CF6] shrink-0'} />
+                                        <span className="truncate font-medium">{cat.name}</span>
+                                      </div>
+                                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                        {getProductCountForCategory(cat.name)}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <img src={getCategoryImage(cat)} alt="" className="w-5 h-5 rounded-md object-cover shrink-0" />
+                                      <span className="truncate">{cat.name}</span>
+                                    </>
+                                  )}
                                 </button>
 
                                 {hasChildren && (
@@ -585,10 +643,10 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                       
                       {/* Sub-header section */}
                       <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-1.5 text-[#2563EB]">
-                          <Star size={12} fill="currentColor" />
-                          <span className="text-[11.5px] font-black text-slate-800 dark:text-white capitalize">
-                            {selectedSidebarCategory.toLowerCase() === 'all' ? 'For You' : t_smart(selectedSidebarCategory)}
+                        <div className={`flex items-center gap-1.5 ${desktopMode ? 'text-[#8B5CF6]' : 'text-[#2563EB]'}`}>
+                          {desktopMode ? <Flame size={14} fill="currentColor" /> : <Star size={12} fill="currentColor" />}
+                          <span className={`${desktopMode ? 'text-[12px]' : 'text-[11.5px]'} font-black text-slate-800 dark:text-white capitalize`}>
+                            {selectedSidebarCategory.toLowerCase() === 'all' ? (desktopMode ? 'Recommended' : 'For You') : t_smart(selectedSidebarCategory)}
                           </span>
                         </div>
                         <button 

@@ -176,7 +176,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               />
               {/* Title */}
               <h2 className="animate-title-shining text-[14px] uppercase tracking-wider whitespace-nowrap shrink-0">
-                {lang === 'fr' ? "OFFRES D'AUJOURD'HUI" : "TODAY'S OFFER"}
+                {title ? title : (lang === 'fr' ? "OFFRES D'AUJOURD'HUI" : "TODAY'S OFFER")}
               </h2>
               {/* Right Line */}
               <div 
@@ -362,7 +362,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
             />
             {/* Title */}
             <h2 className="animate-title-shining text-2xl uppercase tracking-wider whitespace-nowrap shrink-0">
-              {lang === 'fr' ? "OFFRES D'AUJOURD'HUI" : "TODAY'S OFFER"}
+              {title ? title : (lang === 'fr' ? "OFFRES D'AUJOURD'HUI" : "TODAY'S OFFER")}
             </h2>
             {/* Right Line */}
             <div 

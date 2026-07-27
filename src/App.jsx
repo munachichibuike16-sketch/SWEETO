@@ -11,7 +11,7 @@ import Sidebar from './components/Sidebar';
 import ProductSection, { SectionBanner, DualProductSection } from './components/ProductSection';
 import ProductCard from './components/ProductCard';
 import CartDrawer from './components/CartDrawer';
-import ProductModal from './components/ProductModal';
+
 import WishlistContent from './components/WishlistContent';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
@@ -34,6 +34,7 @@ import { getCategoryDescendants } from './utils/categoryHelpers';
 import ScrollToTop from './components/ScrollToTop';
 import RealtimeNotification from './components/RealtimeNotification';
 import ProductDetailPage from './pages/ProductDetailPage';
+
 import GlobalLightbox from './components/GlobalLightbox';
 import BackToTop from './components/BackToTop';
 import SwipeGestures from './components/SwipeGestures';
@@ -49,6 +50,7 @@ import { logVisitorEvent } from './utils/analytics';
 import SweetoLogo from './components/SweetoLogo';
 import MobileBottomBanner from './components/MobileBottomBanner';
 import MobileBottomFeed from './components/MobileBottomFeed';
+import DesktopApp from './DesktopApp';
 
 const shuffleArray = (array) => {
   const arr = [...(array || [])];
@@ -257,8 +259,6 @@ const Storefront = ({ viewMode: propViewMode }) => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   
   const { products: liveProducts, categories, searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
@@ -370,21 +370,6 @@ const Storefront = ({ viewMode: propViewMode }) => {
     ? (categoryName ? decodeURIComponent(categoryName) : null) 
     : selectedCategory;
 
-  // 1. Auto-open Product Modal if ID in URL
-  useEffect(() => {
-    if (productId && liveProducts.length > 0) {
-      const p = liveProducts.find(prod => prod.id.toString() === productId.toString());
-      if (p) {
-        setSelectedProduct(p);
-        setIsProductModalOpen(true);
-      } else {
-        setIsProductModalOpen(false);
-      }
-    } else {
-      setIsProductModalOpen(false);
-    }
-  }, [productId, liveProducts]);
-
   // Listen for template-specific category & routing triggers
   useEffect(() => {
     const handleSelectCategory = (e) => {
@@ -414,18 +399,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     window.scrollTo(0, 0);
   }, [activeCategory, selectedBrand, viewMode, searchQuery]);
 
-  // 3. Clear Modal / Navigation logic
-  const handleProductModalClose = () => {
-    setIsProductModalOpen(false);
-    if (productId) {
-      navigate('/');
-    }
-  };
-
   const handleProductClick = (p) => {
-    setSelectedProduct(p);
-    setIsProductModalOpen(true);
-    // Push path to history stack to support back button modal dismissal
     navigate(`/product/${p.id}`);
   };
 
@@ -440,10 +414,6 @@ const Storefront = ({ viewMode: propViewMode }) => {
         setIsSidebarOpen(false);
         return true;
       }
-      if (isProductModalOpen) {
-        handleProductModalClose();
-        return true;
-      }
       
       const currentPath = getCurrentPath();
       if (currentPath !== '/' && currentPath !== '/home') {
@@ -456,7 +426,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     return () => {
       delete window.handleAndroidBack;
     };
-  }, [isCartOpen, isSidebarOpen, isProductModalOpen, productId, handleProductModalClose]);
+  }, [isCartOpen, isSidebarOpen, productId]);
 
 
 
@@ -1018,15 +988,9 @@ const Storefront = ({ viewMode: propViewMode }) => {
         onMenuClick={() => setIsSidebarOpen(true)} 
         onCartClick={() => setIsCartOpen(true)}
       />
-
       <motion.div 
-        animate={{ 
-          scale: isProductModalOpen ? 0.95 : 1,
-          filter: isProductModalOpen ? 'blur(10px) brightness(0.7)' : 'none',
-          borderRadius: isProductModalOpen ? '40px' : '0px'
-        }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark bg-mesh-gradient bg-grain flex flex-col origin-center transition-colors duration-300"
+        initial={false}
+        className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark flex flex-col origin-center transition-colors duration-300"
         style={{ paddingTop: 'var(--header-height, 96px)' }}
       >
         
@@ -1290,13 +1254,6 @@ const Storefront = ({ viewMode: propViewMode }) => {
         onClose={() => setIsCartOpen(false)} 
       />
 
-      <ProductModal 
-        isOpen={isProductModalOpen}
-        product={selectedProduct}
-        allProducts={allProducts}
-        onClose={handleProductModalClose}
-        onProductClick={handleProductClick}
-      />
 
 
     </div>
@@ -1349,9 +1306,16 @@ const RouteTracker = () => {
   return null;
 };
 
-function App() {
+const App = () => {
   const { loading } = useStore();
   const [currentPath, setCurrentPath] = useState(getCurrentPath());
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -1440,6 +1404,8 @@ function App() {
     detectCountry();
   }, []);
 
+  const HomeElement = isDesktop ? <DesktopApp /> : <Storefront />;
+
   return (
     <>
       <Toast />
@@ -1455,24 +1421,24 @@ function App() {
         <RouteTracker />
         {!currentPath.includes('/dashboard') && !currentPath.includes('/chat') && !currentPath.includes('/support') && <CustomerChatWidget />}
         <Routes>
-          <Route path="/" element={<Storefront />} />
+          <Route path="/" element={HomeElement} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
-          <Route path="/wishlist" element={<Storefront />} />
-          <Route path="/notifications" element={<Storefront />} />
-          <Route path="/products" element={<Storefront />} />
-          <Route path="/login" element={<Storefront />} />
-          <Route path="/register" element={<Storefront />} />
-          <Route path="/auth" element={<Storefront />} />
-          <Route path="/settings" element={<Storefront />} />
-          <Route path="/deals" element={<Storefront />} />
-          <Route path="/trending" element={<Storefront />} />
-          <Route path="/new-arrivals" element={<Storefront />} />
-          <Route path="/featured" element={<Storefront />} />
-          <Route path="/visit" element={<Storefront />} />
-          <Route path="/privacy" element={<Storefront />} />
-          <Route path="/terms" element={<Storefront />} />
-          <Route path="/security" element={<Storefront />} />
-          <Route path="/refund" element={<Storefront />} />
+          <Route path="/wishlist" element={HomeElement} />
+          <Route path="/notifications" element={HomeElement} />
+          <Route path="/products" element={HomeElement} />
+          <Route path="/login" element={HomeElement} />
+          <Route path="/register" element={HomeElement} />
+          <Route path="/auth" element={HomeElement} />
+          <Route path="/settings" element={HomeElement} />
+          <Route path="/deals" element={HomeElement} />
+          <Route path="/trending" element={HomeElement} />
+          <Route path="/new-arrivals" element={HomeElement} />
+          <Route path="/featured" element={HomeElement} />
+          <Route path="/visit" element={HomeElement} />
+          <Route path="/privacy" element={HomeElement} />
+          <Route path="/terms" element={HomeElement} />
+          <Route path="/security" element={HomeElement} />
+          <Route path="/refund" element={HomeElement} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
@@ -1482,12 +1448,12 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/support" element={<CustomerSupportPage />} />
           <Route path="/admin/*" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/category/:categoryName" element={<Storefront />} />
+          <Route path="/category/:categoryName" element={HomeElement} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </>
   );
-}
+};
 
 export default App;

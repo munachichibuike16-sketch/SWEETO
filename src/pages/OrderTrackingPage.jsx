@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { apiFetch } from '../utils/api';
 import { playSound } from '../utils/sound';
 import Header from '../components/Header';
+import DesktopHeader from '../components/DesktopHeader';
 import Sidebar from '../components/Sidebar';
 import CartDrawer from '../components/CartDrawer';
 
@@ -608,7 +609,16 @@ export default function OrderTrackingPage() {
           }
         }
       `}</style>
-      <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
+      <div className="hidden lg:block w-full">
+        <DesktopHeader 
+          activePage="other" 
+          onCartOpen={() => setIsCartOpen(true)}
+          onSidebarOpen={() => setIsSidebarOpen(true)}
+        />
+      </div>
+      <div className="lg:hidden w-full">
+        <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
+      </div>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 

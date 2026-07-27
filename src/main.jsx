@@ -107,10 +107,11 @@ updatePWAManifestAndIcons();
 // Listen for subsequent hash navigation changes
 window.addEventListener('hashchange', updatePWAManifestAndIcons);
 
-import { StrictMode } from 'react'
+import React, { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import DesktopApp from './DesktopApp.jsx'
 
 import { StoreProvider } from './contexts/StoreContext'
 import { CartProvider } from './contexts/CartContext'

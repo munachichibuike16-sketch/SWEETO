@@ -11,6 +11,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
+import DesktopHeader from '../components/DesktopHeader';
 import CartDrawer from '../components/CartDrawer';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
@@ -109,34 +110,37 @@ const ProductDetailPage = () => {
   };
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrollY(currentScrollY);
-      if (currentScrollY > 120) {
-        setShowStickyHeader(true);
-      } else {
-        setShowStickyHeader(false);
-      }
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          setScrollY(currentScrollY);
+          setShowStickyHeader(currentScrollY > 300);
 
-      const overviewEl = document.getElementById('product-overview');
-      const reviewsEl = document.getElementById('product-reviews');
-      const descEl = document.getElementById('product-description');
-      const recomEl = document.getElementById('product-recommendations');
+          const overviewEl = document.getElementById('product-overview');
+          const reviewsEl = document.getElementById('product-reviews');
+          const descEl = document.getElementById('product-description');
+          const recomEl = document.getElementById('product-recommendations');
 
-      const getAbsoluteTop = (el) => el ? el.getBoundingClientRect().top + currentScrollY : 0;
+          const getAbsoluteTop = (el) => el ? el.getBoundingClientRect().top + currentScrollY : 0;
 
-      if (recomEl && currentScrollY >= getAbsoluteTop(recomEl) - 150) {
-        setActiveScrollSection('recommendations');
-      } else if (descEl && currentScrollY >= getAbsoluteTop(descEl) - 150) {
-        setActiveScrollSection('description');
-      } else if (reviewsEl && currentScrollY >= getAbsoluteTop(reviewsEl) - 150) {
-        setActiveScrollSection('reviews');
-      } else {
-        setActiveScrollSection('overview');
+          if (recomEl && currentScrollY >= getAbsoluteTop(recomEl) - 150) {
+            setActiveScrollSection('recommendations');
+          } else if (descEl && currentScrollY >= getAbsoluteTop(descEl) - 150) {
+            setActiveScrollSection('description');
+          } else if (reviewsEl && currentScrollY >= getAbsoluteTop(reviewsEl) - 150) {
+            setActiveScrollSection('reviews');
+          } else {
+            setActiveScrollSection('overview');
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -656,7 +660,16 @@ const ProductDetailPage = () => {
       </AnimatePresence>
 
       {/* Desktop Header */}
-      <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
+      <div className="hidden lg:block w-full">
+        <DesktopHeader 
+          activePage="other" 
+          onCartOpen={() => setIsCartOpen(true)}
+          onSidebarOpen={() => setIsSidebarOpen(true)}
+        />
+      </div>
+      <div className="lg:hidden w-full">
+        <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
+      </div>
       
       {/* Mobile Visual Gallery (Full-bleed AliExpress Style with Native Snapping) */}
       <div 

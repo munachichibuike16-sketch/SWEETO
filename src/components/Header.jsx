@@ -191,7 +191,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
     };
     updateHeaderHeight();
     window.addEventListener('resize', updateHeaderHeight);
-    window.addEventListener('scroll', updateHeaderHeight);
     let resizeObserver;
     if (headerRef.current && window.ResizeObserver) {
       resizeObserver = new ResizeObserver(() => {
@@ -201,7 +200,6 @@ const Header = ({ onMenuClick, onCartClick }) => {
     }
     return () => {
       window.removeEventListener('resize', updateHeaderHeight);
-      window.removeEventListener('scroll', updateHeaderHeight);
       if (resizeObserver) resizeObserver.disconnect();
     };
   }, [isScrolled, isSearchOpen]);
@@ -598,17 +596,23 @@ const Header = ({ onMenuClick, onCartClick }) => {
   useEffect(() => {
     let activityTimeout = null;
     
+    let ticking = false;
     const showNav = () => {
-      setShowBottomNavScroll(true);
-      
-      // Reset the 10-second inactivity timer
-      if (activityTimeout) {
-        clearTimeout(activityTimeout);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowBottomNavScroll(true);
+          
+          if (activityTimeout) {
+            clearTimeout(activityTimeout);
+          }
+          
+          activityTimeout = setTimeout(() => {
+            setShowBottomNavScroll(false);
+          }, 10000); // 10 seconds of no activity
+          ticking = false;
+        });
+        ticking = true;
       }
-      
-      activityTimeout = setTimeout(() => {
-        setShowBottomNavScroll(false);
-      }, 10000); // 10 seconds of no activity
     };
 
     const handleScroll = () => {
@@ -814,7 +818,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               >
                 <User size={18} strokeWidth={1.5} className="text-slate-800 dark:text-slate-200" />
                 <div className="flex flex-col items-start leading-none text-left text-[9px]">
-                  <span className="text-slate-400">Welcome</span>
+                  <span className="text-slate-400">{settings?.shopName || 'SWEETO HUB'}</span>
                   <span className="font-bold text-slate-855 dark:text-slate-200 mt-0.5 truncate max-w-[100px]">
                     {user ? user.name.split(' ')[0] : 'Log in / Register'}
                   </span>
@@ -840,7 +844,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
                     </>
                   ) : (
                     <>
-                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350 mb-3">Welcome to Sweeto Hub!</p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-350 mb-3">Welcome to {settings?.shopName || 'SWEETO HUB'}!</p>
                       <div className="flex gap-2 w-full">
                         <button 
                           onClick={() => navigate('/login')}

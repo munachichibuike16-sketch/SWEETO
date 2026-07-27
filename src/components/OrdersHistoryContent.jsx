@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Search, Clock, MapPin, ChevronRight, Loader2, ArrowRight, ExternalLink, ShoppingBag, Truck, CheckCircle2, ShieldAlert, ArrowLeft, SlidersHorizontal, Headphones, Trash2, X } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
@@ -178,7 +178,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
 
   const handleTrashClick = () => {
     if (!searchQuery.trim()) {
-      showToast('No active search query to delete 🚫', 'info');
+      showToast('No active search query to delete ðŸš«', 'info');
     } else {
       setShowTrashConfirm(true);
     }
@@ -189,14 +189,14 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
     setActiveTab('all');
     setSortOrder('newest');
     setTimeframe('all');
-    showToast('Search and filters cleared 🧹', 'info');
+    showToast('Search and filters cleared ðŸ§¹', 'info');
   };
 
   const handleSwitchAccount = async () => {
     try {
       await supabase.auth.signOut();
       localStorage.removeItem('sweetohub_session');
-      showToast('Logged out to switch account 🔄', 'success');
+      showToast('Logged out to switch account ðŸ”„', 'success');
       window.location.reload();
     } catch (e) {
       console.error(e);
@@ -256,17 +256,14 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
         
         {/* Sticky Header Group */}
         <div 
-          className="sticky z-30 bg-white dark:bg-[#0f172a] shadow-sm w-full"
+          className="sticky lg:static z-30 bg-white lg:bg-transparent dark:bg-[#0f172a] shadow-sm lg:shadow-none w-full lg:mb-4"
           style={{ top: 'var(--header-height, 0px)' }}
         >
           {/* Header Row: Back button, Title & Icon, Search input, sorting/help/trash icons */}
           <div className="border-b border-slate-100 dark:border-white/5 px-4 py-3.5 flex items-center justify-between gap-3 w-full">
             <div className="flex items-center gap-3">
               {/* Back button */}
-              <button 
-                onClick={onBack}
-                className="text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer"
-              >
+              <button onClick={onBack} className="lg:hidden text-slate-800 dark:text-white p-1 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-colors flex-shrink-0 cursor-pointer">
                 <ArrowLeft size={20} />
               </button>
               
@@ -275,7 +272,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                 <div className="w-8 h-8 rounded-xl bg-violet-500/10 dark:bg-violet-500/20 text-[#8b5cf6] flex items-center justify-center flex-shrink-0">
                   <ShoppingBag size={18} />
                 </div>
-                <h1 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider hidden sm:inline-block">
+                <h1 className="text-sm lg:text-2xl font-black text-slate-800 dark:text-white lg:normal-case lg:tracking-normal uppercase tracking-wider hidden sm:inline-block">
                   My Orders
                 </h1>
                 <span className="px-2 py-0.5 bg-[#8b5cf6] text-white text-[10px] font-black rounded-full leading-none">
@@ -389,7 +386,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                       className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 rounded-3xl p-5 shadow-sm relative overflow-hidden cursor-pointer hover:border-[#8b5cf6]/30 hover:shadow-md transition-all flex flex-col text-left group"
                     >
                       {/* Status indicator bar */}
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eas-blue to-[#8b5cf6]" />
+                      
                       
                       {/* Header row */}
                       <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b border-slate-50 dark:border-slate-700/40">
@@ -671,7 +668,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                       setActiveTab('all');
                       setTimeframe('all');
                       setShowFilterSheet(false);
-                      showToast('Filters reset 🧹', 'info');
+                      showToast('Filters reset ðŸ§¹', 'info');
                     }}
                     className="flex-1 py-3.5 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-black text-xs uppercase tracking-widest rounded-2xl transition-all cursor-pointer text-center"
                   >
@@ -680,7 +677,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                   <button 
                     onClick={() => {
                       setShowFilterSheet(false);
-                      showToast('Filters applied successfully! 🎯', 'success');
+                      showToast('Filters applied successfully! ðŸŽ¯', 'success');
                     }}
                     className="flex-1 py-3.5 bg-eas-blue hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all cursor-pointer text-center"
                   >
@@ -726,7 +723,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                     onClick={() => {
                       setSearchQuery('');
                       setShowTrashConfirm(false);
-                      showToast('Search query deleted 🗑️', 'success');
+                      showToast('Search query deleted ðŸ—‘ï¸', 'success');
                     }}
                     className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all cursor-pointer"
                   >
@@ -1034,10 +1031,10 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                      {lang === 'fr' ? 'Détails de la commande' : 'Order Details'}
+                      {lang === 'fr' ? 'DÃ©tails de la commande' : 'Order Details'}
                     </h3>
                     <p className="text-[10px] text-slate-400 font-bold mt-0.5">
-                      Order #{selectedOrder.id} • {new Date(selectedOrder.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Order #{selectedOrder.id} â€¢ {new Date(selectedOrder.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
                 </div>
@@ -1078,10 +1075,10 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
 
                     {/* Steps */}
                     {[
-                      { key: 'pending', label: lang === 'fr' ? 'Reçue' : 'Placed', icon: Clock, activeThreshold: ['pending', 'confirmed', 'processing', 'shipping', 'completed', 'delivered'] },
-                      { key: 'confirmed', label: lang === 'fr' ? 'Confirmée' : 'Confirmed', icon: Package, activeThreshold: ['confirmed', 'processing', 'shipping', 'completed', 'delivered'] },
-                      { key: 'processing', label: lang === 'fr' ? 'En Cours' : 'Processing', icon: Truck, activeThreshold: ['processing', 'shipping', 'completed', 'delivered'] },
-                      { key: 'completed', label: lang === 'fr' ? 'Livrée' : 'Delivered', icon: CheckCircle2, activeThreshold: ['completed', 'delivered'] }
+                      { key: 'pending', label: lang === 'fr' ? 'ReÃ§ue' : 'Placed', icon: Clock, activeThreshold: ['pending', 'confirmed', 'processing', 'shipping', 'completed', 'delivered'] },
+                      { key: 'confirmed', label: lang === 'fr' ? 'ConfirmÃ©e' : 'Confirmed', icon: Package, activeThreshold: ['confirmed', 'processing', 'shipping', 'completed', 'delivered'] },
+                      { key: 'processing', label: lang === 'fr' ? 'Expédiée' : 'Shipped', icon: Truck, activeThreshold: ['processing', 'shipping', 'completed', 'delivered'] },
+                      { key: 'completed', label: lang === 'fr' ? 'LivrÃ©e' : 'Delivered', icon: CheckCircle2, activeThreshold: ['completed', 'delivered'] }
                     ].map((step, idx) => {
                       const isActive = step.activeThreshold.includes(selectedOrder.status);
                       const StepIcon = step.icon;
@@ -1106,7 +1103,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                 {/* Items details */}
                 <div className="space-y-3">
                   <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                    {lang === 'fr' ? 'Articles commandés' : 'Ordered Items'}
+                    {lang === 'fr' ? 'Articles commandÃ©s' : 'Ordered Items'}
                   </span>
                   <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2.5xl border border-slate-100/60 dark:border-slate-850 p-4 space-y-3">
                     {(() => {
@@ -1121,7 +1118,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                               {item.name}
                             </span>
                             <span className="text-slate-400 text-[10px] font-semibold mt-0.5">
-                              {Number(item.price).toLocaleString()} {settings?.currency || 'FCFA'} × {item.quantity}
+                              {Number(item.price).toLocaleString()} {settings?.currency || 'FCFA'} Ã— {item.quantity}
                             </span>
                           </div>
                           <span className="text-slate-900 dark:text-white shrink-0 font-extrabold">
@@ -1158,7 +1155,7 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
                 {/* Recipient details */}
                 <div className="space-y-3">
                   <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                    {lang === 'fr' ? 'Détails de livraison' : 'Delivery Details'}
+                    {lang === 'fr' ? 'DÃ©tails de livraison' : 'Delivery Details'}
                   </span>
                   <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2.5xl border border-slate-100/60 dark:border-slate-850 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
                     <div className="space-y-1">
@@ -1212,3 +1209,6 @@ const OrdersHistoryContent = ({ isProfileTab = false, onBack }) => {
 };
 
 export default OrdersHistoryContent;
+
+
+
