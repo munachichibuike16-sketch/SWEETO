@@ -927,30 +927,34 @@ export default function DesktopApp() {
 
             <div 
               ref={categorySliderRef}
-              className="flex items-center gap-5 overflow-x-auto scrollbar-none py-2 px-1 scroll-smooth"
+              className="flex items-center gap-6 overflow-x-auto scrollbar-none py-6 px-2 scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {mappedCategories.filter(cat => !cat.parent_id).map(cat => (
                 <div
                   key={cat.id}
                   onClick={() => handleSelectCategory(cat.name)}
-                  className="flex-shrink-0 w-44 h-44 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-indigo-400 p-4 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1.5 group relative overflow-hidden"
+                  className="flex-shrink-0 w-44 h-52 rounded-[2rem] bg-white dark:bg-[#070b13] border border-slate-100 dark:border-white/5 p-5 flex flex-col items-center justify-center text-center cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-[0_20px_40px_rgb(99,102,241,0.15)] dark:hover:shadow-[0_20px_40px_rgb(99,102,241,0.2)] hover:border-indigo-500/30 dark:hover:border-indigo-400/50 transition-all duration-500 transform hover:-translate-y-2 group relative overflow-hidden"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.bg} opacity-50 group-hover:opacity-100 transition-opacity`}></div>
+                  {/* Glass reflection */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"></div>
                   
-                  <div className="relative z-10 h-20 w-20 mb-3 flex items-center justify-center">
+                  {/* Subtle background glow based on category color */}
+                  <div className={`absolute -inset-10 bg-gradient-to-br ${cat.bg} opacity-10 group-hover:opacity-30 blur-2xl transition-all duration-500 z-0`}></div>
+                  
+                  <div className="relative z-10 h-24 w-24 mb-4 flex items-center justify-center rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 group-hover:bg-transparent transition-colors p-2">
                     <img 
                       src={cat.image} 
                       alt={cat.name}
-                      className="max-h-full max-w-full object-contain drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300"
+                      className="max-h-full max-w-full object-contain drop-shadow-md transform group-hover:scale-125 transition-transform duration-500"
                       onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=150&q=80'; }}
                     />
                   </div>
 
-                  <h3 className="relative z-10 font-black uppercase text-[12px] text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-1 tracking-tight">
+                  <h3 className="relative z-10 font-black uppercase text-[12px] text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 tracking-tight">
                     {cat.name}
                   </h3>
-                  <span className="relative z-10 text-[10px] font-semibold text-slate-400 mt-0.5 group-hover:text-slate-500">
+                  <span className="relative z-10 text-[10px] font-bold text-slate-400 mt-1.5 bg-slate-100 dark:bg-slate-800/80 px-3 py-0.5 rounded-full group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {cat.itemsCount}
                   </span>
                 </div>
@@ -978,16 +982,25 @@ export default function DesktopApp() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-5 pt-4">
               {mappedBrands.map((brand) => (
                 <div
                   key={brand.id}
                   onClick={() => handleSelectBrand(brand.name)}
-                  className="bg-slate-50 hover:bg-indigo-50/50 border border-slate-200/80 hover:border-indigo-400 p-4 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 transform hover:-translate-y-1 shadow-sm hover:shadow-md group"
+                  className="bg-white dark:bg-[#070b13] border border-slate-100 dark:border-white/5 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-500 transform hover:-translate-y-2 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] hover:shadow-[0_15px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_15px_30px_rgb(0,0,0,0.4)] hover:border-amber-500/30 dark:hover:border-amber-400/50 group relative overflow-hidden"
                 >
-                  <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{brand.logo}</span>
-                  <span className="font-extrabold text-xs text-slate-900 group-hover:text-indigo-600 transition-colors">{brand.name}</span>
-                  <span className="text-[10px] text-slate-400 font-semibold mt-0.5">{brand.itemsCount}</span>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/0 via-purple-500/0 to-amber-500/0 group-hover:from-indigo-500/5 group-hover:via-purple-500/5 group-hover:to-amber-500/10 transition-all duration-700 pointer-events-none z-0"></div>
+                  
+                  <div className="relative z-10 w-14 h-14 mb-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-amber-500 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 group-hover:bg-amber-50 dark:group-hover:bg-amber-500/10 transition-all duration-500 shadow-sm group-hover:shadow-md">
+                    <span className="text-3xl drop-shadow-sm">{brand.logo}</span>
+                  </div>
+                  
+                  <span className="relative z-10 font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-slate-100 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-amber-500 group-hover:to-orange-500 transition-all duration-300">
+                    {brand.name}
+                  </span>
+                  <span className="relative z-10 text-[10px] text-slate-400 font-bold mt-1.5 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                    {brand.itemsCount}
+                  </span>
                 </div>
               ))}
             </div>
