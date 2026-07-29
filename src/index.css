@@ -118,15 +118,10 @@ html {
   scroll-behavior: smooth;
   text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: contain;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 body {
-  overscroll-behavior-y: contain;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* removed overflow restrictions */
 }
 
 .no-scrollbar::-webkit-scrollbar {

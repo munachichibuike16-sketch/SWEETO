@@ -847,7 +847,7 @@ export default function DesktopApp() {
   );
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-white font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden">
       {toastMessage && (
         <div className="fixed top-24 right-8 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl border border-slate-700 transition-all transform animate-bounce">
           <IconZap />
