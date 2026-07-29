@@ -886,7 +886,7 @@ export default function DesktopApp() {
       {activePage === 'home' && (
         <main>
           {/* HERO BANNER */}
-          <section className="px-8 pt-4 pb-8 max-w-[1440px] mx-auto">
+          <section className="px-8 pt-4 pb-2 max-w-[1440px] mx-auto">
             <Hero 
               banners={settings?.hero_banners} 
               onProductClick={(product) => {
@@ -897,7 +897,7 @@ export default function DesktopApp() {
           </section>
 
           {/* CATEGORIES SECTION */}
-          <section className="max-w-[1440px] mx-auto px-8 py-10 border-t border-slate-100">
+          <section className="max-w-[1440px] mx-auto px-8 pt-2 pb-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -963,7 +963,7 @@ export default function DesktopApp() {
           </section>
 
           {/* BRANDS SECTION */}
-          <section className="max-w-[1440px] mx-auto px-8 py-10 border-t border-slate-100">
+          <section className="max-w-[1440px] mx-auto px-8 pt-4 pb-10">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
