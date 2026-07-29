@@ -120,11 +120,13 @@ html {
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: contain;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
   overscroll-behavior-y: contain;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .no-scrollbar::-webkit-scrollbar {
