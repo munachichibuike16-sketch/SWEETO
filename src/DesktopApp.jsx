@@ -982,12 +982,15 @@ export default function DesktopApp() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-5 pt-4">
+            <div 
+              className="flex items-center gap-5 overflow-x-auto scrollbar-none py-4 px-2 scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {mappedBrands.map((brand) => (
                 <div
                   key={brand.id}
                   onClick={() => handleSelectBrand(brand.name)}
-                  className="bg-white dark:bg-[#070b13] border border-slate-100 dark:border-white/5 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-500 transform hover:-translate-y-2 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] hover:shadow-[0_15px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_15px_30px_rgb(0,0,0,0.4)] hover:border-amber-500/30 dark:hover:border-amber-400/50 group relative overflow-hidden"
+                  className="flex-shrink-0 w-40 h-44 bg-white dark:bg-[#070b13] border border-slate-100 dark:border-white/5 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-500 transform hover:-translate-y-2 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] hover:shadow-[0_15px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_15px_30px_rgb(0,0,0,0.4)] hover:border-amber-500/30 dark:hover:border-amber-400/50 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/0 via-purple-500/0 to-amber-500/0 group-hover:from-indigo-500/5 group-hover:via-purple-500/5 group-hover:to-amber-500/10 transition-all duration-700 pointer-events-none z-0"></div>
                   
