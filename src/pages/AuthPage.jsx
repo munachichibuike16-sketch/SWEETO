@@ -47,7 +47,9 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  ShieldAlert
+  ShieldAlert,
+  LogIn,
+  X
 } from 'lucide-react';
 import WishlistContent from '../components/WishlistContent';
 import DesktopAccountSidebar from '../components/DesktopAccountSidebar';
@@ -2535,12 +2537,14 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
       {/* Right side: Auth Card Column */}
       <div className="auth-form-column flex-1 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-eas-light/50 via-white to-eas-light/30 dark:bg-eas-dark transition-colors duration-500">
-        <button 
-          onClick={() => setShowAuthForm(false)} 
-          className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
-        >
-          <ArrowLeft size={20} />
-        </button>
+        {currentTab !== 'login' && (
+          <button 
+            onClick={() => setShowAuthForm(false)} 
+            className="absolute top-6 left-6 w-12 h-12 rounded-2xl bg-white dark:bg-eas-dark/60 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-eas-light dark:hover:bg-white/5 transition-all z-20 cursor-pointer shadow-sm"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        )}
         {/* Floating tech background decorations for mobile view */}
         <span className="candy-decoration lg:hidden">⚡</span>
         <span className="candy-decoration lg:hidden">💻</span>
@@ -2549,85 +2553,122 @@ const AuthPage = ({ initialTab, onCartClick }) => {
         <div className="main-container max-w-[500px] w-full relative z-10">
           <div className="auth-card dark:bg-eas-dark/60 dark:border-white/5 backdrop-blur-xl">
             <div className="card-content">
-              <div className="brand-section">
-                <div className="brand-icon cursor-pointer mx-auto" onClick={() => navigate('/')}>⚡</div>
-                <h1 className="brand-name">SWEETO-HUB</h1>
-                <p className="brand-tagline">{t('powering_digital_life') || 'Powering Your Digital Life'}</p>
-              </div>
+              {currentTab !== 'login' && (
+                <>
+                  <div className="brand-section">
+                    <div className="brand-icon cursor-pointer mx-auto" onClick={() => navigate('/')}>⚡</div>
+                    <h1 className="brand-name">SWEETO-HUB</h1>
+                    <p className="brand-tagline">{t('powering_digital_life') || 'Powering Your Digital Life'}</p>
+                  </div>
 
-              <div className="tab-switcher bg-eas-light/80 dark:bg-eas-dark/50 p-1 border-slate-200/50 dark:border-white/5 rounded-2xl mb-8">
-                <button 
-                  className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'login' ? 'active' : ''}`} 
-                  onClick={() => switchTab('login')}
-                >
-                  {t('login') || 'Login'}
-                </button>
-                <button 
-                  className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'signup' ? 'active' : ''}`} 
-                  onClick={() => switchTab('signup')}
-                >
-                  {t('sign_up') || 'Sign Up'}
-                </button>
-              </div>
+                  <div className="tab-switcher bg-eas-light/80 dark:bg-eas-dark/50 p-1 border-slate-200/50 dark:border-white/5 rounded-2xl mb-8">
+                    <button 
+                      className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'login' ? 'active' : ''}`} 
+                      onClick={() => switchTab('login')}
+                    >
+                      {t('login') || 'Login'}
+                    </button>
+                    <button 
+                      className={`tab-btn text-xs font-black uppercase tracking-widest ${currentTab === 'signup' ? 'active' : ''}`} 
+                      onClick={() => switchTab('signup')}
+                    >
+                      {t('sign_up') || 'Sign Up'}
+                    </button>
+                  </div>
+                </>
+              )}
 
               <div className="form-container">
                 {currentTab === 'login' && (
-                <div className="form-panel active">
-                  <form onSubmit={handleLogin} noValidate>
-                    <div className="input-group">
-                      <label>{t('email_address') || 'Email Address'}</label>
-                      <div className="input-wrapper">
-                        <User className="input-icon" size={18} />
-                        <input 
-                          type="email" 
-                          placeholder={t('email_placeholder') || "you@example.com"} 
-                          value={loginData.email}
-                          onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.loginEmail ? 'input-error' : ''}`}
-                        />
-                      </div>
-                      <div className="error-message">{errors.loginEmail}</div>
+                <div className="form-panel active flex flex-col items-center bg-white dark:bg-slate-900 rounded-[24px] p-2 relative">
+                  
+                  {/* Close button inside modal (top right) */}
+                  <button 
+                    onClick={() => setShowAuthForm(false)} 
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </button>
+
+                  {/* Icon */}
+                  <div className="w-16 h-16 rounded-full bg-[#6d28d9] text-white flex items-center justify-center mt-2 mb-5 shadow-[0_4px_20px_rgba(109,40,217,0.3)]">
+                    <LogIn size={28} strokeWidth={2.5} />
+                  </div>
+                  
+                  {/* Headings */}
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Welcome Back</h2>
+                  <p className="text-sm font-medium text-slate-400 dark:text-slate-500 mb-8">Login to your account</p>
+
+                  <form onSubmit={handleLogin} noValidate className="w-full">
+                    <div className="mb-5 w-full">
+                      <label className="block text-[13px] font-bold text-slate-800 dark:text-slate-200 mb-2 text-left">Email Address</label>
+                      <input 
+                        type="email" 
+                        placeholder="you@example.com" 
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                        className={`w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-white/10 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-[#6d28d9] focus:ring-4 focus:ring-[#6d28d9]/10 transition-all font-medium text-[15px] placeholder-slate-400 ${errors.loginEmail ? 'border-red-500' : ''}`}
+                      />
+                      <div className="text-xs text-red-500 mt-1.5 text-left font-medium min-h-[16px]">{errors.loginEmail}</div>
                     </div>
-                    <div className="input-group">
-                      <div className="flex justify-between items-center">
-                        <label>{t('password') || 'Password'}</label>
-                        <button type="button" className="forgot-btn" onClick={() => switchTab('forgot')}>
-                          {t('forgot_password') || 'Forgot Password?'}
-                        </button>
+
+                    <div className="mb-5 w-full">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-[13px] font-bold text-slate-800 dark:text-slate-200 text-left">Password</label>
                       </div>
-                      <div className="input-wrapper">
-                        <Lock className="input-icon" size={18} />
+                      <div className="relative">
                         <input 
                           type={showPassword.login ? 'text' : 'password'} 
-                          placeholder="••••••••" 
+                          placeholder="Enter your password" 
                           value={loginData.password}
                           onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                          className={`dark:bg-eas-dark dark:border-white/5 dark:text-white ${errors.loginPassword ? 'input-error' : ''}`}
+                          className={`w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-white/10 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-[#6d28d9] focus:ring-4 focus:ring-[#6d28d9]/10 transition-all font-medium text-[15px] placeholder-slate-400 ${errors.loginPassword ? 'border-red-500' : ''}`}
                         />
-                        <button type="button" className="toggle-password" onClick={() => togglePassword('login')}>
-                          <i className={`fas ${showPassword.login ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                        <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#6d28d9] transition-colors" onClick={() => togglePassword('login')}>
+                          {showPassword.login ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
-                      <div className="error-message">{errors.loginPassword}</div>
+                      <div className="text-xs text-red-500 mt-1.5 text-left font-medium min-h-[16px]">{errors.loginPassword}</div>
                     </div>
-                    <div className="flex items-center justify-between py-1">
-                      <label className="remember-me">
+
+                    <div className="flex items-center justify-between mb-6">
+                      <label className="flex items-center gap-2.5 cursor-pointer group">
                         <input 
                           type="checkbox" 
                           checked={loginData.rememberMe}
                           onChange={(e) => setLoginData({...loginData, rememberMe: e.target.checked})}
+                          className="peer sr-only"
                         />
-                        <span className="custom-checkbox">✓</span>
-                        <span className="checkbox-label text-xs font-bold text-slate-600 dark:text-slate-400">{t('remember_me') || 'Remember Me'}</span>
+                        <div className="w-5 h-5 rounded-[6px] border-2 border-slate-300 dark:border-slate-600 peer-checked:bg-[#6d28d9] peer-checked:border-[#6d28d9] flex items-center justify-center transition-all bg-white dark:bg-slate-800">
+                          <Check size={14} strokeWidth={3} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                        </div>
+                        <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">Remember me</span>
                       </label>
+                      <button type="button" className="text-[13px] font-bold text-slate-500 hover:text-[#6d28d9] transition-colors" onClick={() => switchTab('forgot')}>
+                        Forgot Password?
+                      </button>
                     </div>
-                    <button type="submit" className={`btn-submit ${loading ? 'loading' : ''}`} disabled={loading}>
-                      <span className="btn-text">{t('sign_in') || 'Sign In'}</span>
-                      <span className="spinner"></span>
+
+                    <button type="submit" className={`w-full bg-[#6d28d9] hover:bg-[#5b21b6] active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-base ${loading ? 'opacity-80 cursor-wait' : ''}`} disabled={loading}>
+                      {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Login'}
                     </button>
                   </form>
+
+                  <div className="w-full flex items-center gap-4 my-6">
+                    <div className="flex-1 h-[1px] bg-slate-200 dark:bg-slate-800"></div>
+                    <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 tracking-wider">OR</span>
+                    <div className="flex-1 h-[1px] bg-slate-200 dark:bg-slate-800"></div>
+                  </div>
+
+                  <div className="w-full mb-6 relative z-50 overflow-hidden" id="google-button-official">
+                    {/* Google button renders here */}
+                  </div>
+
+                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400 pb-2">
+                    Don't have an account? <button type="button" onClick={() => switchTab('signup')} className="text-[#6d28d9] font-bold hover:underline cursor-pointer bg-transparent border-none p-0 ml-1">Register</button>
+                  </div>
                 </div>
-              )}
+                )}
 
               {currentTab === 'signup' && (
                 <div className="form-panel active">
