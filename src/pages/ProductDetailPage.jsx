@@ -1003,7 +1003,8 @@ const ProductDetailPage = () => {
                   )}
                 </button>
                 
-                <button 
+                <div className="flex-1 flex flex-col gap-4">
+                  <button 
                   onClick={(e) => toggleWishlist(product.id, e)}
                   className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2"
                 >
@@ -1061,6 +1062,7 @@ const ProductDetailPage = () => {
                   <Share2 size={20} strokeWidth={2.5} />
                   <span>Share</span>
                 </button>
+                </div>
               </div>
             </div>
 
