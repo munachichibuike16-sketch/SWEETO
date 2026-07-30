@@ -92,9 +92,9 @@ export default function NotificationsContent({ onProductClick }) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#030712] font-sans relative">
-      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-20">
+      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-20 pt-4 md:pt-6">
         
-        <div className="sticky top-[80px] md:top-[96px] z-30 bg-gray-50/95 dark:bg-[#030712]/95 backdrop-blur-xl flex items-center justify-between py-6 border-b border-gray-200 dark:border-gray-800/60 mb-6 transition-all duration-300">
+        <div className="sticky top-4 md:top-6 z-30 bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm flex items-center justify-between px-6 md:px-8 py-4 md:py-5 mb-8 transition-all duration-300">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
             <Bell className="w-7 h-7 text-indigo-600 fill-indigo-600 dark:text-indigo-500 dark:fill-indigo-500" /> Notifications
           </h1>
