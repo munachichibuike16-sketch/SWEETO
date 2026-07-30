@@ -724,7 +724,7 @@ const ProductDetailPage = () => {
           <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none" />
         </button>
 
-        {/* Top-right: Zoom & Share Buttons */}
+        {/* Top-right: Zoom Buttons */}
         <div className="absolute top-4 right-4 flex items-center gap-2.5 z-20">
           <button 
             onClick={() => {
@@ -735,12 +735,6 @@ const ProductDetailPage = () => {
           >
             <Search size={18} className="pointer-events-none" />
           </button>
-          <button 
-            onClick={shareProduct} 
-            className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
-          >
-            <Share2 size={18} className="pointer-events-none" />
-          </button>
         </div>
 
         {/* Bottom-left: Slide Indicator Pill */}
@@ -748,17 +742,26 @@ const ProductDetailPage = () => {
           Item {activeImageIndex + 1}/{imagesList.length}
         </div>
 
-        {/* Bottom-right: Wishlist Heart Button */}
-        <button 
-          onClick={() => toggleWishlist(product)} 
-          className={`absolute bottom-14 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer z-20 ${
-            isInWishlist(product.id)
-              ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30'
-              : 'bg-white/95 dark:bg-slate-800/90 border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-[#ff3b30]'
-          }`}
-        >
-          <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
-        </button>
+        {/* Bottom-right: Wishlist & Share Buttons */}
+        <div className="absolute bottom-14 right-4 flex flex-col gap-2 z-20">
+          <button 
+            onClick={() => toggleWishlist(product)} 
+            className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer ${
+              isInWishlist(product.id)
+                ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30'
+                : 'bg-white/95 dark:bg-slate-800/90 border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-[#ff3b30]'
+            }`}
+          >
+            <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+          </button>
+          
+          <button 
+            onClick={shareProduct} 
+            className="w-10 h-10 rounded-full shadow-lg bg-white/95 dark:bg-slate-800/90 border border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-blue-500 flex items-center justify-center transition-all cursor-pointer"
+          >
+            <Share2 size={18} className="pointer-events-none" />
+          </button>
+        </div>
       </div>
 
       <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 -mt-10 lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
