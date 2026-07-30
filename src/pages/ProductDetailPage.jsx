@@ -743,9 +743,13 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Bottom-right: Wishlist & Share Buttons */}
-        <div className="absolute bottom-14 right-4 flex flex-col gap-2 z-20">
+        <div className="absolute bottom-20 right-4 flex flex-col gap-3 z-50">
           <button 
-            onClick={() => toggleWishlist(product)} 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleWishlist(product);
+            }} 
             className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer ${
               isInWishlist(product.id)
                 ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30'
@@ -756,8 +760,12 @@ const ProductDetailPage = () => {
           </button>
           
           <button 
-            onClick={shareProduct} 
-            className="w-10 h-10 rounded-full shadow-lg bg-white/95 dark:bg-slate-800/90 border border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-blue-500 flex items-center justify-center transition-all cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              shareProduct();
+            }} 
+            className="w-10 h-10 rounded-full shadow-lg bg-white/95 dark:bg-slate-800/90 border border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-blue-500 flex items-center justify-center transition-all cursor-pointer relative z-50"
           >
             <Share2 size={18} className="pointer-events-none" />
           </button>
