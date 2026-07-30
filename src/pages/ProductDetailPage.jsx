@@ -959,54 +959,76 @@ const ProductDetailPage = () => {
               )}
 
               {/* Quantity selector (Desktop) */}
-              <div className="flex items-center gap-6">
-                <span className="text-xs uppercase tracking-wider font-black text-slate-400">Quantity:</span>
-                <div className="flex items-center border border-slate-200 dark:border-slate-850 rounded-full px-2 py-1 select-none bg-slate-50/50 dark:bg-slate-950/20">
+              <div className="flex items-center gap-4">
+                <span className="text-base font-semibold text-slate-600 dark:text-slate-400">Quantity:</span>
+                <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-3xl px-3 py-1.5 select-none bg-white dark:bg-slate-900 shadow-sm">
                   <button 
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer border-none bg-transparent"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer border-none bg-transparent"
                   >
-                    <Minus size={13} strokeWidth={3} />
+                    <Minus size={16} strokeWidth={2.5} />
                   </button>
-                  <span className="text-xs font-black text-slate-800 dark:text-white px-4 min-w-[32px] text-center">{quantity}</span>
+                  <span className="text-base font-bold text-slate-900 dark:text-white px-5 min-w-[32px] text-center">{quantity}</span>
                   <button 
                     onClick={() => setQuantity(q => q + 1)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer border-none bg-transparent"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer border-none bg-transparent"
                   >
-                    <Plus size={13} strokeWidth={3} />
+                    <Plus size={16} strokeWidth={2.5} />
                   </button>
                 </div>
                 {product.stock !== undefined && (
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">
-                    ({product.stock} items available)
+                  <span className="text-sm text-emerald-500 font-medium">
+                    {product.stock} available
                   </span>
                 )}
               </div>
 
               {/* Action Buttons (Desktop) */}
-              <div className="flex gap-4 pt-2">
+              <div className="flex gap-4 pt-4">
                 <button 
                   onClick={() => addToCart(product, quantity)}
                   disabled={isAdding}
-                  className="flex-1 py-3.5 px-6 bg-[#ff9500] hover:bg-[#e08200] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center border-none flex items-center justify-center gap-2 disabled:opacity-85"
+                  className="flex-[1.2] py-4 px-6 bg-black hover:bg-slate-900 dark:bg-white dark:hover:bg-slate-100 dark:text-black text-white font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border-none flex items-center justify-center gap-3 disabled:opacity-85"
                 >
                   {isAdding ? (
                     <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>{lang === 'fr' ? 'Ajout... 🛒' : 'Adding... 🛒'}</span>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>{lang === 'fr' ? 'Ajout...' : 'Adding...'}</span>
                     </>
                   ) : (
-                    <span>{lang === 'fr' ? 'Ajouter au Panier' : 'Add to Cart'}</span>
+                    <>
+                      <ShoppingCart size={20} strokeWidth={2.5} />
+                      <span>{lang === 'fr' ? 'Ajouter au Panier' : 'Add to Cart'}</span>
+                    </>
                   )}
                 </button>
+                
+                <button 
+                  onClick={(e) => toggleWishlist(product.id, e)}
+                  className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2"
+                >
+                  <Heart 
+                    size={20} 
+                    strokeWidth={2.5} 
+                    className={wishlist.includes(product.id) ? "fill-[#e61e25] text-[#e61e25]" : ""}
+                  />
+                  <span>Wishlist</span>
+                </button>
+
                 <button 
                   onClick={() => {
-                    addToCart(product, quantity);
-                    navigate('/checkout');
+                    if (navigator.share) {
+                      navigator.share({
+                        title: product.name,
+                        text: product.description,
+                        url: window.location.href,
+                      });
+                    }
                   }}
-                  className="flex-1 py-3.5 px-6 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center border-none"
+                  className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2"
                 >
-                  Buy Now
+                  <Share2 size={20} strokeWidth={2.5} />
+                  <span>Share</span>
                 </button>
               </div>
             </div>
