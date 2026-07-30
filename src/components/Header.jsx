@@ -658,6 +658,7 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
                 setSelectedCategory(null);
                 setSelectedBrand(null);
                 navigate('/');
+                window.scrollTo(0, 0);
               }}
               className="flex items-center cursor-pointer"
             >
@@ -988,6 +989,7 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
                 setSelectedCategory(null);
                 setSelectedBrand(null);
                 navigate('/');
+                window.scrollTo(0, 0);
               }}
               className="flex items-center select-none cursor-pointer group shrink-0"
             >
