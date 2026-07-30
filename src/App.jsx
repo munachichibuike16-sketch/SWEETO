@@ -1049,8 +1049,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
                         })()}
                       </div>
 
-                      {/* Parent Category Pills */}
-                      {renderHomepageCategoryPills()}
+                      {/* Parent Category Pills Removed As Requested */}
 
                       {/* Today's Offers (Deal of the Day) */}
                       <DealOfTheDaySection 
