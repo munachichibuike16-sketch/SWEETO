@@ -1230,8 +1230,6 @@ const Storefront = ({ viewMode: propViewMode }) => {
           </div>
 
         </main>
-        <Footer />
-
 
       </motion.div>
       
