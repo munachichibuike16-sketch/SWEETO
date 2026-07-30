@@ -987,15 +987,17 @@ const Storefront = ({ viewMode: propViewMode }) => {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark relative">
-      <Header 
-        onMenuClick={() => setIsSidebarOpen(true)} 
-        onStoreClick={() => setIsStoreSidebarOpen(true)}
-        onCartClick={() => setIsCartOpen(true)}
-      />
+      {viewMode !== 'notifications' && (
+        <Header 
+          onMenuClick={() => setIsSidebarOpen(true)} 
+          onStoreClick={() => setIsStoreSidebarOpen(true)}
+          onCartClick={() => setIsCartOpen(true)}
+        />
+      )}
       <motion.div 
         initial={false}
         className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark flex flex-col origin-center transition-colors duration-300"
-        style={{ paddingTop: 'var(--header-height, 96px)' }}
+        style={{ paddingTop: viewMode === 'notifications' ? '0px' : 'var(--header-height, 96px)' }}
       >
         
         <main className="flex-1 pb-20">
