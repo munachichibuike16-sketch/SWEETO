@@ -107,7 +107,7 @@ const VisitUs = () => {
   const waUrl = phoneDigits ? `https://wa.me/${phoneDigits}` : '#';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 sm:pt-28 pb-16 font-sans text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-6 sm:pt-8 pb-16 font-sans text-slate-900 dark:text-slate-100 transition-colors">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
         
         {/* Back Button */}
