@@ -16,19 +16,26 @@ export default function FlashyDealsSection({ section }) {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
+    let animationFrameId;
     let scrollAmount = 0;
-    const slide = () => {
-      if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
-        scrollContainer.scrollLeft = 0;
-        scrollAmount = 0;
-      } else {
-        scrollAmount += 1;
-        scrollContainer.scrollLeft = scrollAmount;
+    let lastTime = 0;
+    
+    const slide = (currentTime) => {
+      if (currentTime - lastTime >= 30) {
+        if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth - 1) {
+          scrollContainer.scrollLeft = 0;
+          scrollAmount = 0;
+        } else {
+          scrollAmount += 1;
+          scrollContainer.scrollLeft = scrollAmount;
+        }
+        lastTime = currentTime;
       }
+      animationFrameId = requestAnimationFrame(slide);
     };
 
-    const interval = setInterval(slide, 30);
-    return () => clearInterval(interval);
+    animationFrameId = requestAnimationFrame(slide);
+    return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
   return (
