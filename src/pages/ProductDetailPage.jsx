@@ -182,6 +182,21 @@ const ProductDetailPage = () => {
     }
   }, [productId, liveProducts, navigate]);
 
+  const { variantLabel, hasVariants } = React.useMemo(() => {
+    let label = 'Variant';
+    let enabled = false;
+    if (product?.description && product.description.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(product.description);
+        if (parsed.variantsConfig) {
+          label = parsed.variantsConfig.label || 'Variant';
+          enabled = parsed.variantsConfig.enabled || false;
+        }
+      } catch (e) {}
+    }
+    return { variantLabel: label, hasVariants: enabled };
+  }, [product]);
+
   useEffect(() => {
     if (product) {
       const list = getImagesList(product);
@@ -325,20 +340,7 @@ const ProductDetailPage = () => {
 
   const mobileCarouselRef = useRef(null);
 
-  const { variantLabel, hasVariants } = React.useMemo(() => {
-    let label = 'Variant';
-    let enabled = false;
-    if (product?.description && product.description.trim().startsWith('{')) {
-      try {
-        const parsed = JSON.parse(product.description);
-        if (parsed.variantsConfig) {
-          label = parsed.variantsConfig.label || 'Variant';
-          enabled = parsed.variantsConfig.enabled || false;
-        }
-      } catch (e) {}
-    }
-    return { variantLabel: label, hasVariants: enabled };
-  }, [product]);
+
 
 
   useEffect(() => {
