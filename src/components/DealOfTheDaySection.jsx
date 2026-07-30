@@ -206,7 +206,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                   const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
                   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : null;
 
-                  const widthClass = isExpanded ? "w-full" : "min-w-[calc(33.333%-8px)]";
+                  const widthClass = isExpanded ? "w-full" : "min-w-[calc(60%-8px)]";
                   const isWished = isInWishlist(product.id);
 
                   const handleToggleWishlist = (e) => {
@@ -448,7 +448,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                       navigate('/deals');
                       window.scrollTo(0, 0);
                     }}
-                    className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] sm:min-w-[calc(33.333%-11px)] lg:w-[calc(25%-18px)] lg:min-w-[calc(25%-18px)] xl:w-[calc(16.666%-20px)] xl:min-w-[calc(16.666%-20px)] shrink-0 snap-start bg-transparent border-0 flex flex-col justify-between relative group cursor-pointer select-none h-full text-left"
+                    className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] sm:min-w-[calc(33.333%-11px)] md:w-[calc(25%-18px)] md:min-w-[calc(25%-18px)] xl:w-[calc(20%-18px)] xl:min-w-[calc(20%-18px)] shrink-0 snap-start bg-transparent border-0 flex flex-col justify-between relative group cursor-pointer select-none h-full text-left"
                   >
                     {/* Image Area */}
                     <div className="w-full aspect-square bg-[#f4f4f4] dark:bg-slate-905 rounded-2xl flex items-center justify-center p-1 relative overflow-hidden group-hover:scale-[1.01] transition-transform mb-2.5">
