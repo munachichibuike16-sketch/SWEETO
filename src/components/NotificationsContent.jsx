@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Package, Tag, AlertCircle, CheckCircle2, Trash2, X, Sparkles } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function NotificationsContent({ onProductClick }) {
+  const navigate = useNavigate();
   const { products, settings } = useStore();
   const { lang } = useLanguage();
   
@@ -92,23 +94,17 @@ export default function NotificationsContent({ onProductClick }) {
     <div className="min-h-screen bg-gray-50 dark:bg-[#030712] font-sans relative">
       <div className="max-w-2xl mx-auto px-4 md:px-8 pb-20">
         
-        {/* Sticky Header Section */}
         <div className="sticky top-[80px] md:top-[96px] z-30 bg-gray-50/95 dark:bg-[#030712]/95 backdrop-blur-xl flex items-center justify-between py-6 border-b border-gray-200 dark:border-gray-800/60 mb-6 transition-all duration-300">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Bell className="w-6 h-6" /> Notifications
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <Bell className="w-7 h-7 text-indigo-600 fill-indigo-600 dark:text-indigo-500 dark:fill-indigo-500" /> Notifications
           </h1>
-          <div className="flex items-center gap-3">
-            <span className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-medium">
-              {unreadCount} New
-            </span>
-            {notifications.length > 0 && (
-              <button 
-                onClick={clearAll}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors bg-white dark:bg-gray-900 px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-red-200 shadow-sm"
-              >
-                <X className="w-4 h-4" /> Clear All
-              </button>
-            )}
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+            >
+              <X className="w-6 h-6 stroke-[2.5]" />
+            </button>
           </div>
         </div>
 
