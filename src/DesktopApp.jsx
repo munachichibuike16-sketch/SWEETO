@@ -11,7 +11,6 @@ import WishlistContent from './components/WishlistContent';
 import Sidebar from './components/Sidebar';
 import Hero from './components/Hero';
 
-import Footer from './components/Footer';
 import DealOfTheDaySection from './components/DealOfTheDaySection';
 import { supabase } from './lib/supabase';
 
@@ -1317,8 +1316,6 @@ export default function DesktopApp() {
         </div>
       )}
 
-
-      <Footer />
     </div>
   );
 }
