@@ -1016,13 +1016,44 @@ const ProductDetailPage = () => {
                 </button>
 
                 <button 
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
+                  onClick={async () => {
+                    try {
+                      const shareData = {
                         title: product.name,
-                        text: product.description,
+                        text: product.description || `Check out ${product.name}!`,
                         url: window.location.href,
-                      });
+                      };
+
+                      let imageToShare = product.image;
+                      if (!imageToShare && product.images) {
+                        imageToShare = product.images.startsWith('[') ? JSON.parse(product.images)[0] : product.images.split(',')[0];
+                      }
+
+                      if (navigator.canShare && imageToShare) {
+                        try {
+                          const response = await fetch(imageToShare);
+                          const blob = await response.blob();
+                          const file = new File([blob], 'product.jpg', { type: blob.type });
+                          
+                          const dataWithFiles = { ...shareData, files: [file] };
+                          
+                          if (navigator.canShare(dataWithFiles)) {
+                            await navigator.share(dataWithFiles);
+                            return;
+                          }
+                        } catch (err) {
+                          console.warn('Could not fetch image for sharing:', err);
+                        }
+                      }
+
+                      if (navigator.share) {
+                        await navigator.share(shareData);
+                      } else {
+                        await navigator.clipboard.writeText(window.location.href);
+                        showToast('Link copied to clipboard!');
+                      }
+                    } catch (error) {
+                      console.error('Error sharing:', error);
                     }
                   }}
                   className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2"
