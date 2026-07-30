@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Package, Heart, LayoutGrid, ChevronRight } from 'lucide-react';
+import { X, Package, Heart, LayoutGrid, ChevronRight, Info, FileText, Shield, RefreshCcw } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,6 +46,42 @@ const StoreSidebar = ({ isOpen, onClose, onCategoryClick }) => {
       onClick: () => {
         onClose();
         if (onCategoryClick) onCategoryClick();
+      }
+    },
+    {
+      id: 'about',
+      label: lang === 'fr' ? 'À Propos' : 'ABOUT US',
+      icon: <Info size={20} />,
+      onClick: () => {
+        navigate('/visit');
+        onClose();
+      }
+    },
+    {
+      id: 'terms',
+      label: lang === 'fr' ? 'Conditions' : 'TERMS',
+      icon: <FileText size={20} />,
+      onClick: () => {
+        navigate('/terms');
+        onClose();
+      }
+    },
+    {
+      id: 'privacy',
+      label: lang === 'fr' ? 'Confidentialité' : 'PRIVACY',
+      icon: <Shield size={20} />,
+      onClick: () => {
+        navigate('/privacy');
+        onClose();
+      }
+    },
+    {
+      id: 'refund',
+      label: lang === 'fr' ? 'Remboursement' : 'REFUND',
+      icon: <RefreshCcw size={20} />,
+      onClick: () => {
+        navigate('/refund');
+        onClose();
       }
     }
   ];
