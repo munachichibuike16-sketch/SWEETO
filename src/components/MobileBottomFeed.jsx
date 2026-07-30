@@ -55,93 +55,12 @@ export default function MobileBottomFeed({ settings, products = [], categories =
     return sortedProducts.filter(p => p.category === activeTab);
   }, [products, activeTab, forYouText]);
 
-  useEffect(() => {
-    if (!isEnabled || tabsList.length <= 1) return;
-    if (window.innerWidth >= 1024) return;
-
-    const header = document.querySelector('header');
-    const feedPills = document.getElementById('mobile-bottom-feed-pills');
-    const sentinel = document.getElementById('mobile-bottom-feed-sentinel');
-    
-    if (!header || !feedPills || !sentinel) return;
-
-    const H = header.offsetHeight || 96;
-
-    const handleScroll = () => {
-      const rect = sentinel.getBoundingClientRect();
-      const H_dynamic = header.offsetHeight || H;
-      
-      // Push header up as sentinel reaches the top
-      const translateY = Math.max(-H_dynamic, Math.min(0, rect.top - H_dynamic));
-      
-      header.style.transform = `translateY(${translateY}px)`;
-      if (translateY === 0) {
-        header.style.transition = '';
-      } else {
-        header.style.transition = 'none';
-      }
-
-      // When sentinel is above the viewport (meaning pills are sticking at top: 0)
-      if (rect.top <= 0) {
-        feedPills.classList.add('backdrop-blur-xl', 'bg-white/80', 'dark:bg-slate-950/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.1)]');
-        feedPills.classList.remove('bg-eas-light', 'dark:bg-eas-dark');
-      } else {
-        feedPills.classList.remove('backdrop-blur-xl', 'bg-white/80', 'dark:bg-slate-950/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.1)]');
-        feedPills.classList.add('bg-eas-light', 'dark:bg-eas-dark');
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (header) {
-        header.style.transform = '';
-        header.style.transition = '';
-      }
-      if (feedPills) {
-        feedPills.classList.remove('backdrop-blur-xl', 'bg-white/80', 'dark:bg-slate-950/80', 'shadow-[0_8px_32px_rgba(0,0,0,0.1)]');
-        feedPills.classList.add('bg-eas-light', 'dark:bg-eas-dark');
-      }
-    };
-  }, [isEnabled, tabsList]);
-
   if (!isEnabled) return null;
   if (tabsList.length <= 1) return null;
 
   return (
     <div className="w-full px-4 pb-12 select-none block lg:hidden">
-      {/* Sentinel to measure true scroll offset without being blocked by sticky positioning */}
-      <div id="mobile-bottom-feed-sentinel" className="h-0 w-full bg-transparent" />
-      
-      {/* Horizontal Scrollable Tabs */}
-      <div 
-        id="mobile-bottom-feed-pills"
-        className="w-[calc(100%+2rem)] -mx-4 flex gap-2.5 overflow-x-auto no-scrollbar py-2.5 px-4 select-none bg-eas-light dark:bg-eas-dark transition-colors duration-300 border-b border-transparent sticky top-0 z-[100]"
-      >
-        {tabsList.map(tab => {
-          const isSelected = activeTab === tab;
-          return (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`px-4.5 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 whitespace-nowrap shrink-0 border flex items-center gap-1.5 active:scale-[0.93] cursor-pointer ${
-                isSelected
-                  ? 'backdrop-blur-xl bg-gradient-to-r from-cyan-500/90 to-blue-600/90 text-white border-cyan-400/30 shadow-[0_8px_24px_rgba(6,182,212,0.3)] font-black scale-[1.02]'
-                  : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:bg-white dark:hover:bg-slate-900'
-              }`}
-            >
-              <span>{getTabEmoji(tab)}</span>
-              <span>{tab === forYouText ? tab : t_smart(tab)}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Spacer to prevent layout jump when pills become fixed */}
-      <div id="mobile-bottom-feed-spacer" style={{ display: 'none' }} className="w-full mb-4" />
+      <div className="pt-4" />
 
       {/* Two Column Product Grid */}
       {feedProducts.length > 0 ? (
