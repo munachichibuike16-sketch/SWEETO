@@ -30,7 +30,6 @@ import VisitUs from './pages/VisitUs';
 import ChatPage from './pages/ChatPage';
 import CustomerSupportPage from './pages/CustomerSupportPage';
 import LegalPage from './pages/LegalPage';
-import LanguageSwitcher from './components/LanguageSwitcher';
 import WavePayPage from './pages/WavePayPage';
 import { getCategoryDescendants } from './utils/categoryHelpers';
 import ScrollToTop from './components/ScrollToTop';
