@@ -125,7 +125,22 @@ export default function NotificationsContent({ onProductClick }) {
                 }`}
               >
                 <div className="flex gap-4">
-                  <div className="mt-1">{getIcon(notif.type)}</div>
+                  <div className="mt-1 flex-shrink-0">
+                    {notif.originalProduct ? (
+                      <img 
+                        src={
+                          notif.originalProduct.image || 
+                          (notif.originalProduct.images ? 
+                            (notif.originalProduct.images.startsWith('[') ? JSON.parse(notif.originalProduct.images)[0] : notif.originalProduct.images.split(',')[0])
+                          : '')
+                        }
+                        alt={notif.title}
+                        className="w-14 h-14 object-cover rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm"
+                      />
+                    ) : (
+                      getIcon(notif.type)
+                    )}
+                  </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
                       <h3 className={`font-semibold ${!notif.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
