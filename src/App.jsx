@@ -14,6 +14,7 @@ import ProductCard from './components/ProductCard';
 import CartDrawer from './components/CartDrawer';
 
 import WishlistContent from './components/WishlistContent';
+import FlashyDealsSection from './components/FlashyDealsSection';
 import NotificationsContent from './components/NotificationsContent';
 import StoreContent from './components/StoreContent';
 import DealsContent from './components/DealsContent';
@@ -666,6 +667,8 @@ const Storefront = ({ viewMode: propViewMode }) => {
         );
       case 'video_ad':
         return <VideoAdSection key={key} adIndex={idx} section={section} />;
+      case 'flashy_deals':
+        return <FlashyDealsSection key={key} section={section} />;
 
       case 'dealOfDay':
       case 'deal_of_the_day':

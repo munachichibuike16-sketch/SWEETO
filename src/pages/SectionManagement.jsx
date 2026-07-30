@@ -21,6 +21,7 @@ const ROLES = [
   { key: 'speakersPlacement',      label: 'Speakers',        icon: Speaker,     color: 'fuchsia' },
   { key: 'refrigeratorsPlacement', label: 'Refrigerators',   icon: Snowflake,   color: 'cyan'    },
   { key: 'flashSale',              label: 'Flash Sale',      icon: Flame,       color: 'orange'  },
+  { key: 'flashy_deals',           label: 'Flashy Deals',    icon: Zap,         color: 'yellow'  },
   { key: 'giftIdeas',              label: 'Gift Ideas',      icon: Gift,        color: 'pink'    },
   { key: 'custom',                 label: 'Custom',          icon: Layers,      color: 'slate'   },
 ];
@@ -35,6 +36,7 @@ const BRIGHT_ROLES = [
   { key: 'bright_featured',        label: 'Featured Products Grid',icon: Star,        color: 'amber'   },
   { key: 'bright_trending',        label: 'Trending Products Grid',icon: TrendingUp,  color: 'rose'    },
   { key: 'bright_promo_banners',   label: 'Bottom Promo Banners',  icon: Flame,       color: 'orange'  },
+  { key: 'flashy_deals',           label: 'Flashy Deals',          icon: Zap,         color: 'yellow'  },
   { key: 'bright_trust_badges',    label: 'Trust Badges Row',      icon: ShieldCheck, color: 'pink'    },
   { key: 'bright_custom',          label: 'Custom Section',        icon: Layers,      color: 'slate'   },
 ];
