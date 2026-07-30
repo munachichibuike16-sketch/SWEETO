@@ -1010,7 +1010,7 @@ const ProductDetailPage = () => {
                   <Heart 
                     size={20} 
                     strokeWidth={2.5} 
-                    className={wishlist.includes(product.id) ? "fill-[#e61e25] text-[#e61e25]" : ""}
+                    className={isInWishlist(product.id) ? "fill-[#e61e25] text-[#e61e25]" : ""}
                   />
                   <span>Wishlist</span>
                 </button>
