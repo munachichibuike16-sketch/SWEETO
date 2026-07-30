@@ -62,7 +62,7 @@ const ProductRow = ({ products, onProductClick, type, isMobile }) => {
   };
 
   return (
-    <div className="relative group/row mb-2 md:mb-8 px-1 md:px-0">
+    <div className="relative group/row mb-2 md:mb-8 px-0 md:px-0">
       {products.length > 2 && (
         <>
           <button 
@@ -316,7 +316,7 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
 
       {isCarousel ? (
         isMobile && isExpanded ? (
-          <div className="grid grid-cols-2 gap-1.5 px-1 w-full pb-4 animate-fadeIn">
+          <div className="grid grid-cols-2 gap-1.5 px-0 w-full pb-4 animate-fadeIn">
             {filteredProducts.slice(0, 4).map((product, idx) => (
               <ProductCard
                 key={`${product.id}-${idx}`}
@@ -330,7 +330,7 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
           <ProductRow products={filteredProducts} onProductClick={onProductClick} type={type} isMobile={isMobile} />
         )
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-4 px-1 md:px-0 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-4 px-0 md:px-0 w-full">
           {filteredProducts.map((product, idx) => (
             <ProductCard
               key={`${product.id}-${idx}`}

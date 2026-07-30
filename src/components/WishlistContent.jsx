@@ -85,7 +85,7 @@ const WishlistContent = ({ onProductClick }) => {
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#ff3b30]/5 rounded-full blur-3xl -z-10" />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-x-8 sm:gap-y-16 px-1 md:px-0">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-x-8 sm:gap-y-16 px-0 md:px-0">
         {wishlistItems.map((product, idx) => (
           <ProductCard 
             key={`${product.id}-${idx}`} 

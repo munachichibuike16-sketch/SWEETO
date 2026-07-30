@@ -381,12 +381,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <Heart size={13} fill={isWished ? "currentColor" : "none"} />
               </button>
             )}
-            <button 
-              onClick={handleShareProduct}
-              className="w-7.5 h-7.5 rounded-full shadow-md flex items-center justify-center transition-all duration-300 backdrop-blur-md border bg-white/75 dark:bg-slate-900/75 border-slate-200/40 dark:border-slate-800/40 text-slate-700 dark:text-slate-355 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] hover:scale-105 cursor-pointer"
-            >
-              <Share2 size={13} />
-            </button>
+
           </div>
 
           {/* Cart Button (Floating overlay inside image container bottom-right, AliExpress style) */}
@@ -476,38 +471,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
           </div>
         ) : (
           <div className="flex flex-col flex-1 py-0.5 text-start">
-            {/* Sold Count with Red Flame and Views Count */}
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs sm:text-[13px] font-extrabold mb-1">
-              <span className="text-[#ff3b30] flex items-center gap-1">
-                <span>🔥</span>
-                <span>
-                  {getSoldCount(product) > 0 ? `${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'vendus' : 'sold'}
-                </span>
-              </span>
-              <span className="text-slate-350 dark:text-slate-700">•</span>
-              <span className="text-blue-500 dark:text-blue-400 flex items-center gap-1 font-black">
-                <span>👁️</span>
-                <span>
-                  {productViewsMap[product.id] || 0} {lang === 'fr' ? 'vues' : 'views'}
-                </span>
-              </span>
-              <span className="text-slate-350 dark:text-slate-700">•</span>
-              <span className="text-rose-550 dark:text-rose-450 flex items-center gap-1 font-black">
-                <span>❤️</span>
-                <span>
-                  {productLikesMap[product.id] || 0} {lang === 'fr' ? 'likes' : 'likes'}
-                </span>
-              </span>
-              {reviews.length > 0 && (
-                <>
-                  <span className="text-slate-350 dark:text-slate-700">•</span>
-                  <div className="flex items-center gap-0.5 text-amber-500 font-bold">
-                    <Star size={11} fill="currentColor" />
-                    <span>{averageRating}</span>
-                  </div>
-                </>
-              )}
-            </div>
+
 
             {/* Price & Discount Section */}
             <div className="flex items-center flex-wrap gap-2 mb-1">

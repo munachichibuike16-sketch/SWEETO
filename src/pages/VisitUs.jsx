@@ -1,331 +1,387 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
   Phone, 
   Clock, 
-  ArrowLeft, 
-  Globe, 
-  Navigation, 
-  MessageCircle,
-  ExternalLink,
-  ChevronRight,
-  ShieldCheck
+  Store, 
+  ArrowLeft,
+  Mail,
+  Navigation,
+  Share2,
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
-
-/* ─── CUSTOM SOCIAL ICONS ─── */
-const FacebookIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-  </svg>
-);
-
-const InstagramIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-    <circle cx="12" cy="12" r="4"/>
-    <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
-  </svg>
-);
-
-const TwitterIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.7 5.5 4.3 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
-  </svg>
-);
-
-const YoutubeIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
-    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>
-  </svg>
-);
-
-const TiktokIcon = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
-  </svg>
-);
 
 const VisitUs = () => {
   const { settings } = useStore();
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const [copyFeedback, setCopyFeedback] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleCopyToClipboard = (text, label) => {
-    navigator.clipboard.writeText(text).then(() => {
-      const isFr = lang === 'fr' || settings?.loc_country === 'Côte d’Ivoire';
-      setCopyFeedback(`${label} ${isFr ? 'copié !' : 'copied!'}`);
-      setTimeout(() => setCopyFeedback(''), 1500);
-    }).catch(() => {});
+  // Address and contacts
+  const shopName = settings?.shopName || 'Sucess Technology';
+  const address = settings?.loc_address || 'Douala, Cameroon';
+  const phone = settings?.loc_phone || '+237 6XX XXX XXX';
+  const email = settings?.contact_email || 'info@sucesstechnology.com';
+  const phoneClean = phone.replace(/\s/g, '');
+  const phoneDigits = phone.replace(/\D/g, '');
+  const description = settings?.shopDescription || 'Your trusted partner for premium technology products and exceptional service.';
+  const shopPhoto = settings?.loc_shop_photo || '';
+
+  // Hours
+  const weekdayHours = settings?.loc_hours_weekday || '09:00 - 18:00';
+  const satHours = settings?.loc_hours_sat || '09:00 - 17:00';
+  const sunHours = settings?.loc_hours_sun || 'Closed';
+
+  const checkIsOpen = () => {
+    const now = new Date();
+    const day = now.getDay();
+    const currentMin = now.getHours() * 60 + now.getMinutes();
+
+    const parseHours = (timeStr) => {
+      if (!timeStr || timeStr.toLowerCase().includes('closed')) return null;
+      const match = timeStr.match(/(\d+):(\d+)\s*-\s*(\d+):(\d+)/);
+      if (match) {
+        return {
+          start: parseInt(match[1]) * 60 + parseInt(match[2]),
+          end: parseInt(match[3]) * 60 + parseInt(match[4])
+        };
+      }
+      return null;
+    };
+
+    let todayHoursStr = weekdayHours;
+    if (day === 0) todayHoursStr = sunHours;
+    if (day === 6) todayHoursStr = satHours;
+
+    const todayHours = parseHours(todayHoursStr);
+    if (!todayHours) return false;
+
+    return currentMin >= todayHours.start && currentMin <= todayHours.end;
   };
 
-  const socialLinks = [
-    { icon: FacebookIcon, key: 'social_facebook', label: 'Facebook', bg: 'bg-[#1877F2]' },
-    { icon: InstagramIcon, key: 'social_instagram', label: 'Instagram', bg: 'bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]' },
-    { icon: TwitterIcon, key: 'social_twitter', label: 'Twitter', bg: 'bg-slate-900' },
-    { icon: YoutubeIcon, key: 'social_youtube', label: 'YouTube', bg: 'bg-[#FF0000]' },
-    { icon: TiktokIcon, key: 'social_tiktok', label: 'TikTok', bg: 'bg-black' },
-  ];
+  useEffect(() => {
+    setIsOpen(checkIsOpen());
+    const interval = setInterval(() => {
+      setIsOpen(checkIsOpen());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [weekdayHours, satHours, sunHours]);
 
-  const schedule = [
-    { day: 'Monday', hours: settings?.loc_hours_weekday || '09:00 - 18:00' },
-    { day: 'Tuesday', hours: settings?.loc_hours_weekday || '09:00 - 18:00' },
-    { day: 'Wednesday', hours: settings?.loc_hours_weekday || '09:00 - 18:00' },
-    { day: 'Thursday', hours: settings?.loc_hours_weekday || '09:00 - 18:00' },
-    { day: 'Friday', hours: settings?.loc_hours_weekday || '09:00 - 18:00' },
-    { day: 'Saturday', hours: settings?.loc_hours_sat || '09:00 - 17:00', highlight: true },
-    { day: 'Sunday', hours: settings?.loc_hours_sun || 'Closed', highlight: true },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
+  const handleShareLocation = () => {
+    const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+    if (navigator.share) {
+      navigator.share({
+        title: `Visit ${shopName}`,
+        text: `Find us at: ${address}`,
+        url: mapsUrl
+      }).catch(() => {
+        navigator.clipboard.writeText(mapsUrl);
+        showToast('📍 Location link copied!');
+      });
+    } else {
+      navigator.clipboard.writeText(mapsUrl);
+      showToast('📍 Location link copied!');
     }
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
+  const showToast = (message) => {
+    setCopyFeedback(message);
+    setTimeout(() => setCopyFeedback(''), 2500);
   };
 
-  return (
-    <div className="min-h-screen bg-eas-light dark:bg-eas-dark pt-24 pb-20 selection:bg-eas-blue/30 selection:text-eas-blue">
-      <div className="max-w-[1400px] mx-auto px-6 relative">
-        
-        {/* METICULOUS NAVIGATION */}
-        <div className="flex items-center justify-between mb-12">
-          <motion.button
-            whileHover={{ scale: 1.05, x: -5 }}
-            whileActive={{ scale: 0.95 }}
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 rounded-2xl shadow-xl shadow-eas-blue/5 dark:shadow-black/40 group transition-all"
-          >
-            <div className="w-8 h-8 rounded-xl bg-eas-blue/10 flex items-center justify-center text-eas-blue group-hover:bg-eas-blue group-hover:text-white transition-all">
-              <ArrowLeft size={18} />
-            </div>
-            <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white italic">Back</span>
-          </motion.button>
+  const socialLinks = [
+    { icon: 'fa-facebook', key: 'social_facebook', url: settings?.social_facebook },
+    { icon: 'fa-instagram', key: 'social_instagram', url: settings?.social_instagram },
+    { icon: 'fa-twitter', key: 'social_twitter', url: settings?.social_twitter },
+    { icon: 'fa-tiktok', key: 'social_tiktok', url: settings?.social_tiktok },
+    { icon: 'fa-youtube', key: 'social_youtube', url: settings?.social_youtube },
+  ].filter(s => s.url && s.url.trim() && s.url !== '#');
 
-          <div className="flex items-center gap-4 text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">
-            <span className="w-8 h-[2px] bg-eas-blue/30"></span>
-            {settings?.shopName || 'SWEETO HUB'} • OFFICIAL LOCATION
-            <span className="w-8 h-[2px] bg-eas-blue/30"></span>
+  const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+  const waUrl = phoneDigits ? `https://wa.me/${phoneDigits}` : '#';
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 sm:pt-28 pb-16 font-sans text-slate-900 dark:text-slate-100 transition-colors">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+        
+        {/* Back Button */}
+        <button 
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-2 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium text-sm"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-br from-[#0F172A] via-[#1a1a2e] to-[#16213e] rounded-[24px] mb-10 overflow-hidden grid grid-cols-1 lg:grid-cols-2 min-h-[350px] shadow-lg">
+          <div className="absolute -top-1/2 -right-1/4 w-[500px] h-[500px] bg-indigo-500/15 blur-[70px] rounded-full pointer-events-none" />
+          
+          <div className="p-8 sm:p-12 lg:p-14 relative z-10 flex flex-col justify-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-500/20 backdrop-blur-md rounded-2xl mb-6 text-indigo-400">
+              <MapPin size={32} />
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white tracking-tight mb-3">
+              Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">{shopName}</span>
+            </h1>
+            
+            <p className="text-white/70 text-base sm:text-lg leading-relaxed max-w-md mb-4">
+              We're here to help you with any questions or concerns. Reach out to us through any of the channels below.
+            </p>
+            
+            <div className="flex items-center gap-2 text-white/60 text-sm mt-3">
+              <MapPin size={16} className="text-indigo-500" />
+              <span>{address}</span>
+            </div>
+            
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/10 text-white/70 rounded-xl text-sm font-medium mt-4 w-fit">
+              <Clock size={16} className="text-emerald-500" />
+              <span>
+                Mon-Fri: {weekdayHours} | Sat: {satHours}
+              </span>
+            </div>
+          </div>
+          
+          <div className="relative overflow-hidden min-h-[200px] lg:min-h-full bg-white/5 flex items-center justify-center group">
+            {shopPhoto ? (
+              <img src={shopPhoto} alt={shopName} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-white/30 gap-3">
+                <Store size={64} strokeWidth={1} />
+                <span className="text-sm font-medium">Shop Photo</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8"
-        >
-          {/* HERO BANNER SECTION */}
-          <motion.div variants={itemVariants} className="lg:col-span-12 group relative h-[500px] rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border-4 border-white dark:border-eas-dark">
-            <img 
-              src={settings?.shopBanner || "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=2000"} 
-              alt="Store Front"
-              className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-eas-dark via-eas-dark/20 to-transparent" />
+        {/* Grid Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          
+          {/* Info Cards Column */}
+          <div className="flex flex-col gap-4">
             
-            {/* Glassmorphism Title Card */}
-            <div className="absolute bottom-12 left-12 right-12 flex flex-col md:flex-row items-end justify-between gap-8">
-              <div className="space-y-4 max-w-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="px-4 py-1.5 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 rounded-full flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Store Live</span>
-                  </div>
-                </div>
-                <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter italic leading-none">
-                  Visit Our <br/> <span className="text-eas-blue">Flagship</span> Store
-                </h1>
-                <p className="text-slate-300 font-bold text-sm leading-relaxed max-w-lg">
-                  {settings?.experience_text || "Step into the future of tech. Experience our full product range in person at our Douala headquarters."}
-                </p>
+            {/* Location */}
+            <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <MapPin size={20} />
               </div>
+              <div className="flex-1">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Location</div>
+                <div className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">{address}</div>
+              </div>
+              <a href={mapsUrl} target="_blank" rel="noreferrer" className="shrink-0 bg-indigo-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-1">
+                <Navigation size={12} /> Map
+              </a>
+            </div>
 
-              {/* Action Pills */}
-              <div className="flex flex-wrap gap-4">
-                {socialLinks.map((social, idx) => {
-                  const link = settings?.[social.key];
-                  if (!link) return null;
-                  const fullLink = link.startsWith('http') ? link : `https://${link}`;
-                  return (
-                    <motion.a 
-                      key={idx}
-                      href={fullLink} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileActive={{ scale: 0.9 }}
-                      className={`w-14 h-14 rounded-2xl ${social.bg} flex items-center justify-center text-white shadow-2xl border border-white/20`}
-                    >
-                       <social.icon size={24} />
-                    </motion.a>
-                  );
-                })}
+            {/* Phone */}
+            <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <Phone size={20} />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Phone</div>
+                <div className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">
+                  <a href={`tel:${phoneClean}`} className="hover:text-indigo-600 transition-colors">{phone}</a>
+                </div>
+              </div>
+              <a href={waUrl} target="_blank" rel="noreferrer" className="shrink-0 bg-[#25D366] text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-[#20bd5a] transition-colors flex items-center gap-1">
+                 WhatsApp
+              </a>
+            </div>
+
+            {/* Email */}
+            <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <Mail size={20} />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email</div>
+                <div className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">
+                  <a href={`mailto:${email}`} className="hover:text-indigo-600 transition-colors">{email}</a>
+                </div>
+              </div>
+              <a href={`mailto:${email}`} className="shrink-0 bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-blue-600 transition-colors flex items-center gap-1">
+                 Send
+              </a>
+            </div>
+
+            {/* Hours */}
+            <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <Clock size={20} />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Business Hours</div>
+                <div className="text-[14px] font-medium text-slate-900 dark:text-white mt-1 leading-relaxed">
+                  Mon - Fri: {weekdayHours}<br/>
+                  Sat: {satHours}<br/>
+                  Sun: {sunHours}
+                </div>
+              </div>
+              <div className="shrink-0">
+                {isOpen ? (
+                  <span className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Open Now
+                  </span>
+                ) : (
+                  <span className="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Closed
+                  </span>
+                )}
               </div>
             </div>
-          </motion.div>
 
-          {/* INFORMATION GRID */}
-          <motion.div variants={itemVariants} className="lg:col-span-4 space-y-8">
-            {/* Address Card */}
-            <div className="p-10 rounded-[2.5rem] bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 shadow-xl group hover:border-eas-blue/30 transition-all">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-eas-blue text-white flex items-center justify-center shadow-lg shadow-eas-blue/30 group-hover:rotate-12 transition-transform">
-                  <MapPin size={28} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Find Us</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Physical HQ</p>
-                </div>
+            {/* Store Name Card */}
+            <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-5 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <Store size={20} />
               </div>
-              <p 
-                onClick={() => handleCopyToClipboard(settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon', lang === 'fr' ? 'Adresse' : 'Address')}
-                className="text-base font-bold text-slate-600 dark:text-slate-400 leading-relaxed mb-8 hover:text-eas-blue cursor-pointer transition-colors flex items-center justify-between group/addr"
+              <div className="flex-1">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Store</div>
+                <div className="text-lg font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">{shopName}</div>
+              </div>
+            </div>
+            
+          </div>
+
+          {/* Map Column */}
+          <div className="bg-white dark:bg-[#0b0f19] rounded-2xl border border-slate-100 dark:border-slate-800/60 overflow-hidden min-h-[400px] lg:h-full relative group shadow-sm hover:shadow-lg hover:border-indigo-500/50 transition-all flex flex-col">
+            <div className="flex-1 relative min-h-[300px]">
+              <iframe 
+                title="Store Location"
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                scrolling="no" 
+                marginHeight="0" 
+                marginWidth="0" 
+                className="absolute inset-0 grayscale hover:grayscale-0 transition-all duration-700"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+              />
+            </div>
+            <div className="p-6 text-center border-t border-slate-100 dark:border-slate-800/60 flex flex-col items-center justify-center bg-white dark:bg-[#0b0f19] z-10">
+              <MapPin size={24} className="text-indigo-600 dark:text-indigo-400 mb-2" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Find Us Here</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{address}</p>
+              <a 
+                href={mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-all shadow-[0_4px_16px_rgba(79,70,229,0.3)] hover:-translate-y-0.5"
               >
-                <span>{settings?.loc_address || 'Elite Tech District, Block 12, Douala, Cameroon'}</span>
-                <span className="text-[9px] opacity-0 group-hover/addr:opacity-100 bg-eas-light dark:bg-white/5 text-slate-400 px-2 py-1 rounded transition-all font-black uppercase shrink-0 ml-2">
-                  {lang === 'fr' ? 'Copier' : 'Copy'}
-                </span>
-              </p>
-              <div className="flex flex-col gap-3">
+                <Navigation size={16} /> Open in Google Maps
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Description Card */}
+        {description && description !== 'Your trusted partner for premium technology products and exceptional service.' && (
+          <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-6 sm:p-7 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 hover:border-indigo-500/50 transition-all shadow-sm mb-6 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+              <Info size={20} />
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed m-0 mt-2 sm:mt-1">
+              {description}
+            </p>
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <a href={mapsUrl} target="_blank" rel="noreferrer" className="bg-white dark:bg-[#0b0f19] rounded-xl p-4 border border-slate-100 dark:border-slate-800/60 text-center hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm flex flex-col items-center justify-center text-slate-900 dark:text-white no-underline">
+            <span className="text-2xl mb-2">🧭</span>
+            <span className="text-xs font-semibold">Get Directions</span>
+          </a>
+          <a href={`tel:${phoneClean}`} className="bg-white dark:bg-[#0b0f19] rounded-xl p-4 border border-slate-100 dark:border-slate-800/60 text-center hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm flex flex-col items-center justify-center text-slate-900 dark:text-white no-underline">
+            <span className="text-2xl mb-2">📞</span>
+            <span className="text-xs font-semibold">Call Store</span>
+          </a>
+          <button onClick={handleShareLocation} className="bg-white dark:bg-[#0b0f19] rounded-xl p-4 border border-slate-100 dark:border-slate-800/60 text-center hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm flex flex-col items-center justify-center text-slate-900 dark:text-white">
+            <span className="text-2xl mb-2">📤</span>
+            <span className="text-xs font-semibold">Share Location</span>
+          </button>
+          <button onClick={() => navigate('/product')} className="bg-white dark:bg-[#0b0f19] rounded-xl p-4 border border-slate-100 dark:border-slate-800/60 text-center hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500/50 transition-all shadow-sm flex flex-col items-center justify-center text-slate-900 dark:text-white">
+            <span className="text-2xl mb-2">🛍️</span>
+            <span className="text-xs font-semibold">Browse Products</span>
+          </button>
+        </div>
+
+        {/* Social Section */}
+        <div className="bg-white dark:bg-[#0b0f19] rounded-[20px] p-6 sm:p-8 lg:px-10 border border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm mb-10 text-center sm:text-left">
+          <div className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <Share2 className="text-indigo-600 dark:text-indigo-400 hidden sm:block" size={20} /> 
+            Connect with us on social media
+          </div>
+          <div className="flex gap-3">
+            {socialLinks.length > 0 ? (
+              socialLinks.map((social) => (
                 <a 
-                  href={`https://maps.google.com/?q=${encodeURIComponent(settings?.loc_address || "Douala, Cameroon")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-5 bg-eas-dark dark:bg-white text-white dark:text-eas-dark rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-2xl"
+                  key={social.key}
+                  href={social.url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-indigo-600 hover:text-white hover:-translate-y-1 hover:shadow-lg transition-all"
                 >
-                  <Navigation size={18} />
-                  Get Precise Directions
+                  <i className={`fab ${social.icon} text-lg`}></i>
                 </a>
-                <button 
-                  onClick={() => handleCopyToClipboard(settings?.loc_phone || '+2250500619923', lang === 'fr' ? 'Téléphone' : 'Phone')}
-                  className="w-full py-5 border-2 border-slate-100 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
-                >
-                  <Phone size={18} />
-                  {lang === 'fr' ? 'Copier le Numéro' : 'Copy Phone Number'}
-                </button>
-              </div>
-            </div>
+              ))
+            ) : (
+              <span className="text-sm text-slate-500">No social links available</span>
+            )}
+          </div>
+        </div>
 
-            {/* Quick Status */}
-            <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-eas-blue to-blue-800 text-white shadow-2xl shadow-eas-blue/30 overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-                  <ShieldCheck size={28} />
-                </div>
-                <h3 className="text-xl font-black uppercase tracking-tight italic">Service Status</h3>
-              </div>
-              <div className="space-y-6 relative z-10">
-                <div className="p-6 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20">
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 opacity-70 text-blue-100">Active Network</p>
-                  <p className="text-sm font-black uppercase leading-tight italic">
-                    {settings?.loc_service_status || 'NATIONWIDE DELIVERY ACTIVE • 24H DISPATCH'}
-                  </p>
-                </div>
-                <button 
-                   onClick={() => window.open(`https://wa.me/${settings?.social_whatsapp?.replace(/\D/g, '')}`, '_blank')}
-                   className="w-full flex items-center justify-between p-4 bg-white text-eas-blue rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-eas-light transition-all"
-                >
-                  <span>Chat With Agent</span>
-                  <MessageCircle size={18} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
+        {/* CTA Section */}
+        <div className="bg-gradient-to-br from-[#0F172A] via-[#1a1a2e] to-[#16213e] rounded-[20px] p-8 sm:p-12 text-center relative overflow-hidden shadow-lg">
+          <div className="absolute -top-1/2 -right-1/4 w-[400px] h-[400px] bg-indigo-500/10 blur-[60px] rounded-full pointer-events-none" />
+          
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 relative z-10">
+            Ready to Visit Us?
+          </h2>
+          <p className="text-white/70 mb-8 max-w-lg mx-auto text-sm sm:text-base relative z-10">
+            Come experience our products in person. We're excited to serve you!
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <a 
+              href={mapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-[0_4px_16px_rgba(79,70,229,0.3)] hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            >
+              <Navigation size={16} /> Get Directions
+            </a>
+            <a 
+              href={`tel:${phoneClean}`}
+              className="px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+            >
+              <Phone size={16} /> Call Us Now
+            </a>
+          </div>
+        </div>
 
-          {/* MAP & SCHEDULE SECTION */}
-          <motion.div variants={itemVariants} className="lg:col-span-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8 h-full">
-              
-              {/* INTERACTIVE SCHEDULE */}
-              <div className="md:col-span-2 p-10 rounded-[2.5rem] bg-white dark:bg-eas-dark/60 border border-slate-100 dark:border-white/5 shadow-xl flex flex-col">
-                <div className="flex items-center gap-4 mb-10">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30">
-                    <Clock size={28} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Schedule</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opening Hours</p>
-                  </div>
-                </div>
-
-                <div className="flex-1 space-y-4">
-                  {schedule.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className={`flex justify-between items-center p-4 rounded-2xl transition-all ${
-                        item.highlight 
-                          ? 'bg-red-500/5 text-red-500 border border-red-500/10' 
-                          : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400'
-                      }`}
-                    >
-                      <span className="text-xs font-black uppercase tracking-widest italic">{item.day}</span>
-                      <span className="text-xs font-black tracking-tight">{item.hours}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-8 p-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-eas-blue rounded-full animate-pulse shadow-lg shadow-eas-blue/50"></div>
-                    <span className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Open Now</span>
-                  </div>
-                  <ChevronRight size={16} className="text-slate-400" />
-                </div>
-              </div>
-
-              {/* HD MAP INTEGRATION */}
-              <div className="md:col-span-3 rounded-[3rem] overflow-hidden bg-white dark:bg-eas-dark border-4 border-white dark:border-white/5 shadow-2xl relative group h-[600px] md:h-auto">
-                <iframe 
-                  title="Store Location"
-                  width="100%" 
-                  height="100%" 
-                  frameBorder="0" 
-                  scrolling="no" 
-                  marginHeight="0" 
-                  marginWidth="0" 
-                  className="grayscale hover:grayscale-0 transition-all duration-1000"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(settings?.loc_address || "Douala, Cameroon")}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                />
-                <div className="absolute top-6 right-6">
-                   <button 
-                     onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(settings?.loc_address || "Douala, Cameroon")}`, '_blank')}
-                     className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 hover:scale-105 transition-all"
-                   >
-                     <Globe size={16} />
-                     Expand Map
-                   </button>
-                </div>
-              </div>
-
-            </div>
-          </motion.div>
-        </motion.div>
       </div>
 
-      {/* Floating Clipboard Feedback */}
+      {/* Floating Toast */}
       <AnimatePresence>
         {copyFeedback && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9, x: '-50%' }}
+            initial={{ opacity: 0, y: 20, scale: 0.9, x: '-50%' }}
             animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
             exit={{ opacity: 0, y: -20, scale: 0.9, x: '-50%' }}
-            className="fixed bottom-24 left-1/2 bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-900 px-6 py-3 rounded-full text-xs font-black uppercase tracking-wider shadow-2xl z-[999] border border-white/10 dark:border-slate-200/20 flex items-center gap-2"
+            className="fixed bottom-20 left-1/2 bg-slate-900/90 dark:bg-white/95 text-white dark:text-slate-900 px-6 py-3.5 rounded-xl text-sm font-bold shadow-2xl z-50 border border-white/10 dark:border-slate-200/20 flex items-center gap-2"
           >
+            <CheckCircle2 size={16} className="text-emerald-400" />
             <span>{copyFeedback}</span>
-            <span className="text-emerald-400">✓</span>
           </motion.div>
         )}
       </AnimatePresence>

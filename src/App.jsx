@@ -8,6 +8,7 @@ import BrandStory from './components/BrandStory';
 import ForYouSection from './components/ForYouSection';
 import TopCategories from './components/TopCategories';
 import Sidebar from './components/Sidebar';
+import StoreSidebar from './components/StoreSidebar';
 import ProductSection, { SectionBanner, DualProductSection } from './components/ProductSection';
 import ProductCard from './components/ProductCard';
 import CartDrawer from './components/CartDrawer';
@@ -23,6 +24,7 @@ import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import DeliverPage from './pages/DeliverPage';
+import OrdersPage from './pages/OrdersPage';
 import Dashboard from './pages/Dashboard';
 import VisitUs from './pages/VisitUs';
 import ChatPage from './pages/ChatPage';
@@ -244,6 +246,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     if (path === '/register') return 'signup';
     if (path === '/auth') return 'auth';
     if (path === '/settings') return 'settings';
+    if (path === '/orders') return 'orders';
     if (path === '/deals') return 'deals';
     if (path === '/trending') return 'trending';
     if (path === '/new-arrivals') return 'new-arrivals';
@@ -258,6 +261,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
   }, [location.pathname, propViewMode]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isStoreSidebarOpen, setIsStoreSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   
@@ -986,6 +990,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-eas-light dark:bg-eas-dark relative">
       <Header 
         onMenuClick={() => setIsSidebarOpen(true)} 
+        onStoreClick={() => setIsStoreSidebarOpen(true)}
         onCartClick={() => setIsCartOpen(true)}
       />
       <motion.div 
@@ -1016,9 +1021,9 @@ const Storefront = ({ viewMode: propViewMode }) => {
               <LegalPage type={viewMode} />
             ) : ['trending', 'featured'].includes(viewMode) ? (
               <ShufflingProductPage viewMode={viewMode} onProductClick={handleProductClick} />
-            ) : ['auth', 'login', 'signup', 'settings'].includes(viewMode) ? (
+            ) : ['auth', 'login', 'signup', 'settings', 'orders'].includes(viewMode) ? (
               <AuthPage 
-                initialTab={viewMode === 'settings' ? 'settings' : (viewMode === 'signup' ? 'signup' : (viewMode === 'login' ? 'login' : undefined))} 
+                initialTab={viewMode === 'settings' ? 'settings' : (viewMode === 'signup' ? 'signup' : (viewMode === 'login' ? 'login' : (viewMode === 'orders' ? 'orders' : undefined)))} 
                 onCartClick={() => setIsCartOpen(true)}
               />
             ) : (
@@ -1249,6 +1254,12 @@ const Storefront = ({ viewMode: propViewMode }) => {
         }}
       />
 
+      <StoreSidebar
+        isOpen={isStoreSidebarOpen}
+        onClose={() => setIsStoreSidebarOpen(false)}
+        onCategoryClick={() => setIsSidebarOpen(true)}
+      />
+
       <CartDrawer 
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)} 
@@ -1443,6 +1454,7 @@ const App = () => {
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
           <Route path="/order-tracking" element={<OrderTrackingPage />} />
+          <Route path="/orders" element={HomeElement} />
           <Route path="/swto-deliver" element={<DeliverPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<ChatPage />} />

@@ -6,9 +6,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { APP_VERSION } from '../utils/version';
 import { motion, AnimatePresence } from 'framer-motion';
-import OrdersHistoryContent from '../components/OrdersHistoryContent';
 import CouponsContent from '../components/CouponsContent';
 import ProductCard from '../components/ProductCard';
+import UserProfileContent from '../components/UserProfileContent';
 import { 
   User, 
   Package, 
@@ -48,6 +48,8 @@ import {
   EyeOff,
   Trash2,
   ShieldAlert,
+  UserCog,
+  Edit3,
   LogIn,
   X
 } from 'lucide-react';
@@ -891,23 +893,25 @@ const AuthPage = ({ initialTab, onCartClick }) => {
     }
   };
 
-  const handleSaveSettings = async (e) => {
+  const handleSaveSettings = async (e, overrides = null) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!settingsForm.name.trim()) {
+    
+    const nameToSave = overrides?.name ?? settingsForm.name;
+    if (!nameToSave?.trim()) {
       showToast('Name cannot be empty.', 'error');
       return;
     }
 
     const updatedUser = {
       ...sessionUser,
-      name: settingsForm.name,
-      phoneCountryCode: settingsForm.countryCode,
-      phoneNumber: settingsForm.phone,
-      address: settingsForm.address,
-      city: settingsForm.city,
-      preferences: preferences,
-      avatarUrl: settingsForm.avatarUrl,
-      bio: settingsForm.bio
+      name: overrides?.name ?? settingsForm.name,
+      phoneCountryCode: overrides?.countryCode ?? settingsForm.countryCode,
+      phoneNumber: overrides?.phone ?? settingsForm.phone,
+      address: overrides?.address ?? settingsForm.address,
+      city: overrides?.city ?? settingsForm.city,
+      preferences: overrides?.preferences ?? preferences,
+      avatarUrl: overrides?.avatarUrl ?? settingsForm.avatarUrl,
+      bio: overrides?.bio ?? settingsForm.bio
     };
 
     localStorage.setItem('sweetohub_session', JSON.stringify(updatedUser));
@@ -918,14 +922,14 @@ const AuthPage = ({ initialTab, onCartClick }) => {
       const { error } = await supabase
         .from('customer_accounts')
         .update({
-          name: settingsForm.name,
-          phone_country_code: settingsForm.countryCode,
-          phone_number: settingsForm.phone,
-          address: settingsForm.address,
-          city: settingsForm.city,
-          preferences: preferences,
-          avatar_url: settingsForm.avatarUrl,
-          bio: settingsForm.bio
+          name: updatedUser.name,
+          phone_country_code: updatedUser.phoneCountryCode,
+          phone_number: updatedUser.phoneNumber,
+          address: updatedUser.address,
+          city: updatedUser.city,
+          preferences: updatedUser.preferences,
+          avatar_url: updatedUser.avatarUrl,
+          bio: updatedUser.bio
         })
         .eq('email', sessionUser.email.toLowerCase());
       if (error && error.code !== 'PGRST205') console.error("Failed to update settings in Supabase:", error);
@@ -1043,233 +1047,35 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   const { lang, changeLanguage } = useLanguage();
   const isGoogleUser = sessionUser?.provider === 'google';
 
-  if (sessionUser && currentTab === 'overview') {
-    return wrapContent(
-      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
-
-
-        <div className="main-container max-w-[480px] lg:max-w-none w-full mx-auto">
-          {/* Header Row (Signed In): Avatar, Name, and Icons */}
-          <div 
-            className="lg:hidden fixed left-1/2 -translate-x-1/2 max-w-[480px] w-full z-30 bg-white dark:bg-eas-dark flex justify-between items-center py-4 px-6 border-b border-slate-100 dark:border-white/5 shadow-sm transition-all duration-300"
-            style={{ top: 'var(--header-height, 96px)' }}
-          >
-            <div className="flex items-center gap-3">
-              {/* Avatar with click upload handler */}
-              <div 
-                className="profile-avatar-wrapper group cursor-pointer relative w-12 h-12 rounded-full overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm bg-slate-50 flex-shrink-0 transition-all duration-300"
-                onClick={() => avatarInputRef.current?.click()}
-              >
-                {sessionUser.avatarUrl || sessionUser.picture ? (
-                  <img 
-                    src={sessionUser.avatarUrl || sessionUser.picture} 
-                    alt={sessionUser.name} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white font-black text-sm bg-gradient-to-r from-eas-blue to-eas-blue/80">
-                    {sessionUser.name?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                {/* Hover edit overlay */}
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <Camera size={14} className="text-white" />
-                </div>
-                
-                <input 
-                  type="file"
-                  ref={avatarInputRef}
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                  accept="image/jpeg,image/png,image/webp"
-                />
-              </div>
-
-              <div className="text-left flex flex-col justify-center">
-                <span className="font-bold text-slate-800 dark:text-white leading-tight text-[17px] transition-all duration-300">
-                  {sessionUser.name || 'SweeTo user'}
-                </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate max-w-[150px] mt-0.5">
-                  {sessionUser.email}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button onClick={() => showToast("Language selection coming soon!", "info")} className="flex items-center justify-center hover:scale-105 transition-transform">
-                <CoteDivoireFlag />
-              </button>
-
-              <button 
-                onClick={() => navigate('/settings')} 
-                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors"
-              >
-                <SettingsIcon size={20} />
-              </button>
-              <button 
-                onClick={() => navigate('/notifications')} 
-                className="text-slate-700 dark:text-slate-300 hover:text-eas-blue transition-colors relative"
-              >
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></span>
-              </button>
-            </div>
-          </div>
-          {/* Spacer to push content below the fixed header */}
-          <div className="lg:hidden h-[80px] w-full shrink-0" />
-
-          {/* My Orders Section */}
-          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-black text-slate-800 dark:text-white">My orders</h3>
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors flex items-center gap-0.5"
-              >
-                View all <ChevronRight size={12} />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-5 gap-1 text-center">
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <CreditCard size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <Package size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <Truck size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <MessageSquare size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <RotateCcw size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Options Section */}
-          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm">
-            <div className="grid grid-cols-4 gap-1 text-center">
-              <button 
-                onClick={() => setCurrentTab('orders')}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Clock size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">History</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('wishlist')}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Wishlist</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('coupons')}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Tag size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Coupons</span>
-              </button>
-
-              <button 
-                onClick={() => showToast("You are not following any stores yet.", "info")}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Store size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Followed stores</span>
-              </button>
-            </div>
-          </div>
-
-
-
-
-
-          {/* More to Love Section */}
-          {products && products.length > 0 && (
-            <div className="mt-6">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
-                <span className="text-xs font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
-                  {t('more_to_love') || 'More to Love'}
-                </span>
-                <div className="h-px bg-slate-200 dark:bg-white/10 w-8" />
-              </div>
-              <div className="grid grid-cols-2 gap-3 px-4 pb-6">
-                {randomProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product} 
-                    onProductClick={(p) => navigate(`/product/${p.id}`)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-2">
-            Premium Experience by SWEETO HUB
-          </div>
-        </div>
-      </div>
+  if (sessionUser && (currentTab === 'overview' || currentTab === 'settings' || currentTab === 'orders')) {
+    return (
+      <UserProfileContent 
+        sessionUser={sessionUser}
+        handleSaveSettings={handleSaveSettings}
+        handleLogout={handleLogout}
+        onBack={() => navigate('/')}
+      />
     );
   }
 
-  if (currentTab === 'coupons') {
+  if (sessionUser && currentTab === 'coupons') {
     return wrapContent(
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
         <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
-          <CouponsContent onBack={() => setCurrentTab('overview')} onCartClick={onCartClick} />
+          <CouponsContent onBack={() => navigate('/')} onCartClick={onCartClick} />
         </div>
       </div>
     );
   }
 
-  if (sessionUser && currentTab === 'orders') {
-    return wrapContent(
-      <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
-        <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
-          <OrdersHistoryContent isProfileTab={true} onBack={() => setCurrentTab('overview')} />
-        </div>
-      </div>
-    );
-  }
+
 
   if (sessionUser && currentTab === 'wishlist') {
     return wrapContent(
       <div className="profile-body dark:bg-eas-dark transition-colors duration-500 pb-20 w-full flex justify-center">
         <div className="main-container max-w-[480px] w-full bg-[#f8fafc] dark:bg-[#0f172a]">
-           <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-[60] bg-white dark:bg-[#0f172a] shadow-sm flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-800">
-             <button onClick={() => setCurrentTab('overview')} className="p-2 -ml-2 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 dark:bg-slate-800">
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-[60] bg-white dark:bg-[#0f172a] shadow-sm flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-800">
+              <button onClick={() => navigate('/')} className="p-2 -ml-2 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 dark:bg-slate-800">
                <ArrowLeft size={20} />
              </button>
              <h1 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">My Wishlist</h1>
@@ -1285,37 +1091,28 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   if (currentTab === 'settings') {
     return wrapContent(
-      <div className="settings-body dark:bg-[#020617] transition-colors duration-500 pb-20 sm:pt-4 flex justify-center w-full min-h-screen">
-        <div className="w-full max-w-[800px] flex flex-col relative bg-white lg:bg-transparent dark:bg-[#090d16] sm:border lg:border-none border-none border-slate-100 dark:border-slate-800/40 rounded-none sm:rounded-[2.5rem] overflow-hidden my-0 sm:my-6 lg:my-0 shadow-none sm:shadow-xl lg:shadow-none min-h-screen sm:min-h-0">
-          {/* Cover Banner */}
-          <div className="lg:hidden relative w-full h-[140px] sm:h-[180px] bg-gradient-to-r from-violet-600 via-indigo-600 to-indigo-700">
-            {/* Back button overlay */}
-            <button 
-              onClick={() => {
-                if (sessionUser) {
-                  navigate('/auth');
-                } else {
-                  navigate(-1);
-                }
-              }} 
-              className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all cursor-pointer border-none"
-            >
-              <ArrowLeft size={20} />
-            </button>
+      <div className="settings-body bg-slate-50 dark:bg-[#020617] transition-colors duration-500 pb-20 pt-8 flex justify-center w-full min-h-screen">
+        <div className="w-full max-w-[800px] flex flex-col relative bg-transparent px-4 sm:px-6 md:px-8 py-6">
+
+          {/* New Header */}
+          <div className="flex items-center gap-3 pb-6 mb-6 w-full border-b border-slate-200 dark:border-slate-800/60">
+            <UserCog className="text-indigo-600 dark:text-indigo-500" size={32} />
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">Account Settings</h2>
+            <div className="hidden sm:flex items-center gap-1.5 ml-4 text-sm text-slate-500 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Signed in as {settingsForm.name || sessionUser?.name || sessionUser?.email || 'User'}</span>
+            </div>
           </div>
-          
-          {/* Profile Header Info Block */}
-          <div className="lg:hidden relative px-6 sm:px-8 pb-6 border-b border-slate-100 dark:border-white/5">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-[-48px] sm:mt-[-56px] relative z-10">
-              {/* Avatar overlapping */}
+
+          {/* Top User Info Card */}
+          <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-slate-100 dark:border-slate-800/40 mb-6 w-full flex flex-col">
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800/40">
               <div 
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-[2rem] border-4 border-white dark:border-[#090d16] bg-slate-100 dark:bg-slate-800 shadow-lg object-cover overflow-hidden select-none relative group cursor-pointer"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-indigo-600 text-white font-bold text-3xl sm:text-4xl flex items-center justify-center relative cursor-pointer group shrink-0 overflow-hidden"
                 onClick={() => avatarInputRef.current?.click()}
               >
                 {isUploadingAvatar ? (
-                  <div className="w-full h-full flex items-center justify-center bg-eas-light dark:bg-eas-dark">
-                    <span className="w-6 h-6 border-2 border-eas-blue border-t-transparent rounded-full animate-spin" />
-                  </div>
+                  <span className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (settingsForm.avatarUrl || sessionUser?.avatarUrl || sessionUser?.picture) ? (
                   <img 
                     src={settingsForm.avatarUrl || sessionUser?.avatarUrl || sessionUser?.picture} 
@@ -1323,9 +1120,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white font-black text-2xl bg-gradient-to-r from-violet-500 to-indigo-600">
-                    {sessionUser?.name?.charAt(0).toUpperCase()}
-                  </div>
+                  (settingsForm.name || sessionUser?.name || 'O').charAt(0).toUpperCase()
                 )}
                 {/* Camera upload overlay */}
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1339,75 +1134,51 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                   accept="image/jpeg,image/png,image/webp"
                 />
               </div>
-
-              {/* User Identity Details */}
-              <div className="flex-1 text-left sm:pl-4 flex flex-col justify-end">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none">
-                    {settingsForm.name || sessionUser?.name || 'SweeTo User'}
-                  </h1>
-                  <span className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                    Verified VIP Member
-                  </span>
-                </div>
-                <p className="text-xs font-semibold text-slate-400 mt-2 font-mono">
-                  {sessionUser?.email || 'user@example.com'}
-                </p>
+              <div className="overflow-hidden">
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white truncate">{settingsForm.name || sessionUser?.name || 'SweeTo User'}</h3>
+                <p className="text-slate-500 text-sm truncate mt-0.5">{sessionUser?.email || 'user@example.com'}</p>
               </div>
             </div>
-          </div>
 
-          {/* Navigation Tabs Selector */}
-          <div className="lg:hidden flex border-b border-slate-100 dark:border-white/5 px-2 bg-slate-50/50 dark:bg-[#0c101b]/50 w-full overflow-x-auto scrollbar-none">
-            {[
-              { id: 'personal', icon: User },
-              { id: 'address', icon: MapPin },
-              { id: 'security', icon: Lock },
-              { id: 'preferences', icon: Sliders }
-            ].map((tab) => {
-              const IconComp = tab.icon;
-              const isActive = activeSettingsSection === tab.id || (activeSettingsSection === 'profile' && tab.id === 'personal') || (activeSettingsSection === 'menu' && tab.id === 'personal');
-              
-              // Localized short labels to prevent screen overflow and horizontal scrolling
-              const dicts = {
-                en: { personal: 'Profile', address: 'Addresses', security: 'Security', preferences: 'Prefs' },
-                fr: { personal: 'Profil', address: 'Adresses', security: 'Sécurité', preferences: 'Prefs' },
-                es: { personal: 'Perfil', address: 'Direcciones', security: 'Seguridad', preferences: 'Prefs' },
-                de: { personal: 'Profil', address: 'Adressen', security: 'Sicherheit', preferences: 'Prefs' },
-                pt: { personal: 'Perfil', address: 'Endereços', security: 'Segurança', preferences: 'Prefs' },
-                zh: { personal: '资料', address: '地址', security: '安全', preferences: '设置' },
-                ar: { personal: 'الملف', address: 'العناوين', security: 'الأمان', preferences: 'الضبط' }
-              };
-              const currentDict = dicts[lang] || dicts['en'];
-              const labelText = currentDict[tab.id] || tab.id;
-
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveSettingsSection(tab.id)}
-                  className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-5 py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer whitespace-nowrap border-none bg-transparent flex-1 min-w-0 ${
-                    isActive 
-                      ? 'border-b-indigo-650 text-indigo-600 dark:text-indigo-400 border-b-2 border-solid border-indigo-600' 
-                      : 'border-b-transparent text-slate-450 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white'
-                  }`}
-                >
-                  <IconComp size={13} className="shrink-0" />
-                  <span className="truncate">{labelText}</span>
-                </button>
-              );
-            })}
-          </div>
-          {/* Settings Tab Content Container */}
-          <div className="p-6 sm:p-8 lg:p-0 text-left bg-white lg:bg-transparent dark:bg-[#090d16] flex-1">
-
-            {/* Desktop Settings Header */}
-            <div className="hidden lg:block mb-8 pb-4 border-b border-slate-100 dark:border-slate-800/60">
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white">Account Settings</h2>
-              <div className="flex items-center gap-2 mt-2 text-sm text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Signed in as <strong>{sessionUser?.email}</strong></span>
-              </div>
+            {/* Navigation Tabs */}
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { id: 'personal', icon: User, label: 'Profile' },
+                { id: 'orders', icon: ShoppingBag, label: 'My Orders' },
+                { id: 'security', icon: Shield, label: 'Security' },
+                { id: 'preferences', icon: Sliders, label: 'Preferences' }
+              ].map((tab) => {
+                const IconComp = tab.icon;
+                const isActive = activeSettingsSection === tab.id || (activeSettingsSection === 'profile' && tab.id === 'personal') || (activeSettingsSection === 'menu' && tab.id === 'personal');
+                
+                if (isActive) {
+                  return (
+                    <button key={tab.id} onClick={() => setActiveSettingsSection(tab.id)} className="flex items-center gap-2 px-4 py-2 sm:py-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-xl font-semibold text-sm border-2 border-slate-900 dark:border-indigo-500 transition-all cursor-pointer">
+                      <IconComp size={16}/> {tab.label}
+                    </button>
+                  );
+                } else {
+                  return (
+                    <button key={tab.id} onClick={() => {
+                        if (tab.id === 'orders') {
+                          setCurrentTab('orders');
+                        } else {
+                          setActiveSettingsSection(tab.id);
+                        }
+                      }} 
+                      className="flex items-center gap-2 px-4 py-2 sm:py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl font-medium text-sm transition-all cursor-pointer border-2 border-transparent">
+                      <IconComp size={16}/> {tab.label}
+                    </button>
+                  );
+                }
+              })}
+              <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 sm:py-2.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl font-medium text-sm transition-all cursor-pointer border-2 border-transparent lg:ml-auto">
+                <LogOut size={16}/> Logout
+              </button>
             </div>
+          </div>
+          <div className="w-full text-left flex-1">
+
             {/* LEGAL INFORMATION SECTION SUBMENU */}
             {activeSettingsSection === 'legal' && (
               <div className="animate-fade-in text-left space-y-4">
@@ -1496,20 +1267,25 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
             {/* PROFILE SECTION EDIT */}
             {(activeSettingsSection === 'profile' || activeSettingsSection === 'personal') && (
-              <div className="space-y-6 animate-fade-in">
+              <div className="bg-white dark:bg-[#0b0f19] rounded-2xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-slate-100 dark:border-slate-800/40 w-full animate-fade-in text-left">
                 {/* Subheader */}
-                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-white/5">
-                  <Contact className="text-indigo-600 dark:text-indigo-400" size={18} />
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    Account Details & Bio
-                  </h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <User className="text-indigo-600 dark:text-indigo-400" size={24} />
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                      Profile Information
+                    </h3>
+                  </div>
+                  <button className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    <Edit3 size={16} /> Enable Editing
+                  </button>
                 </div>
 
                 {/* Form fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 max-w-3xl">
                   {/* Full Name */}
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  <div className="space-y-2 text-left">
+                    <label className="text-sm font-bold text-slate-900 dark:text-slate-200">
                       Full Name
                     </label>
                     <input 
@@ -1517,128 +1293,95 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                       placeholder="Jane Doe" 
                       value={settingsForm.name || ''}
                       onChange={(e) => setSettingsForm({...settingsForm, name: e.target.value})}
-                      className="bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl p-4 text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all"
+                      className="bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-3 sm:p-4 text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all"
                     />
                   </div>
 
                   {/* Email Address (linked) */}
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  <div className="space-y-2 text-left">
+                    <label className="text-sm font-bold text-slate-900 dark:text-slate-200">
                       Email Address
                     </label>
                     <input 
                       type="email" 
                       value={sessionUser?.email || ''} 
                       disabled 
-                      className="bg-slate-100/70 dark:bg-slate-950/70 border border-slate-150/50 dark:border-slate-800/30 rounded-2xl p-4 text-sm font-semibold text-slate-400 dark:text-slate-500 outline-none w-full cursor-not-allowed select-none"
+                      className="bg-slate-50/50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/30 rounded-xl p-3 sm:p-4 text-sm font-medium text-slate-600 dark:text-slate-500 outline-none w-full cursor-not-allowed select-none"
                     />
+                    <p className="text-xs font-medium text-slate-400 mt-1">Email cannot be changed</p>
                   </div>
 
                   {/* Phone Number */}
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  <div className="space-y-2 text-left">
+                    <label className="text-sm font-bold text-slate-900 dark:text-slate-200">
                       Phone Number
                     </label>
-                    <div className="flex gap-2 w-full">
-                      {/* Country Code Selector */}
-                      <div className="relative shrink-0" style={{ width: '110px' }}>
-                        <button
-                          type="button"
-                          onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                          className="w-full h-full min-h-[50px] bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl px-4 text-xs font-extrabold text-slate-800 dark:text-white flex justify-between items-center cursor-pointer"
-                        >
-                          <span>{settingsForm.countryCode || 'Code'}</span>
-                          <ChevronDown size={14} className="text-slate-400" />
-                        </button>
-                        
-                        <AnimatePresence>
-                          {showCountryDropdown && (
-                            <>
-                              <div className="fixed inset-0 z-40" onClick={() => setShowCountryDropdown(false)} />
-                              <motion.div
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 5 }}
-                                className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-eas-dark border border-slate-155 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto"
-                              >
-                                <div className="p-1 space-y-0.5">
-                                  {africanCountries.map((c) => {
-                                    const isSelected = settingsForm.countryCode === c.code;
-                                    return (
-                                      <button
-                                        key={c.name}
-                                        type="button"
-                                        onClick={() => {
-                                          setSettingsForm({ ...settingsForm, countryCode: c.code });
-                                          setShowCountryDropdown(false);
-                                        }}
-                                        className={`w-full text-left px-3 py-2 text-xs font-bold rounded-lg transition-all flex justify-between items-center cursor-pointer ${
-                                          isSelected 
-                                            ? 'bg-eas-blue/10 text-eas-blue' 
-                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
-                                        }`}
-                                      >
-                                        <span>{c.code} {c.name}</span>
-                                        {isSelected && <Check size={12} strokeWidth={3} className="text-eas-blue" />}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </motion.div>
-                            </>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      <input 
-                        type="tel" 
-                        inputMode="numeric"
-                        placeholder="+1 (555) 234-5678" 
-                        value={settingsForm.phone || ''}
-                        onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
-                        className="bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl p-4 text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none flex-1 transition-all"
-                      />
-                    </div>
+                    <input 
+                      type="tel" 
+                      inputMode="numeric"
+                      placeholder="+1 (555) 234-5678" 
+                      value={settingsForm.phone || ''}
+                      onChange={(e) => setSettingsForm({...settingsForm, phone: e.target.value})}
+                      className="bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-3 sm:p-4 text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all"
+                    />
                   </div>
 
-                  {/* Avatar URL / Image link */}
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      Avatar Image URL
+                  {/* Address */}
+                  <div className="space-y-2 text-left">
+                    <label className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                      Address
                     </label>
                     <input 
                       type="text" 
-                      placeholder="https://images.unsplash.com/photo..." 
-                      value={settingsForm.avatarUrl || ''}
-                      onChange={(e) => setSettingsForm({...settingsForm, avatarUrl: e.target.value})}
-                      className="bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl p-4 text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all"
+                      placeholder="Your Address" 
+                      value={settingsForm.address || ''}
+                      onChange={(e) => setSettingsForm({...settingsForm, address: e.target.value})}
+                      className="bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-3 sm:p-4 text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all"
+                    />
+                  </div>
+
+                  {/* Personal Bio */}
+                  <div className="space-y-2 text-left">
+                    <label className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                      Bio
+                    </label>
+                    <textarea 
+                      placeholder="Tell us a little about yourself..." 
+                      value={settingsForm.bio || ''}
+                      onChange={(e) => setSettingsForm({...settingsForm, bio: e.target.value})}
+                      rows={4}
+                      className="bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-3 sm:p-4 text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all resize-y font-sans"
                     />
                   </div>
                 </div>
 
-                {/* Personal Bio */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                    Personal Bio
-                  </label>
-                  <textarea 
-                    placeholder="Write a brief bio about yourself..." 
-                    value={settingsForm.bio || ''}
-                    onChange={(e) => setSettingsForm({...settingsForm, bio: e.target.value})}
-                    rows={3}
-                    className="bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl p-4 text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all resize-none font-sans"
-                  />
-                </div>
-
-                <div className="pt-4 text-left">
+                <div className="pt-6 text-left flex flex-wrap items-center gap-3">
                   <button 
                     onClick={async () => {
                       await handleSaveSettings();
                     }}
-                    className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer border-none flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-3.5 bg-blue-400 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer border-none flex items-center justify-center gap-2"
                   >
-                    <Save size={14} />
-                    <span>Save Profile Changes</span>
+                    <Save size={16} />
+                    <span>Save Changes</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (sessionUser) {
+                        setSettingsForm({
+                          name: sessionUser.user_metadata?.full_name || '',
+                          avatarUrl: sessionUser.user_metadata?.avatar_url || '',
+                          phone: sessionUser.user_metadata?.phone || '',
+                          bio: sessionUser.user_metadata?.bio || '',
+                          countryCode: '+225',
+                          address: sessionUser.user_metadata?.address || ''
+                        });
+                      }
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-3.5 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold text-sm rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw size={16} />
+                    <span>Reset</span>
                   </button>
                 </div>
               </div>
@@ -2322,132 +2065,6 @@ const AuthPage = ({ initialTab, onCartClick }) => {
           </div>
           {/* Spacer to push content below the fixed header */}
           <div className="h-[69px] w-full shrink-0" />
-
-          {/* My Orders Section */}
-          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-black text-slate-800 dark:text-white">My orders</h3>
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to view your orders.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-eas-blue transition-colors flex items-center gap-0.5"
-              >
-                View all <ChevronRight size={12} />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-5 gap-1 text-center">
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to view payments.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <CreditCard size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To pay</span>
-              </button>
-
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to view shipments.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <Package size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To ship</span>
-              </button>
-
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to view tracking.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <Truck size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Shipped</span>
-              </button>
-
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to write reviews.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <MessageSquare size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">To review</span>
-              </button>
-
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to request returns.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1"
-              >
-                <RotateCcw size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Returns</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Options Section */}
-          <div className="mx-4 my-4 p-4 rounded-3xl bg-white dark:bg-eas-dark/50 border border-slate-100 dark:border-white/5 shadow-sm">
-            <div className="grid grid-cols-4 gap-1 text-center">
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to view history.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Clock size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">History</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('wishlist')}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Heart size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Wishlist</span>
-              </button>
-
-              <button 
-                onClick={() => setCurrentTab('coupons')}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Tag size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Coupons</span>
-              </button>
-
-              <button 
-                onClick={() => { 
-                  showToast("Please sign in to view followed stores.", "info"); 
-                  switchTab('login');
-                  setShowAuthForm(true); 
-                }}
-                className="flex flex-col items-center gap-2 group py-1 cursor-pointer"
-              >
-                <Store size={22} className="text-slate-700 dark:text-slate-300 group-hover:text-eas-blue transition-colors" />
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Followed stores</span>
-              </button>
-            </div>
-          </div>
-
-
 
           {/* More to Love Section */}
           {products && products.length > 0 && (

@@ -427,57 +427,8 @@ export default function BrightRetailHome({ onProductClick }) {
       return '✨';
     };
 
-    return (
-      <div className="sticky top-[var(--header-height,96px)] z-30 w-full bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/10 dark:border-white/5 py-1">
-        <div className="max-w-[1240px] mx-auto w-full px-4 sm:px-6 lg:px-8 select-none">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 scroll-smooth w-full">
-            {/* All Items Button - Red pill if active, gray pill if not */}
-            <button
-              onClick={() => {
-                setSelectedCategory(null);
-                setSelectedBrand(null);
-                setSearchQuery('');
-                navigate('/');
-              }}
-              className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none ${
-                isAllSelected 
-                  ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
-                  : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
-              }`}
-            >
-              <span>🛍️</span>
-              <span>{lang === 'fr' ? 'Tous articles' : 'All Items'}</span>
-            </button>
-
-            {/* Individual Category Buttons */}
-            {displayCats.map(cat => {
-              const isSelected = selectedCategory === cat.name;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.name);
-                    setSelectedBrand(null);
-                    setSearchQuery('');
-                    navigate(`/category/${encodeURIComponent(cat.name)}`);
-                  }}
-                  className={`px-4.5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-300 hover:scale-[1.03] active:scale-[0.93] cursor-pointer border flex items-center gap-1.5 min-h-[38px] leading-none normal-case ${
-                    isSelected 
-                      ? 'bg-gradient-to-r from-[#ff2d55] to-[#ff6b8b] text-white border-transparent shadow-[0_6px_16px_rgba(255,45,85,0.35)]' 
-                      : 'bg-white/80 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-slate-200/50 dark:border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:bg-white dark:hover:bg-slate-900/80'
-                  }`}
-                >
-                  <span>{getCategoryEmoji(cat.name)}</span>
-                  <span>{t_smart(cat.name)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   };
-
   const renderHero = (section) => {
     return (
       <div key="hero-section-wrapper" className="w-full flex flex-col">
@@ -623,7 +574,7 @@ export default function BrightRetailHome({ onProductClick }) {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
           {loading 
             ? renderSkeletons(6) 
             : currentTabProducts.map((product, idx) => renderProductCard(product, idx, 'tab'))}
@@ -1006,7 +957,7 @@ export default function BrightRetailHome({ onProductClick }) {
       <div key={section.id || `custom-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {renderBrightHeader(title, subtitle, section)}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
           {loading ? renderSkeletons(maxProducts) : displayProducts.map((p, idx) => renderProductCard(p, idx, 'custom'))}
         </div>
       </div>
@@ -1030,11 +981,11 @@ export default function BrightRetailHome({ onProductClick }) {
       <div key={section.id || `featured-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {renderBrightHeader(title, subtitle, section)}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
             {renderSkeletons(maxProducts)}
           </div>
         ) : displayProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
             {displayProducts.map((p, idx) => renderProductCard(p, idx, 'featured'))}
           </div>
         ) : (
@@ -1063,11 +1014,11 @@ export default function BrightRetailHome({ onProductClick }) {
       <div key={section.id || `trending-grid-${section.position}`} className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {renderBrightHeader(title, subtitle, section)}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
             {renderSkeletons(maxProducts)}
           </div>
         ) : displayProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
             {displayProducts.map((p, idx) => renderProductCard(p, idx, 'trending'))}
           </div>
         ) : (

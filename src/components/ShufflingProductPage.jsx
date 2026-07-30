@@ -200,7 +200,7 @@ const ShufflingProductPage = ({ viewMode = 'trending', onProductClick }) => {
       <div 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="w-full relative px-1 md:px-0"
+        className="w-full relative px-0 md:px-0"
       >
         {shuffledList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

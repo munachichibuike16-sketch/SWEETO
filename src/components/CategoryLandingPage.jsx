@@ -403,7 +403,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
           </div>
 
           {isMobile && isExpanded ? (
-            <div className="grid grid-cols-2 gap-1.5 px-0.5 w-full pb-4 animate-fadeIn">
+            <div className="grid grid-cols-2 gap-1.5 px-0 w-full pb-4 animate-fadeIn">
               {categoryDeals.slice(0, 4).map((prod) => (
                 <ProductCard 
                   key={`deal-${prod.id}`}
@@ -463,7 +463,7 @@ export default function CategoryLandingPage({ categoryName, products = [], categ
       )}
 
       {/* Filtered Products Grid */}
-      <div className="w-full flex flex-col gap-3 px-1 md:px-0">
+      <div className="w-full flex flex-col gap-3 px-0 md:px-0">
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5 sm:gap-6">
             {filteredProducts.map((prod) => (

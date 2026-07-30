@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft, MessageSquare, ChevronDown, QrCode, Mic } from 'lucide-react';
+import { Search, ShoppingCart, User, Heart, Globe, Menu, Home, X, Sun, Moon, LogOut, Bell, MapPin, Package, ShoppingBag, Camera, Settings, ArrowLeft, MessageSquare, ChevronDown, QrCode, Mic, Store } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -12,7 +12,7 @@ import { getCategoryDescendants } from '../utils/categoryHelpers';
 import SweetoLogo from './SweetoLogo';
 import { logVisitorEvent } from '../utils/analytics';
 
-const Header = ({ onMenuClick, onCartClick }) => {
+const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
   const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings, showToast, sections } = useStore();
@@ -646,7 +646,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
   return (
     <>
-      <header ref={headerRef} className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white dark:bg-[#020617] shadow-md border-b border-slate-150 dark:border-slate-800 ${isHomeOrCategory ? '' : 'hidden md:block'}`}>
+      <header ref={headerRef} className="fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-white dark:bg-[#020617] shadow-md border-b border-slate-150 dark:border-slate-800">
 
         {/* Desktop Main Header Layout */}
         <div className={`hidden md:flex max-w-[1240px] mx-auto items-center justify-between gap-8 w-full px-6 transition-all duration-300 ${isScrolled ? 'py-1.5' : 'py-3'}`}>
@@ -980,7 +980,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
         {/* Mobile Header Layout */}
         <div className="flex flex-col md:hidden w-full">
           {/* Persistent Compact Single-Row Mobile Header */}
-          <div className="flex items-center justify-between w-full h-11 gap-2.5 px-0.5">
+          <div className="flex items-center justify-between w-full h-14 gap-3 px-2">
             {/* Redesigned Icy Cool Mobile Branding without checkmark */}
             <div 
               onClick={() => {
@@ -991,7 +991,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
               }}
               className="flex items-center select-none cursor-pointer group shrink-0"
             >
-              <span className="font-black text-base sm:text-lg tracking-tighter uppercase italic drop-shadow-sm select-none">
+              <span className="font-black text-xl sm:text-2xl tracking-tighter uppercase italic drop-shadow-sm select-none">
                 <span className="text-blue-600">S</span> <span className="text-black dark:text-white">SWEETO-HUB</span>
               </span>
             </div>
@@ -999,7 +999,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
             {/* Compact Search Bar in the middle */}
             <div 
               onClick={() => setIsSearchOpen(true)}
-              className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-full py-1.5 pl-3.5 pr-2.5 gap-2 relative shadow-sm cursor-pointer h-8.5 overflow-hidden"
+              className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-full py-2 pl-4 pr-3 gap-2 relative shadow-sm cursor-pointer h-10 overflow-hidden"
             >
               <Search size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
               <div className="w-full bg-transparent border-none outline-none font-semibold text-xs text-slate-400 dark:text-slate-500 select-none truncate text-start">
@@ -1050,9 +1050,7 @@ const Header = ({ onMenuClick, onCartClick }) => {
 
       {/* --- Mobile Bottom Navigation --- */}
       {showBottomNav && (
-        <nav className={`fixed bottom-0 left-0 right-0 h-[calc(4.6rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] pt-2 bg-white/85 dark:bg-slate-950/90 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_35px_rgba(0,0,0,0.35)] rounded-t-[2rem] transition-all duration-500 transform ${
-          showBottomNavScroll ? 'translate-y-0 opacity-100' : 'translate-y-[120%] opacity-0 shadow-none pointer-events-none'
-        }`}>
+        <nav className="fixed bottom-0 left-0 right-0 h-[calc(4.6rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] pt-2 bg-white/85 dark:bg-slate-950/90 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-800/60 z-[100] lg:hidden px-4 flex justify-between items-center select-none shadow-[0_-10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_35px_rgba(0,0,0,0.35)] rounded-t-[2rem]">
         {/* Accueil */}
         <motion.button 
           onClick={() => {
@@ -1152,19 +1150,19 @@ const Header = ({ onMenuClick, onCartClick }) => {
           <span className="text-[8.5px] font-black uppercase tracking-widest">{t('chat_tab')}</span>
         </motion.button>
 
-        {/* Category (Sidebar) */}
+        {/* Store Button */}
         <motion.button 
-          onClick={onMenuClick} 
+          onClick={onStoreClick} 
           whileTap={{ scale: 0.92 }} 
           className="flex-1 flex flex-col items-center justify-center gap-1 h-full relative text-slate-500 dark:text-slate-400 hover:text-[#2563EB] transition-colors duration-300"
         >
           <motion.div
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <Menu size={19} strokeWidth={2.5} className="transition-all" />
+            <Store size={19} strokeWidth={2.5} className="transition-all" />
           </motion.div>
           <span className="text-[8.5px] font-black uppercase tracking-widest">
-            {lang === 'fr' ? 'Catégorie' : 'Category'}
+            MY STORE
           </span>
         </motion.button>
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, ShoppingCart, Star, Minus, Plus, MessageCircle, 
-  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X, Camera, Save
+  Share2, Heart, Shield, Award, MapPin, ChevronRight, Clock, Check, Search, ChevronLeft, X, Camera, Save, ChevronDown
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -43,6 +43,13 @@ const ProductDetailPage = () => {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
+  const [isSpecsExpanded, setIsSpecsExpanded] = useState(false);
+  const [isSpecsOverflowing, setIsSpecsOverflowing] = useState(false);
+  const specsContentRef = useRef(null);
+
+  const [isReviewsExpanded, setIsReviewsExpanded] = useState(false);
+  const [isReviewsOverflowing, setIsReviewsOverflowing] = useState(false);
+  const reviewsContentRef = useRef(null);
 
   const addToCart = (prod, qty = 1) => {
     setIsAdding(true);
@@ -147,6 +154,19 @@ const ProductDetailPage = () => {
 
 
   useEffect(() => {
+    if (specsContentRef.current) {
+      setIsSpecsOverflowing(specsContentRef.current.scrollHeight > 250);
+    }
+  }, [activeTab, product, lang, isSpecsExpanded]);
+
+  useEffect(() => {
+    if (reviewsContentRef.current) {
+      setIsReviewsOverflowing(reviewsContentRef.current.scrollHeight > 350);
+    }
+  }, [product, lang, isReviewsExpanded, ratingFilter, reviews]);
+
+
+  useEffect(() => {
     if (productId && liveProducts.length > 0) {
       const foundProduct = liveProducts.find(p => p.id.toString() === productId.toString());
       if (foundProduct) {
@@ -167,6 +187,12 @@ const ProductDetailPage = () => {
       const list = getImagesList(product);
       
       // Parse colors from product.colors
+      if (!hasVariants) {
+        setVariants([]);
+        setSelectedVariant(null);
+        return;
+      }
+
       let parsedColors = [];
       if (Array.isArray(product.colors)) {
         parsedColors = product.colors;
@@ -179,59 +205,23 @@ const ProductDetailPage = () => {
         }
       }
 
-      const mapped = list.map((img, idx) => {
+      const mapped = parsedColors.map((c, idx) => {
         let name = '';
-        if (parsedColors[idx]) {
-          if (typeof parsedColors[idx] === 'object' && parsedColors[idx] !== null) {
-            name = parsedColors[idx].name || parsedColors[idx].code || `Option ${idx + 1}`;
-          } else {
-            name = parsedColors[idx];
-          }
-        } else {
-          const category = (product.category || '').toLowerCase();
-          const pName = (product.name || '').toLowerCase();
-          
-          if (category.includes('laptop') || category.includes('computer') || category.includes('ordinateur')) {
-            let ram = '8GB';
-            let ssd = '256GB';
-            try {
-              if (product.description && product.description.trim().startsWith('{')) {
-                const parsed = JSON.parse(product.description);
-                if (parsed.specs) {
-                  if (parsed.specs.ramCapacity) ram = parsed.specs.ramCapacity.replace(/\s+/g, '');
-                  if (parsed.specs.storageCapacity) ssd = parsed.specs.storageCapacity.replace(/\s+/g, '');
-                }
-              }
-            } catch (e) {}
-            
-            if (idx === 0) name = `${ram} + ${ssd}`;
-            else if (idx === 1) name = '16GB + 512GB';
-            else if (idx === 2) name = '16GB + 1TB';
-            else name = `Option ${idx + 1}`;
-          } else if (category.includes('knife') || pName.includes('knife')) {
-            if (idx === 0) name = 'EDC Knife';
-            else if (idx === 1) name = 'Silver Metal';
-            else if (idx === 2) name = 'Shadow Black';
-            else if (idx === 3) name = 'Carbon Steel';
-            else name = `Option ${idx + 1}`;
-          } else {
-            if (idx === 0) name = 'Default Option';
-            else if (idx === 1) name = 'Classic Edition';
-            else if (idx === 2) name = 'Premium Edition';
-            else if (idx === 3) name = 'Special Edition';
-            else name = `Option ${idx + 1}`;
-          }
-        }
         let priceAdjust = 0;
-        if (idx === 1) priceAdjust = 15000;
-        else if (idx === 2) priceAdjust = 45000;
-        else if (idx === 3) priceAdjust = 65000;
+        if (typeof c === 'object' && c !== null) {
+          name = c.name || c.code || `Option ${idx + 1}`;
+          priceAdjust = Number(c.priceAdjust) || 0;
+        } else {
+          name = c;
+        }
+        const img = list[idx] || list[0];
         return { id: idx, name, image: img, priceAdjust };
       });
+      
       setVariants(mapped);
       setSelectedVariant(mapped[0] || null);
     }
-  }, [product]);
+  }, [product, hasVariants]);
 
   // Load session
   useEffect(() => {
@@ -335,19 +325,21 @@ const ProductDetailPage = () => {
 
   const mobileCarouselRef = useRef(null);
 
-  const variantLabel = React.useMemo(() => {
-    const category = (product?.category || '').toLowerCase();
-    if (category.includes('laptop') || category.includes('ordinateur') || category.includes('computer')) {
-      return 'Capacity';
+  const { variantLabel, hasVariants } = React.useMemo(() => {
+    let label = 'Variant';
+    let enabled = false;
+    if (product?.description && product.description.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(product.description);
+        if (parsed.variantsConfig) {
+          label = parsed.variantsConfig.label || 'Variant';
+          enabled = parsed.variantsConfig.enabled || false;
+        }
+      } catch (e) {}
     }
-    if (category.includes('storage') || category.includes('drive') || category.includes('ssd') || category.includes('hdd') || category.includes('usb') || category.includes('ram') || category.includes('mémoire') || category.includes('card')) {
-      return 'Capacity';
-    }
-    if (category.includes('cable') || category.includes('câble')) {
-      return 'Length';
-    }
-    return 'Color';
+    return { variantLabel: label, hasVariants: enabled };
   }, [product]);
+
 
   useEffect(() => {
     if (mobileCarouselRef.current) {
@@ -909,25 +901,6 @@ const ProductDetailPage = () => {
                       {lang === 'fr' ? 'Économie :' : 'You save :'} {Math.round(savings).toLocaleString()} {currSymbol}
                     </p>
                     
-                    {/* Store Coupons ticket */}
-                    <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                      <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 select-none">
-                        {lang === 'fr' ? 'Bons de réduction :' : 'Store Coupons :'}
-                      </span>
-                      
-                      {/* Interactive Coupon Ticket */}
-                      <div className="flex items-center justify-between gap-3 bg-[#e61e25]/5 border border-dashed border-[#e61e25]/30 rounded-2xl px-3.5 py-1.5 relative overflow-hidden">
-                        {/* Left Coupon Cutout Dot */}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-3 bg-white dark:bg-[#090d16] rounded-r-full border-r border-dashed border-[#e61e25]/30 -ml-1" />
-                        
-                        <span className="text-[10px] font-black text-[#e61e25] uppercase tracking-wide leading-none">
-                          {lang === 'fr' ? '1 000 FCFA DE RÉDUCTION' : 'Claim 1,000 FCFA Coupon'}
-                        </span>
-                        
-                        {/* Right Coupon Cutout Dot */}
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-3 bg-white dark:bg-[#090d16] rounded-l-full border-l border-dashed border-[#e61e25]/30 -mr-1" />
-                      </div>
-                    </div>
                   </div>
                 );
               })()}
@@ -950,7 +923,7 @@ const ProductDetailPage = () => {
             {/* AliExpress style desktop options, quantity and action panel */}
             <div className="hidden lg:flex flex-col gap-5 p-5 bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/80 rounded-3xl text-left shadow-sm">
               {/* Variations selector (Desktop) */}
-              {variants.length > 0 && (
+              {hasVariants && variants.length > 0 && (
                 <div className="space-y-2.5">
                   <div className="text-xs uppercase tracking-wider font-black text-slate-800 dark:text-slate-205 flex gap-2">
                     <span className="text-slate-400 capitalize">{variantLabel}:</span>
@@ -1037,7 +1010,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Variant Selector (Mobile only) - AliExpress Style Row */}
-            {variants.length > 0 && (
+            {hasVariants && variants.length > 0 && (
               <button 
                 onClick={() => {
                   setSheetAction('both');
@@ -1127,7 +1100,10 @@ const ProductDetailPage = () => {
                 ))}
               </div>
               
-              <div className="pt-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-bold space-y-2">
+              <div 
+                ref={specsContentRef}
+                className={`pt-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-bold space-y-2 relative transition-all duration-300 ${!isSpecsExpanded && isSpecsOverflowing ? 'max-h-[250px] overflow-hidden' : ''}`}
+              >
                 {(() => {
                   const parsedDesc = (() => {
                     const desc = product?.description ?? '';
@@ -1227,7 +1203,20 @@ const ProductDetailPage = () => {
                     </>
                   );
                 })()}
+                {!isSpecsExpanded && isSpecsOverflowing && (
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
+                )}
               </div>
+              
+              {isSpecsOverflowing && (
+                <button
+                  onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer select-none"
+                >
+                  <span>{isSpecsExpanded ? (lang === 'fr' ? 'Voir moins' : 'Show less') : (lang === 'fr' ? 'Voir plus' : 'Read more')}</span>
+                  <ChevronDown size={14} className={`transition-transform duration-300 ${isSpecsExpanded ? 'rotate-180' : ''}`} />
+                </button>
+              )}
             </div>
 
           </div>
@@ -1252,8 +1241,12 @@ const ProductDetailPage = () => {
             )}
           </div>
 
-          {/* AliExpress Rating breakdown & Submission grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div
+            ref={reviewsContentRef}
+            className={`relative transition-all duration-300 space-y-8 ${!isReviewsExpanded && isReviewsOverflowing ? 'max-h-[350px] overflow-hidden' : ''}`}
+          >
+            {/* AliExpress Rating breakdown & Submission grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Statistics column */}
             <div className="lg:col-span-5 space-y-6">
               <div className="bg-slate-50/50 dark:bg-slate-950/40 p-6 rounded-2xl border border-slate-100/80 dark:border-slate-800/60 flex items-center justify-between gap-6">
@@ -1476,6 +1469,20 @@ const ProductDetailPage = () => {
               </div>
             )}
           </div>
+          {!isReviewsExpanded && isReviewsOverflowing && (
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
+            )}
+          </div>
+
+          {isReviewsOverflowing && (
+            <button
+              onClick={() => setIsReviewsExpanded(!isReviewsExpanded)}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer select-none"
+            >
+              <span>{isReviewsExpanded ? (lang === 'fr' ? 'Voir moins' : 'Show less') : (lang === 'fr' ? 'Voir plus' : 'Read more')}</span>
+              <ChevronDown size={14} className={`transition-transform duration-300 ${isReviewsExpanded ? 'rotate-180' : ''}`} />
+            </button>
+          )}
         </div>
 
         {/* Related Products Grid */}
@@ -1672,7 +1679,7 @@ const ProductDetailPage = () => {
                 </div>
 
                 {/* Variant Color Section */}
-                {variants.length > 0 && (
+                {hasVariants && variants.length > 0 && (
                   <div className="mt-5 space-y-3">
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                       {variantLabel}

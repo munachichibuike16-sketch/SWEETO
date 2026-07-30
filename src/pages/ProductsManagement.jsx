@@ -18,6 +18,7 @@ const EMPTY = {
   name:'', price:'', originalPrice:'', categoryId:'', brandId:'', description:'', image_url:'', additional_images:[], status:'active', 
   featured:false, trending:false, dealOfDay:false, newArrival:false, smartphonesPlacement:false, homeCinemaPlacement:false, 
   speakersPlacement:false, refrigeratorsPlacement:false, colors:[], placements:[], condition:'new', stock:10, costPrice:'',
+  hasVariants: false, variantLabel: '',
   productLine:'', laptopType:'', os:'', ramCapacity:'', ramType:'', storageCapacity:'', storageType:'', processorTier:'', processorGeneration:'', processorModel:'',
   phoneRam:'', phoneStorage:'', screenSize:'', battery:'', camera:'',
   chargerPort:'', chargerPower:'', fastCharging:'',
@@ -358,11 +359,13 @@ export default function ProductsManagement() {
 
     let descText = p.description ?? '';
     let specs = null;
+    let variantsConfig = null;
     try {
       if (descText && descText.trim().startsWith('{')) {
         const parsed = JSON.parse(descText);
         descText = parsed.text || '';
         specs = parsed.specs || null;
+        variantsConfig = parsed.variantsConfig || null;
       }
     } catch(e) {
       console.warn("Failed to parse product description JSON:", e);
@@ -387,6 +390,8 @@ export default function ProductsManagement() {
       speakersPlacement: Boolean(p.speakers_placement) || false, 
       refrigeratorsPlacement: Boolean(p.refrigerators_placement) || false, 
       colors: typeof p.colors === 'string' ? JSON.parse(p.colors) : (p.colors || []),
+      hasVariants: variantsConfig?.enabled || false,
+      variantLabel: variantsConfig?.label || '',
       placements: placements,
       condition: p.condition || 'new',
       stock: p.stock || p.stock_quantity || 0,
@@ -442,7 +447,8 @@ export default function ProductsManagement() {
     catch { setError('Image upload failed.'); } finally { setIsUploading(false); }
   };
 
-  const addColor = () => { if (!colorName.trim()) return; setForm(p=>({...p,colors:[...(p.colors||[]),{name:colorName.trim(),code:colorCode}]})); setColorName(''); setColorCode('#0000FF'); };
+  const [variantPriceAdjust, setVariantPriceAdjust] = useState('');
+  const addColor = () => { if (!colorName.trim()) return; setForm(p=>({...p,colors:[...(p.colors||[]),{name:colorName.trim(),code:colorCode,priceAdjust:parseFloat(variantPriceAdjust)||0}]})); setColorName(''); setColorCode('#0000FF'); setVariantPriceAdjust(''); };
 
   const discount = () => { const o=parseFloat(form.originalPrice),s=parseFloat(form.price); if(!o||!s||o<=s) return null; return Math.round(((o-s)/o)*100); };
 
@@ -504,9 +510,13 @@ export default function ProductsManagement() {
         return !!val;
       });
 
-      const descriptionPayload = hasSpecs ? JSON.stringify({
+      const descriptionPayload = (hasSpecs || form.hasVariants) ? JSON.stringify({
         text: form.description || '',
-        specs: specsObject
+        specs: specsObject,
+        variantsConfig: {
+          enabled: form.hasVariants,
+          label: form.variantLabel
+        }
       }) : form.description || '';
 
       const payload = { 
@@ -1585,24 +1595,43 @@ export default function ProductsManagement() {
                 </div>
               </div>
 
-              {/* Colors */}
+              {/* Product Variants */}
               <div className="bg-slate-50 dark:bg-slate-950/30 rounded-3xl border border-slate-200 dark:border-slate-800 p-5">
-                <label className={`${lbl} mb-4`}><Palette size={12}/> Color Variants</label>
-                <div className="flex gap-2 mb-4">
-                  <input type="text" value={colorName} onChange={e=>setColorName(e.target.value)} placeholder="Color name" className="flex-1 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-900 dark:text-white"/>
-                  <input type="color" value={colorCode} onChange={e=>setColorCode(e.target.value)} className="w-12 h-12 rounded-xl cursor-pointer border border-slate-200 dark:border-slate-800 p-1 bg-white dark:bg-slate-900"/>
-                  <button type="button" onClick={addColor} className="px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase rounded-xl hover:opacity-80 active:scale-95 transition-all">Add</button>
+                <div className="flex items-center justify-between mb-4">
+                  <label className={`${lbl} mb-0`}><Palette size={12}/> Product Variants</label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={form.hasVariants} onChange={e => setForm(p => ({ ...p, hasVariants: e.target.checked }))} />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-blue-500"></div>
+                  </label>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {(form.colors||[]).length===0&&<p className="text-[11px] text-slate-400 italic">No colors added yet.</p>}
-                  {(form.colors||[]).map((c,i)=>(
-                    <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl">
-                      <span className="w-3.5 h-3.5 rounded-full border border-slate-300" style={{backgroundColor:c.code}}/>
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{c.name}</span>
-                      <button type="button" onClick={()=>setForm(p=>({...p,colors:p.colors.filter((_,j)=>j!==i)}))} className="text-slate-300 hover:text-red-500 transition-colors"><X size={12}/></button>
+                
+                {form.hasVariants && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <input type="text" value={form.variantLabel} onChange={e => setForm(p => ({ ...p, variantLabel: e.target.value }))} placeholder="Variant Label (e.g., Capacité, Color, Size)" className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-900 dark:text-white" />
+                    
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input type="text" value={colorName} onChange={e=>setColorName(e.target.value)} placeholder="Option Name" className="flex-1 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-900 dark:text-white"/>
+                      <input type="number" value={variantPriceAdjust} onChange={e=>setVariantPriceAdjust(e.target.value)} placeholder={`Price Adj (${currencySymbol})`} className="w-full sm:w-32 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-900 dark:text-white" />
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={colorCode} onChange={e=>setColorCode(e.target.value)} title="Optional Color Code" className="w-12 h-12 shrink-0 rounded-xl cursor-pointer border border-slate-200 dark:border-slate-800 p-1 bg-white dark:bg-slate-900"/>
+                        <button type="button" onClick={addColor} className="px-5 h-12 shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase rounded-xl hover:opacity-80 active:scale-95 transition-all">Add</button>
+                      </div>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {(form.colors||[]).length===0&&<p className="text-[11px] text-slate-400 italic">No options added yet.</p>}
+                      {(form.colors||[]).map((c,i)=>(
+                        <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm">
+                          <span className="w-3.5 h-3.5 rounded-full border border-slate-300" style={{backgroundColor:c.code}}/>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            {c.name} {c.priceAdjust ? `(${c.priceAdjust > 0 ? '+' : ''}${c.priceAdjust}${currencySymbol})` : ''}
+                          </span>
+                          <button type="button" onClick={()=>setForm(p=>({...p,colors:p.colors.filter((_,j)=>j!==i)}))} className="text-slate-300 hover:text-red-500 transition-colors"><X size={12}/></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

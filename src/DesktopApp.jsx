@@ -440,7 +440,7 @@ export default function DesktopApp() {
     if (location.pathname.includes('/wishlist')) return 'wishlist';
     if (location.pathname.includes('/deals')) return 'deals';
     if (location.pathname.includes('/new-arrivals')) return 'new-arrivals';
-    if (location.pathname.includes('/auth') || location.pathname.includes('/login') || location.pathname.includes('/register') || location.pathname.includes('/settings')) return 'auth';
+    if (location.pathname.includes('/auth') || location.pathname.includes('/login') || location.pathname.includes('/register') || location.pathname.includes('/settings') || location.pathname.includes('/orders')) return 'auth';
     return 'home';
   };
 
@@ -879,7 +879,7 @@ export default function DesktopApp() {
 
       {/* PAGE VIEW: AUTH / ACCOUNT */}
       {activePage === 'auth' && (
-        <AuthPage />
+        <AuthPage initialTab={location.pathname.includes('/orders') ? 'orders' : 'login'} />
       )}
 
       {/* PAGE VIEW: HOME PAGE */}
