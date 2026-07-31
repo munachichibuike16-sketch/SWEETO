@@ -133,11 +133,11 @@ const Toast = () => {
   };
 
   return (
-    <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[3000] pointer-events-none">
+    <div className="fixed bottom-28 md:bottom-12 left-1/2 -translate-x-1/2 z-[3000] pointer-events-none">
       <motion.div
-        initial={{ y: -50, opacity: 0, scale: 0.9 }}
+        initial={{ y: 50, opacity: 0, scale: 0.9 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: -50, opacity: 0, scale: 0.9 }}
+        exit={{ y: 50, opacity: 0, scale: 0.9 }}
         className="bg-white/90 dark:bg-[#020617]/90 backdrop-blur-3xl border border-slate-100 dark:border-eas-blue/15 shadow-[0_20px_50px_rgba(0,82,255,0.05)] px-8 py-4 rounded-3xl flex items-center gap-4 pointer-events-auto"
       >
         {icons[toast.type] || icons.success}

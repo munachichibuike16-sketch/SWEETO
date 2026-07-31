@@ -189,7 +189,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     toggleProductLike(product.id, !isWished);
   };
 
-  const handleShareProduct = (e) => {
+  const handleShareProduct = async (e) => {
     e.stopPropagation();
     
     // Construct the crawler-friendly share link pointing to the backend metadata route
@@ -199,13 +199,30 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     const shareUrl = `${baseShareUrl}/share/product/${product.id}?redirect=${encodeURIComponent(window.location.origin)}`;
     const shareTitle = product.name;
     const shareText = product.description || `Check out ${product.name} on SWEETO!`;
+    const shareData = {
+      title: shareTitle,
+      text: shareText,
+      url: shareUrl,
+    };
+
+    try {
+      const imageUrl = product.image_url || product.image;
+      if (navigator.canShare && imageUrl) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'product.jpg', { type: blob.type });
+        const dataWithFiles = { ...shareData, files: [file] };
+        if (navigator.canShare(dataWithFiles)) {
+          await navigator.share(dataWithFiles);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch image for share:", err);
+    }
 
     if (navigator.share) {
-      navigator.share({
-        title: shareTitle,
-        text: shareText,
-        url: shareUrl,
-      })
+      navigator.share(shareData)
       .then(() => console.log('Successfully shared'))
       .catch((error) => console.log('Error sharing:', error));
     } else {

@@ -545,16 +545,34 @@ const ProductDetailPage = () => {
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
-  const shareProduct = () => {
+  const shareProduct = async () => {
     const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+    const shareData = {
+      title: product.name,
+      text: lang === 'fr' 
+        ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
+        : `Check out ${product.name} on SWEETO! ⚡`,
+      url: shareUrl,
+    };
+
+    try {
+      const imageUrl = product.image_url || product.image;
+      if (navigator.canShare && imageUrl) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'product.jpg', { type: blob.type });
+        const dataWithFiles = { ...shareData, files: [file] };
+        if (navigator.canShare(dataWithFiles)) {
+          await navigator.share(dataWithFiles);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch image for share:", err);
+    }
+
     if (navigator.share) {
-      navigator.share({
-        title: product.name,
-        text: lang === 'fr' 
-          ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
-          : `Check out ${product.name} on SWEETO! ⚡`,
-        url: shareUrl,
-      })
+      navigator.share(shareData)
       .catch((err) => {
         if (err.name !== 'AbortError') {
           console.warn("Native share failed, showing custom share modal:", err);
@@ -1036,7 +1054,7 @@ const ProductDetailPage = () => {
                         url: window.location.href,
                       };
 
-                      let imageToShare = product.image;
+                      let imageToShare = product.image_url || product.image;
                       if (!imageToShare && product.images) {
                         imageToShare = product.images.startsWith('[') ? JSON.parse(product.images)[0] : product.images.split(',')[0];
                       }
