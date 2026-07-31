@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Forward /share/product/123 to share.php
+  RewriteRule ^share/product/(.*)$ share.php?id=$1 [L,QSA]
+  
+  # Normal React fallback (only if not a file or directory)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.html [L,QSA]
+</IfModule>
