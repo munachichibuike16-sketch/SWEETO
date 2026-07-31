@@ -214,9 +214,8 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
         const filename = `product.${ext === 'jpeg' ? 'jpg' : ext}`;
         const file = new File([blob], filename, { type: blob.type });
         
-        // For WhatsApp Status, we must omit the 'url' property and append it to 'text'
+        // For WhatsApp Status, we must omit the 'url' and 'title' properties and append it to 'text'
         const dataWithFiles = { 
-          title: shareData.title,
           text: `${shareData.text}\n\n${shareData.url}`,
           files: [file] 
         };
