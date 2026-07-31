@@ -216,6 +216,7 @@ export default function NotificationsContent({ onProductClick }) {
                           <div className="relative">
                             <img 
                               src={
+                                notif.originalProduct.image_url ||
                                 notif.originalProduct.image || 
                                 (notif.originalProduct.images ? 
                                   (Array.isArray(notif.originalProduct.images) ? notif.originalProduct.images[0] : typeof notif.originalProduct.images === 'string' ? (notif.originalProduct.images.startsWith('[') ? JSON.parse(notif.originalProduct.images)[0] : notif.originalProduct.images.split(',')[0]) : '')
