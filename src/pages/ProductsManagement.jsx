@@ -7,6 +7,8 @@ import { compressImage } from '../utils/imageCompressor';
 import { uploadToStorage } from '../utils/storageHelper';
 import { apiFetch, API_BASE_URL } from '../utils/api';
 import { formatDbError } from '../utils/errorHelper';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../utils/cropImage';
 
 const FacebookIcon = ({ size = 20, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -66,6 +68,12 @@ export default function ProductsManagement() {
   const [colorCode, setColorCode] = useState('#0000FF');
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
+
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [cropTarget, setCropTarget] = useState(null); // 'primary' | 'additional'
 
   const filteredCategoriesList = React.useMemo(() => {
     if (showAllCategories || !form.name) return categories;
@@ -441,10 +449,45 @@ export default function ProductsManagement() {
   };
   const backToList = () => { setView('list'); setEditingProduct(null); setForm(EMPTY); setError(''); setSuccess(''); setAutoPostFacebook(false); setSavedProductForShare(null); };
 
-  const handleImg = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    try { setIsUploading(true); const blob = await compressImage(file); const url = await uploadToStorage(blob,'products'); setForm(p=>({...p,image_url:url})); }
-    catch { setError('Image upload failed.'); } finally { setIsUploading(false); }
+  const handleImg = (e, target = 'primary') => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      setCropImageSrc(reader.result);
+      setCropTarget(target);
+    });
+    reader.readAsDataURL(file);
+    e.target.value = null; // reset input
+  };
+
+  const handleCropComplete = (croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleSaveCrop = async () => {
+    if (!cropImageSrc || !croppedAreaPixels) return;
+    try {
+      setIsUploading(true);
+      const croppedBlob = await getCroppedImg(cropImageSrc, croppedAreaPixels);
+      const file = new File([croppedBlob], "cropped.jpg", { type: "image/jpeg" });
+      const blob = await compressImage(file);
+      const url = await uploadToStorage(blob, 'products');
+      
+      if (cropTarget === 'primary') {
+        setForm(p => ({ ...p, image_url: url }));
+      } else if (cropTarget === 'additional') {
+        setForm(p => ({ ...p, additional_images: [...(p.additional_images || []), url] }));
+      }
+      
+      setCropImageSrc(null); // close modal
+      setCropTarget(null);
+    } catch (err) {
+      setError('Image crop/upload failed.');
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const [variantPriceAdjust, setVariantPriceAdjust] = useState('');
@@ -1567,23 +1610,7 @@ export default function ProductsManagement() {
                         type="file"
                         className="hidden"
                         accept="image/*"
-                        onChange={async (e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          try {
-                            setIsUploading(true);
-                            const blob = await compressImage(file);
-                            const url = await uploadToStorage(blob, 'products');
-                            setForm(p => ({
-                              ...p,
-                              additional_images: [...(p.additional_images || []), url]
-                            }));
-                          } catch (err) {
-                            setError('Gallery image upload failed.');
-                          } finally {
-                            setIsUploading(false);
-                          }
-                        }}
+                        onChange={(e) => handleImg(e, 'additional')}
                         disabled={isUploading}
                       />
                     </label>
@@ -1893,6 +1920,79 @@ export default function ProductsManagement() {
               >
                 Close & Return to List
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Cropper Modal */}
+      <AnimatePresence>
+        {cropImageSrc && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCropImageSrc(null)} className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" />
+            
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-xl bg-white dark:bg-[#0f172a] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden max-h-[90vh]">
+              
+              <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800/50">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Crop Image</h3>
+                  <p className="text-xs text-slate-500 mt-1">Make sure the product fits perfectly in the square.</p>
+                </div>
+                <button onClick={() => setCropImageSrc(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="relative w-full h-[300px] sm:h-[400px] bg-black/5 dark:bg-black/20">
+                <Cropper
+                  image={cropImageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onCropComplete={handleCropComplete}
+                  onZoomChange={setZoom}
+                  classes={{ containerClassName: 'rounded-none' }}
+                />
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Zoom</label>
+                  <input
+                    type="range"
+                    value={zoom}
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    aria-labelledby="Zoom"
+                    onChange={(e) => setZoom(e.target.value)}
+                    className="w-full accent-blue-500"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCropImageSrc(null)}
+                    disabled={isUploading}
+                    className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveCrop}
+                    disabled={isUploading}
+                    className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
+                  >
+                    {isUploading ? (
+                      <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                    ) : (
+                      <><CheckCircle2 size={18} /> Save & Upload</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
             </motion.div>
           </div>
         )}
