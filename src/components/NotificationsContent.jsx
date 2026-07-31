@@ -35,7 +35,7 @@ export default function NotificationsContent({ onProductClick }) {
     }));
 
     const systemNotifs = [
-      { id: 'sys-1', type: 'order', title: lang === 'fr' ? 'Bienvenue sur SWEETO' : 'Welcome to SWEETO', message: lang === 'fr' ? 'Profitez d\\'une expérience d\\'achat premium.' : 'Enjoy a premium shopping experience with us.', time: lang === 'fr' ? 'À l\\'instant' : 'Just now', read: storedRead.includes('sys-1'), deleted: !!storedDeleted['sys-1'] }
+      { id: 'sys-1', type: 'order', title: lang === 'fr' ? "Bienvenue sur SWEETO" : "Welcome to SWEETO", message: lang === 'fr' ? "Profitez d'une expérience d'achat premium." : "Enjoy a premium shopping experience with us.", time: lang === 'fr' ? "À l'instant" : "Just now", read: storedRead.includes('sys-1'), deleted: !!storedDeleted['sys-1'] }
     ];
 
     const combined = [...newArrivals, ...systemNotifs].filter(n => !n.deleted);
@@ -137,7 +137,7 @@ export default function NotificationsContent({ onProductClick }) {
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                   {unreadCount === 0 
                     ? (lang === 'fr' ? 'Tout est à jour' : 'All caught up') 
-                    : (lang === 'fr' ? \`\${unreadCount} nouvelle(s)\` : \`\${unreadCount} new\`)}
+                    : (lang === 'fr' ? `${unreadCount} nouvelle(s)` : `${unreadCount} new`)}
                 </p>
               </div>
             </div>
@@ -199,11 +199,11 @@ export default function NotificationsContent({ onProductClick }) {
                     animate="show"
                     exit="exit"
                     onClick={() => handleNotificationClick(notif)}
-                    className={\`group relative p-5 rounded-2xl border transition-all duration-300 cursor-pointer \${
+                    className={`group relative p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
                       notif.read 
                         ? 'bg-white dark:bg-[#121827] border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10' 
                         : 'bg-white dark:bg-[#151c2e] border-indigo-100 dark:border-indigo-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(79,70,229,0.1)]'
-                    }\`}
+                    }`}
                   >
                     {/* Glowing dot for unread */}
                     {!notif.read && (
@@ -230,7 +230,7 @@ export default function NotificationsContent({ onProductClick }) {
                             )}
                           </div>
                         ) : (
-                          <div className={\`w-12 h-12 rounded-[14px] flex items-center justify-center \${!notif.read ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'bg-gray-50 dark:bg-gray-800'}\`}>
+                          <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center ${!notif.read ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'bg-gray-50 dark:bg-gray-800'}`}>
                             {getIcon(notif.type)}
                           </div>
                         )}
@@ -238,7 +238,7 @@ export default function NotificationsContent({ onProductClick }) {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <h3 className={\`text-base font-semibold truncate \${!notif.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}\`}>
+                          <h3 className={`text-base font-semibold truncate ${!notif.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                             {notif.title}
                           </h3>
                           <span className="text-xs font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap pt-1">
@@ -246,7 +246,7 @@ export default function NotificationsContent({ onProductClick }) {
                           </span>
                         </div>
                         
-                        <p className={\`text-sm mt-1 leading-relaxed \${!notif.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-500'}\`}>
+                        <p className={`text-sm mt-1 leading-relaxed ${!notif.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-500'}`}>
                           {notif.message}
                         </p>
                         

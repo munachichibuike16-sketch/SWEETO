@@ -16,7 +16,6 @@ import CartDrawer from './components/CartDrawer';
 import WishlistContent from './components/WishlistContent';
 import FlashyDealsSection from './components/FlashyDealsSection';
 import NotificationsContent from './components/NotificationsContent';
-import CartContent from './components/CartContent';
 import { pushManager } from './utils/pushManager';
 
 // Handle legacy hash routing URLs seamlessly
