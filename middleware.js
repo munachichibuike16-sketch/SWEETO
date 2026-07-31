@@ -12,7 +12,7 @@ export default async function middleware(request) {
   const BOT_REGEX = /facebookexternalhit|Facebot|WhatsApp|Twitterbot|Pinterest|LinkedInBot|Discordbot/i;
 
   // 1. Only run for bots on /product/:id paths
-  const match = url.pathname.match(/^\/product\/([^/]+)/);
+  const match = url.pathname.match(/^\/(?:share\/)?product\/([^/]+)/);
   if (!match || !BOT_REGEX.test(userAgent)) {
     // Return early, letting the static index.html load normally for real users
     return;
