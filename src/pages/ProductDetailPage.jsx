@@ -555,30 +555,7 @@ const ProductDetailPage = () => {
       url: shareUrl,
     };
 
-    try {
-      const imageUrl = product.image_url || product.image;
-      if (navigator.canShare && imageUrl) {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        const ext = blob.type.split('/')[1] || 'jpg';
-        const filename = `product.${ext === 'jpeg' ? 'jpg' : ext}`;
-        const file = new File([blob], filename, { type: blob.type });
-        
-        // For WhatsApp Status, we must omit the 'url' and 'title' properties and append it to 'text'
-        // Otherwise, it forces a link share and drops the image.
-        const dataWithFiles = { 
-          text: `${shareData.text}\n\n${shareData.url}`,
-          files: [file] 
-        };
-        
-        if (navigator.canShare(dataWithFiles)) {
-          await navigator.share(dataWithFiles);
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("Could not fetch image for share:", err);
-    }
+
 
     if (navigator.share) {
       navigator.share(shareData)
@@ -1063,33 +1040,6 @@ const ProductDetailPage = () => {
                         url: window.location.href,
                       };
 
-                      let imageToShare = product.image_url || product.image;
-                      if (!imageToShare && product.images) {
-                        imageToShare = product.images.startsWith('[') ? JSON.parse(product.images)[0] : product.images.split(',')[0];
-                      }
-
-                      if (navigator.canShare && imageToShare) {
-                        try {
-                          const response = await fetch(imageToShare);
-                          const blob = await response.blob();
-                          const ext = blob.type.split('/')[1] || 'jpg';
-                          const filename = `product.${ext === 'jpeg' ? 'jpg' : ext}`;
-                          const file = new File([blob], filename, { type: blob.type });
-                          
-                          // For WhatsApp Status, we must omit the 'url' and 'title' properties and append it to 'text'
-                          const dataWithFiles = { 
-                            text: `${shareData.text}\n\n${shareData.url}`,
-                            files: [file] 
-                          };
-                          
-                          if (navigator.canShare(dataWithFiles)) {
-                            await navigator.share(dataWithFiles);
-                            return;
-                          }
-                        } catch (err) {
-                          console.warn('Could not fetch image for sharing:', err);
-                        }
-                      }
 
                       if (navigator.share) {
                         await navigator.share(shareData);
