@@ -1469,7 +1469,7 @@ const App = () => {
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
           <Route path="/order-tracking" element={<OrderTrackingPage />} />
-          <Route path="/orders" element={HomeElement} />
+          <Route path="/orders" element={<OrdersPage />} />
           <Route path="/swto-deliver" element={<DeliverPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<ChatPage />} />

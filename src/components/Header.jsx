@@ -869,7 +869,7 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
                   <button onClick={() => navigate('/auth')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
                     My Account
                   </button>
-                  <button onClick={() => navigate('/auth')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
+                  <button onClick={() => navigate('/orders')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
                     My Orders
                   </button>
                   <button onClick={() => navigate('/wishlist')} className="w-full text-left py-2 px-3 text-xs font-bold text-slate-705 dark:text-slate-305 hover:bg-slate-55 rounded-xl transition-colors border-none bg-transparent cursor-pointer">
