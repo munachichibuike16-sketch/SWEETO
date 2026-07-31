@@ -49,6 +49,15 @@ export default async function handler(req, res) {
 
     // 3. Resolve product image URL
     let metaImageUrl = product.image_url || product.image || '';
+    if (!metaImageUrl && product.images) {
+      try {
+        const imgs = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+        if (Array.isArray(imgs) && imgs.length > 0) {
+          metaImageUrl = imgs[0];
+        }
+      } catch (e) {}
+    }
+    
     if (metaImageUrl && (metaImageUrl.startsWith('/') || !metaImageUrl.startsWith('http'))) {
       const host = req.headers.host || 'swto.site';
       const protocol = req.headers['x-forwarded-proto'] || 'https';
