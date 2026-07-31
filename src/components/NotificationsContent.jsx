@@ -92,12 +92,12 @@ export default function NotificationsContent({ onProductClick }) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#030712] font-sans relative">
-      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-20 pt-4 md:pt-6">
+      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-20 pt-[env(safe-area-inset-top,0px)] md:pt-6">
         
-        <div className="fixed top-4 md:top-6 left-0 right-0 z-30 mx-auto w-full max-w-2xl px-4 md:px-8">
+        <div className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] md:top-6 left-0 right-0 z-30 mx-auto w-full max-w-2xl px-4 md:px-8">
           <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-[2rem] shadow-sm border border-gray-100/50 dark:border-gray-800/50 flex items-center justify-between px-6 md:px-8 py-4 md:py-5 transition-all duration-300">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <Bell className="w-7 h-7 text-indigo-600 fill-indigo-600 dark:text-indigo-500 dark:fill-indigo-500" /> Notifications
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <Bell className="w-6 h-6 md:w-7 md:h-7 text-indigo-600 fill-indigo-600 dark:text-indigo-500 dark:fill-indigo-500" /> Notifications
             </h1>
             <div className="flex items-center gap-4">
               <button 
@@ -110,7 +110,7 @@ export default function NotificationsContent({ onProductClick }) {
           </div>
         </div>
 
-        <div className="space-y-4 pt-24 md:pt-28">
+        <div className="space-y-4 pt-28 md:pt-32">
           {notifications.length === 0 ? (
             <div className="text-center py-20 text-gray-500 dark:text-gray-400">
               <p>No new notifications.</p>

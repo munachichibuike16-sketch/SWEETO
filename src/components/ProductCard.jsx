@@ -210,8 +210,17 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
       if (navigator.canShare && imageUrl) {
         const response = await fetch(imageUrl);
         const blob = await response.blob();
-        const file = new File([blob], 'product.jpg', { type: blob.type });
-        const dataWithFiles = { ...shareData, files: [file] };
+        const ext = blob.type.split('/')[1] || 'jpg';
+        const filename = `product.${ext === 'jpeg' ? 'jpg' : ext}`;
+        const file = new File([blob], filename, { type: blob.type });
+        
+        // For WhatsApp Status, we must omit the 'url' property and append it to 'text'
+        const dataWithFiles = { 
+          title: shareData.title,
+          text: `${shareData.text}\n\n${shareData.url}`,
+          files: [file] 
+        };
+        
         if (navigator.canShare(dataWithFiles)) {
           await navigator.share(dataWithFiles);
           return;
