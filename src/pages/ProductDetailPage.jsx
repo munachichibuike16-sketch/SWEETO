@@ -65,6 +65,13 @@ const ProductDetailPage = () => {
   };
 
   const [product, setProduct] = useState(null);
+  const [artificialLoading, setArtificialLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setArtificialLoading(false), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('specs');
@@ -569,6 +576,32 @@ const ProductDetailPage = () => {
       setIsShareModalOpen(true);
     }
   };
+
+  const isPageLoading = artificialLoading;
+
+  if (isPageLoading || !product) {
+    return (
+      <div className="relative min-h-screen bg-slate-50 dark:bg-[#090d16] pb-24 transition-colors duration-300 animate-pulse pt-4 px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 pt-10">
+          {/* Image Skeleton */}
+          <div className="w-full h-[400px] md:h-[600px] rounded-[2rem] bg-slate-200 dark:bg-slate-800" />
+          
+          {/* Details Skeleton */}
+          <div className="space-y-6">
+            <div className="w-32 h-6 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="w-full h-12 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="w-3/4 h-12 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="w-48 h-8 rounded bg-slate-200 dark:bg-slate-800 mt-6" />
+            <div className="w-full h-32 rounded-xl bg-slate-200 dark:bg-slate-800" />
+            <div className="flex gap-4 mt-8">
+              <div className="w-1/2 h-14 rounded-full bg-slate-200 dark:bg-slate-800" />
+              <div className="w-1/2 h-14 rounded-full bg-slate-200 dark:bg-slate-800" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-white pb-24 transition-colors duration-300">

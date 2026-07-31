@@ -83,6 +83,12 @@ export default function BrightRetailHome({ onProductClick }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('new'); // 'new' or 'bestseller'
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [artificialLoading, setArtificialLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setArtificialLoading(false), 1500);
+    return () => clearTimeout(t);
+  }, []);
 
   // Time remaining countdown for Deal of the Day
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 22, seconds: 45 });
@@ -1057,6 +1063,38 @@ export default function BrightRetailHome({ onProductClick }) {
         return renderBrightCustomSection(section);
     }
   };
+
+  const isPageLoading = loading || artificialLoading;
+
+  if (isPageLoading) {
+    return (
+      <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] pb-20 pt-4 px-4 sm:px-6 lg:px-8 space-y-8 animate-pulse min-h-screen">
+        {/* Hero Skeleton */}
+        <div className="w-full max-w-[1440px] mx-auto h-[250px] sm:h-[400px] md:h-[500px] rounded-[2rem] bg-slate-200 dark:bg-slate-800" />
+        
+        {/* Categories Skeleton */}
+        <div className="w-full max-w-[1440px] mx-auto flex gap-4 overflow-hidden py-4">
+          {[1,2,3,4,5,6,7,8].map(i => (
+            <div key={i} className="flex flex-col items-center gap-3 shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800" />
+              <div className="w-12 h-3 rounded bg-slate-200 dark:bg-slate-800" />
+            </div>
+          ))}
+        </div>
+
+        {/* Section Header Skeleton */}
+        <div className="w-full max-w-[1440px] mx-auto flex justify-between items-center mt-8">
+          <div className="w-48 h-8 rounded-lg bg-slate-200 dark:bg-slate-800" />
+          <div className="w-24 h-4 rounded bg-slate-200 dark:bg-slate-800" />
+        </div>
+
+        {/* Product Grid Skeleton */}
+        <div className="w-full max-w-[1440px] mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {renderSkeletons(6)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[#f8f9fa] dark:bg-[#020617] transition-colors duration-500 pb-20 pt-4">
