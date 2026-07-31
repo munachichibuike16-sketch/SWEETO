@@ -17,9 +17,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const currencySymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency === 'USD' ? '$' : (settings?.currency || 'FCFA'));
 
-  const handleGoToCheckout = () => {
+  const handleGoToCart = () => {
     onClose();
-    navigate('/checkout');
+    navigate('/cart');
   };
 
   const handleClearCart = () => {
@@ -246,10 +246,10 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   </button>
                   
                   <button 
-                    onClick={handleGoToCheckout}
+                    onClick={handleGoToCart}
                     className="flex-[1.2] py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-2xl transition-all shadow-md active:scale-95 cursor-pointer border-none flex items-center justify-center gap-1.5"
                   >
-                    <span>Checkout</span>
+                    <span>View Cart</span>
                     <span>➔</span>
                   </button>
                 </div>

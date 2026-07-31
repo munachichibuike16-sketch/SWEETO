@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Package, AlertCircle, CheckCircle2, Trash2, X, Sparkles, CheckCheck } from 'lucide-react';
+import { Bell, Package, AlertCircle, CheckCircle2, Trash2, X, Sparkles, CheckCheck, Truck, Clock, XCircle } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase';
 
 export default function NotificationsContent({ onProductClick }) {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function NotificationsContent({ onProductClick }) {
   const [notifications, setNotifications] = useState([]);
   const [readNotifs, setReadNotifs] = useState([]);
   const [deletedNotifs, setDeletedNotifs] = useState({});
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
     // Load state from localStorage
@@ -21,6 +23,49 @@ export default function NotificationsContent({ onProductClick }) {
     
     setReadNotifs(storedRead);
     setDeletedNotifs(storedDeleted);
+
+    // Fetch user orders
+    const fetchUserOrders = async () => {
+      const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+      if (!session) return;
+      
+      try {
+        const queries = [];
+        if (session.email) queries.push(`customer_contact.ilike.%| ${session.email.toLowerCase()} |%`);
+        if (session.id) queries.push(`customer_contact.ilike.%| ${session.id}%`);
+        
+        const phoneVal = session.phoneNumber || session.phone;
+        const cleanPhone = phoneVal ? phoneVal.replace(/\D/g, '') : '';
+        if (cleanPhone && cleanPhone.length >= 8) {
+          queries.push(`customer_contact.ilike.${cleanPhone} |%`);
+          queries.push(`customer_contact.ilike.+${cleanPhone} |%`);
+          queries.push(`customer_contact.ilike.${phoneVal} |%`);
+          queries.push(`customer_phone.eq.${phoneVal}`);
+          queries.push(`customer_phone.eq.${cleanPhone}`);
+        }
+
+        if (queries.length > 0) {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .or(queries.join(','))
+            .order('created_at', { ascending: false });
+            
+          if (!error && data) {
+            setOrders(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+      }
+    };
+    
+    fetchUserOrders();
+  }, []);
+
+  useEffect(() => {
+    const storedRead = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+    const storedDeleted = JSON.parse(localStorage.getItem('deleted_notifications') || '{}');
 
     // Build notifications from new arrival products
     const newArrivals = (products || []).filter(p => p.is_new_arrival).map(p => ({
@@ -31,16 +76,54 @@ export default function NotificationsContent({ onProductClick }) {
       time: p.created_at ? new Date(p.created_at).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' }) : 'New',
       read: storedRead.includes(`new-product-${p.id}`),
       deleted: !!storedDeleted[`new-product-${p.id}`],
-      originalProduct: p
+      originalProduct: p,
+      sortTime: p.created_at ? new Date(p.created_at).getTime() : 0
     }));
 
+    // Build order notifications
+    const orderNotifs = orders.map(order => {
+      const status = (order.status || 'pending').toLowerCase();
+      let title = lang === 'fr' ? 'Mise à jour de commande' : 'Order Update';
+      let message = '';
+      let type = 'order_status';
+      
+      if (status === 'pending' || status === 'processing') {
+        title = lang === 'fr' ? 'Commande Reçue' : 'Order Received';
+        message = lang === 'fr' ? `Votre commande pour ${order.total_amount || order.total} FCFA est en cours de traitement.` : `Your order for ${order.total_amount || order.total} FCFA is being processed.`;
+        type = 'processing';
+      } else if (status === 'shipped' || status === 'shipping') {
+        title = lang === 'fr' ? 'Commande Expédiée' : 'Order Shipped';
+        message = lang === 'fr' ? `Bonne nouvelle ! Votre commande est en route.` : `Good news! Your order is on the way.`;
+        type = 'shipped';
+      } else if (status === 'delivered' || status === 'completed') {
+        title = lang === 'fr' ? 'Commande Livrée' : 'Order Delivered';
+        message = lang === 'fr' ? `Votre commande a été livrée avec succès.` : `Your order has been delivered successfully.`;
+        type = 'delivered';
+      } else if (status === 'cancelled') {
+        title = lang === 'fr' ? 'Commande Annulée' : 'Order Cancelled';
+        message = lang === 'fr' ? `Votre commande a été annulée.` : `Your order has been cancelled.`;
+        type = 'alert';
+      }
+
+      return {
+        id: `order-${order.id}-${status}`,
+        type,
+        title,
+        message,
+        time: order.created_at ? new Date(order.created_at).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' }) : 'Recent',
+        read: storedRead.includes(`order-${order.id}-${status}`),
+        deleted: !!storedDeleted[`order-${order.id}-${status}`],
+        sortTime: order.created_at ? new Date(order.created_at).getTime() : 0
+      };
+    });
+
     const systemNotifs = [
-      { id: 'sys-1', type: 'order', title: lang === 'fr' ? "Bienvenue sur SWEETO" : "Welcome to SWEETO", message: lang === 'fr' ? "Profitez d'une expérience d'achat premium." : "Enjoy a premium shopping experience with us.", time: lang === 'fr' ? "À l'instant" : "Just now", read: storedRead.includes('sys-1'), deleted: !!storedDeleted['sys-1'] }
+      { id: 'sys-1', type: 'order', title: lang === 'fr' ? "Bienvenue sur SWEETO" : "Welcome to SWEETO", message: lang === 'fr' ? "Profitez d'une expérience d'achat premium." : "Enjoy a premium shopping experience with us.", time: lang === 'fr' ? "À l'instant" : "Just now", read: storedRead.includes('sys-1'), deleted: !!storedDeleted['sys-1'], sortTime: 9999999999999 }
     ];
 
-    const combined = [...newArrivals, ...systemNotifs].filter(n => !n.deleted);
+    const combined = [...orderNotifs, ...newArrivals, ...systemNotifs].filter(n => !n.deleted).sort((a, b) => b.sortTime - a.sortTime);
     setNotifications(combined);
-  }, [products, lang]);
+  }, [products, lang, orders]);
 
   const updateGlobalState = (newRead, newDeleted) => {
     localStorage.setItem('read_notifications', JSON.stringify(newRead));
@@ -79,7 +162,10 @@ export default function NotificationsContent({ onProductClick }) {
 
   const getIcon = (type) => {
     switch (type) {
-      case 'order': return <Package className="text-blue-500 w-6 h-6" />;
+      case 'order': return <Package className="text-indigo-500 w-6 h-6" />;
+      case 'processing': return <Clock className="text-amber-500 w-6 h-6" />;
+      case 'shipped': return <Truck className="text-blue-500 w-6 h-6" />;
+      case 'delivered': return <CheckCircle2 className="text-emerald-500 w-6 h-6" />;
       case 'sale': return <Sparkles className="text-purple-500 w-6 h-6" />;
       case 'alert': return <AlertCircle className="text-red-500 w-6 h-6" />;
       default: return <CheckCircle2 className="text-green-500 w-6 h-6" />;
@@ -207,7 +293,7 @@ export default function NotificationsContent({ onProductClick }) {
                   >
                     {/* Glowing dot for unread */}
                     {!notif.read && (
-                      <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.6)] animate-pulse" />
+                      <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
                     )}
 
                     <div className="flex gap-4 sm:gap-5">

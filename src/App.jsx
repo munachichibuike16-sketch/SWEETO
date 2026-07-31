@@ -17,6 +17,7 @@ import WishlistContent from './components/WishlistContent';
 import FlashyDealsSection from './components/FlashyDealsSection';
 import NotificationsContent from './components/NotificationsContent';
 import { pushManager } from './utils/pushManager';
+import CartPage from './pages/CartPage';
 
 // Handle legacy hash routing URLs seamlessly
 if (window.location.hash && window.location.hash.startsWith('#/')) {
@@ -1463,6 +1464,7 @@ const App = () => {
           <Route path="/terms" element={HomeElement} />
           <Route path="/security" element={HomeElement} />
           <Route path="/refund" element={HomeElement} />
+          <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
