@@ -7,7 +7,8 @@ export default function LoadingScreen({ isVisible }) {
 
   useEffect(() => {
     if (!isVisible) {
-      const exitTimer = setTimeout(() => setShow(false), 200);
+      // Extended the loading screen duration slightly as requested
+      const exitTimer = setTimeout(() => setShow(false), 2000);
       return () => clearTimeout(exitTimer);
     }
     setShow(true);
