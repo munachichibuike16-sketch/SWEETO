@@ -191,6 +191,7 @@ db.exec(`
     total REAL,
     total_items INTEGER DEFAULT 1,
     status TEXT DEFAULT 'completed',
+    user_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -300,6 +301,8 @@ db.exec(`
     endpoint TEXT UNIQUE NOT NULL,
     p256dh TEXT NOT NULL,
     auth TEXT NOT NULL,
+    role TEXT DEFAULT 'customer',
+    user_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -374,6 +377,8 @@ try { db.exec('ALTER TABLE visitor_log ADD COLUMN country TEXT DEFAULT "Unknown"
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN event_type TEXT DEFAULT "page_view"'); } catch (e) {}
 try { db.exec('ALTER TABLE visitor_log ADD COLUMN device_id TEXT'); } catch (e) {}
 try { db.exec('ALTER TABLE push_subscriptions ADD COLUMN role TEXT DEFAULT "customer"'); } catch (e) {}
+try { db.exec('ALTER TABLE push_subscriptions ADD COLUMN user_id TEXT'); } catch (e) {}
+try { db.exec('ALTER TABLE orders ADD COLUMN user_id TEXT'); } catch (e) {}
 
 // Seed visitor logs removed - we only want real visitors
 try {
@@ -567,7 +572,7 @@ try {
 }
 
 // Helper: Send Web Push Notification to all active background subscribers
-async function sendBackgroundPushNotification(title, body, url, image = null, targetRole = null) {
+async function sendBackgroundPushNotification(title, body, url, image = null, targetRole = null, targetUser = null) {
   try {
     let subscriptions = [];
     const endpointsSeen = new Set();
@@ -576,7 +581,9 @@ async function sendBackgroundPushNotification(title, body, url, image = null, ta
     if (supabaseAdmin) {
       try {
         let query = supabaseAdmin.from('push_subscriptions').select('*');
-        if (targetRole) {
+        if (targetUser) {
+          query = query.eq('user_id', targetUser);
+        } else if (targetRole && targetRole !== 'all') {
           query = query.eq('role', targetRole);
         }
         const { data, error } = await query;
@@ -598,7 +605,9 @@ async function sendBackgroundPushNotification(title, body, url, image = null, ta
     // 2. Load from local SQLite push_subscriptions
     try {
       let localSubs = [];
-      if (targetRole) {
+      if (targetUser) {
+        localSubs = db.prepare('SELECT * FROM push_subscriptions WHERE user_id = ?').all(targetUser);
+      } else if (targetRole && targetRole !== 'all') {
         localSubs = db.prepare('SELECT * FROM push_subscriptions WHERE role = ?').all(targetRole);
       } else {
         localSubs = db.prepare('SELECT * FROM push_subscriptions').all();
@@ -837,9 +846,9 @@ app.post('/api/push/subscribe', (req, res) => {
   
   try {
     db.prepare(`
-      INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth, role)
-      VALUES (?, ?, ?, ?)
-    `).run(endpoint, keys.p256dh, keys.auth, role || 'customer');
+      INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth, role, user_id)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(endpoint, keys.p256dh, keys.auth, role || 'customer', req.body.user_id || null);
     res.json({ success: true, message: 'Push subscription saved successfully.' });
   } catch (err) {
     console.error('Error saving push subscription:', err);
@@ -1452,11 +1461,11 @@ app.post('/api/orders', (req, res) => {
     const info = db.prepare(`
       INSERT INTO orders (
         customer_name, customer_contact, items, 
-        total, total_items, status
-      ) VALUES (?, ?, ?, ?, ?, ?)
+        total, total_items, status, user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       customer_name, customer_contact || null, items || '[]', 
-      total, total_items || 1, status || 'completed'
+      total, total_items || 1, status || 'completed', req.body.user_id || null
     );
     res.json({ id: info.lastInsertRowid, success: true });
 
@@ -1842,9 +1851,11 @@ app.post('/api/products', authenticateAdmin, upload.single('image'), (req, res) 
     res.json({ id: info.lastInsertRowid, success: true });
 
     // Trigger dynamic closed-tab background push notifications to customers
+    const title = flags.is_daily_deal ? `🔥 Deal of the Day: ${name}` : `🆕 New Arrival: ${name}`;
+    const body = flags.is_daily_deal ? `Don't miss out on today's amazing deal for ${name}!` : `Check out the new ${category || 'product'} now available!`;
     sendBackgroundPushNotification(
-      `🆕 New Arrival: ${name}`,
-      `Check out the new ${category || 'product'} now available!`,
+      title,
+      body,
       `/#/product/${info.lastInsertRowid}`,
       final_image_url,
       'customer'
@@ -1968,6 +1979,15 @@ app.patch('/api/products/:id/stock', authenticateAdmin, (req, res) => {
     const result = stmt.run(...params);
     if (result.changes === 0) return res.status(404).json({ error: 'Product not found' });
     res.json({ success: true });
+
+    if (stock !== undefined) {
+      const prodName = db.prepare('SELECT name FROM products WHERE id = ?').get(id)?.name || id;
+      if (stock <= 0) {
+        sendBackgroundPushNotification('⚠️ Out of Stock', `${prodName} is out of stock!`, `/#/dashboard/products`, null, 'admin').catch(e=>e);
+      } else if (stock <= 5) {
+        sendBackgroundPushNotification('⚠️ Low Stock', `${prodName} has only ${stock} items left.`, `/#/dashboard/products`, null, 'admin').catch(e=>e);
+      }
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -2063,13 +2083,23 @@ app.patch('/api/orders/:id/status', authenticateAdmin, (req, res) => {
     // Push notification to customers when order status changes
     if (status || tracking_stage) {
       const statusLabel = status || tracking_stage || 'updated';
+      const order = db.prepare('SELECT user_id FROM orders WHERE id = ?').get(id);
       sendBackgroundPushNotification(
         `📦 Order SWT-${id} Update`,
         `Your order status has been updated to: ${statusLabel.toUpperCase()}`,
         `/#/track/${id}`,
         null,
-        'customer'
-      );
+        'customer',
+        order?.user_id || null
+      ).catch(e => console.error(e));
+
+      // Also notify Admin if completed or cancelled
+      if (status === 'cancelled' || status === 'refunded') {
+        sendBackgroundPushNotification('❌ Order Cancelled', `Order SWT-${id} was cancelled.`, `/#/dashboard/orders`, null, 'admin').catch(e=>e);
+      }
+      if (status === 'completed' || status === 'delivered') {
+        sendBackgroundPushNotification('✅ Order Completed', `Order SWT-${id} was delivered!`, `/#/dashboard/orders`, null, 'admin').catch(e=>e);
+      }
     }
   } catch (err) {
     res.status(500).json({ error: err.message });

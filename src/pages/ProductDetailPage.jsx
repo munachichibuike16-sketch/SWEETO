@@ -553,7 +553,7 @@ const ProductDetailPage = () => {
   };
 
   const shareProduct = async () => {
-    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+    const shareUrl = `${window.location.origin}/product/${product.id}`;
     const shareData = {
       title: product.name,
       text: lang === 'fr' 

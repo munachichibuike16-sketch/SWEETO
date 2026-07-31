@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase';
 import { getCategoryDescendants } from '../utils/categoryHelpers';
 import SweetoLogo from './SweetoLogo';
 import { logVisitorEvent } from '../utils/analytics';
+import { pushManager } from '../utils/pushManager';
 
 const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
   const { cartCount, cartTotal } = useCart();
@@ -1034,7 +1035,10 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
 
               {/* Notifications bell */}
               <button 
-                onClick={() => navigate('/notifications')} 
+                onClick={() => {
+                  pushManager.subscribe('customer').catch(() => {});
+                  navigate('/notifications');
+                }} 
                 className="p-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
                 title={t('notifications')}
               >

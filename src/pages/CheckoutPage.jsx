@@ -611,7 +611,8 @@ const CheckoutPage = () => {
         city: deliveryMethod === 'pickup' ? `Retrait (${pickupLocation})` : formData.city,
         address: fullAddress,
         destination_lat: destLat,
-        destination_lng: destLng
+        destination_lng: destLng,
+        user_id: session?.id || session?.phone || ''
       };
 
       let newOrderId = null;

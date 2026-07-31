@@ -100,13 +100,13 @@ export default async function handler(req, res) {
   
   <!-- Redirect immediately to frontend route -->
   <script>
-    window.location.replace("/#/product/${product.id}");
+    window.location.replace("/product/${product.id}");
   </script>
 </head>
 <body>
   <div style="font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #090d16; color: white;">
     <h2 style="margin-bottom: 8px;">Redirecting you to ${product.name}...</h2>
-    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="/#/product/${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
+    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="/product/${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
   </div>
 </body>
 </html>`);

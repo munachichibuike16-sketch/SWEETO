@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate, Navigate, useParams, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronDown, Zap, Globe, ArrowLeft, Sparkles, Package, MessageCircle, MapPin, Send, Clock, Lock as LockIcon, Heart, Truck, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
@@ -16,7 +16,15 @@ import CartDrawer from './components/CartDrawer';
 import WishlistContent from './components/WishlistContent';
 import FlashyDealsSection from './components/FlashyDealsSection';
 import NotificationsContent from './components/NotificationsContent';
-import StoreContent from './components/StoreContent';
+import CartContent from './components/CartContent';
+import { pushManager } from './utils/pushManager';
+
+// Handle legacy hash routing URLs seamlessly
+if (window.location.hash && window.location.hash.startsWith('#/')) {
+  const newPath = window.location.hash.substring(1); // removes the '#'
+  window.history.replaceState(null, null, newPath);
+}
+
 import DealsContent from './components/DealsContent';
 import BrightRetailHome from './components/BrightRetailHome';
 import CategoryLandingPage from './components/CategoryLandingPage';
@@ -356,6 +364,11 @@ const Storefront = ({ viewMode: propViewMode }) => {
     }
     return arr;
   }, [liveProducts]);
+
+  // Initialize Push Notifications
+  useEffect(() => {
+    pushManager.init().catch(err => console.error('Push Init Error:', err));
+  }, []);
 
   const getProductCountForCategory = (catName) => {
     if (!catName) return 0;
