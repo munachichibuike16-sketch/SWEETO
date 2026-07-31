@@ -131,7 +131,7 @@ export default function NotificationsContent({ onProductClick }) {
                         src={
                           notif.originalProduct.image || 
                           (notif.originalProduct.images ? 
-                            (notif.originalProduct.images.startsWith('[') ? JSON.parse(notif.originalProduct.images)[0] : notif.originalProduct.images.split(',')[0])
+                            (Array.isArray(notif.originalProduct.images) ? notif.originalProduct.images[0] : typeof notif.originalProduct.images === 'string' ? (notif.originalProduct.images.startsWith('[') ? JSON.parse(notif.originalProduct.images)[0] : notif.originalProduct.images.split(',')[0]) : '')
                           : '')
                         }
                         alt={notif.title}
