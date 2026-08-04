@@ -69,8 +69,16 @@ async function generate() {
   <meta name="twitter:image" content="${metaImageUrl}" />
     `;
 
+    // Strip default OG tags and replace title tag from baseHtml to prevent duplicate meta tag conflicts in crawlers
+    let productHtml = baseHtml
+      .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"']*["']\s*\/?>/i, '')
+      .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"']*["']\s*\/?>/i, '')
+      .replace(/<meta\s+property=["']og:image["']\s+content=["'][^"']*["']\s*\/?>/i, '')
+      .replace(/<meta\s+property=["']og:type["']\s+content=["'][^"']*["']\s*\/?>/i, '')
+      .replace(/<title>[^<]*<\/title>/i, `<title>${product.name} | SWEETO</title>`);
+
     // Inject OG tags right before </head>
-    const productHtml = baseHtml.replace('</head>', `${ogTags}\n</head>`);
+    productHtml = productHtml.replace('</head>', `${ogTags}\n</head>`);
 
     // Create directories for both /product/:id and /share/product/:id
     const productDir = path.join(distDir, 'product', product.id.toString());
