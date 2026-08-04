@@ -892,7 +892,7 @@ export default function ProductsManagement() {
     if (!API_BASE_URL || API_BASE_URL.includes('your-backend-service.onrender.com')) {
       return `${window.location.origin}/product/${productId}`;
     }
-    return `${API_BASE_URL}/share/product/${productId}?redirect=${encodeURIComponent(window.location.origin)}`;
+    return `${API_BASE_URL}/share/product/${productId}`;
   };
 
   /* ─── FORM VIEW ─── */
