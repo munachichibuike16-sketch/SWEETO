@@ -1326,6 +1326,9 @@ app.get('/share/product/:id', (req, res) => {
     
     // Resolve absolute image URL pointing to backend uploads
     let imageUrl = product.image_url || '';
+    if (imageUrl && (imageUrl.includes('localhost:3000') || imageUrl.includes('127.0.0.1:3000')) && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      imageUrl = imageUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1):3000/, `${protocol}://${host}`);
+    }
     if (imageUrl && (imageUrl.startsWith('/') || !imageUrl.startsWith('http'))) {
       const cleanedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
       imageUrl = `${protocol}://${host}${cleanedPath}`;

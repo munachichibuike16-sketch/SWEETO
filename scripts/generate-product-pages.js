@@ -37,8 +37,12 @@ async function generate() {
       } catch (e) {}
     }
     
-    if (metaImageUrl && (metaImageUrl.startsWith('/') || !metaImageUrl.startsWith('http'))) {
-      metaImageUrl = `https://swto.site${metaImageUrl.startsWith('/') ? metaImageUrl : `/${metaImageUrl}`}`;
+    if (metaImageUrl) {
+      if (metaImageUrl.includes('localhost:3000') || metaImageUrl.includes('127.0.0.1:3000')) {
+        metaImageUrl = metaImageUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1):3000/, 'https://swto.site');
+      } else if (metaImageUrl.startsWith('/') || !metaImageUrl.startsWith('http')) {
+        metaImageUrl = `https://swto.site${metaImageUrl.startsWith('/') ? metaImageUrl : `/${metaImageUrl}`}`;
+      }
     }
 
     const shareUrl = `https://swto.site/product/${product.id}`;
