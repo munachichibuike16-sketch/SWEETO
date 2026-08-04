@@ -315,7 +315,7 @@ export default function LiveChatManagement() {
   };
 
   const copyInviteLink = () => {
-    const inviteLink = `${window.location.origin}/#/support`;
+    const inviteLink = `${window.location.origin}/support`;
     navigator.clipboard.writeText(inviteLink);
     showToast('Customer support chat link copied to clipboard! 📋✨', 'success');
   };
@@ -492,7 +492,7 @@ export default function LiveChatManagement() {
                               </div>
                               <button
                                 onClick={() => {
-                                  window.open(`${window.location.origin}/#/product/${productData.id}`, '_blank');
+                                  window.open(`${window.location.origin}/product/${productData.id}`, '_blank');
                                 }}
                                 className="py-1.5 bg-[#0084FF] hover:bg-[#0078eb] text-white rounded-lg text-[9px] font-black text-center uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-98"
                               >

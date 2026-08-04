@@ -512,7 +512,7 @@ Informations de livraison et paiement :
             </div>
             <button
               onClick={() => {
-                window.location.hash = `#/product/${productData.id}`;
+                navigate(`/product/${productData.id}`);
               }}
               className="py-1.5 bg-[#0084FF] hover:bg-[#0078eb] text-white rounded-xl text-[10px] font-black text-center uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-98"
             >

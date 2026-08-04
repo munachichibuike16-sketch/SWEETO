@@ -581,7 +581,8 @@ const Dashboard = () => {
         // Listen for route messages from Service Worker
         navigator.serviceWorker.addEventListener('message', (event) => {
           if (event.data && event.data.type === 'ROUTE_TO') {
-            window.location.hash = event.data.url.replace(/^\/?#?/, '#');
+            const url = event.data.url.replace(/^\/?#?\/?/, '');
+            window.location.href = '/' + url;
           }
         });
 

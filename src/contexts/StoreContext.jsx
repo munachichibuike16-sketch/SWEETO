@@ -220,7 +220,8 @@ export const StoreProvider = ({ children }) => {
           navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'ROUTE_TO') {
               console.log('Routing to Service Worker destination:', event.data.url);
-              window.location.hash = event.data.url.replace(/^\/?#?/, '#');
+              const url = event.data.url.replace(/^\/?#?\/?/, '');
+              window.location.href = '/' + url;
             }
           });
 
@@ -395,7 +396,7 @@ export const StoreProvider = ({ children }) => {
         ? `Check out the new ${first.category || 'product'} now available in store!`
         : `${newProducts.map(p => p.name).slice(0, 3).join(', ')}${newProducts.length > 3 ? '...' : ''} just dropped!`;
       
-      fireNativeNotification(title, body, `/#/product/${first.id}`);
+      fireNativeNotification(title, body, `/product/${first.id}`);
       triggerInAppNotification(first);
 
       // Persist each new product as an in-app notification
@@ -433,7 +434,7 @@ export const StoreProvider = ({ children }) => {
         ? `Now ${dropPercent}% off! Don't miss this deal.`
         : `${priceDrops.map(p => p.name).slice(0, 3).join(', ')} and more!`;
       
-      fireNativeNotification(title, body, `/#/product/${first.id}`);
+      fireNativeNotification(title, body, `/product/${first.id}`);
       triggerInAppNotification(first);
 
       // Persist each price drop as an in-app notification
@@ -940,7 +941,7 @@ export const StoreProvider = ({ children }) => {
           const body = `Check out the new ${newProduct.category || 'product'} now available in store!`;
           
           // 1. Native device notification
-          fireNativeNotification(title, body, `/#/product/${newProduct.id}`);
+          fireNativeNotification(title, body, `/product/${newProduct.id}`);
           
           // 2. In-app floating clickable notification
           triggerInAppNotification(newProduct);

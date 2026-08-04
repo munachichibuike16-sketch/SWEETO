@@ -193,7 +193,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     e.stopPropagation();
     
     // Construct the crawler-friendly share link pointing to the backend metadata route
-    const shareUrl = `${window.location.origin}/product/${product.id}`;
+    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
     const shareTitle = product.name;
     const shareText = product.description || `Check out ${product.name} on SWEETO!`;
     const shareData = {

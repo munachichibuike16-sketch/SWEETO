@@ -861,7 +861,7 @@ app.post('/api/push/test', (req, res) => {
     sendBackgroundPushNotification(
       '🔔 SWEETO HUB - Test Push Notification',
       'Awesome! If you are seeing this, push notifications are working perfectly on your mobile device.',
-      '/#/'
+      '/'
     );
     res.json({ success: true, message: 'Test push notification triggered.' });
   } catch (err) {
@@ -879,7 +879,7 @@ app.post('/api/push/notify-new-product', authenticateAdmin, (req, res) => {
     sendBackgroundPushNotification(
       `🆕 New Arrival: ${name}`,
       `Check out the new ${category || 'product'} now available!`,
-      `/#/product/${productId || ''}`,
+      `/product/${productId || ''}`,
       image_url || null,
       'customer'
     );
@@ -899,7 +899,7 @@ app.post('/api/push/notify-chat-message', async (req, res) => {
     }
 
     const role = targetRole || 'admin';
-    const url = '/#/chat';
+    const url = '/chat';
     const displayBody = messageText.startsWith('http') ? 'Sent a photo 📸' : messageText;
 
     await sendBackgroundPushNotification(
@@ -1336,7 +1336,7 @@ app.get('/share/product/:id', (req, res) => {
       ? `${priceFormatted} - Découvrez ce produit sur SWEETO!` 
       : 'Découvrez ce produit sur SWEETO!';
 
-    const shareUrl = `${redirect}/#/product/swt-${product.id}`;
+    const shareUrl = `${redirect}/product/swt-${product.id}`;
 
     res.send(`<!DOCTYPE html>
 <html lang="fr">
@@ -1363,13 +1363,13 @@ app.get('/share/product/:id', (req, res) => {
   
   <!-- Redirect immediately to frontend route -->
   <script>
-    window.location.replace("${redirect}/#/product/swt-${product.id}");
+    window.location.replace("${redirect}/product/swt-${product.id}");
   </script>
 </head>
 <body>
   <div style="font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: #090d16; color: white;">
     <h2 style="margin-bottom: 8px;">Redirecting you to ${product.name}...</h2>
-    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="${redirect}/#/product/swt-${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
+    <p style="color: #64748b; font-size: 14px;">If you are not redirected automatically, <a href="${redirect}/product/swt-${product.id}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">click here</a>.</p>
   </div>
 </body>
 </html>`);
@@ -1473,7 +1473,7 @@ app.post('/api/orders', (req, res) => {
     sendBackgroundPushNotification(
       '🛍️ New Order Received!',
       `Order SWT-${info.lastInsertRowid} from ${customer_name || 'Customer'} — ${Number(total || 0).toLocaleString()} FCFA`,
-      '/#/dashboard',
+      '/dashboard',
       null,
       'admin'
     );
@@ -1535,8 +1535,8 @@ app.post('/api/payments/wave/checkout-session', (req, res) => {
         body: JSON.stringify({
           amount: String(order.total),
           currency: settings.wave_currency || 'XOF',
-          error_url: `${origin}/#/wave-pay/${orderId}?status=error`,
-          success_url: `${origin}/#/wave-pay/${orderId}?status=success`,
+          error_url: `${origin}/wave-pay/${orderId}?status=error`,
+          success_url: `${origin}/wave-pay/${orderId}?status=success`,
           client_reference_id: String(orderId)
         })
       })
@@ -1591,7 +1591,7 @@ app.post('/api/payments/wave/webhook', (req, res) => {
           sendBackgroundPushNotification(
             `💸 Wave Payment Callback!`,
             `Order SWT-${orderId} from ${order.customer_name} has been paid via Wave: ${Number(amountPaid).toLocaleString()} FCFA.`,
-            `/#/dashboard`,
+            `/dashboard`,
             null,
             'admin'
           ).catch(() => {});
@@ -1611,7 +1611,7 @@ app.post('/api/push/notify-payment', async (req, res) => {
     await sendBackgroundPushNotification(
       `💸 Wave Payment Confirmed!`,
       `Order SWT-${orderId} from ${customerName} has been paid via Wave: ${Number(amount).toLocaleString()} FCFA (${status || 'PAID'})`,
-      `/#/dashboard`,
+      `/dashboard`,
       null,
       'admin'
     );
@@ -1856,7 +1856,7 @@ app.post('/api/products', authenticateAdmin, upload.single('image'), (req, res) 
     sendBackgroundPushNotification(
       title,
       body,
-      `/#/product/${info.lastInsertRowid}`,
+      `/product/${info.lastInsertRowid}`,
       final_image_url,
       'customer'
     );
@@ -1939,7 +1939,7 @@ app.put('/api/products/:id', authenticateAdmin, upload.single('image'), (req, re
       sendBackgroundPushNotification(
         `🔥 Price Drop: ${name}`,
         `Now ${dropPercent}% off! Down to ${Number(price).toLocaleString()} FCFA from ${Number(prevPrice).toLocaleString()} FCFA.`,
-        `/#/product/${id}`,
+        `/product/${id}`,
         final_image_url || oldProduct.image_url
       );
     }
@@ -1950,7 +1950,7 @@ app.put('/api/products/:id', authenticateAdmin, upload.single('image'), (req, re
       sendBackgroundPushNotification(
         `⚠️ Low Stock: ${name}`,
         `Only ${Number(stock)} units remaining! Restock soon.`,
-        '/#/dashboard',
+        '/dashboard',
         null,
         'admin'
       );
@@ -1983,9 +1983,9 @@ app.patch('/api/products/:id/stock', authenticateAdmin, (req, res) => {
     if (stock !== undefined) {
       const prodName = db.prepare('SELECT name FROM products WHERE id = ?').get(id)?.name || id;
       if (stock <= 0) {
-        sendBackgroundPushNotification('⚠️ Out of Stock', `${prodName} is out of stock!`, `/#/dashboard/products`, null, 'admin').catch(e=>e);
+        sendBackgroundPushNotification('⚠️ Out of Stock', `${prodName} is out of stock!`, `/dashboard/products`, null, 'admin').catch(e=>e);
       } else if (stock <= 5) {
-        sendBackgroundPushNotification('⚠️ Low Stock', `${prodName} has only ${stock} items left.`, `/#/dashboard/products`, null, 'admin').catch(e=>e);
+        sendBackgroundPushNotification('⚠️ Low Stock', `${prodName} has only ${stock} items left.`, `/dashboard/products`, null, 'admin').catch(e=>e);
       }
     }
   } catch (err) {
@@ -2087,7 +2087,7 @@ app.patch('/api/orders/:id/status', authenticateAdmin, (req, res) => {
       sendBackgroundPushNotification(
         `📦 Order SWT-${id} Update`,
         `Your order status has been updated to: ${statusLabel.toUpperCase()}`,
-        `/#/track/${id}`,
+        `/order-tracking/${id}`,
         null,
         'customer',
         order?.user_id || null
@@ -2095,10 +2095,10 @@ app.patch('/api/orders/:id/status', authenticateAdmin, (req, res) => {
 
       // Also notify Admin if completed or cancelled
       if (status === 'cancelled' || status === 'refunded') {
-        sendBackgroundPushNotification('❌ Order Cancelled', `Order SWT-${id} was cancelled.`, `/#/dashboard/orders`, null, 'admin').catch(e=>e);
+        sendBackgroundPushNotification('❌ Order Cancelled', `Order SWT-${id} was cancelled.`, `/dashboard/orders`, null, 'admin').catch(e=>e);
       }
       if (status === 'completed' || status === 'delivered') {
-        sendBackgroundPushNotification('✅ Order Completed', `Order SWT-${id} was delivered!`, `/#/dashboard/orders`, null, 'admin').catch(e=>e);
+        sendBackgroundPushNotification('✅ Order Completed', `Order SWT-${id} was delivered!`, `/dashboard/orders`, null, 'admin').catch(e=>e);
       }
     }
   } catch (err) {
@@ -2473,8 +2473,8 @@ app.post('/api/social/facebook-post', authenticateAdmin, async (req, res) => {
         return res.status(400).json({ error: 'Product details are required for posting.' });
       }
       const currency = 'FCFA';
-      caption = `✨ NEW ARRIVAL: ${product.name} ✨\n\n${product.description || ''}\n\n🏷️ Price: ${product.price?.toLocaleString()} ${currency}\n\n🛒 View & Order here:\n${storeUrl}/#/product/${product.id}`;
-      productLink = `${storeUrl}/#/product/${product.id}`;
+      caption = `✨ NEW ARRIVAL: ${product.name} ✨\n\n${product.description || ''}\n\n🏷️ Price: ${product.price?.toLocaleString()} ${currency}\n\n🛒 View & Order here:\n${storeUrl}/product/${product.id}`;
+      productLink = `${storeUrl}/product/${product.id}`;
       
       imageUrl = product.image_url || product.image || '';
       if (imageUrl && !imageUrl.startsWith('http')) {

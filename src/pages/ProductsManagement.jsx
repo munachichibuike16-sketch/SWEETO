@@ -624,7 +624,7 @@ export default function ProductsManagement() {
             body: {
               title: `🆕 New Arrival: ${form.name}`,
               body: `Check out the new ${categories.find(c => c.id?.toString() === form.categoryId?.toString())?.name || 'product'} now available!`,
-              url: `/#/product/${payload.id || ''}`,
+              url: `/product/${payload.id || ''}`,
               image: form.image_url || null,
               targetRole: 'customer'
             }
@@ -890,7 +890,7 @@ export default function ProductsManagement() {
 
   const getShareUrl = (productId) => {
     if (!API_BASE_URL || API_BASE_URL.includes('your-backend-service.onrender.com')) {
-      return `${window.location.origin}/#/product/${productId}`;
+      return `${window.location.origin}/product/${productId}`;
     }
     return `${API_BASE_URL}/share/product/${productId}?redirect=${encodeURIComponent(window.location.origin)}`;
   };

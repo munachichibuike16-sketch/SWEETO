@@ -145,7 +145,7 @@ const PushNotificationPanel = ({ showToast }) => {
         body: {
           title: '🔔 SWEETO HUB - Test Push Notification',
           body: 'Awesome! If you are seeing this, push notifications are working perfectly on your mobile device.',
-          url: '/#/',
+          url: '/',
           targetRole: 'all' // Test send to all roles (both admins and customers)
         }
       });

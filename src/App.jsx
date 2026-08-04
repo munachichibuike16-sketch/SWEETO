@@ -1306,7 +1306,7 @@ const RouteTracker = () => {
     let eventType = 'page_view';
     if (pagePath === '/' || pagePath === '') {
       eventType = 'visit storefront';
-    } else if (pagePath.startsWith('/product/')) {
+    } else if (pagePath.startsWith('/product/') || pagePath.startsWith('/share/product/')) {
       eventType = 'product viewed';
     } else if (pagePath.startsWith('/search') || pagePath.includes('q=')) {
       eventType = 'product searched';
@@ -1314,10 +1314,10 @@ const RouteTracker = () => {
 
     // Find product name if product viewed
     let productName = '';
-    if (pagePath.startsWith('/product/') && products) {
-      const match = pagePath.match(/\/product\/([^\/\?]+)/);
+    if ((pagePath.startsWith('/product/') || pagePath.startsWith('/share/product/')) && products) {
+      const match = pagePath.match(/\/(?:share\/)?product\/([^\/\?]+)/);
       if (match && match[1]) {
-        const pId = parseInt(match[1]) || match[1];
+        const pId = match[1].toLowerCase().replace(/^swt-/, '');
         const prod = products.find(p => String(p.id) === String(pId));
         if (prod) {
           productName = prod.name;
@@ -1448,6 +1448,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={HomeElement} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/share/product/:productId" element={<ProductDetailPage />} />
           <Route path="/wishlist" element={HomeElement} />
           <Route path="/notifications" element={HomeElement} />
           <Route path="/products" element={HomeElement} />
