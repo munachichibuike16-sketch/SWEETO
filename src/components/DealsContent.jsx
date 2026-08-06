@@ -289,7 +289,7 @@ export default function DealsContent({ onProductClick }) {
                 product={prod}
                 index={idx}
                 onProductClick={onProductClick}
-                layout="aliexpress"
+                layout="deal"
               />
             ))}
           </div>
@@ -325,7 +325,7 @@ export default function DealsContent({ onProductClick }) {
                   product={prod}
                   index={idx}
                   onProductClick={onProductClick}
-                  layout="aliexpress"
+                  layout="unending"
                 />
               ))}
             </div>

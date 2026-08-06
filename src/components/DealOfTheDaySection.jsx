@@ -11,7 +11,7 @@ import { SectionBanner, SectionHeader, MiniSectionHeader } from './ProductSectio
 import { useLanguage } from '../contexts/LanguageContext';
 import confetti from 'canvas-confetti';
 
-const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick, title, subtitle }) => {
+const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyle, videoAdId, onCartClick, title, subtitle, sectionType = 'deal', scrollDirection = 'left' }) => {
   const navigate = useNavigate();
   const { cartCount, addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -19,6 +19,7 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
   const { t, lang, t_smart } = useLanguage();
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const isNewSection = title && (title.toUpperCase().includes('ARRIVED') || title.toUpperCase().includes('NEW') || title.toUpperCase().includes('NOUVEAU'));
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -78,36 +79,64 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
     }
   }, [products]);
 
-  // Setup auto-sliding interval
+  const animationRef = React.useRef(null);
+
   useEffect(() => {
-    if (products.length === 0 || isHovered) return;
+    if (!products || products.length === 0 || isHovered || isExpanded) {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      return;
+    }
 
-    const autoSlide = () => {
-      // Mobile auto-slide
-      if (!isExpanded && mobileScrollRef.current) {
-        const container = mobileScrollRef.current;
-        const firstChild = container.firstElementChild;
-        if (firstChild) {
-          const cardWidth = firstChild.offsetWidth + 12; // card width + gap-3
-          container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    const scrollSpeed = 0.6; // pixels per frame, slow and smooth
+
+    const animate = () => {
+      // Mobile scroll
+      const mContainer = mobileScrollRef.current;
+      if (mContainer && !isExpanded) {
+        const singleSetWidth = mContainer.scrollWidth / 3;
+        if (scrollDirection === 'right') {
+          mContainer.scrollLeft -= scrollSpeed;
+          if (mContainer.scrollLeft <= singleSetWidth - mContainer.clientWidth) {
+            mContainer.scrollLeft += singleSetWidth;
+          }
+        } else {
+          mContainer.scrollLeft += scrollSpeed;
+          if (mContainer.scrollLeft >= singleSetWidth * 2) {
+            mContainer.scrollLeft -= singleSetWidth;
+          }
         }
       }
 
-      // Desktop auto-slide
-      if (desktopScrollRef.current) {
-        const container = desktopScrollRef.current;
-        const firstChild = container.firstElementChild;
-        if (firstChild) {
-          const cardWidth = firstChild.offsetWidth + 24; // card width + gap-6
-          container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      // Desktop scroll
+      const dContainer = desktopScrollRef.current;
+      if (dContainer) {
+        const singleSetWidth = dContainer.scrollWidth / 3;
+        if (scrollDirection === 'right') {
+          dContainer.scrollLeft -= scrollSpeed;
+          if (dContainer.scrollLeft <= singleSetWidth - dContainer.clientWidth) {
+            dContainer.scrollLeft += singleSetWidth;
+          }
+        } else {
+          dContainer.scrollLeft += scrollSpeed;
+          if (dContainer.scrollLeft >= singleSetWidth * 2) {
+            dContainer.scrollLeft -= singleSetWidth;
+          }
         }
       }
+
+      animationRef.current = requestAnimationFrame(animate);
     };
 
-    const interval = setInterval(autoSlide, 3000); // slide every 3 seconds
+    animationRef.current = requestAnimationFrame(animate);
 
-    return () => clearInterval(interval);
-  }, [products, isExpanded, isHovered]);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [products, isHovered, isExpanded, scrollDirection]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -184,20 +213,23 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
               />
             </div>
             
-            <div 
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              className="relative mt-2 flex-1 flex flex-col justify-center"
-            >
               <div 
-                ref={mobileScrollRef}
-                onScroll={handleMobileScroll}
-                id="deals-carousel-mobile"
-                className={isExpanded 
-                  ? "grid grid-cols-2 gap-3 px-1 pb-2 animate-fadeIn"
-                  : "flex overflow-x-auto gap-3 no-scrollbar snap-x snap-mandatory scroll-smooth pb-2"
-                }
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                onTouchStart={() => setIsHovered(true)}
+                onTouchEnd={() => setIsHovered(false)}
+                onTouchCancel={() => setIsHovered(false)}
+                className="relative mt-2 flex-1 flex flex-col justify-center"
               >
+                <div 
+                  ref={mobileScrollRef}
+                  onScroll={handleMobileScroll}
+                  id="deals-carousel-mobile"
+                  className={isExpanded 
+                    ? "grid grid-cols-2 gap-3 px-1 pb-2 animate-fadeIn"
+                    : "flex overflow-x-auto gap-3 no-scrollbar pb-2"
+                  }
+                >
                 {(isExpanded ? products.slice(0, 4) : duplicatedProducts).map((product, idx) => {
                   const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : (product.discount || 25);
                   const soldCount = product.sold_count || 0;
@@ -237,38 +269,46 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                     >
                       <div 
                         onClick={() => {
-                          navigate('/deals');
+                          if (onProductClick) {
+                            onProductClick(product);
+                          } else {
+                            navigate(`/product/${product.id}`);
+                          }
                           window.scrollTo(0, 0);
                         }}
-                        className="bg-transparent border-0 p-0 flex flex-col justify-between relative group cursor-pointer select-none h-full"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-3.5 flex flex-col justify-between relative group cursor-pointer select-none h-full shadow-sm hover:shadow-md transition-shadow"
                       >
                         {/* Image Area */}
-                        <div className="w-full aspect-square bg-[#f4f4f4] dark:bg-slate-900/50 rounded-2xl flex items-center justify-center p-1 relative overflow-hidden transition-transform mb-2.5">
+                        <div className="w-full aspect-square bg-[#f8fafc] dark:bg-slate-950 rounded-2xl flex items-center justify-center p-2 relative overflow-hidden transition-transform mb-3">
+                          {/* Badge */}
+                          {sectionType === 'bestseller' ? (
+                            <span className="absolute top-2.5 left-2.5 bg-[#e61e25] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full z-10 shadow-sm select-none">
+                              {lang === 'fr' ? 'SOLDES' : 'SALE'}
+                            </span>
+                          ) : (
+                            <span className="absolute top-2.5 left-2.5 bg-[#1e5cff] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full z-10 shadow-sm select-none">
+                              {isNewSection ? (lang === 'fr' ? 'NOUVEAU' : 'NEW') : 'DEAL'}
+                            </span>
+                          )}
+
+                          {/* Discount Badge */}
+                          {discount > 0 && (
+                            <span className="absolute bottom-2.5 left-2.5 bg-[#00b050] text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">
+                              -{discount}%
+                            </span>
+                          )}
+
                           {/* Wishlist Button */}
                           <div className="absolute top-2.5 right-2.5 z-20">
                             <button 
                               onClick={handleToggleWishlist}
-                              className={`w-7 h-7 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
+                              className={`w-7.5 h-7.5 rounded-full shadow-sm flex items-center justify-center transition-all backdrop-blur-md border ${
                                 isWished 
                                   ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
-                                  : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white'
+                                  : 'bg-white/85 dark:bg-slate-800/85 border-slate-100 dark:border-slate-700/50 text-slate-800 dark:text-white'
                               }`}
                             >
-                              <Heart size={13} fill={isWished ? "currentColor" : "none"} />
-                            </button>
-                          </div>
-
-                          {/* Cart Button */}
-                          <div className="absolute bottom-2.5 right-2.5 z-20">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(product);
-                                showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
-                              }}
-                              className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 text-slate-900 dark:text-white cursor-pointer"
-                            >
-                              <ShoppingCart size={13} className="text-slate-900 dark:text-white" />
+                              <Heart size={14} fill={isWished ? "currentColor" : "none"} />
                             </button>
                           </div>
 
@@ -283,62 +323,57 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                           />
                         </div>
 
-                        {/* Pricing row with Slanted Red Discount Ribbon */}
-                        <div className="flex items-stretch justify-between w-full mt-1 overflow-hidden">
-                          <div className="flex flex-col text-left justify-center pl-0.5">
-                            <span className="text-[14px] font-black text-slate-900 dark:text-white leading-none">
-                              {settings?.currency || 'FCFA'} {product.price?.toLocaleString()}
-                            </span>
-                            {product.original_price && product.original_price > product.price && (
-                              <span className="text-[10px] font-bold text-slate-450 dark:text-slate-500 line-through mt-1.5 font-mono leading-none">
-                                {settings?.currency || 'FCFA'} {product.original_price.toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                          {discount > 0 && (
-                            <div 
-                              className="bg-[#ff0a24] text-white font-black text-[10px] pl-3.5 pr-2 py-1 flex items-center justify-center italic shrink-0"
-                              style={{ clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)' }}
-                            >
-                              -{discount}%
+                        {/* Info details */}
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div>
+                            {/* Brand & Category */}
+                            <div className="text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest text-left mb-1">
+                              {product.brand || 'SWEETO'} · {product.category || 'Deals'}
                             </div>
-                          )}
-                        </div>
 
-                        {/* Title with Choice/Marque+ Badge */}
-                        <div className="flex items-center gap-1.5 mt-2 w-full leading-tight text-left">
-                          {idx % 2 === 0 ? (
-                            <span className="bg-[#fff000] text-black text-[8px] font-black px-1.5 py-0.5 rounded leading-none shrink-0 uppercase">Choice</span>
-                          ) : (
-                            <span className="bg-[#1e5cff] text-white text-[8px] font-black px-1.5 py-0.5 rounded leading-none shrink-0 uppercase">Marque+</span>
-                          )}
-                          <span className="line-clamp-1 text-[11px] font-bold text-slate-700 dark:text-slate-350">
-                            {t_smart(product.name)}
-                          </span>
-                        </div>
+                            {/* Title */}
+                            <h3 className="line-clamp-2 text-xs font-bold text-slate-850 dark:text-white text-left leading-snug mb-1.5 min-h-[32px]">
+                              {t_smart(product.name)}
+                            </h3>
 
-                        {/* Stock urgency / sales ratings */}
-                        <div className="mt-2 text-[10px] font-medium leading-normal text-left">
-                          {/* Urgency Stock (Line 1) */}
-                          <div className="text-red-500 font-bold flex items-center gap-0.5">
-                            <span>🔥</span>
-                            <span>
-                              {stock <= 1 
-                                ? (lang === 'fr' ? '0 restant' : '0 remaining') 
-                                : stock <= 3 
-                                  ? (lang === 'fr' ? 'Stock faible' : 'Low stock') 
-                                  : (lang === 'fr' ? `${stock} restants` : `${stock} remaining`)}
-                            </span>
-                          </div>
-                          {/* Sales & Rating (Line 2) */}
-                          <div className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1 mt-0.5">
-                            <span>{soldCount} {lang === 'fr' ? 'vendus' : 'sold'}</span>
-                            {averageRating && (
-                              <span className="flex items-center gap-0.5 text-amber-500">
-                                <span>⭐</span>
-                                <span>{averageRating}</span>
+                            {/* Rating */}
+                            <div className="flex items-center gap-1 text-[11px] text-left mb-2">
+                              <div className="flex text-amber-500 gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} size={11} fill={i < Math.round(Number(averageRating || 4.2)) ? "currentColor" : "none"} strokeWidth={2.5} />
+                                ))}
+                              </div>
+                              <span className="font-bold text-slate-500">
+                                {averageRating || '4.2'} ({soldCount})
                               </span>
-                            )}
+                            </div>
+                          </div>
+
+                          <div>
+                            {/* Price block */}
+                            <div className="flex items-baseline gap-1.5 text-left mb-3">
+                              <span className="text-base font-black text-slate-900 dark:text-white">
+                                {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
+                              </span>
+                              {product.original_price && product.original_price > product.price && (
+                                <span className="text-xs text-slate-400 line-through font-bold">
+                                  {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Add to Cart button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(product);
+                                showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
+                              }}
+                              className="w-full text-white font-black text-[11px] py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer select-none border-none bg-[#1e5cff] hover:bg-[#1554C0]"
+                            >
+                              <ShoppingCart size={12} fill="currentColor" />
+                              <span>{lang === 'fr' ? 'Ajouter' : 'Add to Cart'}</span>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -409,7 +444,9 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
             <div 
               ref={desktopScrollRef}
               onScroll={handleDesktopScroll}
-              className="flex overflow-x-auto gap-4 sm:gap-6 px-1 w-full pb-4 no-scrollbar snap-x snap-mandatory scroll-smooth"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="flex overflow-x-auto gap-4 sm:gap-6 px-1 w-full pb-4 no-scrollbar"
             >
               {duplicatedProducts.map((product, idx) => {
                 const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : (product.discount || 25);
@@ -439,44 +476,53 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                       shapes: ['star', 'circle']
                     });
                   }
+                  toggleWishlist(product);
                 };
 
                 return (
                   <div 
                     key={`${product.id}-${idx}`} 
                     onClick={() => {
-                      navigate('/deals');
+                      if (onProductClick) {
+                        onProductClick(product);
+                      } else {
+                        navigate(`/product/${product.id}`);
+                      }
                       window.scrollTo(0, 0);
                     }}
-                    className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] sm:min-w-[calc(33.333%-11px)] md:w-[calc(25%-18px)] md:min-w-[calc(25%-18px)] xl:w-[calc(20%-18px)] xl:min-w-[calc(20%-18px)] shrink-0 snap-start bg-transparent border-0 flex flex-col justify-between relative group cursor-pointer select-none h-full text-left"
+                    className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] sm:min-w-[calc(33.333%-11px)] md:w-[calc(25%-18px)] md:min-w-[calc(25%-18px)] xl:w-[calc(20%-18px)] xl:min-w-[calc(20%-18px)] shrink-0 snap-start bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-3.5 flex flex-col justify-between relative group cursor-pointer select-none h-full shadow-sm hover:shadow-md transition-shadow text-left"
                   >
                     {/* Image Area */}
-                    <div className="w-full aspect-square bg-[#f4f4f4] dark:bg-slate-905 rounded-2xl flex items-center justify-center p-1 relative overflow-hidden group-hover:scale-[1.01] transition-transform mb-2.5">
+                    <div className="w-full aspect-square bg-[#f8fafc] dark:bg-slate-950 rounded-2xl flex items-center justify-center p-2 relative overflow-hidden group-hover:scale-[1.01] transition-transform mb-3.5">
+                      {/* Badge */}
+                      {sectionType === 'bestseller' ? (
+                        <span className="absolute top-3 left-3 bg-[#e61e25] text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full z-10 shadow-sm select-none">
+                          {lang === 'fr' ? 'SOLDES' : 'SALE'}
+                        </span>
+                      ) : (
+                        <span className="absolute top-3 left-3 bg-[#1e5cff] text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full z-10 shadow-sm select-none">
+                          {isNewSection ? (lang === 'fr' ? 'NOUVEAU' : 'NEW') : 'DEAL'}
+                        </span>
+                      )}
+
+                      {/* Discount Badge */}
+                      {discount > 0 && (
+                        <span className="absolute bottom-3 left-3 bg-[#00b050] text-white text-[11px] font-black px-2.5 py-1 rounded-full z-10">
+                          -{discount}%
+                        </span>
+                      )}
+
                       {/* Wishlist Button (Floating overlay top-right) */}
-                      <div className="absolute top-2.5 right-2.5 z-20">
+                      <div className="absolute top-3 right-3 z-20">
                         <button 
                           onClick={handleToggleWishlist}
                           className={`w-8.5 h-8.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
                             isWished 
-                              ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
-                              : 'bg-white/80 dark:bg-slate-800/80 border-white/20 dark:border-slate-700/50 text-slate-800 dark:text-white hover:text-[#ff3b30]'
+                              ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/20' 
+                              : 'bg-white border-slate-100 text-slate-400 hover:text-red-500'
                           }`}
                         >
                           <Heart size={15} fill={isWished ? "currentColor" : "none"} />
-                        </button>
-                      </div>
-
-                      {/* Cart Button (Floating overlay bottom-right) */}
-                      <div className="absolute bottom-2.5 right-2.5 z-20">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(product);
-                            showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
-                          }}
-                          className="w-8.5 h-8.5 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center border border-slate-100 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all text-slate-900 dark:text-white cursor-pointer"
-                        >
-                          <ShoppingCart size={15} className="text-slate-900 dark:text-white" />
                         </button>
                       </div>
 
@@ -491,62 +537,57 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                       />
                     </div>
 
-                    {/* Pricing row with Slanted Red Discount Ribbon */}
-                    <div className="flex items-stretch justify-between w-full mt-2 overflow-hidden">
-                      <div className="flex flex-col text-left justify-center pl-0.5">
-                        <span className="text-lg font-black text-slate-900 dark:text-white leading-none">
-                          {settings?.currency || 'FCFA'} {product.price?.toLocaleString()}
-                        </span>
-                        {product.original_price && product.original_price > product.price && (
-                          <span className="text-[12px] font-bold text-slate-450 dark:text-slate-500 line-through mt-1.5 font-mono leading-none">
-                            {settings?.currency || 'FCFA'} {product.original_price.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      {discount > 0 && (
-                        <div 
-                          className="bg-[#ff0a24] text-white font-black text-[13px] pl-5.5 pr-3 py-2 flex items-center justify-center italic shrink-0"
-                          style={{ clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)' }}
-                        >
-                          -{discount}%
+                    {/* Info details */}
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        {/* Brand & Category */}
+                        <div className="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest text-left mb-1.5">
+                          {product.brand || 'SWEETO'} · {product.category || 'Deals'}
                         </div>
-                      )}
-                    </div>
 
-                    {/* Title with Choice/Marque+ Badge */}
-                    <div className="flex items-start gap-1.5 mt-3 w-full leading-tight text-left">
-                      {idx % 2 === 0 ? (
-                        <span className="bg-[#fff000] text-black text-[9.5px] font-black px-2 py-0.5 rounded leading-none shrink-0 uppercase">Choice</span>
-                      ) : (
-                        <span className="bg-[#1e5cff] text-white text-[9.5px] font-black px-2 py-0.5 rounded leading-none shrink-0 uppercase">Marque+</span>
-                      )}
-                      <span className="line-clamp-2 text-[13px] font-bold text-slate-700 dark:text-slate-350">
-                        {t_smart(product.name)}
-                      </span>
-                    </div>
+                        {/* Title */}
+                        <h3 className="line-clamp-2 text-sm font-bold text-slate-855 dark:text-white text-left leading-snug mb-2 min-h-[40px]">
+                          {t_smart(product.name)}
+                        </h3>
 
-                    {/* Stock urgency / sales ratings */}
-                    <div className="mt-2.5 text-[12px] font-medium leading-normal">
-                      {/* Urgency Stock (Line 1) */}
-                      <div className="text-red-500 font-bold flex items-center gap-0.5">
-                        <span>🔥</span>
-                        <span>
-                          {stock <= 1 
-                            ? (lang === 'fr' ? '0 restant' : '0 remaining') 
-                            : stock <= 3 
-                              ? (lang === 'fr' ? 'Stock faible' : 'Low stock') 
-                              : (lang === 'fr' ? `${stock} restants` : `${stock} remaining`)}
-                        </span>
-                      </div>
-                      {/* Sales & Rating (Line 2) */}
-                      <div className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 mt-0.5">
-                        <span>{soldCount} {lang === 'fr' ? 'vendus' : 'sold'}</span>
-                        {averageRating && (
-                          <span className="flex items-center gap-0.5 text-amber-500">
-                            <span>⭐</span>
-                            <span>{averageRating}</span>
+                        {/* Rating */}
+                        <div className="flex items-center gap-1.5 text-xs text-left mb-3">
+                          <div className="flex text-amber-500 gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} size={13} fill={i < Math.round(Number(averageRating || 4.2)) ? "currentColor" : "none"} strokeWidth={2.5} />
+                            ))}
+                          </div>
+                          <span className="font-bold text-slate-500">
+                            {averageRating || '4.2'} ({soldCount})
                           </span>
-                        )}
+                        </div>
+                      </div>
+
+                      <div>
+                        {/* Price block */}
+                        <div className="flex items-baseline gap-2 text-left mb-4">
+                          <span className="text-xl font-black text-slate-900 dark:text-white">
+                            {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
+                          </span>
+                          {product.original_price && product.original_price > product.price && (
+                            <span className="text-sm text-slate-400 line-through font-bold">
+                              {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Add to Cart button */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                            showToast(lang === 'fr' ? 'Ajouté au panier ! 🛒' : 'Added to cart! 🛒', 'success');
+                          }}
+                          className="w-full text-white font-bold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer select-none border-none bg-[#1e5cff] hover:bg-[#1554C0]"
+                        >
+                          <ShoppingCart size={14} fill="currentColor" />
+                          <span>{lang === 'fr' ? 'Ajouter au panier' : 'Add to Cart'}</span>
+                        </button>
                       </div>
                     </div>
                   </div>

@@ -25,7 +25,8 @@ import {
   MousePointer2,
   Coins,
   Tag,
-  Type
+  Type,
+  Check
 } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
@@ -383,6 +384,8 @@ const StoreSettings = () => {
     mobile_bottom_banner_target_time: '',
     free_delivery_code: '',
     checkout_mode: 'standard',
+    best_sellers_enabled: true,
+    best_sellers_products: [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -450,6 +453,8 @@ const StoreSettings = () => {
         mobile_bottom_banner_target_time: settings.mobile_bottom_banner_target_time || '',
         free_delivery_code: settings.free_delivery_code || '',
         checkout_mode: settings.checkout_mode || 'standard',
+        best_sellers_enabled: settings.best_sellers_enabled === 'true' || settings.best_sellers_enabled === true || settings.best_sellers_enabled === undefined,
+        best_sellers_products: Array.isArray(settings.best_sellers_products) ? settings.best_sellers_products : (typeof settings.best_sellers_products === 'string' ? (function(){ try { return JSON.parse(settings.best_sellers_products); } catch(e) { return []; } })() : []),
       });
     }
   }, [settings, isDirty]);
@@ -1470,6 +1475,105 @@ const StoreSettings = () => {
                     Enter your free Gemini API key from Google AI Studio. This is used to automatically generate description text from uploaded product images.
                   </p>
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Best Sellers Settings Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-sm text-left mt-6"
+            >
+              <SectionHeader 
+                icon={Sparkles} 
+                title="Best Sellers Engine" 
+                color="blue" 
+                subtitle="Configure Best Sellers section & product selection"
+              />
+
+              <div className="space-y-6 mt-6">
+                {/* Enabled/Disabled Toggle */}
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100/60 dark:border-slate-800/50 rounded-2xl">
+                  <div className="space-y-0.5 max-w-[70%]">
+                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Enable Best Sellers Section</span>
+                    <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                      Toggle the Best Sellers grid ON or OFF on the desktop storefront landing page.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      name="best_sellers_enabled"
+                      checked={formData.best_sellers_enabled}
+                      onChange={(e) => {
+                        setIsDirty(true);
+                        setFormData(prev => ({ ...prev, best_sellers_enabled: e.target.checked }));
+                      }}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {/* Product Multi-selector Grid */}
+                {formData.best_sellers_enabled && (
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-wider block">Selected Best Sellers Products</span>
+                      <p className="text-[10px] text-slate-400 font-bold leading-normal mt-0.5">
+                        Select which products will show up in the storefront Best Sellers section. Check/uncheck products below (typically 6 items).
+                      </p>
+                    </div>
+
+                    {/* Scrollable list of products with checkboxes */}
+                    <div className="max-h-[300px] overflow-y-auto border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 bg-slate-50/20 dark:bg-slate-950/30 space-y-2.5 no-scrollbar">
+                      {products.map(p => {
+                        const pId = String(p.id);
+                        const isChecked = Array.isArray(formData.best_sellers_products) && formData.best_sellers_products.includes(pId);
+                        return (
+                          <div 
+                            key={p.id}
+                            onClick={() => {
+                              setIsDirty(true);
+                              setFormData(prev => {
+                                const currentSelected = Array.isArray(prev.best_sellers_products) ? [...prev.best_sellers_products] : [];
+                                if (currentSelected.includes(pId)) {
+                                  return { ...prev, best_sellers_products: currentSelected.filter(id => id !== pId) };
+                                } else {
+                                  return { ...prev, best_sellers_products: [...currentSelected, pId] };
+                                }
+                              });
+                            }}
+                            className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+                              isChecked 
+                                ? 'bg-blue-50/30 dark:bg-blue-950/10 border-blue-500/30 text-blue-950 dark:text-blue-400 font-black' 
+                                : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={p.image_url || p.image || '/hero-banner.png'} 
+                                alt={p.name} 
+                                className="w-8 h-8 rounded-lg object-contain bg-slate-100 dark:bg-slate-800 shrink-0" 
+                              />
+                              <div className="text-left">
+                                <p className="text-[11px] font-extrabold truncate max-w-[280px] sm:max-w-[420px]">{p.name}</p>
+                                <p className="text-[9px] text-slate-400 font-bold mt-0.5">{p.category} | ID: {p.id}</p>
+                              </div>
+                            </div>
+                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                              isChecked 
+                                ? 'bg-blue-600 border-blue-600 text-white' 
+                                : 'border-slate-200 dark:border-slate-700'
+                            }`}>
+                              {isChecked && <Check size={12} strokeWidth={4} />}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
 

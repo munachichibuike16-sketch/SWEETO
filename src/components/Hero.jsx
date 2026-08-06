@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import DesktopHero from './DesktopHero';
 
 // Subtle floating particle effect
 const FloatingParticles = () => {
@@ -33,8 +34,8 @@ const FloatingParticles = () => {
   );
 };
 
-const Hero = ({ banners = [], onProductClick }) => {
-  const { lang, t, t_smart } = useLanguage();
+const MobileHero = ({ banners = [], onProductClick }) => {
+  const { lang } = useLanguage();
   const { products, settings } = useStore();
   const { scrollY } = useScroll();
   const [randomProduct, setRandomProduct] = useState(null);
@@ -209,6 +210,31 @@ const Hero = ({ banners = [], onProductClick }) => {
         </AnimatePresence>
       </motion.div>
     </section>
+  );
+};
+
+const Hero = ({ banners = [], onProductClick, onCartOpen }) => {
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (isDesktop) {
+    return (
+      <DesktopHero 
+        onProductClick={onProductClick} 
+        onCartOpen={onCartOpen}
+      />
+    );
+  }
+
+  return (
+    <MobileHero banners={banners} onProductClick={onProductClick} />
   );
 };
 

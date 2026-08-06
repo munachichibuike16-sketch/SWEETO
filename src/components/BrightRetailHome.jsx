@@ -83,12 +83,7 @@ export default function BrightRetailHome({ onProductClick }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('new'); // 'new' or 'bestseller'
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [artificialLoading, setArtificialLoading] = useState(true);
-
-  useEffect(() => {
-    const t = setTimeout(() => setArtificialLoading(false), 1500);
-    return () => clearTimeout(t);
-  }, []);
+  const [artificialLoading, setArtificialLoading] = useState(false);
 
   // Time remaining countdown for Deal of the Day
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 22, seconds: 45 });
@@ -300,6 +295,111 @@ export default function BrightRetailHome({ onProductClick }) {
   const renderProductCard = (product, idx = 0, prefix = 'p') => {
     const discount = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
     const isWished = isInWishlist(product.id);
+    const isBestSellerStyle = prefix === 'tab' && activeTab === 'bestseller';
+
+    if (isBestSellerStyle) {
+      return (
+        <div 
+          key={`${prefix}-${product.id}-${idx}`}
+          onClick={() => {
+            const event = new CustomEvent('view-all-products');
+            window.dispatchEvent(event);
+            window.scrollTo(0, 0);
+          }}
+          className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-3 flex flex-col justify-between relative group cursor-pointer select-none h-full shadow-sm hover:shadow-md transition-shadow text-left"
+        >
+          {/* Image Area */}
+          <div className="w-full aspect-square bg-[#f8fafc] dark:bg-slate-950 rounded-2xl flex items-center justify-center p-2 relative overflow-hidden mb-3">
+            {/* SALE Badge */}
+            <span className="absolute top-2 left-2 bg-[#e61e25] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full z-10 shadow-sm select-none">
+              {lang === 'fr' ? 'SOLDES' : 'SALE'}
+            </span>
+
+            {/* Discount Badge */}
+            {discount > 0 && (
+              <span className="absolute bottom-2 left-2 bg-[#00b050] text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10 select-none">
+                -{discount}%
+              </span>
+            )}
+
+            {/* Wishlist Button (Floating overlay top-right) */}
+            <div className="absolute top-2 right-2 z-20">
+              <button 
+                onClick={(e) => handleToggleWishlist(e, product.id)}
+                className={`w-7.5 h-7.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
+                  isWished 
+                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/20' 
+                    : 'bg-white border-slate-100 text-slate-400 hover:text-red-500'
+                }`}
+              >
+                <Heart size={13} fill={isWished ? "currentColor" : "none"} />
+              </button>
+            </div>
+
+            <img 
+              src={product.image_url || product.image || '/hero-banner.png'} 
+              alt={product.name} 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = '/hero-banner.png';
+              }}
+              className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 rounded-lg"
+            />
+          </div>
+
+          {/* Info details */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              {/* Brand & Category */}
+              <div className="text-[9px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest text-left mb-1">
+                {product.brand || 'SWEETO'} · {product.category || 'Bestseller'}
+              </div>
+
+              {/* Title */}
+              <h3 className="line-clamp-2 text-xs font-bold text-slate-855 dark:text-white text-left leading-snug mb-1.5 min-h-[34px]">
+                {product.name}
+              </h3>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1 text-[10px] text-left mb-2">
+                <div className="flex text-amber-500 gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={11} fill={i < 4 ? "currentColor" : "none"} strokeWidth={2.5} />
+                  ))}
+                </div>
+                <span className="font-bold text-slate-500">
+                  {product.rating || '4.8'} ({product.reviews_count || 2341})
+                </span>
+              </div>
+            </div>
+
+            <div>
+              {/* Price block */}
+              <div className="flex items-baseline gap-1.5 text-left mb-3">
+                <span className="text-base font-black text-slate-900 dark:text-white">
+                  {product.price.toLocaleString()} {settings.currency || 'FCFA'}
+                </span>
+                {product.original_price && product.original_price > product.price && (
+                  <span className="text-xs text-slate-405 dark:text-slate-500 line-through font-bold">
+                    {product.original_price.toLocaleString()} {settings.currency || 'FCFA'}
+                  </span>
+                )}
+              </div>
+
+              {/* Add to Cart button */}
+              <button 
+                onClick={(e) => handleAddToCart(e, product)}
+                className="w-full bg-[#111322] hover:bg-slate-950 text-white font-bold text-[10px] py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer select-none"
+              >
+                <ShoppingCart size={12} fill="currentColor" />
+                <span>{lang === 'fr' ? 'Ajouter' : 'Add to Cart'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div 
         key={`${prefix}-${product.id}-${idx}`}
@@ -374,7 +474,7 @@ export default function BrightRetailHome({ onProductClick }) {
           {/* Action Button */}
           <button 
             onClick={(e) => handleAddToCart(e, product)}
-            className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-950 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
+            className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-955 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
           >
             {t('add_to_cart') || 'Add To Cart'}
           </button>
@@ -580,11 +680,26 @@ export default function BrightRetailHome({ onProductClick }) {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
-          {loading 
-            ? renderSkeletons(6) 
-            : currentTabProducts.map((product, idx) => renderProductCard(product, idx, 'tab'))}
-        </div>
+        {activeTab === 'bestseller' ? (
+          <div className="-mx-4 sm:mx-0">
+            <DealOfTheDaySection 
+              products={currentTabProducts} 
+              onProductClick={() => {
+                const event = new CustomEvent('view-all-products');
+                window.dispatchEvent(event);
+                window.scrollTo(0, 0);
+              }}
+              sectionType="bestseller"
+              scrollDirection="right"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
+            {loading 
+              ? renderSkeletons(6) 
+              : currentTabProducts.map((product, idx) => renderProductCard(product, idx, 'tab'))}
+          </div>
+        )}
       </div>
     );
   };
@@ -1101,7 +1216,10 @@ export default function BrightRetailHome({ onProductClick }) {
       {/* Today's Offers (Deal of the Day) */}
       <DealOfTheDaySection 
         products={dailyDeals} 
-        onProductClick={onProductClick} 
+        onProductClick={() => {
+          navigate('/deals');
+          window.scrollTo(0, 0);
+        }} 
       />
 
       {/* Shop By Category Section */}

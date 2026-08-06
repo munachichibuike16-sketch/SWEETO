@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,179 +9,382 @@ import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
 import DesktopHeader from '../components/DesktopHeader';
 import CartDrawer from '../components/CartDrawer';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
-import ProductThreeDView from '../components/ProductThreeDView';
-import DealOfTheDaySection from '../components/DealOfTheDaySection';
 
-const getColorFilter = (variantName) => {
-  if (!variantName) return 'none';
-  const name = variantName.toLowerCase();
-  if (name.includes('rouge') || name.includes('red')) return 'hue-rotate(340deg) saturate(1.5)';
-  if (name.includes('bleu') || name.includes('blue')) return 'hue-rotate(210deg) saturate(1.3)';
-  if (name.includes('vert') || name.includes('green')) return 'hue-rotate(110deg) saturate(1.2)';
-  if (name.includes('jaune') || name.includes('yellow') || name.includes('gold') || name.includes('or')) return 'hue-rotate(45deg) saturate(1.4)';
-  if (name.includes('violet') || name.includes('purple')) return 'hue-rotate(270deg) saturate(1.3)';
-  if (name.includes('orange')) return 'hue-rotate(15deg) saturate(1.5)';
-  return 'none';
+/* ─────────────────────── helpers ─────────────────────── */
+const getHexColor = (colorName) => {
+  if (!colorName) return 'var(--accent)';
+  const name = colorName.toLowerCase().trim();
+  const m = {
+    sandstone: '#C9A87C', sand: '#C9A87C',
+    midnight: '#1C1B1A', noir: '#1C1B1A', black: '#1C1B1A',
+    moss: '#7A8471', vert: '#7A8471', green: '#7A8471',
+    blue: '#1F6FEB', bleu: '#1F6FEB',
+    red: '#ff3b30', rouge: '#ff3b30',
+    yellow: '#ffcc00', jaune: '#ffcc00',
+    white: '#ffffff', blanc: '#ffffff',
+    grey: '#8e8e93', gris: '#8e8e93',
+    gold: '#C5A059'
+  };
+  for (const [k, v] of Object.entries(m)) {
+    if (name.includes(k)) return v;
+  }
+  if (name.startsWith('#')) return colorName;
+  // Fallback hash color
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+  return '#' + '00000'.substring(0, 6 - c.length) + c;
 };
 
-const ProductDetailPage = () => {
+const getFeatureDetails = (prod) => {
+  const cat = (prod?.category || '').toLowerCase();
+  if (cat.includes('phone') || cat.includes('ecouteur') || cat.includes('headphone') || cat.includes('audio') || cat.includes('sound')) {
+    return {
+      feat1: {
+        eyebrow: "Materials & Comfort",
+        title: "Premium Build, Zero fatigue.",
+        desc: "Ergonomically tuned shape designed for prolonged daily usage. Memory cushions seal in the acoustics without applying excess pressure to your head.",
+        bullets: ["Replaceable high-comfort padding", "Brushed metal hinges for extended durability", "Lightweight framework"]
+      },
+      feat2: {
+        eyebrow: "Acoustic Engineering",
+        title: "Sound that reads the room.",
+        desc: "High-definition custom speakers tuned for rich bass response, transparent mids, and crystal-clear vocals. Immerse yourself in studio-quality music anywhere.",
+        bullets: ["Adaptive frequency response", "Deep passive isolation seal", "Enhanced call clarity hardware"]
+      }
+    };
+  }
+  return {
+    feat1: {
+      eyebrow: "DESIGN PHILOSOPHY",
+      title: "Crafted for Everyday Excellence.",
+      desc: "Carefully engineered using robust, premium materials. Form and function aligned to deliver the most reliable user experience under heavy daily operation.",
+      bullets: ["Durable lightweight chassis", "Scratch-resistant sleek surfaces", "Strict quality control tested"]
+    },
+    feat2: {
+      eyebrow: "INTELLIGENT TECHNOLOGY",
+      title: "Powering your lifestyle.",
+      desc: "Packs next-generation internal hardware to maximize efficiency and speed. Designed to connect instantly and keep operating without interruptions.",
+      bullets: ["High efficiency power management", "Seamless multi-device connectivity", "Official manufacturer certification"]
+    }
+  };
+};
+
+function Stars({ value }) {
+  const r = Math.round(value);
+  return (
+    <span className="stars">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <svg key={i} viewBox="0 0 24 24" style={{ fill: i <= r ? "#1F6FEB" : "#D9E3F2" }}>
+          <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+const getImagesList = (prod) => {
+  if (!prod) return [];
+  const list = [];
+  const mainImg = prod.image_url || prod.image;
+  if (mainImg) list.push(mainImg);
+  if (prod.images) {
+    try {
+      const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
+      if (Array.isArray(imgs)) {
+        imgs.forEach(img => {
+          if (img && !list.includes(img)) list.push(img);
+        });
+      }
+    } catch (e) {}
+  }
+  if (list.length === 0) list.push('/hero-banner.png');
+  return list;
+};
+
+const HINTS = ["Tap a star", "Poor", "Fair", "Good", "Great", "Legendary"];
+
+/* ───────────────────────── CSS ───────────────────────── */
+const css = `
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/fraunces@latest/latin-600-normal.css");
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/fraunces@latest/latin-700-normal.css");
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/fraunces@latest/latin-600-italic.css");
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/space-grotesk@latest/latin-400-normal.css");
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/space-grotesk@latest/latin-500-normal.css");
+@import url("https://cdn.jsdelivr.net/fontsource/fonts/space-grotesk@latest/latin-700-normal.css");
+
+.pdp-premium-container {
+  --paper:#F6F9FE; --card:#FFFFFF; --stage:#E8F0FB;
+  --ink:#0A2540; --ink-soft:#5A6B84; --line:#D9E3F2;
+  --accent:#1F6FEB; --accent-dark:#1554C0; --gold:#1F6FEB; --moss:#2F80ED;
+  --r:16px; --shadow:0 18px 44px -18px rgba(10,37,64,.25);
+  --disp:"Fraunces",serif; --body:"Space Grotesk",sans-serif;
+  
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  width: 100%;
+}
+
+.pdp-premium-container .noise{position:absolute;inset:0;z-index:120;pointer-events:none;opacity:.04;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.pdp-premium-container .crumb{display:flex;gap:8px;align-items:center;font-size:12px;letter-spacing:.08em;color:var(--ink-soft);padding:26px 0 4px;text-transform:uppercase}
+.pdp-premium-container .crumb b{color:var(--ink)} .pdp-premium-container .crumb i{font-style:normal;color:var(--line)}
+.pdp-premium-container .pdp{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:52px;padding:18px 0 70px;align-items:start}
+.pdp-premium-container .gallery{position:sticky;top:20px}
+.pdp-premium-container .stage{position:relative;aspect-ratio:1/1;background:var(--stage);border-radius:20px;overflow:hidden;box-shadow:var(--shadow)}
+.pdp-premium-container .stage .breathe{position:absolute;inset:0;animation:breathe 9s ease-in-out infinite alternate}
+@keyframes breathe{from{transform:scale(1)}to{transform:scale(1.045)}}
+.pdp-premium-container .stage img{width:100%;height:100%;object-fit:cover;transition:opacity .28s ease,transform .5s cubic-bezier(.2,.7,.2,1);transform-origin:center}
+.pdp-premium-container .stage.zoomed img{transform:scale(1.8)}
+.pdp-premium-container .stage.switching img{opacity:0}
+.pdp-premium-container .badges{position:absolute;top:16px;left:16px;display:flex;flex-direction:column;gap:8px;z-index:2}
+.pdp-premium-container .badge{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:7px 12px;border-radius:999px}
+.pdp-premium-container .badge.sale{background:var(--accent);color:#fff}
+.pdp-premium-container .badge.new{background:var(--ink);color:#fff}
+.pdp-premium-container .zoom-hint{position:absolute;right:14px;bottom:12px;z-index:2;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);background:rgba(255,255,255,.85);padding:6px 10px;border-radius:999px}
+.pdp-premium-container .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.pdp-premium-container .thumb{aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:2px solid transparent;background:var(--stage);padding:0;transition:border-color .25s,transform .25s}
+.pdp-premium-container .thumb img{width:100%;height:100%;object-fit:cover}
+.pdp-premium-container .thumb:hover{transform:translateY(-3px)}
+.pdp-premium-container .thumb.active{border-color:var(--accent)}
+.pdp-premium-container .eyebrow{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px}
+.pdp-premium-container .eyebrow::before{content:"";width:26px;height:2px;background:var(--accent)}
+.pdp-premium-container h1.pname{font-family:var(--disp);font-weight:700;font-size:clamp(2.4rem,4.4vw,3.6rem);line-height:1.02;margin:12px 0 10px;letter-spacing:-.01em}
+.pdp-premium-container .rate-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-soft)}
+.pdp-premium-container .stars{display:inline-flex;gap:2px}
+.pdp-premium-container .stars svg{width:15px;height:15px}
+.pdp-premium-container .rate-row a{font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.pdp-premium-container .price-row{display:flex;align-items:baseline;gap:14px;margin:20px 0 6px}
+.pdp-premium-container .price{font-family:var(--disp);font-weight:700;font-size:2.1rem}
+.pdp-premium-container .compare{color:var(--ink-soft);text-decoration:line-through;font-size:1.05rem}
+.pdp-premium-container .save{background:rgba(31,111,235,.12);color:var(--accent-dark);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;border-radius:999px}
+.pdp-premium-container .pdesc{color:var(--ink-soft);margin:10px 0 22px;max-width:52ch}
+.pdp-premium-container .opt-label{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px}
+.pdp-premium-container .opt-label span{color:var(--ink-soft);font-weight:500;text-transform:none;letter-spacing:.02em}
+.pdp-premium-container .swatches{display:flex;gap:12px;margin-bottom:26px}
+.pdp-premium-container .swatch{width:38px;height:38px;border-radius:50%;border:1px solid rgba(10,37,64,.18);position:relative;transition:transform .25s;cursor:pointer}
+.pdp-premium-container .swatch:hover{transform:scale(1.1)}
+.pdp-premium-container .swatch.active::after{content:"";position:absolute;inset:-6px;border:2px solid var(--accent);border-radius:50%}
+.pdp-premium-container .buy-row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.pdp-premium-container .qty{display:flex;align-items:center;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.pdp-premium-container .qty button{width:42px;height:100%;min-height:52px;font-size:18px;font-weight:500;transition:background .2s;cursor:pointer}
+.pdp-premium-container .qty button:hover{background:rgba(31,111,235,.1)}
+.pdp-premium-container .qty output{width:34px;text-align:center;font-weight:700}
+.pdp-premium-container .btn-add{flex:1;min-width:200px;background:var(--accent);color:#fff;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:17px 26px;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .25s,transform .15s;cursor:pointer}
+.pdp-premium-container .btn-add:hover{background:var(--accent-dark)}
+.pdp-premium-container .btn-add:active{transform:scale(.97)}
+.pdp-premium-container .btn-add.done{background:var(--ink)}
+.pdp-premium-container .btn-wish,.pdp-premium-container .btn-share{width:54px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;transition:background .25s,border-color .25s;flex-shrink:0;cursor:pointer}
+.pdp-premium-container .btn-wish svg,.pdp-premium-container .btn-share svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pdp-premium-container .btn-wish:hover,.pdp-premium-container .btn-share:hover{background:rgba(31,111,235,.08)}
+.pdp-premium-container .btn-wish.on{background:rgba(31,111,235,.1);border-color:var(--accent)}
+.pdp-premium-container .btn-wish.on svg{fill:var(--accent);stroke:var(--accent);animation:pop .4s}
+.pdp-premium-container .btn-share.pulse svg{animation:pop .4s}
+.pdp-premium-container .btn-now{width:100%;margin-top:12px;border:1.5px solid var(--accent);color:var(--accent);border-radius:999px;padding:15px;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;transition:background .25s,color .25s;cursor:pointer}
+.pdp-premium-container .btn-now:hover{background:var(--accent);color:#fff}
+.pdp-premium-container .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:26px 0 8px}
+.pdp-premium-container .trust div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 12px;text-align:center;font-size:11.5px;font-weight:500;color:var(--ink-soft)}
+.pdp-premium-container .trust svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;margin:0 auto 8px;display:block}
+.pdp-premium-container .acc{margin-top:26px;border-top:1px solid var(--line)}
+.pdp-premium-container .acc-item{border-bottom:1px solid var(--line)}
+.pdp-premium-container .acc-head{width:100%;display:flex;justify-content:space-between;align-items:center;padding:18px 2px;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.pdp-premium-container .acc-head .pl{font-size:20px;font-weight:400;transition:transform .35s}
+.pdp-premium-container .acc-item.open .pl{transform:rotate(45deg);color:var(--accent)}
+.pdp-premium-container .acc-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .acc-item.open .acc-panel{grid-template-rows:1fr}
+.pdp-premium-container .acc-panel>div{min-height:0;overflow:hidden}
+.pdp-premium-container .acc-body{padding:0 2px 22px;color:var(--ink-soft);font-size:14.5px}
+.pdp-premium-container .spec{display:grid;grid-template-columns:1fr 1.3fr;row-gap:10px;font-size:14px}
+.pdp-premium-container .spec dt{font-weight:700;color:var(--ink)} .pdp-premium-container .spec dd{color:var(--ink-soft)}
+.pdp-premium-container .boxlist{list-style:none;margin-top:8px}
+.pdp-premium-container .boxlist li{padding:6px 0 6px 26px;position:relative}
+.pdp-premium-container .boxlist li::before{content:"✓";position:absolute;left:2px;color:var(--accent);font-weight:700}
+.pdp-premium-container .fab{position:fixed;right:22px;bottom:22px;z-index:95;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:var(--shadow);transition:bottom .45s cubic-bezier(.2,.7,.2,1),transform .2s,background .25s;cursor:pointer}
+.pdp-premium-container .fab:hover{background:var(--accent-dark);transform:scale(1.06)}
+.pdp-premium-container .fab svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pdp-premium-container .fab.lift{bottom:96px}
+.pdp-premium-container #cartCount{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;transform:scale(0);transition:transform .25s cubic-bezier(.34,1.6,.5,1)}
+.pdp-premium-container #cartCount.on{transform:scale(1)}
+.pdp-premium-container #cartCount.pop{animation:pop .35s cubic-bezier(.34,1.8,.5,1)}
+@keyframes pop{50%{transform:scale(1.45)}}
+.pdp-premium-container .features{padding:40px 0 20px}
+.pdp-premium-container .feat{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;margin-bottom:44px}
+.pdp-premium-container .feat:nth-child(even) .feat-img{order:2}
+.pdp-premium-container .feat-img{border-radius:16px;overflow:hidden;box-shadow:var(--shadow);max-height:300px;display:flex;align-items:center;justify-content:center;background:var(--stage)}
+.pdp-premium-container .feat-img img{width:100%;height:100%;object-fit:cover;max-height:300px;transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .feat-img:hover img{transform:scale(1.06)}
+.pdp-premium-container h2.big{font-family:var(--disp);font-weight:700;font-size:clamp(1.5rem,2.4vw,2.1rem);line-height:1.1;margin:8px 0 10px;letter-spacing:-.01em}
+.pdp-premium-container h2.big em{font-style:italic;color:var(--accent)}
+.pdp-premium-container .feat p{color:var(--ink-soft);max-width:48ch;font-size:14.5px}
+.pdp-premium-container .feat ul{list-style:none;margin-top:12px;display:grid;gap:8px;font-size:13.5px;font-weight:500}
+.pdp-premium-container .feat ul li{padding-left:26px;position:relative}
+.pdp-premium-container .feat ul li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+.pdp-premium-container .lm{overflow:hidden}
+.pdp-premium-container .lm .lm-in{display:block;transform:translateY(115%);transition:transform .9s cubic-bezier(.2,.75,.2,1)}
+.pdp-premium-container .lm.in .lm-in{transform:translateY(0)}
+.pdp-premium-container .reviews{padding:20px 0 110px}
+.pdp-premium-container .rev-head{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:34px}
+.pdp-premium-container .rev-grid{display:grid;grid-template-columns:340px 1fr;gap:36px;align-items:start}
+.pdp-premium-container .rev-sum{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px;position:sticky;top:24px}
+.pdp-premium-container .rev-score{display:flex;align-items:baseline;gap:12px}
+.pdp-premium-container .rev-score b{font-family:var(--disp);font-size:3.4rem;font-weight:700;line-height:1}
+.pdp-premium-container .rev-score span{color:var(--ink-soft);font-size:13px}
+.pdp-premium-container .bars{margin-top:18px;display:grid;gap:8px}
+.pdp-premium-container .bar-row{display:grid;grid-template-columns:34px 1fr 40px;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft)}
+.pdp-premium-container .bar{height:7px;background:var(--line);border-radius:99px;overflow:hidden}
+.pdp-premium-container .bar-fill{height:100%;background:var(--accent);border-radius:999px;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.pdp-premium-container .pill{border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:12px;font-weight:700;letter-spacing:.08em;transition:all .25s;cursor:pointer}
+.pdp-premium-container .pill:hover{border-color:var(--accent)}
+.pdp-premium-container .pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pdp-premium-container .rev-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pdp-premium-container .rev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:transform .3s,box-shadow .3s}
+.pdp-premium-container .rev-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.pdp-premium-container .rev-card.fresh{animation:slideIn .5s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .rev-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.pdp-premium-container .ava{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.pdp-premium-container .rev-who b{display:block;font-size:14px}
+.pdp-premium-container .rev-who span{font-size:11.5px;color:var(--ink-soft)}
+.pdp-premium-container .verif{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);display:flex;gap:4px;align-items:center}
+.pdp-premium-container .verif.fresh-tag{color:var(--accent)}
+.pdp-premium-container .rev-card h4{font-size:15px;margin:6px 0 6px}
+.pdp-premium-container .rev-card p{font-size:13.5px;color:var(--ink-soft)}
+.pdp-premium-container .rev-card .stars svg{width:13px;height:13px}
+.pdp-premium-container .modal{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:20px;pointer-events:none}
+.pdp-premium-container .modal-back{position:absolute;inset:0;background:rgba(10,37,64,.5);opacity:0;transition:opacity .35s;cursor:pointer}
+.pdp-premium-container .modal-card{position:relative;background:var(--paper);border-radius:20px;max-width:540px;width:100%;padding:32px;box-shadow:var(--shadow);transform:translateY(28px) scale(.97);opacity:0;transition:transform .45s cubic-bezier(.2,.75,.2,1),opacity .45s;max-height:92vh;overflow-y:auto}
+.pdp-premium-container .modal.on{pointer-events:auto}
+.pdp-premium-container .modal.on .modal-back{opacity:1}
+.pdp-premium-container .modal.on .modal-card{transform:none;opacity:1}
+.pdp-premium-container .modal-x{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:16px;transition:background .2s;cursor:pointer}
+.pdp-premium-container .modal-x:hover{background:rgba(31,111,235,.1)}
+.pdp-premium-container .modal-title{font-family:var(--disp);font-weight:700;font-size:2rem;margin:10px 0 20px}
+.pdp-premium-container .modal-card form label{display:grid;gap:6px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+.pdp-premium-container .modal-card input,.pdp-premium-container .modal-card textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card);font-family:var(--body);font-size:14px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink);outline:none;transition:border-color .25s;resize:vertical}
+.pdp-premium-container .modal-card input:focus,.pdp-premium-container .modal-card textarea:focus{border-color:var(--accent)}
+.pdp-premium-container .f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pdp-premium-container .f-rate{margin-bottom:16px}
+.pdp-premium-container .f-label{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:8px}
+.pdp-premium-container .star-pick{display:inline-flex;gap:4px}
+.pdp-premium-container .star-pick button{padding:2px;transition:transform .15s;cursor:pointer}
+.pdp-premium-container .star-pick button:hover{transform:scale(1.2)}
+.pdp-premium-container .star-pick button svg{width:26px;height:26px;fill:var(--line);transition:fill .15s}
+.pdp-premium-container .star-pick button.lit svg{fill:var(--accent)}
+.pdp-premium-container .f-hint{font-size:12px;color:var(--ink-soft);margin-left:10px}
+.pdp-premium-container .modal-submit{width:100%;background:var(--accent);color:#fff;border-radius:999px;padding:16px;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;transition:background .25s;margin-top:6px;cursor:pointer}
+.pdp-premium-container .modal-submit:hover{background:var(--accent-dark)}
+.pdp-premium-container .related{padding:0 0 130px}
+.pdp-premium-container .rel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:30px}
+.pdp-premium-container .rel-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:transform .3s,box-shadow .3s;position:relative}
+.pdp-premium-container .rel-card:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.pdp-premium-container .rel-img{aspect-ratio:1/1;background:var(--stage);overflow:hidden}
+.pdp-premium-container .rel-img img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .rel-card:hover .rel-img img{transform:scale(1.07)}
+.pdp-premium-container .rel-body{padding:16px 18px 18px}
+.pdp-premium-container .rel-body b{font-size:15px;display:block}
+.pdp-premium-container .rel-body span{font-size:13px;color:var(--ink-soft)}
+.pdp-premium-container .rel-add{position:absolute;right:14px;bottom:14px;width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;font-size:20px;display:grid;place-items:center;transition:background .25s,transform .25s;opacity:0;transform:translateY(8px);cursor:pointer}
+.pdp-premium-container .rel-card:hover .rel-add{opacity:1;transform:translateY(0)}
+.pdp-premium-container .rel-add:hover{background:var(--accent-dark)}
+@media(hover:none){.pdp-premium-container .rel-add{opacity:1;transform:none}}
+.pdp-premium-container .stickybar{position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -12px 34px rgba(10,37,64,.12);transform:translateY(110%);transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .stickybar.show{transform:translateY(0)}
+.pdp-premium-container .sb-in{display:flex;align-items:center;gap:16px;padding:12px 0}
+.pdp-premium-container .sb-in img{width:52px;height:52px;object-fit:cover;border-radius:10px;background:var(--stage)}
+.pdp-premium-container .sb-in .sb-name{font-weight:700;font-size:14px}
+.pdp-premium-container .sb-in .sb-name span{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+.pdp-premium-container .sb-in .price{font-size:1.3rem;margin-left:auto}
+.pdp-premium-container .sb-in .btn-add{flex:0;min-width:0;padding:14px 26px}
+.pdp-premium-container .overlay{position:fixed;inset:0;background:rgba(10,37,64,.45);z-index:100;opacity:0;pointer-events:none;transition:opacity .35s}
+.pdp-premium-container .overlay.on{opacity:1;pointer-events:auto}
+.pdp-premium-container .fly{position:fixed;z-index:140;width:18px;height:18px;border-radius:50%;background:var(--accent);pointer-events:none;transition:transform .75s cubic-bezier(.25,.7,.3,1),opacity .75s;box-shadow:0 4px 12px rgba(31,111,235,.5)}
+.pdp-premium-container .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+.pdp-premium-container .reveal.in{opacity:1;transform:none}
+
+@media(max-width:1020px){
+  .pdp-premium-container .pdp{grid-template-columns:1fr;gap:34px}
+  .pdp-premium-container .gallery{position:static}
+  .pdp-premium-container .rev-grid{grid-template-columns:1fr}
+  .pdp-premium-container .rev-sum{position:static}
+  .pdp-premium-container .rel-grid{grid-template-columns:repeat(2,1fr)}
+  .pdp-premium-container .feat{grid-template-columns:1fr;gap:26px}
+  .pdp-premium-container .feat:nth-child(even) .feat-img{order:0}
+}
+@media(max-width:720px){
+  .pdp-premium-container .rev-cards{grid-template-columns:1fr}
+  .pdp-premium-container .rel-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .pdp-premium-container .trust{grid-template-columns:1fr}
+  .pdp-premium-container .sb-in .price{display:none}
+  .pdp-premium-container .f-row{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .pdp-premium-container *,.pdp-premium-container *::before,.pdp-premium-container *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .pdp-premium-container .reveal{opacity:1;transform:none}
+  .pdp-premium-container .lm .lm-in{transform:none}
+}
+`;
+
+export default function ProductDetailPage() {
   const { productId: rawProductId } = useParams();
   const productId = rawProductId ? rawProductId.toLowerCase().replace(/^swt-/, '') : '';
   const navigate = useNavigate();
+  
   const { 
     products: liveProducts, settings, showToast, addToRecent, 
     setSearchQuery, setSelectedCategory, setSelectedBrand, 
     openGlobalLightbox 
   } = useStore();
+  
   const { addToCart: originalAddToCart, cartCount } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { lang, t, t_smart } = useLanguage();
-  const [isAdding, setIsAdding] = useState(false);
-  const [isSpecsExpanded, setIsSpecsExpanded] = useState(false);
-  const [isSpecsOverflowing, setIsSpecsOverflowing] = useState(false);
-  const specsContentRef = useRef(null);
-
-  const [isReviewsExpanded, setIsReviewsExpanded] = useState(false);
-  const [isReviewsOverflowing, setIsReviewsOverflowing] = useState(false);
-  const reviewsContentRef = useRef(null);
-
-  const addToCart = (prod, qty = 1) => {
-    setIsAdding(true);
-    const finalProduct = {
-      ...prod,
-      name: selectedVariant ? `${prod.name} (${selectedVariant.name})` : prod.name,
-      price: prod.price + (selectedVariant?.priceAdjust || 0)
-    };
-    originalAddToCart(finalProduct, qty);
-    setTimeout(() => {
-      setIsAdding(false);
-    }, 800);
-  };
-
+  
   const [product, setProduct] = useState(null);
-  const [artificialLoading, setArtificialLoading] = useState(true);
-
-  useEffect(() => {
-    const t = setTimeout(() => setArtificialLoading(false), 1500);
-    return () => clearTimeout(t);
-  }, []);
-
-  const [quantity, setQuantity] = useState(1);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState('specs');
-  const [showVideo, setShowVideo] = useState(false);
-  const [showThreeD, setShowThreeD] = useState(false);
+  const [view, setView] = useState(0);
+  const [switching, setSwitching] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [wish, setWish] = useState(false);
+  const [sharePulse, setSharePulse] = useState(false);
+  const [added, setAdded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [touchStartX, setTouchStartX] = useState(null);
-  const [showStickyHeader, setShowStickyHeader] = useState(false);
-  const [activeScrollSection, setActiveScrollSection] = useState('overview');
-  const [scrollY, setScrollY] = useState(0);
-  
-
-
-
-  const [isVariantSheetOpen, setIsVariantSheetOpen] = useState(false);
-  const [sheetAction, setSheetAction] = useState('both'); // 'both', 'cart', 'buy'
+  const [showBar, setShowBar] = useState(false);
+  const [openAcc, setOpenAcc] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [filter, setFilter] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", title: "", body: "" });
+  const [pick, setPick] = useState(0);
+  const [hoverPick, setHoverPick] = useState(0);
+  const [badgePop, setBadgePop] = useState(false);
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
-  const [sheetScrollY, setSheetScrollY] = useState(0);
 
+  const fabRef = useRef(null);
+  const buyboxRef = useRef(null);
+  const titleRef = useRef(null);
+  const mainImgRef = useRef(null);
 
-
-  const [reviews, setReviews] = useState([]);
-  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userRating, setUserRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [ratingFilter, setRatingFilter] = useState('all');
-
-  const getImagesList = (prod) => {
-    if (!prod) return [];
-    const list = [];
-    const mainImg = prod.image_url || prod.image;
-    if (mainImg) list.push(mainImg);
-    if (prod.images) {
-      try {
-        const imgs = typeof prod.images === 'string' ? JSON.parse(prod.images) : prod.images;
-        if (Array.isArray(imgs)) {
-          imgs.forEach(img => {
-            if (img && !list.includes(img)) list.push(img);
-          });
-        }
-      } catch (e) {}
-    }
-    if (list.length === 0) list.push('/hero-banner.png');
-    return list;
-  };
-
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          setScrollY(currentScrollY);
-          setShowStickyHeader(currentScrollY > 300);
-
-          const overviewEl = document.getElementById('product-overview');
-          const reviewsEl = document.getElementById('product-reviews');
-          const descEl = document.getElementById('product-description');
-          const recomEl = document.getElementById('product-recommendations');
-
-          const getAbsoluteTop = (el) => el ? el.getBoundingClientRect().top + currentScrollY : 0;
-
-          if (recomEl && currentScrollY >= getAbsoluteTop(recomEl) - 150) {
-            setActiveScrollSection('recommendations');
-          } else if (descEl && currentScrollY >= getAbsoluteTop(descEl) - 150) {
-            setActiveScrollSection('description');
-          } else if (reviewsEl && currentScrollY >= getAbsoluteTop(reviewsEl) - 150) {
-            setActiveScrollSection('reviews');
-          } else {
-            setActiveScrollSection('overview');
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-
-
-  useEffect(() => {
-    if (specsContentRef.current) {
-      setIsSpecsOverflowing(specsContentRef.current.scrollHeight > 250);
-    }
-  }, [activeTab, product, lang, isSpecsExpanded]);
-
-  useEffect(() => {
-    if (reviewsContentRef.current) {
-      setIsReviewsOverflowing(reviewsContentRef.current.scrollHeight > 350);
-    }
-  }, [product, lang, isReviewsExpanded, ratingFilter, reviews]);
-
-
+  // Fetch product data on load
   useEffect(() => {
     if (productId && liveProducts.length > 0) {
       const foundProduct = liveProducts.find(p => p.id.toString() === productId.toString());
       if (foundProduct) {
         setProduct(foundProduct);
-        setShowVideo(false);
         addToRecent(foundProduct);
-        setScrollY(0); // Reset scroll state!
-        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'instant' });
       } else {
         navigate('/');
@@ -189,26 +392,60 @@ const ProductDetailPage = () => {
     }
   }, [productId, liveProducts, navigate]);
 
-  const { variantLabel, hasVariants } = React.useMemo(() => {
-    let label = 'Variant';
+  // Fetch reviews from Supabase
+  const fetchProductReviews = async () => {
+    if (!product) return;
+    try {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('product_id', product.id)
+          .eq('is_approved', 1)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          const mapped = data.map(r => ({
+            name: r.reviewer_name || "Guest User",
+            date: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+            rating: r.rating || 5,
+            title: r.rating >= 4 ? "Excellent Quality" : "Satisfactory",
+            body: r.comment || "",
+            ava: AVA_COLORS[(r.reviewer_name?.length || 5) % AVA_COLORS.length],
+            verified: true
+          }));
+          setReviews(mapped);
+          return;
+        }
+      }
+    } catch (err) {}
+    setReviews([]);
+  };
+
+  useEffect(() => {
+    if (product) {
+      fetchProductReviews();
+    }
+  }, [product]);
+
+  // Check if product has variants
+  const hasVariants = useMemo(() => {
     let enabled = false;
     if (product?.description && product.description.trim().startsWith('{')) {
       try {
         const parsed = JSON.parse(product.description);
         if (parsed.variantsConfig) {
-          label = parsed.variantsConfig.label || 'Variant';
           enabled = parsed.variantsConfig.enabled || false;
         }
       } catch (e) {}
     }
-    return { variantLabel: label, hasVariants: enabled };
+    return enabled;
   }, [product]);
 
+  // Map variants config colors
   useEffect(() => {
     if (product) {
       const list = getImagesList(product);
-      
-      // Parse colors from product.colors
       if (!hasVariants) {
         setVariants([]);
         setSelectedVariant(null);
@@ -245,73 +482,210 @@ const ProductDetailPage = () => {
     }
   }, [product, hasVariants]);
 
-  // Load session
+  // Scroll handler for sticky header and sticky bar
   useEffect(() => {
-    try {
-      const session = localStorage.getItem('sweetohub_session');
-      if (session) {
-        setCurrentUser(JSON.parse(session));
+    const onScroll = () => {
+      if (buyboxRef.current) {
+        setShowBar(buyboxRef.current.getBoundingClientRect().bottom < 60);
       }
-    } catch (e) {}
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Fetch reviews when product changes
-  const fetchProductReviews = async () => {
-    if (!product?.id) return;
-    setIsReviewsLoading(true);
-    try {
-      if (!supabase) throw new Error("Supabase not configured");
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('product_id', product.id)
-        .order('created_at', { ascending: false });
+  // Intersection observer for animation fadeUp entries
+  useEffect(() => {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        en.target.classList.add("in");
+        io.unobserve(en.target);
+      });
+    }, { threshold: 0.1 });
+    
+    // Tiny delay to ensure DOM nodes are fully rendered
+    const t = setTimeout(() => {
+      document.querySelectorAll(".reveal, .lm").forEach((el) => io.observe(el));
+    }, 400);
 
-      if (error) throw error;
+    return () => {
+      clearTimeout(t);
+      io.disconnect();
+    };
+  }, [product]);
 
-      const approvedOnly = (data || []).filter(
-        r => r.status === 'approved' || r.is_approved === 1
-      );
-
-      const formatted = approvedOnly.map(r => ({
-        id: r.id,
-        rating: r.rating,
-        comment: r.comment,
-        date: new Date(r.created_at).toLocaleDateString(),
-        user: r.customer_name || r.reviewer_name || "Guest User"
-      }));
-
-      setReviews(formatted);
-    } catch (e) {
-      console.error("Error fetching reviews:", e);
-      try {
-        const local = localStorage.getItem(`reviews_${product.id}`);
-        if (local) {
-          setReviews(JSON.parse(local));
-          setIsReviewsLoading(false);
-          return;
-        }
-      } catch (err) {}
-      setReviews([]);
-    }
-    setIsReviewsLoading(false);
-  };
-
+  // Preload Images
   useEffect(() => {
     if (product) {
-      fetchProductReviews();
+      getImagesList(product).forEach((src) => {
+        const im = new Image();
+        im.src = src;
+      });
     }
   }, [product]);
 
-  const handleReviewSubmit = async () => {
-    if (userRating === 0) return showToast("Please select a rating", "error");
-    if (!comment.trim()) return showToast("Please enter a comment", "error");
+  // Badge animation pop trigger
+  useEffect(() => {
+    if (cartCount > 0) {
+      setBadgePop(true);
+      const t = setTimeout(() => setBadgePop(false), 350);
+      return () => clearTimeout(t);
+    }
+  }, [cartCount]);
+
+  if (!product) return null;
+
+  // Pricing calculations
+  const finalPrice = (product.price || 0) + (selectedVariant?.priceAdjust || 0);
+  const oldPrice = product.original_price || product.old_price || (finalPrice * 1.25);
+  const savings = oldPrice - finalPrice;
+  const discountPercent = Math.round((savings / oldPrice) * 100);
+  const currSymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency || 'FCFA');
+
+  // Breadcrumbs category selection
+  const handleCategoryBreadcrumb = () => {
+    setSelectedCategory(product.category);
+    navigate('/');
+  };
+
+  // Image list configuration
+  const imagesList = getImagesList(product);
+  const viewsArr = selectedVariant?.image 
+    ? [{ src: selectedVariant.image, label: selectedVariant.name }, ...imagesList.filter(img => img !== selectedVariant.image).map((img, i) => ({ src: img, label: `Angle ${i+1}` }))]
+    : imagesList.map((img, i) => ({ src: img, label: `Angle ${i+1}` }));
+
+  // Related products & More to Love lists
+  const currentCat = (product.category || '').toLowerCase();
+  const relatedProducts = liveProducts
+    .filter(p => p.id.toString() !== product.id.toString() && p.status === 'active' && (p.category || '').toLowerCase() === currentCat)
+    .slice(0, 4);
+
+  const relatedIds = new Set(relatedProducts.map(r => r.id.toString()));
+  const moreToLoveProducts = liveProducts
+    .filter(p => p.id.toString() !== product.id.toString() && p.status === 'active' && !relatedIds.has(p.id.toString()))
+    .slice(0, 8);
+
+  // Review statistics calculation
+  const reviewCount = reviews.length;
+  const averageRating = reviewCount > 0 
+    ? Number((reviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount).toFixed(1))
+    : (product.rating || 4.8);
+
+  const reviewRatings = reviews.map(r => r.rating);
+  const buckets = [5, 4, 3, 2, 1].map(stars => {
+    const count = reviewRatings.filter(r => r === stars).length;
+    return reviewCount > 0 ? Math.round((count / reviewCount) * 100) : (stars === 5 ? 88 : stars === 4 ? 8 : 4);
+  });
+
+  const visibleReviews = filter === "all" ? reviews : reviews.filter((r) => String(r.rating) === filter);
+
+  // Specifications Accordion contents
+  let cleanDescription = product.description || '';
+  let boxListItems = [];
+  let productSpecs = [];
+  if (cleanDescription.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(cleanDescription);
+      cleanDescription = parsed.description || '';
+      boxListItems = parsed.whatsInBox || parsed.boxList || [];
+      if (parsed.specs) {
+        productSpecs = Object.entries(parsed.specs).map(([k, v]) => ({ label: k, value: v }));
+      }
+    } catch (e) {}
+  }
+  if (productSpecs.length === 0) {
+    productSpecs = [
+      { label: 'Brand', value: product.brand || 'SWEETO' },
+      { label: 'Category', value: product.category || 'Electronics' },
+      { label: 'Status', value: product.stock > 0 ? 'In Stock' : 'Out of Stock' },
+      { label: 'Warranty', value: '2-Year Official Warranty' },
+      { label: 'Delivery', value: 'Express Available' }
+    ];
+  }
+
+  // Alternating highlight feature values
+  const featureContent = getFeatureDetails(product);
+  const feat1Img = viewsArr[1]?.src || viewsArr[0]?.src || '/hero-banner.png';
+  const feat2Img = viewsArr[2]?.src || viewsArr[0]?.src || '/hero-banner.png';
+
+  /* Actions */
+  const addToCartHandler = (item, q) => {
+    const finalProduct = {
+      ...item,
+      name: selectedVariant ? `${item.name} (${selectedVariant.name})` : item.name,
+      price: finalPrice
+    };
+    originalAddToCart(finalProduct, q);
+    showToast(`Added ${item.name} to cart!`, 'success');
+  };
+
+  const fly = (fromEl) => {
+    if (REDUCED || !fabRef.current) return;
+    const a = fromEl.getBoundingClientRect(), b = fabRef.current.getBoundingClientRect();
+    const dot = document.createElement("div");
+    dot.className = "fly";
+    dot.style.left = a.left + a.width / 2 - 9 + "px";
+    dot.style.top = a.top + a.height / 2 - 9 + "px";
+    document.body.appendChild(dot);
+    requestAnimationFrame(() => {
+      dot.style.transform = "translate(" + (b.left + b.width / 2 - (a.left + a.width / 2)) + "px," + (b.top + b.height / 2 - (a.top + a.height / 2)) + "px) scale(.25)";
+      dot.style.opacity = ".2";
+    });
+    setTimeout(() => dot.remove(), 800);
+  };
+
+  const mainAdd = (e) => {
+    fly(e.currentTarget);
+    addToCartHandler(product, qty);
+    setAdded(true);
+    setTimeout(() => { 
+      setAdded(false); 
+      setIsCartOpen(true); 
+    }, 650);
+  };
+
+  const shareProduct = () => {
+    setSharePulse(true);
+    setTimeout(() => setSharePulse(false), 400);
+    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
+    const shareText = product.description || `Check out ${product.name} on SWEETO!`;
+    const shareData = {
+      title: product.name,
+      text: shareText,
+      url: shareUrl,
+    };
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => showToast('Share link copied to clipboard!', 'success'))
+        .catch(() => showToast('Failed to copy share link', 'error'));
+    }
+  };
+
+  const setGalleryView = (i) => {
+    if (i === view) return;
+    if (REDUCED) { setView(i); return; }
+    setSwitching(true);
+    setTimeout(() => { setView(i); setSwitching(false); }, 200);
+  };
+
+  const pickColor = (c) => {
+    setSelectedVariant(c);
+    setView(0);
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return showToast("Please enter your name", "error");
+    if (pick === 0) return showToast("Please select a star rating", "error");
+    if (!form.body.trim()) return showToast("Please write a review comment", "error");
 
     const payload = {
       product_id: product.id,
-      reviewer_name: currentUser?.name || "Guest User",
-      rating: userRating,
-      comment: comment.trim(),
+      reviewer_name: form.name.trim(),
+      rating: pick,
+      comment: form.body.trim(),
       is_approved: 1,
       created_at: new Date().toISOString()
     };
@@ -323,1721 +697,535 @@ const ProductDetailPage = () => {
       
       showToast("Review submitted successfully!", "success");
       fetchProductReviews();
-      setComment("");
-      setUserRating(0);
+      setForm({ name: "", email: "", title: "", body: "" });
+      setPick(0);
+      setModalOpen(false);
     } catch (err) {
-      console.error(err);
-      showToast("Failed to submit review. Saving locally.", "warning");
-      
-      const newReview = {
-        id: Date.now(),
-        rating: userRating,
-        comment: comment.trim(),
-        date: new Date().toLocaleDateString(),
-        user: currentUser?.name || "Guest User"
-      };
-
-      const updatedReviews = [newReview, ...reviews];
-      setReviews(updatedReviews);
-      localStorage.setItem(`reviews_${product.id}`, JSON.stringify(updatedReviews));
-      setComment("");
-      setUserRating(0);
+      showToast("Failed to submit review", "error");
     }
   };
 
-  const mobileCarouselRef = useRef(null);
-
-
-
-
-  useEffect(() => {
-    if (mobileCarouselRef.current) {
-      const container = mobileCarouselRef.current;
-      const width = container.offsetWidth;
-      if (width === 0) return;
-      const currentIdx = Math.round(container.scrollLeft / width);
-      if (currentIdx !== activeImageIndex) {
-        container.scrollTo({
-          left: activeImageIndex * width,
-          behavior: 'smooth'
-        });
-      }
-    }
-  }, [activeImageIndex]);
-
-  const handleCarouselScroll = () => {
-    if (!mobileCarouselRef.current) return;
-    const container = mobileCarouselRef.current;
-    const width = container.offsetWidth;
-    if (width === 0) return;
-    const scrollLeft = container.scrollLeft;
-    const newIdx = Math.round(scrollLeft / width);
-    if (newIdx !== activeImageIndex && newIdx < imagesList.length) {
-      setActiveImageIndex(newIdx);
-    }
-  };
-
-  const imagesList = getImagesList(product);
-
-  const handleSheetScroll = (e) => {
-    setSheetScrollY(e.currentTarget.scrollTop);
-  };
-
-  // Related Products (same category)
-  const relatedProducts = React.useMemo(() => {
-    if (!product || !Array.isArray(liveProducts)) return [];
-    const currentCat = (product.category || '').toLowerCase();
-    return liveProducts
-      .filter(p => p.id.toString() !== product.id.toString() && p.status === 'active' && (p.category || '').toLowerCase() === currentCat)
-      .slice(0, 6);
-  }, [product, liveProducts]);
-
-  // More to Love (shuffled other products)
-  const moreToLoveProducts = React.useMemo(() => {
-    if (!product || !Array.isArray(liveProducts)) return [];
-    const relatedIds = new Set(relatedProducts.map(r => r.id.toString()));
-    const list = liveProducts.filter(p => 
-      p.id.toString() !== product.id.toString() && 
-      p.status === 'active' && 
-      !relatedIds.has(p.id.toString())
-    );
-    
-    const arr = [...list];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr.slice(0, 12);
-  }, [product, liveProducts, relatedProducts]);
-
-  // Daily Deals (filtered or active fallback)
-  const dailyDealsProducts = React.useMemo(() => {
-    if (!Array.isArray(liveProducts)) return [];
-    const deals = liveProducts.filter(p => 
-      p.status === 'active' && 
-      (p.is_daily_deal === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true')
-    );
-    if (deals.length > 0) return deals;
-    // Fallback to active products if none are marked daily deal
-    return liveProducts.filter(p => p.status === 'active').slice(0, 8);
-  }, [liveProducts]);
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // Early return if product is not loaded yet (all hooks must be declared above this point!)
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <span className="w-10 h-10 border-4 border-eas-blue border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  const isNewArrivalProduct = (() => {
-    if (product.created_at) {
-      const createdDate = new Date(product.created_at);
-      const ageInDays = (new Date() - createdDate) / (1000 * 60 * 60 * 24);
-      return ageInDays <= 5;
-    }
-    return Number(product.is_new_arrival) === 1 || product.is_new_arrival === true || String(product.is_new_arrival) === '1' || String(product.is_new_arrival) === 'true';
-  })();
-
-  const getUnifiedReviews = () => {
-    const localAndDb = reviews || [];
-    const prodReviews = typeof product.reviews === 'string'
-      ? JSON.parse(product.reviews || '[]')
-      : (product.reviews || []);
-    
-    const uniqueReviews = new Map();
-    prodReviews.forEach(r => {
-      const id = r.id || `${r.user}-${r.rating}-${r.comment}`;
-      uniqueReviews.set(id, {
-        id: id,
-        rating: Number(r.rating) || 5,
-        comment: r.comment || '',
-        date: r.date || r.created_at || new Date().toLocaleDateString(),
-        user: r.user || r.customer_name || r.reviewer_name || "Guest User"
-      });
-    });
-    localAndDb.forEach(r => {
-      const id = r.id || `${r.user}-${r.rating}-${r.comment}`;
-      uniqueReviews.set(id, {
-        id: id,
-        rating: Number(r.rating) || 5,
-        comment: r.comment || '',
-        date: r.date || r.created_at || new Date().toLocaleDateString(),
-        user: r.user || r.customer_name || r.reviewer_name || "Guest User"
-      });
-    });
-
-    return Array.from(uniqueReviews.values());
-  };
-
-  const activeReviews = getUnifiedReviews();
-  const reviewCount = activeReviews.length;
-  const averageRating = reviewCount > 0
-    ? (activeReviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount).toFixed(1)
-    : "0.0";
-
-  const starsBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  activeReviews.forEach(r => {
-    const rating = Math.round(r.rating);
-    if (starsBreakdown[rating] !== undefined) {
-      starsBreakdown[rating] += 1;
-    }
-  });
-
-  const getPercentage = (star) => {
-    if (reviewCount === 0) {
-      return 0;
-    }
-    return Math.round((starsBreakdown[star] / reviewCount) * 105) % 100 || Math.round((starsBreakdown[star] / reviewCount) * 100);
-  };
-
-  const getPercentageFixed = (star) => {
-    if (reviewCount === 0) {
-      return 0;
-    }
-    return Math.round((starsBreakdown[star] / reviewCount) * 100);
-  };
-
-  const getPositiveFeedbackPercentage = () => {
-    if (reviewCount === 0) return 0;
-    const positiveReviews = activeReviews.filter(r => r.rating >= 4).length;
-    return Math.round((positiveReviews / reviewCount) * 100);
-  };
-
-  const filteredReviews = ratingFilter === 'all'
-    ? activeReviews
-    : activeReviews.filter(r => Math.round(r.rating) === Number(ratingFilter));
-
-  const discountPercentage = product.old_price && product.old_price > product.price 
-    ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
-    : 0;
-
-  const savingsAmount = product.old_price && product.old_price > product.price 
-    ? product.old_price - product.price
-    : 0;
-
-  const getSoldCount = (prod) => {
-    if (!prod) return 0;
-    return prod.sold_count || 0;
-  };
-
-  const handleBuyNow = () => {
-    addToCart(product);
-    navigate('/checkout');
-  };
-
-  const handleWhatsAppClick = () => {
-    const phone = settings?.social_whatsapp ? settings.social_whatsapp.replace(/\D/g, '') : '2250500619923';
-    const text = lang === 'fr'
-      ? `Bonjour! Est-ce que ce produit est disponible en stock? ${product.name} (${window.location.href})`
-      : `Hello! Do you have this product in stock? ${product.name} (${window.location.href})`;
-    const message = encodeURIComponent(text);
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-  };
-
-  const shareProduct = async () => {
-    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-    const shareData = {
-      title: product.name,
-      text: lang === 'fr' 
-        ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
-        : `Check out ${product.name} on SWEETO! ⚡`,
-      url: shareUrl,
-    };
-
-
-
-    if (navigator.share) {
-      navigator.share(shareData)
-      .catch((err) => {
-        if (err.name !== 'AbortError') {
-          console.warn("Native share failed, showing custom share modal:", err);
-          setIsShareModalOpen(true);
-        }
-      });
-    } else {
-      setIsShareModalOpen(true);
-    }
-  };
-
-  const isPageLoading = artificialLoading;
-
-  if (isPageLoading || !product) {
-    return (
-      <div className="relative min-h-screen bg-slate-50 dark:bg-[#090d16] pb-24 transition-colors duration-300 animate-pulse pt-4 px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 pt-10">
-          {/* Image Skeleton */}
-          <div className="w-full h-[400px] md:h-[600px] rounded-[2rem] bg-slate-200 dark:bg-slate-800" />
-          
-          {/* Details Skeleton */}
-          <div className="space-y-6">
-            <div className="w-32 h-6 rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="w-full h-12 rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="w-3/4 h-12 rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="w-48 h-8 rounded bg-slate-200 dark:bg-slate-800 mt-6" />
-            <div className="w-full h-32 rounded-xl bg-slate-200 dark:bg-slate-800" />
-            <div className="flex gap-4 mt-8">
-              <div className="w-1/2 h-14 rounded-full bg-slate-200 dark:bg-slate-800" />
-              <div className="w-1/2 h-14 rounded-full bg-slate-200 dark:bg-slate-800" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const litCount = hoverPick || pick;
+  const isWished = isInWishlist(product.id);
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-white pb-24 transition-colors duration-300">
-      {/* Mobile Sticky Scroll Header (revealed on scroll) */}
-      <AnimatePresence>
-        {showStickyHeader && (
-          <motion.div 
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0b1324]/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 md:hidden flex flex-col pt-3 pb-1"
-          >
-            {/* Header top row */}
-            <div className="flex items-center justify-between px-4 gap-3">
-              {/* Back chevron */}
-              <button 
-                onClick={() => navigate(-1)}
-                className="text-blue-600 dark:text-blue-400 p-1 cursor-pointer hover:opacity-70 transition-opacity"
-              >
-                <ChevronLeft size={24} strokeWidth={2.5} />
-              </button>
-
-              {/* Search Bar Input Container */}
-              <div 
-                onClick={() => {
-                  const event = new CustomEvent('open-search-modal', {
-                    detail: { defaultValue: product.category || '' }
-                  });
-                  window.dispatchEvent(event);
-                }}
-                className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full py-1 pl-4 pr-1 flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
-              >
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
-                  {product.category || product.name}
-                </span>
-                <div className="px-3 py-1.5 bg-slate-900 dark:bg-slate-950 rounded-full flex items-center justify-center text-white scale-90">
-                  <Search size={12} strokeWidth={3} />
-                </div>
-              </div>
-
-              {/* Share button */}
-              <button 
-                onClick={shareProduct}
-                className="text-slate-800 dark:text-white p-1 cursor-pointer hover:opacity-70 transition-opacity"
-              >
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Header tab items */}
-            <div className="flex items-center justify-around mt-2.5 border-t border-slate-100/60 dark:border-slate-800/40 px-2 select-none">
-              {[
-                { id: 'overview', targetId: 'product-overview', label: lang === 'fr' ? 'Aperçu' : 'Overview' },
-                { id: 'reviews', targetId: 'product-reviews', label: lang === 'fr' ? 'Avis' : 'Reviews' },
-                { id: 'description', targetId: 'product-description', label: lang === 'fr' ? 'Description' : 'Description' },
-                { id: 'recommendations', targetId: 'product-recommendations', label: lang === 'fr' ? 'Recommandations' : 'Recommendations' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => scrollToSection(tab.targetId)}
-                  className={`py-2 text-[10px] font-black uppercase tracking-wider relative cursor-pointer transition-colors duration-300 ${
-                    activeScrollSection === tab.id 
-                      ? 'text-[#e61e25] font-black' 
-                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-650'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  {activeScrollSection === tab.id && (
-                    <motion.div 
-                      layoutId="activeStickyTabUnderline" 
-                      className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#e61e25] rounded-full" 
-                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <>
+      <style>{css}</style>
+      
       {/* Desktop Header */}
-      <div className="hidden lg:block w-full">
+      <div className="hidden md:block w-full z-40 relative">
         <DesktopHeader 
           activePage="other" 
           onCartOpen={() => setIsCartOpen(true)}
           onSidebarOpen={() => setIsSidebarOpen(true)}
         />
       </div>
-      <div className="lg:hidden w-full">
+      
+      {/* Mobile Header */}
+      <div className="md:hidden w-full z-45 relative">
         <Header onSidebarOpen={() => setIsSidebarOpen(true)} onCartOpen={() => setIsCartOpen(true)} />
       </div>
-      
-      {/* Mobile Visual Gallery (Full-bleed AliExpress Style with Native Snapping) */}
-      <div 
-        id="product-overview"
-        className="relative lg:hidden w-full h-[100vw] bg-white dark:bg-slate-950 overflow-hidden select-none z-10"
-      >
 
+      <div className="pdp-premium-container">
+        <div className="noise" aria-hidden="true"></div>
 
-        {showThreeD ? (
-          <div className="absolute inset-0 bg-white dark:bg-slate-950 z-[20] flex items-center justify-center p-4">
-            <ProductThreeDView product={product} />
-          </div>
-        ) : showVideo && (
-          <div className="absolute inset-0 bg-white dark:bg-slate-950 z-[20] flex items-center justify-center">
-            <video
-              src={
-                product.video_url || 
-                (['Smartphones', 'Phones', 'Téléphones', 'Phones & Tablets'].includes(product.category)
-                  ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-                  : ['Laptops', 'Computers', 'Ordinateurs'].includes(product.category)
-                  ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
-                  : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4')
-              }
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        <div
-          ref={mobileCarouselRef}
-          onScroll={handleCarouselScroll}
-          className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
-        >
-          {imagesList.map((img, idx) => (
-            <div 
-              key={idx} 
-              className="w-full h-full shrink-0 snap-center snap-always flex items-center justify-center p-3"
-            >
-              <img 
-                src={img} 
-                alt="" 
-                onClick={() => openGlobalLightbox(imagesList, idx, product.category, product.id)}
-                className="w-full h-full object-contain dark:mix-blend-normal cursor-zoom-in"
-                style={{ filter: getColorFilter(selectedVariant?.name) }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Top-left: Back Button */}
-        <button 
-          onClick={() => navigate(-1)} 
-          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/90 dark:bg-slate-950/90 shadow-md text-blue-600 dark:text-blue-400 border border-slate-100 dark:border-slate-800 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all z-20"
-        >
-          <ChevronLeft size={20} strokeWidth={3} className="pointer-events-none" />
-        </button>
-
-        {/* Top-right: Zoom Buttons */}
-        <div className="absolute top-4 right-4 flex items-center gap-2.5 z-20">
-          <button 
-            onClick={() => {
-              const event = new CustomEvent('open-search-modal');
-              window.dispatchEvent(event);
-            }} 
-            className="w-9 h-9 rounded-full bg-slate-950/40 backdrop-blur-sm text-white flex items-center justify-center cursor-pointer hover:bg-slate-950/60 transition-colors"
-          >
-            <Search size={18} className="pointer-events-none" />
-          </button>
-        </div>
-
-        {/* Bottom-left: Slide Indicator Pill */}
-        <div className="absolute bottom-14 left-4 bg-slate-950/40 backdrop-blur-sm px-3.5 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-wider select-none z-20">
-          Item {activeImageIndex + 1}/{imagesList.length}
-        </div>
-
-        {/* Bottom-right: Wishlist & Share Buttons */}
-        <div className="absolute bottom-20 right-4 flex flex-col gap-3 z-50">
-          <button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleWishlist(product);
-            }} 
-            className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all border cursor-pointer ${
-              isInWishlist(product.id)
-                ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30'
-                : 'bg-white/95 dark:bg-slate-800/90 border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-[#ff3b30]'
-            }`}
-          >
-            <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
-          </button>
-          
-          <button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              shareProduct();
-            }} 
-            className="w-10 h-10 rounded-full shadow-lg bg-white/95 dark:bg-slate-800/90 border border-slate-100 dark:border-slate-700 text-slate-850 dark:text-white hover:text-blue-500 flex items-center justify-center transition-all cursor-pointer relative z-50"
-          >
-            <Share2 size={18} className="pointer-events-none" />
-          </button>
-        </div>
-      </div>
-
-      <div className="relative z-20 max-w-6xl mx-auto px-4 lg:py-6 -mt-10 lg:mt-0 bg-slate-50 dark:bg-[#090d16] rounded-t-[2.5rem] lg:rounded-none pt-8 lg:pt-0 shadow-[0_-15px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_-15px_30px_rgba(0,0,0,0.35)] lg:shadow-none transition-colors duration-300">
-        {/* Main Columns wrapper */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* Left Column: Visual Gallery Carousel (Desktop only) */}
-          <div className="hidden lg:block w-full lg:w-[45%] bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-4 shadow-sm space-y-4">
-            
-            {/* Main Image View */}
-            <div 
-              onClick={() => {
-                if (!showVideo) {
-                  openGlobalLightbox(imagesList, activeImageIndex, product.category, product.id);
-                }
-              }}
-              className="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center p-6 relative overflow-hidden group cursor-zoom-in"
-            >
-
-
-              {showThreeD ? (
-                <div className="absolute inset-0 bg-slate-50 dark:bg-slate-955 z-[20] flex items-center justify-center p-4">
-                  <ProductThreeDView product={product} />
-                </div>
-              ) : showVideo ? (
-                <div className="absolute inset-0 bg-slate-55 dark:bg-slate-955 z-[20] flex items-center justify-center">
-                  <video
-                    src={
-                      product.video_url || 
-                      (['Smartphones', 'Phones', 'Téléphones', 'Phones & Tablets'].includes(product.category)
-                        ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-                        : ['Laptops', 'Computers', 'Ordinateurs'].includes(product.category)
-                        ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
-                        : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4')
-                    }
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover rounded-2xl"
-                  />
-                </div>
-              ) : (
-                <img 
-                  src={imagesList[activeImageIndex]} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain dark:mix-blend-normal transition-transform duration-300 group-hover:scale-105"
-                  style={{ filter: getColorFilter(selectedVariant?.name) }}
-                />
-              )}
-              
-              {/* Wishlist Floating Overlay */}
-              <button 
-                onClick={() => toggleWishlist(product)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-100 dark:border-slate-800 flex items-center justify-center shadow-md text-slate-400 hover:text-red-500 transition-colors cursor-pointer z-[25]"
-              >
-                <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} className={isInWishlist(product.id) ? "text-red-500" : ""} />
-              </button>
-            </div>
-
-            {/* Thumbnails Row */}
-            {imagesList.length > 1 && (
-              <div className="flex gap-2.5 overflow-x-auto py-1 no-scrollbar select-none">
-                {imagesList.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveImageIndex(idx);
-                      openGlobalLightbox(imagesList, idx, product.category, product.id);
-                    }}
-                    className={`w-14 h-14 rounded-lg bg-slate-50 dark:bg-slate-950 p-1 border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
-                      activeImageIndex === idx 
-                        ? 'border-eas-blue ring-2 ring-eas-blue/15' 
-                        : 'border-slate-100 dark:border-slate-800/60 hover:border-slate-200'
-                    }`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-contain dark:mix-blend-normal" />
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="wrap select-none">
+          {/* Breadcrumbs */}
+          <div className="crumb">
+            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/'); }}>Home</a>
+            <i>/</i>
+            <a href="#" onClick={(e) => { e.preventDefault(); handleCategoryBreadcrumb(); }}>
+              {product.category || 'Electronics'}
+            </a>
+            <i>/</i>
+            <b>{product.name}</b>
           </div>
 
-          {/* Right Column: Key details */}
-          <div className="w-full lg:w-[55%] space-y-6">
-            
-
-
-            {/* Header info */}
-            <div className="space-y-3.5 text-left">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter leading-snug">
-                  {product.name}
-                </h1>
-                {isNewArrivalProduct && (
-                  <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none animate-pulse shrink-0">
-                    {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
-                  </span>
-                )}
-              </div>
-
-              {/* Pricing card (Ultra-Premium Redesign) */}
-              {(() => {
-                const finalPrice = (product.price || 0) + (selectedVariant?.priceAdjust || 0);
-                const oldPrice = product.old_price || (product.price * 1.25);
-                const savings = oldPrice - finalPrice;
-                const discount = Math.round(((oldPrice - finalPrice) / oldPrice) * 100);
-                const currSymbol = settings?.currency || 'FCFA';
-
-                return (
-                  <div className="bg-white/80 dark:bg-slate-900/40 backdrop-blur-md p-5 rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-md relative overflow-hidden space-y-3.5 text-left">
-                    {/* Header Tag / Discount Indicator */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] bg-red-500 text-white px-2 py-0.5 rounded-[5px] font-black uppercase tracking-wider shadow-sm shadow-red-500/10">
-                          {lang === 'fr' ? 'SuperOffres' : 'SuperDeals'}
-                        </span>
-                        <span className="text-[9px] bg-amber-500 text-white px-2 py-0.5 rounded-[5px] font-black uppercase tracking-wider shadow-sm shadow-amber-500/10">
-                          {lang === 'fr' ? 'Vente Flash' : 'Flash Sale'}
-                        </span>
-                      </div>
-                      
-                      {/* Discount percentage tag */}
-                      <span className="text-[10px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded-[5px] font-black uppercase tracking-wide border border-red-500/20">
-                        -{discount}% OFF
-                      </span>
-                    </div>
-
-                    {/* Price Display Block */}
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-3xl sm:text-4xl font-black text-red-500 italic tracking-tighter select-all">
-                        {finalPrice.toLocaleString()} {currSymbol}
-                      </span>
-                      <span className="text-sm text-slate-450 dark:text-slate-500 line-through font-bold">
-                        {Math.round(oldPrice).toLocaleString()} {currSymbol}
-                      </span>
-                    </div>
-
-                    {/* Savings helper block */}
-                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider flex items-center gap-1">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {lang === 'fr' ? 'Économie :' : 'You save :'} {Math.round(savings).toLocaleString()} {currSymbol}
-                    </p>
-                    
-                  </div>
-                );
-              })()}
-
-              {/* Rating + Sold proof */}
-              <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 pt-1.5">
-                <div className="flex items-center gap-1 text-amber-500">
-                  <Star size={14} fill="currentColor" />
-                  <span className="font-extrabold text-slate-700 dark:text-slate-200">{averageRating}</span>
-                </div>
-                <span>•</span>
-                <span>{reviewCount} {lang === 'fr' ? 'Avis' : 'Reviews'}</span>
-                <span>•</span>
-                <span className="text-[#e61e25] uppercase tracking-wide italic">
-                  {getSoldCount(product) > 0 ? `+${getSoldCount(product)}` : `0`} {lang === 'fr' ? 'Vendus' : 'Sold'}
-                </span>
-              </div>
-            </div>
-
-            {/* AliExpress style desktop options, quantity and action panel */}
-            <div className="hidden lg:flex flex-col gap-5 p-5 bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/80 rounded-3xl text-left shadow-sm">
-              {/* Variations selector (Desktop) */}
-              {hasVariants && variants.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="text-xs uppercase tracking-wider font-black text-slate-800 dark:text-slate-205 flex gap-2">
-                    <span className="text-slate-400 capitalize">{variantLabel}:</span>
-                    <span>{selectedVariant ? selectedVariant.name : 'Default'}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2.5">
-                    {variants.map((v) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedVariant(v);
-                          setActiveImageIndex(v.id); // Update main image to variant image!
-                        }}
-                        className={`px-4 py-2 border text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                          selectedVariant?.id === v.id
-                            ? 'border-[#e61e25] bg-[#e61e25]/5 text-[#e61e25] ring-2 ring-[#e61e25]/15'
-                            : 'border-slate-200 dark:border-slate-850 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        {v.image && (
-                          <div className="w-6 h-6 rounded-md overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
-                            <img src={v.image} alt="" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <span>{v.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity selector (Desktop) */}
-              <div className="flex items-center gap-4">
-                <span className="text-base font-semibold text-slate-600 dark:text-slate-400">Quantity:</span>
-                <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-3xl px-3 py-1.5 select-none bg-white dark:bg-slate-900 shadow-sm">
-                  <button 
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer border-none bg-transparent"
-                  >
-                    <Minus size={16} strokeWidth={2.5} />
-                  </button>
-                  <span className="text-base font-bold text-slate-900 dark:text-white px-5 min-w-[32px] text-center">{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(q => q + 1)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer border-none bg-transparent"
-                  >
-                    <Plus size={16} strokeWidth={2.5} />
-                  </button>
-                </div>
-                {product.stock !== undefined && (
-                  <span className="text-sm text-emerald-500 font-medium">
-                    {product.stock} available
-                  </span>
-                )}
-              </div>
-
-              {/* Action Buttons (Desktop) */}
-              <div className="flex gap-4 pt-4">
-                <button 
-                  onClick={() => addToCart(product, quantity)}
-                  disabled={isAdding}
-                  className="flex-[1.2] py-4 px-6 bg-black hover:bg-slate-900 dark:bg-white dark:hover:bg-slate-100 dark:text-black text-white font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border-none flex items-center justify-center gap-3 disabled:opacity-85"
-                >
-                  {isAdding ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>{lang === 'fr' ? 'Ajout...' : 'Adding...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart size={20} strokeWidth={2.5} />
-                      <span>{lang === 'fr' ? 'Ajouter au Panier' : 'Add to Cart'}</span>
-                    </>
-                  )}
-                </button>
-                
-                <div className="flex-1 flex flex-col gap-4">
-                  <button 
-                  onClick={(e) => toggleWishlist(product.id, e)}
-                  className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2"
-                >
-                  <Heart 
-                    size={20} 
-                    strokeWidth={2.5} 
-                    className={isInWishlist(product.id) ? "fill-[#e61e25] text-[#e61e25]" : ""}
-                  />
-                  <span>Wishlist</span>
-                </button>
-
-                <button 
-                  onClick={async () => {
-                    try {
-                      const shareData = {
-                        title: product.name,
-                        text: product.description || `Check out ${product.name}!`,
-                        url: window.location.href,
-                      };
-
-
-                      if (navigator.share) {
-                        await navigator.share(shareData);
-                      } else {
-                        await navigator.clipboard.writeText(window.location.href);
-                        showToast('Link copied to clipboard!');
-                      }
-                    } catch (error) {
-                      console.error('Error sharing:', error);
-                    }
-                  }}
-                  className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-base rounded-2xl transition-all shadow-sm active:scale-97 cursor-pointer text-center border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2"
-                >
-                  <Share2 size={20} strokeWidth={2.5} />
-                  <span>Share</span>
-                </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Variant Selector (Mobile only) - AliExpress Style Row */}
-            {hasVariants && variants.length > 0 && (
-              <button 
-                onClick={() => {
-                  setSheetAction('both');
-                  setIsVariantSheetOpen(true);
+          <section className="pdp">
+            {/* Gallery Section */}
+            <div className="gallery">
+              <div
+                className={"stage" + (zoomed ? " zoomed" : "") + (switching ? " switching" : "")}
+                onMouseEnter={() => setZoomed(true)}
+                onMouseLeave={() => setZoomed(false)}
+                onMouseMove={(e) => {
+                  if (!mainImgRef.current) return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  mainImgRef.current.style.transformOrigin =
+                    ((e.clientX - r.left) / r.width * 100).toFixed(1) + "% " + ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%";
                 }}
-                className="w-full bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 px-5 py-4 flex justify-between items-center cursor-pointer shadow-sm active:scale-[0.99] transition-all text-left lg:hidden"
               >
-                <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                  <span className="text-slate-400 dark:text-slate-500 font-bold capitalize">{variantLabel}:</span>
-                  <span className="text-slate-800 dark:text-white font-black">{selectedVariant ? selectedVariant.name : 'Default'}</span>
-                </div>
-                <ChevronRight size={16} className="text-slate-400 dark:text-slate-500" />
-              </button>
-            )}
-
-            {/* Variant tag / Specification Details */}
-            <div id="product-details" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left space-y-4 shadow-sm">
-              <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                  {lang === 'fr' ? 'Détails et Garantie' : 'Details & Warranty'}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-xs font-bold">
-                {product.category && (
-                  <div className="space-y-1">
-                    <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Catégorie' : 'Category'}</span>
-                    <p className="text-slate-700 dark:text-slate-200">{product.category}</p>
-                  </div>
-                )}
-                <div className="space-y-1">
-                  <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Statut' : 'Status'}</span>
-                  <p className="text-emerald-500 uppercase">{lang === 'fr' ? 'En Stock' : 'In Stock'}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Garantie' : 'Warranty'}</span>
-                  <p className="text-slate-700 dark:text-slate-200">
-                    {product.warranty || (lang === 'fr' ? '1 semaine de garantie' : '1 week warranty')}
-                  </p>
-                </div>
-                {product.brand && (
-                  <div className="space-y-1">
-                    <span className="text-slate-400 uppercase text-[9px]">{lang === 'fr' ? 'Marque' : 'Brand'}</span>
-                    <p className="text-slate-700 dark:text-slate-200">{product.brand}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Deal of the Day Section */}
-            {dailyDealsProducts.length > 0 && (
-              <div className="w-full">
-                <DealOfTheDaySection 
-                  products={dailyDealsProducts}
-                  onProductClick={(p) => {
-                    navigate(`/product/${p.id}`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  videoAdId="none"
-                  onCartClick={() => {}}
-                  title={lang === 'fr' ? 'Offre du Jour' : 'Deal of the day'}
-                  subtitle={lang === 'fr' ? 'Vente Flash & Offres exclusives' : 'Elite Flash Deals'}
-                />
-              </div>
-            )}
-
-
-
-            {/* Tabbed view: specs/faqs */}
-            <div id="product-description" className="bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-5 text-left shadow-sm">
-              <div className="flex gap-4 border-b border-slate-100 dark:border-slate-800/40 pb-2">
-                {[
-                  { id: 'specs', label: 'Specs' },
-                  { id: 'faq', label: 'FAQ' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`pb-1 text-xs font-black uppercase tracking-wider relative cursor-pointer ${
-                      activeTab === tab.id ? 'text-[#e61e25]' : 'text-slate-400'
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                    {activeTab === tab.id && (
-                      <motion.div layoutId="activeTabUnderline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e61e25]" />
-                    )}
-                  </button>
-                ))}
-              </div>
-              
-              <div 
-                ref={specsContentRef}
-                className={`pt-4 text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-bold space-y-2 relative transition-all duration-300 ${!isSpecsExpanded && isSpecsOverflowing ? 'max-h-[250px] overflow-hidden' : ''}`}
-              >
-                {(() => {
-                  const parsedDesc = (() => {
-                    const desc = product?.description ?? '';
-                    try {
-                      if (desc && desc.trim().startsWith('{')) {
-                        const parsed = JSON.parse(desc);
-                        return {
-                          text: parsed.text || '',
-                          specs: parsed.specs || null
-                        };
-                      }
-                    } catch(e) {}
-                    return {
-                      text: desc,
-                      specs: null
-                    };
-                  })();
-
-                  if (activeTab === 'specs') {
-                    if (parsedDesc.specs) {
-                      const specLabels = {
-                        productLine: 'Product Line',
-                        laptopType: 'Laptop Type',
-                        os: 'Operating System',
-                        ramCapacity: 'RAM Capacity',
-                        ramType: 'RAM Type',
-                        storageCapacity: 'Storage Capacity',
-                        storageType: 'Storage Type',
-                        processorTier: 'Processor',
-                        processorGeneration: 'Generation',
-                        processorModel: 'Processor Model',
-                        phoneRam: 'RAM Memory',
-                        phoneStorage: 'Internal Storage',
-                        screenSize: 'Screen Size',
-                        battery: 'Battery Capacity',
-                        camera: 'Camera Resolution',
-                        chargerPort: 'Charger Port',
-                        chargerPower: 'Power (Wattage)',
-                        fastCharging: 'Fast Charging',
-                        compatBrand: 'Compatible Brand',
-                        connectorTip: 'Connector Tip',
-                        wattage: 'Wattage Output',
-                        voltage: 'Input Voltage',
-                        cableType: 'Cable Type',
-                        length: 'Cable Length',
-                        cableVersion: 'Version / Speed',
-                        usbCapacity: 'Storage Capacity',
-                        usbVersion: 'USB Standard',
-                        usbConnector: 'Connector Type',
-                        ramSpeed: 'Memory Frequency',
-                        ramFormFactor: 'Memory Form Factor',
-                        driveType: 'Drive Type',
-                        driveFormFactor: 'Drive Form Factor',
-                        driveSpeed: 'Read/Write Speed',
-                        runTime: 'Cordless Runtime',
-                        chargeTime: 'Charging Time',
-                        bladeMaterial: 'Blade Material',
-                        cordless: 'Cordless Operation'
-                      };
-
-                      const specList = Object.entries(parsedDesc.specs)
-                        .filter(([k, v]) => k !== 'customSpecs' && !!v)
-                        .map(([k, v]) => {
-                          const label = specLabels[k] || k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                          return <p key={k}>• {label}: {v}</p>;
-                        });
-                      
-                      const customSpecList = (parsedDesc.specs.customSpecs || [])
-                        .filter(s => s.key && s.value)
-                        .map((s, idx) => (
-                          <p key={`custom-${idx}`}>• {s.key}: {s.value}</p>
-                        ));
-
-                      return (
-                        <>
-                          {specList}
-                          {customSpecList}
-                          {parsedDesc.text && <p>• Description: {parsedDesc.text}</p>}
-                          <p>• Warranty: Full replacement coverage active</p>
-                        </>
-                      );
-                    }
-                    return (
-                      <>
-                        <p>• Model: {product.brand || 'Sweeto'} {product.id}</p>
-                        <p>• Description: {parsedDesc.text || 'Premium high-performance electronics gear engineered for ultimate diagnostics.'}</p>
-                        <p>• Warranty: Full replacement coverage active</p>
-                      </>
-                    );
-                  }
-                  return (
-                    <>
-                      <p><strong>Q: How long does delivery take?</strong></p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2">A: Generally 24-48 hours depending on your city zone.</p>
-                      <p><strong>Q: Is cash on delivery supported?</strong></p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500">A: Yes, Abidjan and major zones support cash on delivery.</p>
-                    </>
-                  );
-                })()}
-                {!isSpecsExpanded && isSpecsOverflowing && (
-                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
-                )}
-              </div>
-              
-              {isSpecsOverflowing && (
-                <button
-                  onClick={() => setIsSpecsExpanded(!isSpecsExpanded)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer select-none"
-                >
-                  <span>{isSpecsExpanded ? (lang === 'fr' ? 'Voir moins' : 'Show less') : (lang === 'fr' ? 'Voir plus' : 'Read more')}</span>
-                  <ChevronDown size={14} className={`transition-transform duration-300 ${isSpecsExpanded ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-            </div>
-
-          </div>
-        </div>
-
-        {/* AliExpress Customer Reviews Section */}
-        <div id="product-reviews" className="mt-8 bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-800/80 p-6 sm:p-8 text-left space-y-8 shadow-sm">
-          {/* Header */}
-          <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/40">
-            <div>
-              <h3 className="text-base font-black uppercase tracking-wider text-slate-900 dark:text-white italic">
-                {lang === 'fr' ? `Avis clients (${reviewCount})` : `Customer Reviews (${reviewCount})`}
-              </h3>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
-                {lang === 'fr' ? 'Évaluations honnêtes de vrais acheteurs' : 'Honest feedback from verified buyers'}
-              </p>
-            </div>
-            {reviewCount > 0 && (
-              <span className="text-xs font-black text-[#e61e25] bg-[#e61e25]/10 px-3 py-1 rounded-full uppercase tracking-wider">
-                {getPositiveFeedbackPercentage()}% Positive
-              </span>
-            )}
-          </div>
-
-          <div
-            ref={reviewsContentRef}
-            className={`relative transition-all duration-300 space-y-8 ${!isReviewsExpanded && isReviewsOverflowing ? 'max-h-[350px] overflow-hidden' : ''}`}
-          >
-            {/* AliExpress Rating breakdown & Submission grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Statistics column */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="bg-slate-50/50 dark:bg-slate-950/40 p-6 rounded-2xl border border-slate-100/80 dark:border-slate-800/60 flex items-center justify-between gap-6">
-                <div className="text-center space-y-1">
-                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic">
-                    {averageRating}
-                  </span>
-                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    out of 5
-                  </p>
-                </div>
-
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex text-amber-500 gap-0.5 justify-start">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={15} fill={i < Math.round(Number(averageRating)) ? "currentColor" : "none"} strokeWidth={2.5} />
-                    ))}
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    {lang === 'fr' ? `${reviewCount} avis au total` : `${reviewCount} global ratings`}
-                  </p>
-                  {reviewCount > 0 ? (
-                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-wider">
-                      {getPositiveFeedbackPercentage()}% {lang === 'fr' ? 'recommandent ce produit' : 'recommend this product'}
-                    </p>
-                  ) : (
-                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      {lang === 'fr' ? 'Aucune évaluation pour le moment' : 'No ratings yet'}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Progress bars list */}
-              <div className="space-y-2.5">
-                {[5, 4, 3, 2, 1].map(star => {
-                  const percent = getPercentage(star);
-                  return (
-                    <div key={star} className="flex items-center gap-3 text-xs font-bold">
-                      <button 
-                        onClick={() => setRatingFilter(ratingFilter === String(star) ? 'all' : String(star))}
-                        className={`flex items-center gap-1 w-12 hover:text-[#e61e25] transition-colors text-left ${ratingFilter === String(star) ? 'text-[#e61e25] font-black' : 'text-slate-650 dark:text-slate-400'}`}
-                      >
-                        <span>{star}</span>
-                        <Star size={10} fill="currentColor" className="text-amber-500 shrink-0" />
-                      </button>
-                      
-                      {/* Bar container */}
-                      <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percent}%` }}
-                          transition={{ duration: 0.8, ease: 'easeOut' }}
-                          className="absolute top-0 bottom-0 left-0 bg-amber-500 rounded-full"
-                        />
-                      </div>
-
-                      {/* Percentage label */}
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 w-8 text-right font-black">
-                        {percent}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Submission form with guest auth overlay - 7 cols */}
-            <div className="lg:col-span-7 bg-slate-50/50 dark:bg-slate-950/20 p-6 rounded-2xl border border-slate-100/60 dark:border-slate-800/40 relative overflow-hidden min-h-[200px]">
-              {/* Guest Shield Overlay */}
-              {!currentUser && (
-                <div className="absolute inset-0 bg-white/70 dark:bg-[#0b1324]/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 select-none">
-                  <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-[#e61e25] mb-3 shadow-sm border border-red-500/5">
-                    <Shield size={20} />
-                  </div>
-                  <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase italic mb-1 tracking-tighter">
-                    {lang === 'fr' ? 'Authentification Requise' : 'Authentication Required'}
-                  </h4>
-                  <p className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider mb-4 max-w-[280px] leading-relaxed">
-                    {lang === 'fr' ? 'Connectez-vous pour laisser une note et un commentaire.' : 'Join the Sweeto community to share your feedback.'}
-                  </p>
-                  <button 
-                    onClick={() => navigate('/login')}
-                    className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black text-[9px] uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
-                  >
-                    {lang === 'fr' ? 'Se Connecter' : 'Login / Register'}
-                  </button>
-                </div>
-              )}
-
-              {/* Real form */}
-              <h4 className="font-black text-slate-800 dark:text-slate-100 mb-3 uppercase text-[10px] tracking-wider">
-                {lang === 'fr' ? 'Rédiger un avis' : 'Leave a comment'}
-              </h4>
-
-              {/* Stars rating selection */}
-              <div className="flex gap-1.5 mb-3">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <button 
-                    key={i}
-                    type="button"
-                    onMouseEnter={() => setHoverRating(i)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    onClick={() => setUserRating(i)}
-                    className="p-0.5 transition-all duration-200 cursor-pointer"
-                  >
-                    <Star 
-                      size={20} 
-                      className={`transition-colors ${(hoverRating || userRating) >= i ? 'text-amber-500 fill-amber-500 scale-110' : 'text-slate-200 dark:text-slate-700'}`}
-                      strokeWidth={2.5}
-                    />
-                  </button>
-                ))}
-              </div>
-
-              {/* Comment text area */}
-              <textarea 
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                disabled={!currentUser}
-                rows={2}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs font-semibold focus:ring-2 focus:ring-[#e61e25]/20 focus:border-[#e61e25] focus:bg-white dark:focus:bg-slate-950 transition-all outline-none mb-3 resize-none text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                placeholder={lang === 'fr' ? "Partagez votre expérience sur la qualité, la livraison..." : "Share your feedback about quality, logistics, packaging..."}
-              />
-
-              {/* Submit Button */}
-              <button 
-                onClick={handleReviewSubmit}
-                disabled={!currentUser}
-                className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-[#e61e25] dark:hover:bg-[#e61e25] hover:text-white transition-all shadow-md cursor-pointer"
-              >
-                {lang === 'fr' ? 'Soumettre l\'avis' : 'Submit Review'}
-              </button>
-            </div>
-          </div>
-
-          {/* Interactive filter tabs row */}
-          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/40 select-none">
-            {[
-              { id: 'all', label: lang === 'fr' ? 'Tous' : 'All' },
-              { id: '5', label: '5 ★' },
-              { id: '4', label: '4 ★' },
-              { id: '3', label: '3 ★' },
-              { id: '2', label: '2 ★' },
-              { id: '1', label: '1 ★' }
-            ].map(tab => {
-              const count = tab.id === 'all' 
-                ? reviewCount 
-                : (starsBreakdown[tab.id] || 0);
-              const isActive = ratingFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setRatingFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
-                    isActive 
-                      ? 'bg-[#e61e25] border-[#e61e25] text-white'
-                      : 'bg-slate-50 dark:bg-slate-950/40 border-slate-205 dark:border-slate-800/60 text-slate-650 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
-                >
-                  {tab.label} ({count})
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Reviews list feed */}
-          <div className="space-y-4 pt-2">
-            {isReviewsLoading ? (
-              <div className="space-y-4">
-                {[...Array(2)].map((_, i) => (
-                  <div key={i} className="p-4 bg-slate-50/50 dark:bg-slate-950/10 rounded-2xl border border-slate-100 dark:border-slate-800/40 animate-pulse space-y-3">
-                    <div className="flex justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
-                        <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
-                      </div>
-                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
-                    </div>
-                    <div className="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded" />
-                  </div>
-                ))}
-              </div>
-            ) : filteredReviews.length === 0 ? (
-              <div className="py-8 text-center text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                {lang === 'fr' ? 'Aucun avis ne correspond à ce filtre.' : 'No reviews match this filter.'}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredReviews.map(rev => (
-                  <div 
-                    key={rev.id} 
-                    className="p-4 bg-slate-50/30 dark:bg-slate-950/10 hover:bg-white dark:hover:bg-slate-950/30 rounded-2xl border border-slate-100/60 dark:border-slate-800/40 transition-colors text-left"
-                  >
-                    <div className="flex justify-between items-start mb-2.5 gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-[#e61e25]/10 text-[#e61e25] rounded-full flex items-center justify-center font-black text-[11px] uppercase tracking-wider">
-                          {rev.user ? String(rev.user).charAt(0).toUpperCase() : 'G'}
-                        </div>
-                        <div>
-                          <span className="block text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                            {rev.user}
-                          </span>
-                          <span className="block text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                            {rev.date}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex text-amber-500 gap-0.5 shrink-0">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={10} fill={i < rev.rating ? "currentColor" : "none"} strokeWidth={2.5} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-350 font-bold leading-relaxed italic pl-11">
-                      "{rev.comment}"
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {!isReviewsExpanded && isReviewsOverflowing && (
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none" />
-            )}
-          </div>
-
-          {isReviewsOverflowing && (
-            <button
-              onClick={() => setIsReviewsExpanded(!isReviewsExpanded)}
-              className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer select-none"
-            >
-              <span>{isReviewsExpanded ? (lang === 'fr' ? 'Voir moins' : 'Show less') : (lang === 'fr' ? 'Voir plus' : 'Read more')}</span>
-              <ChevronDown size={14} className={`transition-transform duration-300 ${isReviewsExpanded ? 'rotate-180' : ''}`} />
-            </button>
-          )}
-        </div>
-
-        {/* Related Products Grid */}
-        {relatedProducts.length > 0 && (
-          <div id="product-recommendations" className="mt-4 pt-4 text-left border-t border-slate-100/50 dark:border-white/5 space-y-5">
-            <div className="flex items-center justify-between border-l-4 border-[#2563EB] pl-3.5 select-none">
-              <div className="text-left">
-                <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white italic leading-tight">
-                  {lang === 'fr' ? 'Produits Associés' : 'Related Products'}
-                </h3>
-                <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-widest mt-1">
-                  {lang === 'fr' ? 'Dans la même catégorie' : 'In the same category'}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {relatedProducts.map((p, idx) => (
-                <ProductCard 
-                  key={p.id} 
-                  product={p} 
-                  index={idx} 
-                  onProductClick={(prod) => {
-                    navigate(`/product/${prod.id}`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* More to Love Grid */}
-        {moreToLoveProducts.length > 0 && (
-          <div className="mt-4 pt-4 text-left border-t border-slate-100/50 dark:border-white/5 space-y-5">
-            <div className="flex items-center justify-between border-l-4 border-[#2563EB] pl-3.5 select-none">
-              <div className="text-left">
-                <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white italic leading-tight">
-                  {lang === 'fr' ? 'Plus à aimer' : 'More to love'}
-                </h3>
-                <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-widest mt-1">
-                  {lang === 'fr' ? 'Produits recommandés' : 'Recommended products'}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {moreToLoveProducts.map((p, idx) => (
-                <ProductCard 
-                  key={p.id} 
-                  product={p} 
-                  index={idx} 
-                  onProductClick={(prod) => {
-                    navigate(`/product/${prod.id}`);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Sticky Action Footer Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] pt-3.5 border-t border-slate-150 dark:border-slate-800 flex items-center justify-between gap-4 lg:hidden shadow-[0_-10px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-        {/* WhatsApp Button (Arranged like bottom nav buttons) */}
-        <motion.button 
-          whileTap={{ scale: 0.92 }}
-          onClick={handleWhatsAppClick}
-          className="flex flex-col items-center justify-center cursor-pointer shrink-0 min-w-[56px] text-[#25D366] hover:text-[#20ba5a] transition-colors gap-1 relative"
-        >
-          <svg 
-            viewBox="0 0 24 24" 
-            className="w-5 h-5 fill-[#25D366]"
-          >
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-          </svg>
-          <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-1">WhatsApp</span>
-        </motion.button>
-
-        {/* Add to Cart Outline Pill & Buy Now Red Pill (Opens bottom sheet if variants exist) */}
-        <div className="flex-1 flex gap-2.5">
-          <button 
-            onClick={() => {
-              if (variants.length > 0) {
-                setSheetAction('cart');
-                setIsVariantSheetOpen(true);
-              } else {
-                addToCart(product);
-              }
-            }}
-            disabled={isAdding}
-            className="flex-1 py-3 px-3 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center whitespace-nowrap bg-transparent flex items-center justify-center gap-1.5 disabled:opacity-85"
-          >
-            {isAdding ? (
-              <>
-                <div className="w-3 h-3 border-2 border-slate-900 dark:border-white border-t-transparent rounded-full animate-spin" />
-                <span>{lang === 'fr' ? 'Ajout...' : 'Adding...'}</span>
-              </>
-            ) : (
-              <span>{lang === 'fr' ? 'Panier' : 'Add to Cart'}</span>
-            )}
-          </button>
-          <button 
-            onClick={() => {
-              if (variants.length > 0) {
-                setSheetAction('buy');
-                setIsVariantSheetOpen(true);
-              } else {
-                addToCart(product);
-                navigate('/checkout');
-              }
-            }}
-            className="flex-1 py-3 px-4 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center whitespace-nowrap"
-          >
-            Buy Now
-          </button>
-        </div>
-      </div>
-
-      {/* Variant Slide-up Sheet (Mobile Bottom Sheet) */}
-      <AnimatePresence>
-        {isVariantSheetOpen && (
-          <>
-            {/* Backdrop overlay */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsVariantSheetOpen(false)}
-              className="fixed inset-0 z-50 bg-black/60 md:hidden"
-            />
-
-            {/* Bottom Sheet Modal */}
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#0b1324] rounded-t-[2rem] shadow-2xl md:hidden flex flex-col max-h-[85vh]"
-            >
-              {/* AliExpress Style Fixed Header (Height: ~120px) */}
-              <div className="relative p-4 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0b1324] flex items-end gap-4 shrink-0 pt-8">
-                {/* Overlapping Product Image */}
-                <div className="w-24 h-24 rounded-2xl bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 p-1.5 shadow-md -mt-10 z-10 shrink-0 flex items-center justify-center overflow-hidden">
+                <div className="breathe">
                   <img 
-                    src={selectedVariant ? selectedVariant.image : product.image_url} 
-                    alt="" 
-                    className="w-full h-full object-contain" 
+                    ref={mainImgRef} 
+                    src={viewsArr[view]?.src || '/hero-banner.png'} 
+                    alt={product.name} 
                   />
                 </div>
-                
-                {/* Price and Specifications details */}
-                <div className="flex-1 text-left space-y-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-black text-[#e61e25] italic tracking-tighter">
-                      {settings?.currency || 'XOF'} {((product.price || 0) + (selectedVariant?.priceAdjust || 0)).toLocaleString()}
-                    </span>
-                    {discountPercentage > 0 && (
-                      <span className="bg-[#e61e25]/10 text-[#e61e25] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                        -{discountPercentage}%
-                      </span>
-                    )}
-                  </div>
-                  {product.old_price && (
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 line-through font-bold">
-                      {settings?.currency || 'XOF'} {product.old_price.toLocaleString()}
-                    </p>
-                  )}
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                    Stock: {product.stock_quantity || 10} available
-                  </p>
-                  <p className="text-[11px] font-black text-slate-850 dark:text-white uppercase tracking-tight truncate max-w-[180px]">
-                    Selected: <span className="text-[#e61e25]">{selectedVariant ? selectedVariant.name : 'Default'}</span>
-                  </p>
+                <div className="badges">
+                  {discountPercent > 0 && <span className="badge sale">Save {discountPercent}%</span>}
+                  <span className="badge new">Best Seller</span>
                 </div>
+                <span className="zoom-hint">Hover to zoom</span>
+              </div>
+              
+              <div className="thumbs">
+                {viewsArr.map((v, i) => (
+                  <button 
+                    key={v.label} 
+                    className={"thumb" + (i === view ? " active" : "")} 
+                    aria-label={v.label} 
+                    onClick={() => setGalleryView(i)}
+                  >
+                    <img src={v.src} alt="" />
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                {/* Close button X */}
+            {/* Buy Box Info Section */}
+            <div className="buybox" ref={buyboxRef}>
+              <div className="eyebrow">{product.brand || 'SWEETO'} · {product.category || 'Electronics'}</div>
+              <h1 className="pname">{product.name}</h1>
+              
+              <div className="rate-row">
+                <Stars value={averageRating} />
+                <b>{averageRating.toFixed(1)}</b>
+                <a href="#reviews">{reviewCount} reviews</a>
+              </div>
+              
+              <div className="price-row">
+                <span className="price">{finalPrice.toLocaleString()} {currSymbol}</span>
+                {oldPrice > finalPrice && <span className="compare">{oldPrice.toLocaleString()} {currSymbol}</span>}
+                {savings > 0 && <span className="save">You save {savings.toLocaleString()} {currSymbol}</span>}
+              </div>
+              
+              <p className="pdesc">{cleanDescription}</p>
+
+              {/* Swatch Selector */}
+              {variants.length > 0 && (
+                <>
+                  <div className="opt-label">Colour — <span>{selectedVariant?.name || 'Select Option'}</span></div>
+                  <div className="swatches">
+                    {variants.map((c) => (
+                      <button 
+                        key={c.id} 
+                        className={"swatch" + (selectedVariant?.id === c.id ? " active" : "")} 
+                        style={{ background: getHexColor(c.name) }} 
+                        aria-label={c.name} 
+                        onClick={() => pickColor(c)} 
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Purchase Actions */}
+              <div className="buy-row">
+                <div className="qty" aria-label="Quantity">
+                  <button aria-label="Decrease" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+                  <output>{qty}</output>
+                  <button aria-label="Increase" onClick={() => setQty((q) => Math.min(9, q + 1))}>+</button>
+                </div>
+                <button className={"btn-add" + (added ? " done" : "")} onClick={mainAdd}>
+                  {added ? "Added ✓" : "Add to cart →"}
+                </button>
                 <button 
-                  onClick={() => setIsVariantSheetOpen(false)}
-                  className="absolute top-4 right-4 w-7 h-7 rounded-full bg-slate-150 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:text-slate-400 cursor-pointer"
+                  className={"btn-wish" + (isWished ? " on" : "")} 
+                  aria-label="Add to wishlist"
+                  onClick={() => {
+                    toggleWishlist(product);
+                    showToast(!isWished ? "Saved to your wishlist ♥" : "Removed from wishlist", "info");
+                  }}
                 >
-                  <X size={16} strokeWidth={2.5} />
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 20s-7.5-4.7-9.5-9C1 7.5 3 4.5 6.5 4.5c2.2 0 3.9 1.3 5.5 3.4 1.6-2.1 3.3-3.4 5.5-3.4C21 4.5 23 7.5 21.5 11c-2 4.3-9.5 9-9.5 9z" />
+                  </svg>
+                </button>
+                <button 
+                  className={"btn-share" + (sharePulse ? " pulse" : "")} 
+                  aria-label="Share this product" 
+                  title="Share" 
+                  onClick={shareProduct}
+                >
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="6" cy="12" r="2.6" />
+                    <circle cx="17.5" cy="5.5" r="2.6" />
+                    <circle cx="17.5" cy="18.5" r="2.6" />
+                    <path d="M8.4 10.8l6.8-4M8.4 13.2l6.8 4" />
+                  </svg>
                 </button>
               </div>
-
-              {/* Scrollable Sheet Content */}
-              <div 
-                className="overflow-y-auto flex-1 pb-6 px-4 text-left no-scrollbar"
+              
+              <button 
+                className="btn-now" 
+                onClick={() => {
+                  addToCartHandler(product, qty);
+                  setIsCartOpen(true);
+                }}
               >
-                {/* Promo/Coins Banner */}
-                <div className="mt-3.5 p-3 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100/60 dark:border-slate-800/40">
-                  <p className="text-[10px] font-bold text-slate-450 dark:text-slate-550 uppercase tracking-wide">
-                    Tax excluded, add at checkout if applicable; Extra 1% off with coins
-                  </p>
-                </div>
+                Buy it now
+              </button>
 
-                {/* Variant Color Section */}
-                {hasVariants && variants.length > 0 && (
-                  <div className="mt-5 space-y-3">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-                      {variantLabel}
-                    </h4>
-                    <div className="flex flex-wrap gap-2.5 pt-1">
-                      {variants.map((v, idx) => {
-                        const isSelected = selectedVariant && selectedVariant.id === v.id;
-                        return (
-                          <button
-                            key={v.id}
-                            onClick={() => {
-                              setSelectedVariant(v);
-                              setActiveImageIndex(v.id);
-                            }}
-                            className={`relative flex items-center gap-2.5 px-3.5 py-2 rounded-2xl border transition-all duration-300 cursor-pointer ${
-                              isSelected 
-                                ? 'border-[#e61e25] bg-[#e61e25]/5 text-[#e61e25] font-black' 
-                                : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-350 hover:border-slate-300'
-                            }`}
-                          >
-                            <img 
-                              src={v.image} 
-                              alt="" 
-                              className="w-7 h-7 object-contain rounded-lg shrink-0" 
-                            />
-                            <span className="text-[11px] font-black tracking-tight whitespace-nowrap uppercase leading-none">
-                              {v.name}
-                            </span>
-                          </button>
-                        );
-                      })}
+              {/* Trust Badges */}
+              <div className="trust">
+                <div>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M1 8h13v9H1zM14 11h5l3 3v3h-8" />
+                    <circle cx="6" cy="19" r="2" />
+                    <circle cx="18" cy="19" r="2" />
+                  </svg>
+                  Free express shipping over $150
+                </div>
+                <div>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M3 12a9 9 0 1 0 3-6.7" />
+                    <path d="M3 4v5h5" />
+                  </svg>
+                  30-day no-fuss returns
+                </div>
+                <div>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                  2-year warranty included
+                </div>
+              </div>
+
+              {/* Accordion Specs */}
+              <div className="acc">
+                {[
+                  { t: "Description", body: (
+                    <div className="acc-body">
+                      The {product.name} delivers spatial acoustics paired with intelligent hardware. Built with high durability structural yokes and slow-rebound cushion pads to maximize focus and ensure fatigue-free operation.
+                      {boxListItems.length > 0 && (
+                        <ul className="boxlist">
+                          {boxListItems.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div> ) },
+                  { t: "Specifications", body: (
+                    <div className="acc-body">
+                      <dl className="spec">
+                        {productSpecs.map((s, idx) => (
+                          <React.Fragment key={idx}>
+                            <dt>{s.label}</dt>
+                            <dd>{s.value}</dd>
+                          </React.Fragment>
+                        ))}
+                      </dl>
+                    </div> ) },
+                  { t: "Shipping & returns", body: (
+                    <div className="acc-body">
+                      Orders placed before 4 pm ship the same day. Express delivery (1–3 business days) is free over $150. Try the {product.name} at home for 30 days — if it isn't the one, returns are free and refunded in full within 48 hours of arrival.
+                    </div> ) }
+                ].map((item, i) => (
+                  <div className={"acc-item" + (openAcc === i ? " open" : "")} key={item.t}>
+                    <button className="acc-head" onClick={() => setOpenAcc((o) => (o === i ? -1 : i))}>
+                      {item.t} 
+                      <span className="pl">+</span>
+                    </button>
+                    <div className="acc-panel">
+                      <div>{item.body}</div>
                     </div>
                   </div>
-                )}
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
 
-                {/* Quantity Stepper */}
-                <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/40 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Qty</h4>
-                    <p className="text-[10px] font-bold text-emerald-500 uppercase">In stock</p>
-                  </div>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-full flex items-center justify-between w-24 p-1">
-                    <button 
-                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer"
-                    >
-                      <Minus size={12} strokeWidth={3} />
-                    </button>
-                    <span className="text-xs font-black text-slate-800 dark:text-white select-none">{quantity}</span>
-                    <button 
-                      onClick={() => setQuantity(q => q + 1)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white active:bg-slate-100 dark:active:bg-slate-800 cursor-pointer"
-                    >
-                      <Plus size={12} strokeWidth={3} />
-                    </button>
-                  </div>
+        {/* Alternating Highlights Banners */}
+        <section className="features wrap select-none">
+          <div className="feat">
+            <div className="feat-img reveal">
+              <img src={feat1Img} alt="" loading="lazy" />
+            </div>
+            <div>
+              <div className="eyebrow">{featureContent.feat1.eyebrow}</div>
+              <h2 className="big lm"><span className="lm-in">{featureContent.feat1.title}</span></h2>
+              <p className="reveal">{featureContent.feat1.desc}</p>
+              <ul className="reveal">
+                {featureContent.feat1.bullets.map((b, idx) => (
+                  <li key={idx}>{b}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="feat">
+            <div className="feat-img reveal">
+              <img src={feat2Img} alt="" loading="lazy" />
+            </div>
+            <div>
+              <div className="eyebrow">{featureContent.feat2.eyebrow}</div>
+              <h2 className="big lm"><span className="lm-in">{featureContent.feat2.title}</span></h2>
+              <p className="reveal">{featureContent.feat2.desc}</p>
+              <ul className="reveal">
+                {featureContent.feat2.bullets.map((b, idx) => (
+                  <li key={idx}>{b}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Reviews Section */}
+        <section className="reviews wrap select-none" id="reviews">
+          <div className="rev-head">
+            <div>
+              <div className="eyebrow">From the listening room</div>
+              <h2 className="big lm">
+                <span className="lm-in">
+                  {reviewCount} honest <em>ears.</em>
+                </span>
+              </h2>
+            </div>
+            <button className="pill" onClick={() => setModalOpen(true)}>✎ &nbsp;Write a review</button>
+          </div>
+          
+          <div className="rev-grid">
+            {/* Score Card Panel */}
+            <aside className="rev-sum reveal">
+              <div className="rev-score">
+                <b>{averageRating.toFixed(1)}</b>
+                <div>
+                  <Stars value={averageRating} />
+                  <br />
+                  <span>Based on {reviewCount} reviews</span>
                 </div>
               </div>
-
-              {/* Bottom Sticky Action Buttons */}
-              <div className="p-4 border-t border-slate-150 dark:border-slate-800 bg-white/95 dark:bg-[#0b1324]/95 backdrop-blur flex gap-3 pb-[calc(env(safe-area-inset-bottom,0px)+14px)]">
-                {sheetAction === 'cart' && (
+              <div className="bars" id="bars">
+                {buckets.map((b, i) => (
+                  <div className="bar-row" key={i}>
+                    <span>{5 - i} ★</span>
+                    <div className="bar">
+                      <div className="bar-fill" style={{ width: b + "%" }}></div>
+                    </div>
+                    <span>{b}%</span>
+                  </div>
+                ))}
+              </div>
+            </aside>
+            
+            {/* Reviews Cards List */}
+            <div>
+              <div className="filters">
+                {["all", "5", "4", "3"].map((f) => (
                   <button 
-                    onClick={() => {
-                      addToCart(product);
-                      showToast("Added to shopping cart! 🛒", "success");
-                      setIsVariantSheetOpen(false);
-                    }}
-                    className="w-full py-3.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
+                    key={f} 
+                    className={"pill" + (filter === f ? " active" : "")} 
+                    onClick={() => setFilter(f)}
                   >
-                    Confirm
+                    {f === "all" ? "All" : f + " ★"}
                   </button>
-                )}
-                {sheetAction === 'buy' && (
-                  <button 
-                    onClick={() => {
-                      addToCart(product);
-                      setIsVariantSheetOpen(false);
-                      navigate('/checkout');
-                    }}
-                    className="w-full py-3.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
-                  >
-                    Confirm
-                  </button>
-                )}
-                {sheetAction === 'both' && (
-                  <>
-                    <button 
-                      onClick={() => {
-                        addToCart(product);
-                        setTimeout(() => setIsVariantSheetOpen(false), 800);
-                      }}
-                      disabled={isAdding}
-                      className="flex-1 py-3.5 border border-slate-900 dark:border-white text-slate-900 dark:text-white font-black text-xs uppercase tracking-widest rounded-full transition-all active:scale-97 cursor-pointer text-center bg-transparent flex items-center justify-center gap-1.5 disabled:opacity-85"
-                    >
-                      {isAdding ? (
-                        <>
-                          <div className="w-3 h-3 border-2 border-slate-900 dark:border-white border-t-transparent rounded-full animate-spin" />
-                          <span>{lang === 'fr' ? 'Ajout...' : 'Adding...'}</span>
-                        </>
-                      ) : (
-                        <span>{lang === 'fr' ? 'Ajouter au Panier' : 'Add to Cart'}</span>
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => {
-                        addToCart(product);
-                        setIsVariantSheetOpen(false);
-                        navigate('/checkout');
-                      }}
-                      className="flex-1 py-3.5 bg-[#e61e25] hover:bg-[#c9181e] text-white font-black text-xs uppercase tracking-widest rounded-full transition-all shadow-md active:scale-97 cursor-pointer text-center"
-                    >
-                      Buy Now
-                    </button>
-                  </>
+                ))}
+              </div>
+              
+              <div className="rev-cards">
+                {visibleReviews.length === 0 ? (
+                  <div className="text-slate-400 py-10 font-bold col-span-2 text-center select-none">
+                    No reviews in this category yet. Be the first to share your thoughts!
+                  </div>
+                ) : (
+                  visibleReviews.map((r, idx) => (
+                    <article className={"rev-card" + (r.fresh ? " fresh" : "")} key={r.name + idx}>
+                      <div className="rev-top">
+                        <span className="ava" style={{ background: r.ava }}>{initialsOf(r.name)}</span>
+                        <div className="rev-who">
+                          <b>{r.name}</b>
+                          <span>{r.date}</span>
+                        </div>
+                        {r.verified ? <span className="verif">✓ Verified</span> : <span className="verif fresh-tag">★ New</span>}
+                      </div>
+                      <Stars value={r.rating} />
+                      <h4>{r.title}</h4>
+                      <p>{r.body}</p>
+                    </article>
+                  ))
                 )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </section>
 
-
-
-      {/* Global Sidebar & Cart overlay drawers */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
-      {/* Dynamic Share Modal */}
-      <AnimatePresence>
-        {isShareModalOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsShareModalOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[999] cursor-pointer"
-            />
-            {/* Modal Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="fixed inset-x-4 bottom-8 md:bottom-auto md:top-1/2 md:left-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-md bg-white dark:bg-[#0b1324] border border-slate-100 dark:border-slate-800/80 rounded-3xl shadow-2xl p-6 z-[1000] overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white">
-                  {lang === 'fr' ? 'Partager le produit' : 'Share Product'}
-                </h3>
-                <button
-                  onClick={() => setIsShareModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              {/* Product Info Preview */}
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 mb-6">
-                <img
-                  src={selectedVariant ? selectedVariant.image : (product.image_url || product.image || '/hero-banner.png')}
-                  alt={product.name}
-                  className="w-14 h-14 rounded-xl object-cover bg-white dark:bg-slate-800"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white truncate">{product.name}</h4>
-                  <p className="text-xs text-red-500 font-extrabold mt-0.5">
-                    {settings?.currency || 'XOF'} {product.price?.toLocaleString()}
-                  </p>
+        {/* Complete the Ritual (Related Products) */}
+        {relatedProducts.length > 0 && (
+          <section className="related wrap select-none">
+            <div className="eyebrow">Complete the ritual</div>
+            <h2 className="big lm"><span className="lm-in">Pairs well <em>with.</em></span></h2>
+            <div className="rel-grid">
+              {relatedProducts.map((p) => (
+                <div className="rel-card reveal" key={p.id}>
+                  <div className="rel-img">
+                    <img 
+                      src={p.image_url || p.image || '/hero-banner.png'} 
+                      alt={p.name} 
+                      loading="lazy" 
+                      onClick={() => {
+                        navigate(`/product/${p.id}`);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  <div className="rel-body">
+                    <b>{p.name}</b>
+                    <span>{p.price?.toLocaleString()} {currSymbol}</span>
+                  </div>
+                  <button 
+                    className="rel-add" 
+                    aria-label={"Add " + p.name + " to cart"}
+                    onClick={(e) => { 
+                      fly(e.currentTarget); 
+                      addToCartHandler(p, 1); 
+                    }}
+                  >
+                    +
+                  </button>
                 </div>
-              </div>
-
-              {/* Share Options Grid */}
-              <div className={`grid gap-3 mb-6 ${navigator.share ? 'grid-cols-4' : 'grid-cols-3'}`}>
-                {/* WhatsApp */}
-                <button
-                  onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-                    const text = lang === 'fr'
-                      ? `Découvrez ${product.name} sur SWEETO ! ⚡ ${shareUrl}`
-                      : `Check out ${product.name} on SWEETO! ⚡ ${shareUrl}`;
-                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-                    setIsShareModalOpen(false);
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 transition-all cursor-pointer group"
-                >
-                  <i className="fa-brands fa-whatsapp text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
-                  <span className="text-[9px] font-black uppercase tracking-wider">WhatsApp</span>
-                </button>
-
-                {/* Facebook */}
-                <button
-                  onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
-                    setIsShareModalOpen(false);
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/30 transition-all cursor-pointer group"
-                >
-                  <i className="fa-brands fa-facebook text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
-                  <span className="text-[9px] font-black uppercase tracking-wider">Facebook</span>
-                </button>
-
-                {/* Copy Link */}
-                <button
-                  onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-                    navigator.clipboard.writeText(shareUrl);
-                    showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
-                    setIsShareModalOpen(false);
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/30 transition-all cursor-pointer group"
-                >
-                  <i className="fa-solid fa-link text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
-                  <span className="text-[9px] font-black uppercase tracking-wider">{lang === 'fr' ? 'Copier' : 'Copy'}</span>
-                </button>
-
-                {/* More / Device Share */}
-                {navigator.share && (
-                  <button
-                    onClick={() => {
-                      const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-                      navigator.share({
-                        title: product.name,
-                        text: lang === 'fr' 
-                          ? `Découvrez ${product.name} sur SWEETO ! ⚡` 
-                          : `Check out ${product.name} on SWEETO! ⚡`,
-                        url: shareUrl,
-                      }).catch((err) => console.log("Native share failed in modal:", err));
-                      setIsShareModalOpen(false);
-                    }}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30 transition-all cursor-pointer group"
-                  >
-                    <i className="fa-solid fa-share-nodes text-xl mb-1.5 transition-transform group-hover:scale-110"></i>
-                    <span className="text-[9px] font-black uppercase tracking-wider">{lang === 'fr' ? 'Plus' : 'More'}</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Direct Link Input Box */}
-              <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/50 rounded-2xl">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${window.location.origin}/share/product/${product.id}`}
-                  className="flex-1 bg-transparent border-none text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 outline-none select-all"
-                />
-                <button
-                  onClick={() => {
-                    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-                    navigator.clipboard.writeText(shareUrl);
-                    showToast(lang === 'fr' ? "Lien copié ! 🔗" : "Link copied! 🔗", "success");
-                  }}
-                  className="px-3.5 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-                >
-                  {lang === 'fr' ? 'Copier' : 'Copy'}
-                </button>
-              </div>
-            </motion.div>
-          </>
+              ))}
+            </div>
+          </section>
         )}
-      </AnimatePresence>
 
-      {/* Global Sidebar & Cart overlay drawers */}
+        {/* More to Love Section */}
+        {moreToLoveProducts.length > 0 && (
+          <section className="related wrap select-none" style={{ paddingTop: '20px', paddingBottom: '80px' }}>
+            <div className="eyebrow">Discover new drops</div>
+            <h2 className="big lm"><span className="lm-in">More to <em>love.</em></span></h2>
+            <div className="rel-grid">
+              {moreToLoveProducts.map((p) => (
+                <div className="rel-card reveal" key={p.id}>
+                  <div className="rel-img">
+                    <img 
+                      src={p.image_url || p.image || '/hero-banner.png'} 
+                      alt={p.name} 
+                      loading="lazy" 
+                      onClick={() => {
+                        navigate(`/product/${p.id}`);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  <div className="rel-body">
+                    <b>{p.name}</b>
+                    <span>{p.price?.toLocaleString()} {currSymbol}</span>
+                  </div>
+                  <button 
+                    className="rel-add" 
+                    aria-label={"Add " + p.name + " to cart"}
+                    onClick={(e) => { 
+                      fly(e.currentTarget); 
+                      addToCartHandler(p, 1); 
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+      {/* Floating Cart FAB */}
+      <button 
+        className="fab" 
+        ref={fabRef} 
+        aria-label="Open cart" 
+        onClick={() => setIsCartOpen(true)}
+      >
+        <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-[#1F6FEB] stroke-[#1F6FEB]">
+          <path d="M6 8h12l-1.2 12H7.2L6 8z" />
+          <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+        </svg>
+        <span id="cartCount" className={(cartCount > 0 ? "on " : "") + (badgePop ? "pop" : "")}>
+          {cartCount}
+        </span>
+      </button>
+
+
+      {/* Write a Review Modal */}
+      <div className={"modal" + (modalOpen ? " on" : "")} aria-hidden={!modalOpen}>
+        <div className="modal-back" onClick={() => setModalOpen(false)}></div>
+        <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="revModalTitle">
+          <button className="modal-x" aria-label="Close" onClick={() => setModalOpen(false)}>✕</button>
+          <div className="eyebrow">Your ears, your verdict</div>
+          <h3 className="modal-title" id="revModalTitle">Write a review</h3>
+          <form onSubmit={submitReview} noValidate>
+            <div className="f-row">
+              <label>Name
+                <input 
+                  value={form.name} 
+                  maxLength="40" 
+                  placeholder="Maya R." 
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} 
+                />
+              </label>
+              <label>Email — not published
+                <input 
+                  type="email" 
+                  value={form.email} 
+                  placeholder="you@email.com" 
+                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} 
+                />
+              </label>
+            </div>
+            
+            <div className="f-rate">
+              <span className="f-label">Your rating</span>
+              <div className="star-pick" onMouseLeave={() => setHoverPick(0)}>
+                {[1, 2, 3, 4, 5].map((v) => (
+                  <button 
+                    key={v} 
+                    type="button" 
+                    className={v <= litCount ? "lit" : ""} 
+                    aria-label={v + " star" + (v > 1 ? "s" : "")}
+                    onClick={() => setPick(v)} 
+                    onMouseEnter={() => setHoverPick(v)}
+                  >
+                    <svg viewBox="0 0 24 24">
+                      <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+              <span className="f-hint">{HINTS[pick]}</span>
+            </div>
+            
+            <label>Title
+              <input 
+                value={form.title} 
+                maxLength="70" 
+                placeholder="Sum it up in one line" 
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} 
+              />
+            </label>
+            
+            <label>Review
+              <textarea 
+                rows="4" 
+                maxLength="600" 
+                value={form.body} 
+                placeholder="What did you hear? Comfort, battery, silence — tell it like it is." 
+                onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+              ></textarea>
+            </label>
+            
+            <button className="modal-submit" type="submit">Post review →</button>
+          </form>
+        </div>
+      </div>
+      </div>
+
+      {/* Global Sidebar Drawer */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
+      {/* Global Checkout Cart Drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
-
-    </div>
+    </>
   );
-};
-
-export default ProductDetailPage;
+}

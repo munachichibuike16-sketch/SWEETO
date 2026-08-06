@@ -245,8 +245,9 @@ const Storefront = ({ viewMode: propViewMode }) => {
   const location = useLocation();
   const viewMode = useMemo(() => {
     if (propViewMode) return propViewMode;
-    const path = location.pathname;
-    if (path === '/') return 'home';
+    const hash = window.location.hash.replace(/^#/, '');
+    const path = hash.startsWith('/') ? hash : location.pathname;
+    if (path === '/' || path === '') return 'home';
     if (path === '/wishlist') return 'wishlist';
     if (path === '/notifications') return 'notifications';
     if (path === '/products') return 'products';
@@ -266,7 +267,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     if (path === '/refund') return 'refund';
     if (path.startsWith('/category/')) return 'category';
     return 'home';
-  }, [location.pathname, propViewMode]);
+  }, [location, propViewMode]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isStoreSidebarOpen, setIsStoreSidebarOpen] = useState(false);
@@ -1067,7 +1068,10 @@ const Storefront = ({ viewMode: propViewMode }) => {
                       {/* Today's Offers (Deal of the Day) */}
                       <DealOfTheDaySection 
                         products={dealProducts} 
-                        onProductClick={handleProductClick} 
+                        onProductClick={() => {
+                          navigate('/deals');
+                          window.scrollTo(0, 0);
+                        }} 
                       />
 
                       {/* Shop By Category Section */}
@@ -1077,7 +1081,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
 
                       {/* Interleaved Content Sections & Products */}
                       {(() => {
-                        const isMobileDevice = window.innerWidth < 1024;
+                        const isMobileDevice = window.innerWidth < 768;
                         const sliceSize = isMobileDevice ? 2 : 4;
                         
                         const unsectioned = shuffledActiveProducts.filter(p => !sectionedProductIds.has(p.id));
@@ -1334,10 +1338,10 @@ const RouteTracker = () => {
 const App = () => {
   const { loading } = useStore();
   const [currentPath, setCurrentPath] = useState(getCurrentPath());
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
   useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);

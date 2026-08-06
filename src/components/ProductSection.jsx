@@ -92,7 +92,7 @@ const ProductRow = ({ products, onProductClick, type, isMobile }) => {
               product={product}
               index={idx}
               onProductClick={onProductClick}
-              layout={!isMobile && type === 'new' ? 'new_arrivals' : 'default'}
+              layout={type === 'new' ? 'new_arrivals' : 'default'}
             />
           </div>
         ))}

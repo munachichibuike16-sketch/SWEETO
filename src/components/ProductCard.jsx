@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, Star, Heart, Eye, ShoppingCart, Zap, TrendingUp, Share2, Scale } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -60,6 +61,7 @@ const getImagesList = (prod) => {
 };
 
 const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
+  const navigate = useNavigate();
   const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike, incrementProductView, showToast } = useStore();
   const { isDarkMode } = useTheme();
   const { lang, t, t_smart } = useLanguage();
@@ -137,6 +139,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const handleCardClick = (e) => {
     if (onProductClick) {
       onProductClick(product);
+    } else {
+      navigate(`/product/${product.id}`);
+      window.scrollTo(0, 0);
     }
   };
 
@@ -228,54 +233,271 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
   const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
 
-  if (layout === 'new_arrivals') {
-    const isEarlyBird = index < 3;
-    const isFr = lang === 'fr';
+  if (layout === 'unending') {
+    const finalPrice = product.price || 0;
+    const currSymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency || 'FCFA');
+    const isWished = isInWishlist(product.id);
+    const ratingVal = product.rating || 4.3;
+    const reviewsCountVal = reviews.length > 0 ? reviews.length : 761;
 
     return (
       <>
         <motion.div 
-        whileHover={{ y: -6, scale: 1.01 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        onClick={handleCardClick}
-        className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none select-none text-left"
-      >
+          whileHover={{ y: -6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          onClick={handleCardClick}
+          className="group relative flex flex-col justify-between h-full cursor-pointer w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-3.5 shadow-sm hover:shadow-md transition-shadow select-none text-left"
+        >
           {/* Image Container */}
-          <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-2.5 rounded-2xl bg-[#f4f4f4] dark:bg-slate-905 p-1">
-            {/* Top-left Badges Container */}
-            <div className="absolute top-2.5 left-2.5 z-20 flex flex-col sm:flex-row gap-1.5">
-              {isNewArrivalProduct && (
-                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none">
-                  {lang === 'fr' ? 'NOUVEAU' : 'NEW'}
-                </span>
-              )}
-              {(product.is_daily_deal === 1 || product.is_daily_deal === true || String(product.is_daily_deal) === '1' || String(product.is_daily_deal) === 'true') && (
-                <span className="bg-[#2563eb] text-white font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-[6px] shadow-md uppercase tracking-wider leading-none select-none">
-                  {lang === 'fr' ? 'OFFRE ÉLITE' : 'ELITE OFFER'}
-                </span>
-              )}
-            </div>
-            {/* Action Buttons (Floating overlay top-right) */}
-            <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5">
+          <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-3.5 rounded-2xl bg-[#f8fafc] dark:bg-slate-950 p-2">
+            {/* Wishlist Button (Floating overlay top-right) */}
+            <div className="absolute top-2.5 right-2.5 z-20">
               <button 
                 onClick={handleToggleWishlist}
-                className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${
+                className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-all border ${
                   isWished 
-                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30 shadow-md scale-105' 
-                    : 'bg-white/75 dark:bg-slate-900/75 border-slate-200/40 dark:border-slate-800/40 text-slate-700 dark:text-slate-300 hover:bg-[#ff3b30] hover:text-white hover:border-[#ff3b30] hover:scale-105'
+                    ? 'bg-red-500 border-red-500 text-white shadow-red-500/20' 
+                    : 'bg-white border-slate-100 text-slate-400 hover:text-red-500'
                 }`}
               >
                 <Heart size={14} fill={isWished ? "currentColor" : "none"} />
               </button>
             </div>
 
-            {/* Cart Button (Floating overlay bottom-right) */}
-            <div className="absolute bottom-2.5 right-2.5 z-20">
+            <img 
+              src={images[currentImageIndex] || '/hero-banner.png'} 
+              alt={product.name} 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = '/hero-banner.png';
+              }}
+              className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 rounded-lg"
+            />
+          </div>
+
+          {/* Info Details */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              {/* Brand & Category */}
+              <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left mb-1.5">
+                {product.brand || 'SWEETO'} · {product.category || 'Gear'}
+              </div>
+
+              {/* Title */}
+              <h3 className="line-clamp-2 text-sm font-bold text-slate-900 dark:text-white text-left leading-snug mb-2 min-h-[40px]">
+                {product.name}
+              </h3>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1 text-xs text-left mb-3">
+                <div className="flex text-amber-500 gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={12} fill={i < Math.round(ratingVal) ? "currentColor" : "none"} strokeWidth={2.5} />
+                  ))}
+                </div>
+                <span className="font-bold text-slate-500">
+                  {ratingVal} ({reviewsCountVal})
+                </span>
+              </div>
+            </div>
+
+            <div>
+              {/* Price */}
+              <div className="text-xl font-black text-[#111322] dark:text-white text-left mb-4">
+                {finalPrice.toLocaleString()} {currSymbol}
+              </div>
+
+              {/* Add to Cart button */}
               <button 
                 onClick={handleAddToCart}
-                className="w-8 h-8 rounded-full bg-white/75 dark:bg-slate-900/75 backdrop-blur-md shadow-md flex items-center justify-center border border-slate-200/40 dark:border-slate-800/40 hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] hover:scale-105 active:scale-95 transition-all text-slate-750 dark:text-white cursor-pointer group"
+                className="w-full bg-[#111322] hover:bg-slate-900 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer select-none border-none outline-none"
               >
-                <ShoppingCart size={14} className="text-slate-750 dark:text-white group-hover:text-white" />
+                <ShoppingCart size={14} fill="currentColor" />
+                <span>{lang === 'fr' ? 'Ajouter' : 'Add to Cart'}</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        <QuickViewModal 
+          product={product} 
+          isOpen={isQuickViewOpen} 
+          onClose={closeQuickView}
+          onViewDetails={handleViewDetails}
+        />
+      </>
+    );
+  }
+
+  if (layout === 'deal' || layout === 'bestseller') {
+    const isFr = lang === 'fr';
+    const finalPrice = product.price || 0;
+    const oldPrice = product.original_price || (product.price * 1.25);
+    const currSymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency || 'FCFA');
+    const isWished = isInWishlist(product.id);
+    const ratingVal = product.rating || 4.2;
+    const reviewsCountVal = reviews.length > 0 ? reviews.length : 430;
+
+    return (
+      <>
+        <motion.div 
+          whileHover={{ y: -6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          onClick={handleCardClick}
+          className="group relative flex flex-col justify-between h-full cursor-pointer w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-3.5 shadow-sm hover:shadow-md transition-shadow select-none text-left"
+        >
+          {/* Image Container */}
+          <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-3.5 rounded-2xl bg-[#f8fafc] dark:bg-slate-950 p-2">
+            {/* Top-left Badge */}
+            {layout === 'bestseller' ? (
+              <span className="absolute top-2.5 left-2.5 bg-[#e61e25] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full z-10 shadow-sm select-none">
+                {isFr ? 'SOLDES' : 'SALE'}
+              </span>
+            ) : (
+              <span className="absolute top-2.5 left-2.5 bg-[#1e5cff] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full z-10 shadow-sm select-none">
+                DEAL
+              </span>
+            )}
+
+            {/* Discount Badge */}
+            {discountPercent > 0 && (
+              <span className="absolute bottom-2.5 left-2.5 bg-[#00b050] text-white text-[10px] font-black px-2.5 py-1 rounded-full z-10">
+                -{discountPercent}%
+              </span>
+            )}
+
+            {/* Wishlist Button */}
+            <div className="absolute top-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleToggleWishlist}
+                className={`w-7.5 h-7.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
+                  isWished 
+                    ? 'bg-red-500 border-red-500 text-white shadow-red-500/20' 
+                    : 'bg-white border-slate-100 text-slate-400 hover:text-red-500'
+                }`}
+              >
+                <Heart size={14} fill={isWished ? "currentColor" : "none"} />
+              </button>
+            </div>
+
+            <img 
+              src={images[currentImageIndex] || '/hero-banner.png'} 
+              alt={product.name} 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = '/hero-banner.png';
+              }}
+              className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 rounded-lg"
+            />
+          </div>
+
+          {/* Info Details */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              {/* Brand & Category */}
+              <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left mb-1.5">
+                {product.brand || 'SWEETO'} · {product.category || (layout === 'bestseller' ? 'Bestseller' : 'Deals')}
+              </div>
+
+              {/* Title */}
+              <h3 className="line-clamp-2 text-sm font-bold text-slate-900 dark:text-white text-left leading-snug mb-2 min-h-[40px]">
+                {product.name}
+              </h3>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1.5 text-xs text-left mb-3">
+                <div className="flex text-amber-500 gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={12} fill={i < Math.round(ratingVal) ? "currentColor" : "none"} strokeWidth={2.5} />
+                  ))}
+                </div>
+                <span className="font-bold text-slate-500">
+                  {ratingVal} ({reviewsCountVal})
+                </span>
+              </div>
+            </div>
+
+            <div>
+              {/* Price block */}
+              <div className="flex items-baseline gap-2 text-left mb-4">
+                <span className="text-xl font-black text-[#111322] dark:text-white">
+                  {finalPrice.toLocaleString()} {currSymbol}
+                </span>
+                {oldPrice && oldPrice > finalPrice && (
+                  <span className="text-sm text-slate-400 line-through font-bold">
+                    {oldPrice.toLocaleString()} {currSymbol}
+                  </span>
+                )}
+              </div>
+
+              {/* Add to Cart button */}
+              {layout === 'bestseller' ? (
+                <button 
+                  onClick={handleAddToCart}
+                  className="w-full bg-[#1e5cff] hover:bg-[#1554c0] text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer select-none border-none outline-none"
+                >
+                  <ShoppingCart size={14} fill="currentColor" />
+                  <span>{isFr ? 'Ajouter' : 'Add to Cart'}</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={handleAddToCart}
+                  className="w-full bg-[#1e5cff] hover:bg-[#1554c0] text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer select-none border-none outline-none"
+                >
+                  <ShoppingCart size={14} fill="currentColor" />
+                  <span>{isFr ? 'Ajouter' : 'Add to Cart'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        <QuickViewModal 
+          product={product} 
+          isOpen={isQuickViewOpen} 
+          onClose={closeQuickView}
+          onViewDetails={handleViewDetails}
+        />
+      </>
+    );
+  }
+
+  if (layout === 'new_arrivals') {
+    const isFr = lang === 'fr';
+
+    return (
+      <>
+        <motion.div 
+          whileHover={{ y: -6 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          onClick={handleCardClick}
+          className="group relative flex flex-col h-full cursor-pointer w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-3.5 shadow-sm hover:shadow-md transition-shadow select-none text-left"
+        >
+          {/* Image Container */}
+          <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-3.5 rounded-2xl bg-[#f8fafc] dark:bg-slate-950 p-2">
+            {/* Top-left Badge */}
+            <span className="absolute top-2.5 left-2.5 bg-[#1e5cff] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full z-10 shadow-sm select-none">
+              {isFr ? 'NOUVEAU' : 'NEW'}
+            </span>
+
+            {/* Discount Badge */}
+            {discountPercent > 0 && (
+              <span className="absolute bottom-2.5 left-2.5 bg-[#00b050] text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">
+                -{discountPercent}%
+              </span>
+            )}
+
+            {/* Wishlist Button (Floating overlay top-right) */}
+            <div className="absolute top-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleToggleWishlist}
+                className={`w-7.5 h-7.5 rounded-full shadow-sm flex items-center justify-center transition-all border ${
+                  isWished 
+                    ? 'bg-red-500 border-red-500 text-white shadow-red-500/20' 
+                    : 'bg-white border-slate-100 text-slate-400 hover:text-red-500'
+                }`}
+              >
+                <Heart size={14} fill={isWished ? "currentColor" : "none"} />
               </button>
             </div>
 
@@ -292,41 +514,53 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
             />
           </div>
 
-          {/* Title & Badges */}
-          <div className="flex flex-col flex-1 py-0.5 text-start">
-            <div className="flex items-start gap-1.5 mt-1.5 w-full leading-tight text-left">
-              {index % 2 === 0 ? (
-                <span className="bg-[#fff000] text-black text-[9.5px] font-black px-2 py-0.5 rounded leading-none shrink-0 uppercase">Choice</span>
-              ) : (
-                <span className="bg-[#1e5cff] text-white text-[9.5px] font-black px-2 py-0.5 rounded leading-none shrink-0 uppercase">Marque+</span>
-              )}
-              <span className="line-clamp-2 text-[13px] font-bold text-slate-700 dark:text-slate-350">
+          {/* Info Details */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              {/* Category / Brand */}
+              <div className="text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest text-left mb-1.5">
+                {product.brand || 'SWEETO'} · {product.category || 'New'}
+              </div>
+
+              {/* Title */}
+              <h3 className="line-clamp-2 text-xs font-bold text-slate-850 dark:text-white text-left leading-snug mb-1.5 min-h-[32px]">
                 {t_smart(product.name)}
-              </span>
+              </h3>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1 text-[11px] text-left mb-2">
+                <div className="flex text-amber-500 gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={11} fill={i < Math.round(Number(averageRating || 4.2)) ? "currentColor" : "none"} strokeWidth={2.5} />
+                  ))}
+                </div>
+                <span className="font-bold text-slate-500">
+                  {averageRating || '4.2'} ({getSoldCount(product)})
+                </span>
+              </div>
             </div>
 
-            {/* Deal tag and Stats */}
-            <div className="mt-2.5 text-[12px] font-medium leading-normal">
-              {isEarlyBird ? (
-                <>
-                  <div className="text-[#ff0a24] font-black">
-                    {isFr ? "Offre de lancement" : "Early bird deal"}
-                  </div>
-                  <div className="text-slate-500 dark:text-slate-400 font-bold mt-0.5">
-                    {getSoldCount(product)} {isFr ? 'vendus' : 'sold'}
-                  </div>
-                </>
-              ) : (
-                <div className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5">
-                  <span>{getSoldCount(product)} {isFr ? 'vendus' : 'sold'}</span>
-                  {reviews.length > 0 && reviews.length !== "0.0" && (
-                    <span className="flex items-center gap-0.5 text-amber-500">
-                      <span>⭐</span>
-                      <span>{averageRating}</span>
-                    </span>
-                  )}
-                </div>
-              )}
+            <div>
+              {/* Price Row */}
+              <div className="flex items-baseline gap-1.5 text-left mb-3.5">
+                <span className="text-base font-black text-slate-900 dark:text-white">
+                  {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
+                </span>
+                {product.original_price && product.original_price > product.price && (
+                  <span className="text-xs text-slate-400 line-through font-bold">
+                    {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
+                  </span>
+                )}
+              </div>
+
+              {/* Add to Cart Button */}
+              <button 
+                onClick={handleAddToCart}
+                className="w-full bg-[#1e5cff] hover:bg-[#1554C0] text-white font-black text-[11px] py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer select-none"
+              >
+                <ShoppingCart size={12} fill="currentColor" />
+                <span>{isFr ? 'Ajouter' : 'Add to Cart'}</span>
+              </button>
             </div>
           </div>
         </motion.div>
