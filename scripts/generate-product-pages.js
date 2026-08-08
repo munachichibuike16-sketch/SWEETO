@@ -54,13 +54,15 @@ async function generate() {
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${metaImageUrl}" />
   <meta property="og:image:secure_url" content="${metaImageUrl}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="628" />
   <meta property="og:url" content="${shareUrl}" />
   <meta property="og:type" content="product" />
   <meta property="og:site_name" content="SWEETO" />
   <meta itemprop="name" content="${product.name} | SWEETO">
   <meta itemprop="description" content="${description}">
   <meta itemprop="image" content="${metaImageUrl}">
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${product.name} | SWEETO" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${metaImageUrl}" />
