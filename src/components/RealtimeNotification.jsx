@@ -19,9 +19,9 @@ const RealtimeNotification = () => {
   return (
     <AnimatePresence>
       {realtimeNotification && (
-        <div className="fixed top-24 right-4 z-[9999] w-full max-w-sm px-4 md:px-0">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0 z-[9999] w-[92%] max-w-sm px-0">
           <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.9, rotateX: -15 }}
+            initial={{ opacity: 0, y: -80, scale: 0.9, rotateX: -15 }}
             animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
             exit={{ opacity: 0, y: -30, scale: 0.95, filter: 'blur(5px)' }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}

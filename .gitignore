@@ -45,4 +45,5 @@ Thumbs.db
 scratch/
 update_admin.js
 update_admin_supabase.js
+.tmp.driveupload/
 

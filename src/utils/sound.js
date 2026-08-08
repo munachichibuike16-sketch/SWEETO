@@ -134,3 +134,28 @@ export const playSound = (type = 'chime') => {
     console.warn('Audio synthesis failed:', err);
   }
 };
+
+// Auto-unlock Web Audio API on first user gesture (bypass mobile browser suspension)
+if (typeof window !== 'undefined') {
+  const unlock = () => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          // Play silent oscillator node to initialize audio hardware
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.001, ctx.currentTime);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(0);
+          osc.stop(0.01);
+        }).catch(() => {});
+      }
+    } catch (e) {}
+    document.removeEventListener('click', unlock);
+    document.removeEventListener('touchstart', unlock);
+  };
+  document.addEventListener('click', unlock);
+  document.addEventListener('touchstart', unlock);
+}

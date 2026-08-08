@@ -381,6 +381,8 @@ export const StoreProvider = ({ children }) => {
           // Keep max 50 notifications
           if (stored.length > 50) stored.length = 50;
           localStorage.setItem('product_notifications', JSON.stringify(stored));
+          // Notify headers to recalculate unread badge count immediately
+          window.dispatchEvent(new Event('notifications_updated'));
         }
       } catch (e) { console.warn('Failed to persist notification:', e); }
     };
