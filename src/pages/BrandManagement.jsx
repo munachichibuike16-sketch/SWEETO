@@ -9,7 +9,7 @@ import { apiFetch, isLocalHost } from '../utils/api';
 import { formatDbError } from '../utils/errorHelper';
 
 const EMPTY = { name: '', description: '', logo_url: '', website: '' };
-const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
+const inp = 'w-full px-5 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-[#1F6FEB] focus:bg-white dark:focus:bg-slate-900 transition-all outline-none text-slate-900 dark:text-white font-medium';
 const lbl = 'flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 ml-1';
 
 export default function BrandManagement() {
@@ -148,12 +148,12 @@ export default function BrandManagement() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-500"><Award size={20}/></div>
+            <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-[#1F6FEB]"><Award size={20}/></div>
             Brand Management
           </h2>
           <p className="text-slate-500 text-sm font-medium mt-1 ml-14">{brands.length} brands in your store</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-purple-500/20">
+        <button onClick={openAdd} className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-[#1F6FEB] to-[#1554C0] text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-blue-500/20">
           <Plus size={16}/> New Brand
         </button>
       </div>
@@ -162,14 +162,14 @@ export default function BrandManagement() {
         {/* Search & Header Stats */}
         <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="relative w-full md:w-96 group">
-            <div className="absolute inset-0 bg-purple-500/10 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity rounded-full"></div>
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-500 transition-colors pointer-events-none" size={18}/>
+            <div className="absolute inset-0 bg-blue-500/10 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity rounded-full"></div>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#1F6FEB] transition-colors pointer-events-none" size={18}/>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search brands by name…"
-              className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] text-sm outline-none focus:ring-2 focus:ring-purple-500 font-bold text-slate-900 dark:text-white transition-all shadow-sm group-hover:bg-white dark:group-hover:bg-slate-900"/>
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-[1.5rem] text-sm outline-none focus:ring-2 focus:ring-[#1F6FEB] font-bold text-slate-900 dark:text-white transition-all shadow-sm group-hover:bg-white dark:group-hover:bg-slate-900"/>
           </div>
           <div className="flex gap-4">
-            <div className="px-5 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-2xl border border-purple-100 dark:border-purple-800/30">
-               <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 block mb-0.5">Total Brands</span>
+            <div className="px-5 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30">
+               <span className="text-[10px] font-black uppercase tracking-widest text-[#1F6FEB] dark:text-blue-400 block mb-0.5">Total Brands</span>
                <span className="text-xl font-black text-slate-900 dark:text-white">{brands.length}</span>
             </div>
           </div>
@@ -177,21 +177,21 @@ export default function BrandManagement() {
 
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center px-6">
-            <div className="w-24 h-24 bg-purple-50 dark:bg-purple-900/20 rounded-3xl flex items-center justify-center mb-6 rotate-3"><Award className="text-purple-400" size={40}/></div>
+            <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-3xl flex items-center justify-center mb-6 rotate-3"><Award className="text-[#1F6FEB]" size={40}/></div>
             <p className="text-slate-900 dark:text-white font-black text-xl mb-2">{search ? 'No matches found.' : 'Your Brand Portfolio is Empty'}</p>
             {!search && <><p className="text-slate-500 text-sm mb-10 max-w-xs">Start building your store's identity by adding your first luxury brand.</p>
-            <button onClick={openAdd} className="flex items-center gap-3 px-8 py-4 bg-purple-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-purple-600 transition-all shadow-xl shadow-purple-500/20"><Plus size={18}/>Initialize Brand</button></>}
+            <button onClick={openAdd} className="flex items-center gap-3 px-8 py-4 bg-[#1F6FEB] text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-[#1554C0] transition-all shadow-xl shadow-blue-500/20"><Plus size={18}/>Initialize Brand</button></>}
           </div>
         ) : (
           <div className="p-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filtered.map((b, i) => (
               <motion.div key={b.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
-                className="group relative bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/10 rounded-[2rem] p-8 hover:bg-white dark:hover:bg-slate-900 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/10 flex flex-col items-center text-center">
+                className="group relative bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/10 rounded-[2rem] p-8 hover:bg-white dark:hover:bg-slate-900 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col items-center text-center">
                 
                 {/* Logo Showcase */}
                 <div className="relative w-32 h-32 mb-6 group-hover:scale-110 transition-transform duration-700 ease-out">
                   {/* Outer Glow Overlay */}
-                  <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                   
                   {/* Logo Container */}
                   <div className="relative w-full h-full bg-white dark:bg-slate-950 rounded-full border border-slate-100 dark:border-slate-800 shadow-xl flex items-center justify-center p-6 overflow-hidden">
@@ -208,7 +208,7 @@ export default function BrandManagement() {
                   
                   {/* Action Bubbles (Floating on hover) */}
                   <div className="absolute -right-2 -top-2 flex flex-col gap-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
-                    <button onClick={() => openEdit(b)} className="w-10 h-10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 hover:bg-purple-500 hover:text-white transition-colors"><Edit size={16}/></button>
+                    <button onClick={() => openEdit(b)} className="w-10 h-10 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 hover:bg-[#1F6FEB] hover:text-white transition-colors"><Edit size={16}/></button>
                     <button onClick={() => setConfirmDel({ id: b.id, name: b.name })} disabled={deletingId === b.id}
                       className="w-10 h-10 bg-white dark:bg-slate-800 text-red-500 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 hover:bg-red-500 hover:text-white transition-colors">
                       {deletingId === b.id ? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16}/>}
@@ -220,7 +220,7 @@ export default function BrandManagement() {
                 <div className="space-y-3 w-full">
                   <div className="flex flex-col items-center">
                     <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-[0.1em] text-xl leading-tight">{b.name}</h3>
-                    <div className="h-0.5 w-10 bg-gradient-to-r from-purple-500 to-transparent mt-2 group-hover:w-20 transition-all duration-500"></div>
+                    <div className="h-0.5 w-10 bg-gradient-to-r from-[#1F6FEB] to-transparent mt-2 group-hover:w-20 transition-all duration-500"></div>
                   </div>
                   
                   <div className="min-h-[3rem]">
@@ -235,7 +235,7 @@ export default function BrandManagement() {
 
                   {b.website && (
                     <a href={b.website} target="_blank" rel="noopener noreferrer" 
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 hover:bg-purple-500/10 rounded-xl text-[10px] font-black text-slate-500 hover:text-purple-500 uppercase tracking-widest transition-all">
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-500/10 rounded-xl text-[10px] font-black text-slate-500 hover:text-[#1F6FEB] uppercase tracking-widest transition-all">
                       <Search size={12}/> Visit Website
                     </a>
                   )}
@@ -331,7 +331,7 @@ export default function BrandManagement() {
               </div>
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-purple-500/20 active:scale-95 flex items-center justify-center disabled:opacity-50">
+            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-gradient-to-r from-[#1F6FEB] to-[#1554C0] text-white font-black uppercase tracking-widest text-sm rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center disabled:opacity-50">
               {isSubmitting ? <Loader2 size={20} className="animate-spin"/> : editingId ? 'Update Brand' : 'Save Brand'}
             </button>
 

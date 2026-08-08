@@ -1,158 +1,337 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useStore } from '../contexts/StoreContext';
-import { ArrowRight, Truck } from 'lucide-react';
 
-export default function MobileBottomBanner({ settings, lang, t_smart }) {
+const OFFER_MS = (((6 * 24 + 23) * 60 + 41) * 60 + 32) * 1000;
+const padTwo = (n) => String(n).padStart(2, "0");
+
+const CSS = `
+.mb-banner-stage {
+  font-family: "Nunito", sans-serif;
+  width: 100%;
+  display: block;
+  padding: 16px 0;
+}
+
+/* ---------- banner ---------- */
+.mb-banner {
+  position: relative;
+  width: 100%;
+  background: #0b0f16;
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 38px 24px;
+  box-shadow: 0 25px 60px -25px rgba(5, 10, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.mb-banner-logo {
+  position: absolute;
+  top: 50%;
+  right: -10%;
+  width: 58%;
+  transform: translateY(-50%);
+  mix-blend-mode: screen;
+  opacity: .5;
+  pointer-events: none;
+  user-select: none;
+  animation: mbLogoDrift 9s ease-in-out infinite;
+}
+@keyframes mbLogoDrift {
+  50% { transform: translateY(-52%) scale(1.03); }
+}
+.mb-banner-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, #0b0f16 35%, rgba(11, 15, 22, 0.6) 65%, rgba(11, 15, 22, 0.1) 90%);
+}
+.mb-banner-shade::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 0% 0%, rgba(11, 15, 22, 0.35), transparent 55%);
+}
+
+.mb-content {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  text-align: left;
+}
+.mb-content > * {
+  animation: mbRiseIn .7s cubic-bezier(.22, 1, .36, 1) both;
+}
+.mb-content > *:nth-child(2) { animation-delay: .08s }
+.mb-content > *:nth-child(3) { animation-delay: .16s }
+.mb-content > *:nth-child(4) { animation-delay: .24s }
+.mb-content > *:nth-child(5) { animation-delay: .32s }
+@keyframes mbRiseIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- badge ---------- */
+.mb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1F6FEB;
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px -6px rgba(31, 111, 235, 0.5);
+  text-transform: uppercase;
+}
+
+.mb-title {
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  font-size: 1.75rem;
+  margin: 18px 0 10px;
+  line-height: 1.25;
+}
+.mb-sub {
+  color: #c3cad2;
+  font-size: .88rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+/* ---------- countdown ---------- */
+.mb-timer {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.mb-t-box {
+  min-width: 70px;
+  padding: 12px 8px 10px;
+  text-align: center;
+  background: rgba(52, 58, 66, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.5);
+}
+.mb-t-num {
+  display: block;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mb-t-num.pop {
+  animation: mbPop .3s ease;
+}
+@keyframes mbPop {
+  40% { transform: scale(1.16); }
+}
+.mb-t-lbl {
+  display: block;
+  margin-top: 5px;
+  color: #aeb6bf;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+/* ---------- buttons ---------- */
+.mb-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+.mb-btn {
+  font-family: "Nunito", sans-serif;
+  cursor: pointer;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: .88rem;
+  padding: 14px 24px;
+  transition: transform .25s, box-shadow .25s, background .25s, border-color .25s;
+  flex: 1;
+  text-align: center;
+  border: none;
+}
+.mb-btn-primary {
+  color: #fff;
+  background: #1F6FEB;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset, 0 8px 25px -6px rgba(31, 111, 235, 0.6);
+}
+.mb-btn-primary:hover {
+  transform: translateY(-2px);
+  background: #1554C0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.16) inset, 0 12px 30px -6px rgba(31, 111, 235, 0.7);
+}
+.mb-btn-primary .arr {
+  display: inline-block;
+  transition: transform .25s;
+}
+.mb-btn-primary:hover .arr {
+  transform: translateX(4px);
+}
+.mb-btn-ghost {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.mb-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* ---------- toast ---------- */
+.mb-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translate(-50%, 90px);
+  z-index: 2000;
+  background: #161a22;
+  color: #fff;
+  font-weight: 700;
+  font-size: .8rem;
+  padding: 11px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: .4s cubic-bezier(.22, 1, .36, 1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.mb-toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+.mb-toast b {
+  color: #60a5fa;
+}
+`;
+
+export default function MobileBottomBanner({ settings }) {
   const navigate = useNavigate();
-  const { products } = useStore();
-
+  const { lang } = useLanguage();
+  
   const isEnabled = settings?.mobile_bottom_banner_enabled !== false && settings?.mobile_bottom_banner_enabled !== 'false';
-  const deals = products?.filter(p => p.status === 'active' && p.stock > 0 && (Number(p.is_daily_deal) === 1 || p.is_daily_deal === true || String(p.is_daily_deal) === '1' || String(p.is_daily_deal) === 'true')) || [];
-
-  const [timeLeft, setTimeLeft] = useState(() => {
+  
+  const [endTime] = useState(() => {
     let target = Number(settings?.mobile_bottom_banner_target_time);
     if (!target || target - Date.now() <= 0) {
-      target = Date.now() + 16 * 3600 * 1000;
+      return Date.now() + OFFER_MS;
     }
-    const diff = target - Date.now();
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    return { hours: h, minutes: m, seconds: s, expired: false };
+    return target;
   });
 
+  const [msLeft, setMsLeft] = useState(() => Math.max(0, endTime - Date.now()));
+  const [toast, setToast] = useState({ node: null, show: false });
+  const toastTimer = useRef(null);
+
+  /* Live countdown loop */
   useEffect(() => {
-    let target = Number(settings?.mobile_bottom_banner_target_time);
-    if (!target || target - Date.now() <= 0) {
-      target = Date.now() + 16 * 3600 * 1000;
-    }
-    
-    const updateTimer = () => {
-      const diff = target - Date.now();
-      if (diff <= 0) {
-        target = Date.now() + 16 * 3600 * 1000;
-        return false;
-      }
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setTimeLeft({ hours: h, minutes: m, seconds: s, expired: false });
-      return false;
-    };
+    const tickId = setInterval(() => {
+      setMsLeft(Math.max(0, endTime - Date.now()));
+    }, 250);
+    return () => clearInterval(tickId);
+  }, [endTime]);
 
-    updateTimer();
-    const timer = setInterval(() => {
-      updateTimer();
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [settings?.mobile_bottom_banner_target_time, settings?.mobile_bottom_banner_hours, settings?.mobile_bottom_banner_minutes, settings?.mobile_bottom_banner_seconds]);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   if (!isEnabled) return null;
 
+  const days  = Math.floor(msLeft / 864e5);
+  const hours = Math.floor(msLeft / 36e5) % 24;
+  const mins  = Math.floor(msLeft / 6e4) % 60;
+  const secs  = Math.floor(msLeft / 1e3) % 60;
+
+  const timeUnits = [
+    { value: days,  label: lang === 'fr' ? "JOURS" : "DAYS"  },
+    { value: hours, label: lang === 'fr' ? "HEURES" : "HOURS" },
+    { value: mins,  label: "MINS"  },
+    { value: secs,  label: "SECS"  },
+  ];
+
+  const showToast = (node, path) => {
+    setToast({ node, show: true });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => {
+      setToast((t) => ({ ...t, show: false }));
+      if (path) navigate(path);
+    }, 1500);
+  };
+
   return (
-    <section className="-mx-4 px-4 pt-4 pb-6 select-none block lg:hidden w-[calc(100%+32px)]">
-      <div 
-        className="relative w-full rounded-2xl bg-slate-900/95 backdrop-blur-3xl text-white overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.25)] border border-white/10 flex flex-col items-center p-6 select-none text-center"
-      >
-        {/* Subtle Orange/Golden radial glow */}
-        <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#ffc72c]/10 to-transparent blur-2xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[120px] h-[120px] bg-[#ff5722]/5 rounded-full blur-[60px] pointer-events-none" />
+    <div className="mb-banner-stage block lg:hidden">
+      <style>{CSS}</style>
 
-        {/* Badge */}
-        <div className="flex items-center gap-1 bg-[#f5c71a] text-slate-950 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider select-none mb-3 shadow-[0_4px_12px_rgba(245,199,26,0.25)]">
-          <span>⚡</span>
-          <span>{lang === 'fr' ? 'Super Offres Choix' : 'Choice Super Deals'}</span>
-        </div>
+      <section className="mb-banner">
+        <img
+          className="mb-banner-logo"
+          src="https://image.qwenlm.ai/public_source/8ca7834a-3f50-4eb5-b927-73a76f237ff4/100195490-db12-4502-abb0-045ee4804108.png"
+          alt="Banner Brand"
+        />
+        <div className="mb-banner-shade" />
 
-        {/* Heading */}
-        <h3 className="text-base sm:text-lg font-black text-white leading-tight max-w-xs mb-1">
-          {lang === 'fr' ? (
-            <>Jusqu'à <span className="text-[#f5c71a]">-70%</span> sur les essentiels Tech</>
-          ) : (
-            <>Up to <span className="text-[#f5c71a]">70% OFF</span> Tech Essentials</>
-          )}
-        </h3>
+        <div className="mb-content">
+          <span className="mb-badge">🔥 {lang === 'fr' ? 'OFFRE LIMITÉE' : 'LIMITED TIME OFFER'}</span>
 
-        {/* Subheading */}
-        <p className="text-[8px] sm:text-[9px] text-white/60 max-w-xs mb-4 font-medium leading-normal">
-          {lang === 'fr' 
-            ? "Livraison gratuite dès 10$ • Garantie en 5 jours" 
-            : "Free shipping over $10 • Guaranteed 5-Day Delivery"
-          }
-        </p>
+          <h1 className="mb-title">{lang === 'fr' ? 'Catégories Pour Vous' : 'Categories For You'}</h1>
+          <p className="mb-sub">
+            {lang === 'fr' 
+              ? 'Dépêchez-vous! Profitez de réductions allant jusqu’à 50% sur notre collection.' 
+              : 'Hurry! Take advantage of discounts of up to 50% on our collection.'}
+          </p>
 
-        {/* Deal Products Horizontal Scroll */}
-        {deals.length > 0 && (
-          <div className="w-full max-w-full overflow-x-auto no-scrollbar flex gap-3 pb-2 mb-4 snap-x px-1">
-            {deals.slice(0, 8).map(product => {
-              const img = product.image_url || product.image || (product.images ? (typeof product.images === 'string' ? (() => { try { return JSON.parse(product.images)[0]; } catch(e) { return null; } })() : product.images[0]) : null) || '/placeholder.png';
-              return (
-                <div 
-                  key={product.id} 
-                  onClick={() => navigate(`/product/${product.id}`)}
-                  className="min-w-[100px] w-[100px] shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-2 flex flex-col items-center gap-1.5 cursor-pointer snap-start hover:bg-white/10 transition-colors shadow-lg"
-                >
-                  <div className="w-full aspect-square rounded-xl overflow-hidden bg-white/5">
-                    <img src={img} alt={product.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-full flex flex-col items-center px-1">
-                    <span className="text-[9px] font-medium text-white/90 line-clamp-1 text-center w-full leading-tight">{product.name}</span>
-                    <span className="text-[10px] font-black text-[#f5c71a] mt-0.5">{parseFloat(product.price).toLocaleString()} {settings?.currency || 'FCFA'}</span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mb-timer" aria-label="Offer countdown">
+            {timeUnits.map((unit) => (
+              <div className="mb-t-box" key={unit.label}>
+                <span className="mb-t-num pop" key={unit.value}>{padTwo(unit.value)}</span>
+                <span className="mb-t-lbl">{unit.label}</span>
+              </div>
+            ))}
           </div>
-        )}
 
-        {/* Action Buttons */}
-        <div className="mb-4 w-full max-w-[240px]">
-          <button 
-            onClick={() => navigate('/deals')}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-[#ff5722] to-[#ff2a5f] text-white rounded-full font-black text-[10px] uppercase tracking-wider border-none flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer shadow-lg shadow-[#ff2a5f]/25"
-          >
-            <span>{lang === 'fr' ? 'Acheter Maintenant' : 'Shop Deals Now'}</span>
-            <ArrowRight size={12} className="stroke-[3]" />
-          </button>
-        </div>
-
-        {/* Countdown Timer */}
-        <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 w-full max-w-[240px] flex flex-col items-center gap-1.5 shadow-md">
-          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#f5c71a]">
-            {lang === 'fr' ? 'LA VENTE FLASH SE TERMINE DANS' : 'FLASH SALE ENDS IN'}
-          </span>
-          
-          <div className="flex items-center gap-2 text-white select-none">
-            <div className="flex flex-col items-center">
-              <div className="bg-[#0b0f19] border border-white/5 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-mono font-black text-[#f5c71a] shadow-inner">
-                {String(timeLeft.hours).padStart(2, '0')}
-              </div>
-              <span className="text-[6px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">HRS</span>
-            </div>
-            
-            <span className="text-xs font-black text-[#f5c71a] -mt-2.5">:</span>
-            
-            <div className="flex flex-col items-center">
-              <div className="bg-[#0b0f19] border border-white/5 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-mono font-black text-[#f5c71a] shadow-inner">
-                {String(timeLeft.minutes).padStart(2, '0')}
-              </div>
-              <span className="text-[6px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">MIN</span>
-            </div>
-            
-            <span className="text-xs font-black text-[#f5c71a] -mt-2.5">:</span>
-            
-            <div className="flex flex-col items-center">
-              <div className="bg-[#0b0f19] border border-white/5 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-mono font-black text-red-500 shadow-inner animate-pulse">
-                {String(timeLeft.seconds).padStart(2, '0')}
-              </div>
-              <span className="text-[6px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">SEC</span>
-            </div>
+          <div className="mb-actions">
+            <button
+              type="button"
+              className="mb-btn mb-btn-primary"
+              onClick={() => showToast(
+                lang === 'fr' 
+                  ? <>🛍️ Ouverture des offres avec <b>remise supplémentaire</b>…</> 
+                  : <>🛍️ Opening deals with <b>extra discount</b>…</>,
+                '/deals'
+              )}
+            >
+              {lang === 'fr' ? 'Acheter' : 'Shop Now'} <span className="arr">→</span>
+            </button>
+            <button
+              type="button"
+              className="mb-btn mb-btn-ghost"
+              onClick={() => showToast(
+                lang === 'fr' 
+                  ? <>🧭 Exploration de <b>toutes les catégories</b>…</> 
+                  : <>🧭 Browsing <b>all categories</b> for you…</>,
+                '/'
+              )}
+            >
+              {lang === 'fr' ? 'Voir Tout' : 'View All'}
+            </button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <div className={`mb-toast${toast.show ? " show" : ""}`}>{toast.node}</div>
+    </div>
   );
 }

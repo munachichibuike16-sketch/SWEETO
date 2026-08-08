@@ -911,15 +911,6 @@ export const StoreProvider = ({ children }) => {
     }
 
     fetchStoreData();
-    // Only poll when NOT on the admin/dashboard pages to prevent input focus loss
-    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
-    if (isAdminPage) return; // No polling on admin pages
-    
-    // Poll every 30 seconds for near real-time updates on the storefront
-    const pollInterval = setInterval(() => {
-      fetchStoreData(true);
-    }, 30000);
-    return () => clearInterval(pollInterval);
   }, []);
 
   // Subscribe to real-time changes in Supabase products table

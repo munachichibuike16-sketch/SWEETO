@@ -32,38 +32,50 @@ const IconBox = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="non
 const IconGear = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>);
 const IconFlame = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>);
 const IconSparkles = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l2.4 5.4L20 11l-5.6 2.6L12 19l-2.4-5.4L4 11l5.6-2.6L12 3z" /><path d="M19 3v4M21 5h-4M5 17v4M7 19H3" /></svg>);
+const IconShoppingBag = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>);
+const IconInfo = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>);
+const IconFileText = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg>);
+const IconMapPin = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>);
 
 /* ---------------- Styles ---------------- */
 const css = `
-:root{--bg:#f4f5fb;--ink:#151735;--muted:#69708c;--line:#e6e8f4;--accent:#5046e5;--accent-soft:#eeeaff;--danger:#e11d48;--purple:#7c5cf5;--blue:#1f7cf6}
-.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:14px 24px}
+:root{--bg:#f4f5fb;--ink:#0A2540;--muted:#5A6B84;--line:#D9E3F2;--accent:#1F6FEB;--accent-dark:#1554C0;--accent-soft:#eef6ff;--danger:#e11d48;--purple:#1F6FEB;--blue:#1F6FEB}
+.header-wrapper{position:relative;width:100%;height:65px;z-index:100}
+.header{position:fixed;top:0;left:0;right:0;width:100%;height:65px;z-index:100;background:rgba(255,255,255,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);box-shadow:0 4px 20px rgba(10,37,64,0.04);display:flex;align-items:center}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:0 20px;width:100%;box-sizing:border-box}
 .logo{display:flex;align-items:baseline;gap:3px;cursor:pointer;user-select:none;flex-shrink:0}
-.logo-s{font-family:'Sora',sans-serif;font-weight:800;font-style:italic;font-size:27px;color:var(--blue);line-height:1;text-shadow:0 2px 5px rgba(31,124,246,.35)}
-.logo-text{font-family:'Sora',sans-serif;font-weight:800;font-style:italic;font-size:20px;color:#0b0d12;letter-spacing:-.01em;line-height:1;white-space:nowrap;text-shadow:0 2px 4px rgba(0,0,0,.16)}
-.nav-btn{display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;transition:.2s;flex-shrink:0}
+.logo-s{font-family:'Sora',sans-serif;font-weight:800;font-style:italic;font-size:26px;color:var(--blue);line-height:1;text-shadow:0 2px 5px rgba(31,111,235,.35)}
+.logo-text{font-family:'Sora',sans-serif;font-weight:800;font-style:italic;font-size:19px;color:#0A2540;letter-spacing:-.01em;line-height:1;white-space:nowrap}
+.nav-btn{display:flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;transition:.2s;flex-shrink:0;white-space:nowrap}
 .nav-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
-.nav-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(80,70,229,.3)}
-.nav-btn.deal:hover{border-color:#f97316;color:#f97316}
-.nav-btn.deal.active{background:linear-gradient(135deg,#f97316,#e11d48);border-color:transparent;box-shadow:0 6px 16px rgba(225,29,72,.3)}
-.nav-btn.new:hover{border-color:#0ea5e9;color:#0ea5e9}
-.nav-btn.new.active{background:linear-gradient(135deg,#0ea5e9,#6366f1);border-color:transparent;box-shadow:0 6px 16px rgba(14,165,233,.3)}
-.search-wrap{flex:1;max-width:640px;display:flex;margin-left:auto;min-width:180px}
-.search-bar{flex:1;display:flex;align-items:center;gap:2px;padding:0 8px 0 18px;background:#edf0f5;border-radius:12px 0 0 12px;height:48px;border:1.5px solid transparent;transition:.2s}
-.search-bar:focus-within{background:#fff;border-color:var(--purple);box-shadow:0 0 0 4px rgba(124,92,245,.14)}
-.search-input{flex:1;min-width:40px;border:none;background:transparent;outline:none;font:inherit;font-size:15px;color:var(--ink)}
+.nav-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(31,111,235,.25)}
+.nav-btn.deal:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.nav-btn.deal.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(31,111,235,.25)}
+.nav-btn.new:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.nav-btn.new.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(31,111,235,.25)}
+.search-wrap{flex:1;max-width:560px;display:flex;margin-left:auto;min-width:120px;position:relative}
+.search-suggestions-dropdown{position:absolute;top:48px;left:0;right:0;background:#ffffff;border:1.5px solid var(--line);border-radius:14px;box-shadow:0 12px 35px rgba(10,37,64,0.1);z-index:1000;max-height:380px;overflow-y:auto;padding:8px;box-sizing:border-box}
+.search-suggestion-item{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:all 0.15s ease;text-decoration:none}
+.search-suggestion-item:hover{background:var(--accent-soft)}
+.suggestion-thumb{width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#f8fafc;flex-shrink:0}
+.suggestion-info{flex:1;min-width:0;text-align:left}
+.suggestion-name{font-size:13px;font-weight:700;color:var(--ink);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggestion-price{font-size:11px;font-weight:700;color:var(--accent);margin:2px 0 0 0}
+.search-bar{flex:1;display:flex;align-items:center;gap:2px;padding:0 6px 0 14px;background:#edf0f5;border-radius:12px 0 0 12px;height:42px;border:1.5px solid transparent;transition:.2s;min-width:0}
+.search-bar:focus-within{background:#fff;border-color:var(--accent);box-shadow:0 0 0 4px rgba(31,111,235,.12)}
+.search-input{flex:1;min-width:30px;border:none;background:transparent;outline:none;font:inherit;font-size:14px;color:var(--ink)}
 .search-input::placeholder{color:#9aa0b5}
-.sb-icon{border:none;background:none;color:#8a90a8;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex-shrink:0}
-.sb-icon:hover{color:var(--purple);background:#e4defc}
+.sb-icon{border:none;background:none;color:#8a90a8;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex-shrink:0}
+.sb-icon:hover{color:var(--accent);background:#eef6ff}
 .sb-icon.listening{color:#fff;background:var(--danger);animation:pulse 1.1s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(225,29,72,.5)}70%{box-shadow:0 0 0 10px rgba(225,29,72,0)}100%{box-shadow:0 0 0 0 rgba(225,29,72,0)}}
-.search-btn{display:flex;align-items:center;gap:9px;padding:0 26px;height:48px;border:none;background:var(--purple);color:#fff;font:inherit;font-size:15px;font-weight:700;border-radius:0 12px 12px 0;cursor:pointer;transition:.2s;flex-shrink:0}
-.search-btn:hover{background:#6a48e8}
+.search-btn{display:flex;align-items:center;gap:7px;padding:0 20px;height:42px;border:none;background:var(--accent);color:#fff;font:inherit;font-size:14px;font-weight:700;border-radius:0 12px 12px 0;cursor:pointer;transition:.2s;flex-shrink:0;white-space:nowrap}
+.search-btn:hover{background:var(--accent-dark)}
 .search-btn:active{transform:scale(.97)}
-.icon-btn{position:relative;width:42px;height:42px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;flex-shrink:0}
+.icon-btn{position:relative;width:40px;height:40px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;flex-shrink:0}
 .icon-btn:hover{border-color:var(--accent);color:var(--accent)}
 .icon-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.badge{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
 .badge.red{background:var(--danger)}
 .dd-wrap{position:relative}
 .dropdown{position:absolute;right:0;top:calc(100% + 12px);width:330px;max-width:calc(100vw - 24px);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(15,18,40,.16);z-index:80;overflow:hidden}
@@ -85,51 +97,161 @@ const css = `
 .notif-x{border:none;background:none;color:#b3b8ca;cursor:pointer;position:absolute;top:10px;right:8px;display:flex;padding:3px;border-radius:6px}
 .notif-x:hover{color:var(--danger);background:#fdecef}
 .notif-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:13px}
-.profile-btn{width:42px;height:42px;border-radius:50%;overflow:hidden;border:2px solid var(--line);padding:0;cursor:pointer;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent);transition:.2s;flex-shrink:0}
+.profile-btn{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid var(--line);padding:0;cursor:pointer;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent);transition:.2s;flex-shrink:0}
 .profile-btn:hover{border-color:var(--accent)}
 .profile-btn img{width:100%;height:100%;object-fit:cover}
-.profile-head{display:flex;gap:12px;align-items:center;padding:16px;background:linear-gradient(135deg,#6d5ef0,#8b5cf6);color:#fff}
-.avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.75);background:#fff;flex-shrink:0}
-.p-name{font-weight:700;font-size:14px;font-family:'Sora',sans-serif}
-.p-mail{font-size:12px;opacity:.85;margin-top:2px}
-.menu-list{padding:8px}
-.menu-item{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border:none;background:none;border-radius:10px;font:inherit;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;transition:.15s;text-align:left}
-.menu-item:hover{background:#f2f1fd;color:var(--accent)}
-.menu-item.danger{color:var(--danger)}
-.menu-item.danger:hover{background:#fdecef;color:var(--danger)}
-.menu-sep{height:1px;background:var(--line);margin:6px 10px}
+.profile-head-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px 18px;
+  background: transparent;
+}
+.premium-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1F6FEB, #1554C0);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 26px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(31, 111, 235, 0.25);
+  user-select: none;
+}
+.premium-name {
+  font-weight: 800;
+  font-size: 16px;
+  color: #0f172a;
+  font-family: 'Sora', sans-serif;
+}
+.dark .premium-name {
+  color: #f8fafc;
+}
+.premium-mail {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.dark .premium-mail {
+  color: #94a3b8;
+}
+.premium-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0 16px 8px;
+}
+.dark .premium-divider {
+  background: rgba(255, 255, 255, 0.08);
+}
+.menu-list {
+  padding: 8px;
+}
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: .15s;
+  text-align: left;
+}
+.dark .menu-item {
+  color: #cbd5e1;
+}
+.menu-item svg {
+  color: #1F6FEB !important;
+  flex-shrink: 0;
+  width: 18px !important;
+  height: 18px !important;
+}
+.dark .menu-item svg {
+  color: #60a5fa !important;
+}
+.menu-item:hover {
+  background: #eef6ff;
+  color: #1F6FEB;
+}
+.dark .menu-item:hover {
+  background: rgba(31, 111, 235, 0.12);
+  color: #60a5fa;
+}
+.menu-sep {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 10px;
+}
 .vs-card{position:fixed;z-index:86;left:50%;top:50%;transform:translate(-50%,-50%);width:620px;max-width:calc(100vw - 32px);max-height:86vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(15,18,40,.3)}
 .vs-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
 .vs-head b{font-family:'Sora',sans-serif;font-size:15px}
 .vs-body{display:grid;grid-template-columns:210px 1fr;gap:18px;padding:20px}
 .vs-img-wrap{position:relative;border-radius:14px;overflow:hidden;background:#eceef5;aspect-ratio:1}
 .vs-img-wrap img{width:100%;height:100%;object-fit:cover}
-.scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--purple),transparent);animation:scan 1.2s linear infinite;box-shadow:0 0 14px rgba(124,92,245,.8)}
+.scan-line{position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scan 1.2s linear infinite;box-shadow:0 0 14px rgba(31,111,235,.8)}
 @keyframes scan{0%{top:0}100%{top:100%}}
 .vs-status{font-size:13px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.spinner{width:14px;height:14px;border:2px solid var(--accent-soft);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.spinner{width:14px;height:14px;border:2px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 .vs-empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:13px;background:#f7f8fc;border:1.5px dashed var(--line);border-radius:12px}
 .vs-foot{padding:0 20px 18px;font-size:11px;color:#a0a6bd;text-align:center}
 .overlay{position:fixed;inset:0;background:rgba(15,18,40,.45);z-index:60;backdrop-filter:blur(2px)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:90;background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.28);white-space:nowrap}
 .toast .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0}
-@media (max-width:640px){
-  .header-inner{flex-wrap:wrap;gap:8px}
-  .search-wrap{order:3;max-width:none;flex-basis:100%;margin-left:0}
-  .nav-btn span{display:none}
-  .nav-btn{padding:0 13px}
-  .logo-s{font-size:21px}
-  .logo-text{font-size:15px}
-  .vs-body{grid-template-columns:1fr}
+
+/* Tablet and Large Tablet Breakpoints */
+@media (max-width: 1200px) {
+  .header-inner { gap: 8px; padding: 10px 16px; }
+  .search-wrap { max-width: 400px; }
+  .nav-btn { padding: 0 10px; font-size: 12px; }
+  .search-btn { padding: 0 14px; }
 }
-@media (max-width:480px){
-  .search-btn span{display:none}
-  .search-btn{padding:0 16px}
+
+@media (max-width: 1080px) {
+  .nav-btn span { display: none; }
+  .nav-btn { padding: 0 10px; width: 40px; justify-content: center; }
+  .search-btn span { display: none; }
+  .search-btn { padding: 0 14px; }
+  .search-wrap { max-width: 320px; }
+}
+
+@media (max-width: 820px) {
+  .header-inner { gap: 6px; padding: 8px 12px; }
+  .logo-text { display: none; }
+  .search-wrap { min-width: 100px; }
+  .search-bar { padding: 0 4px 0 10px; }
+  .search-input { font-size: 13px; }
+}
+
+@media (max-width: 640px) {
+  .header-inner { flex-wrap: wrap; gap: 8px; }
+  .search-wrap { order: 3; max-width: none; flex-basis: 100%; margin-left: 0; }
+  .nav-btn span { display: none; }
+  .nav-btn { padding: 0 10px; }
+  .logo-s { font-size: 21px; }
+  .logo-text { font-size: 15px; display: block; }
+  .vs-body { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .search-btn span { display: none; }
+  .search-btn { padding: 0 14px; }
 }
 `;
 
-export default function DesktopHeader({ activePage = "home", setActivePage, onCartOpen, onSidebarOpen }) {
+export default function DesktopHeader({ activePage = "home", setActivePage, onCartOpen, onSidebarOpen, onNotifOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { settings, products: globalProducts, showToast: globalShowToast } = useStore();
@@ -138,19 +260,87 @@ export default function DesktopHeader({ activePage = "home", setActivePage, onCa
   const { t, t_smart, lang } = useLanguage();
 
   const [currentUser, setCurrentUser] = useState(null);
-  const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFS);
   const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [toast, setToast] = useState(null);
   const [listening, setListening] = useState(false);
   const [imgSearch, setImgSearch] = useState(null);
 
-  const notifRef = useRef(null);
   const profileRef = useRef(null);
   const fileRef = useRef(null);
   const recognitionRef = useRef(null);
   const scanTimerRef = useRef(null);
+  const suggestionsRef = useRef(null);
+
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  // Live Search Suggestions filter
+  useEffect(() => {
+    if (!query.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const trimmed = query.trim().toLowerCase();
+    const filtered = (globalProducts || [])
+      .filter(p => p.status === 'active' && p.name && p.name.toLowerCase().includes(trimmed))
+      .slice(0, 6);
+    setSuggestions(filtered);
+    setShowSuggestions(filtered.length > 0);
+  }, [query, globalProducts]);
+
+  // Click outside suggestions listener
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    const calculateUnread = () => {
+      try {
+        const rawRead = localStorage.getItem('read_notifications');
+        
+        // Mark all initial mock products as read for first-time visitors
+        if (rawRead === null && globalProducts && globalProducts.length > 0) {
+          const allInitialIds = globalProducts.map(p => `new-product-${p.id}`);
+          localStorage.setItem('read_notifications', JSON.stringify(allInitialIds));
+          setUnreadNotifCount(0);
+          return;
+        }
+
+        const readNotifs = rawRead ? JSON.parse(rawRead) : [];
+        const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
+        const deletedNotifs = JSON.parse(localStorage.getItem('deleted_notifications') || '{}');
+        const count = globalProducts.filter(p => p.is_new_arrival).filter(p => {
+          const id = `new-product-${p.id}`;
+          return !readNotifs.includes(id) && !readTimed[id] && !deletedNotifs[id];
+        }).length;
+        setUnreadNotifCount(count);
+      } catch (e) {
+        setUnreadNotifCount(0);
+      }
+    };
+
+    calculateUnread();
+
+    const handleUpdate = () => {
+      calculateUnread();
+    };
+
+    window.addEventListener('notifications_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('notifications_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [globalProducts]);
 
   // If no setActivePage prop is provided, we can fallback to location based
   if (!setActivePage) {
@@ -187,18 +377,38 @@ export default function DesktopHeader({ activePage = "home", setActivePage, onCa
       }
     });
 
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setCurrentUser(session?.user || null);
+    const checkSession = () => {
+      try {
+        const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+        if (session) setCurrentUser(session);
+        else setCurrentUser(null);
+      } catch (e) {
+        setCurrentUser(null);
+      }
     };
-    fetchUser();
+    checkSession();
+    window.addEventListener('storage', checkSession);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUser(session?.user || null);
+      if (session?.user) {
+        const mappedUser = {
+          id: session.user.id,
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
+          email: session.user.email,
+          avatarUrl: session.user.user_metadata?.avatar_url,
+          picture: session.user.user_metadata?.avatar_url
+        };
+        setCurrentUser(mappedUser);
+        localStorage.setItem('sweetohub_session', JSON.stringify(mappedUser));
+      } else {
+        checkSession();
+      }
     });
 
     return () => {
       if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
       subscription.unsubscribe();
+      window.removeEventListener('storage', checkSession);
     };
   }, []);
 
@@ -208,7 +418,6 @@ export default function DesktopHeader({ activePage = "home", setActivePage, onCa
 
   useEffect(() => {
     const onDown = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
       if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
     };
     document.addEventListener("mousedown", onDown);
@@ -230,6 +439,8 @@ export default function DesktopHeader({ activePage = "home", setActivePage, onCa
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('sweetohub_session');
+    setCurrentUser(null);
     setProfileOpen(false);
     showLocalToast(lang === "fr" ? "Déconnexion réussie 👋" : "Logged out successfully 👋");
   };
@@ -310,167 +521,199 @@ export default function DesktopHeader({ activePage = "home", setActivePage, onCa
     setImgSearch(null);
   };
 
-  const markAllRead = () => setNotifications((n) => n.map((x) => ({ ...x, read: true })));
-  const markRead = (id) => setNotifications((n) => n.map((x) => (x.id === id ? { ...x, read: true } : x)));
-  const dismissNotif = (id) => setNotifications((n) => n.filter((x) => x.id !== id));
-  const unreadCount = notifications.filter((n) => !n.read).length;
+
 
   return (
     <div className="w-full">
       <style>{css}</style>
 
       {/* Header */}
-      <header className="header">
-        <div className="header-inner">
-          <div className="logo" onClick={goHome} title="Go to home">
-            <span className="logo-s">S</span>
-            <span className="logo-text">{settings?.shopName || "SWEETO-HUB"}</span>
-          </div>
+      <div className="header-wrapper">
+        <header className="header">
+          <div className="header-inner">
+            <div className="logo" onClick={goHome} title="Go to home">
+              <span className="logo-s">S</span>
+              <span className="logo-text">{settings?.shopName || "SWEETO-HUB"}</span>
+            </div>
 
-          <button className={activePage === "home" ? "nav-btn active" : "nav-btn"} onClick={goHome} title="Home">
-            <IconHome /><span>{t("Home") || "Home"}</span>
-          </button>
-          <button className={activePage === "deals" ? "nav-btn deal active" : "nav-btn deal"} onClick={goDeals} title="Hot deals">
-            <IconFlame /><span>{t("Deals") || "Deals"}</span>
-          </button>
-          <button className={activePage === "new-arrivals" ? "nav-btn new active" : "nav-btn new"} onClick={goNew} title="New arrivals">
-            <IconSparkles /><span>{t("New Arrivals") || "New Arrivals"}</span>
-          </button>
+            <button className={activePage === "home" ? "nav-btn active" : "nav-btn"} onClick={goHome} title="Home">
+              <IconHome /><span>{t("Home") || "Home"}</span>
+            </button>
+            <button className={activePage === "deals" ? "nav-btn deal active" : "nav-btn deal"} onClick={goDeals} title="Hot deals">
+              <IconFlame /><span>{t("Deals") || "Deals"}</span>
+            </button>
+            <button className={activePage === "new-arrivals" ? "nav-btn new active" : "nav-btn new"} onClick={goNew} title="New arrivals">
+              <IconSparkles /><span>{t("New Arrivals") || "New Arrivals"}</span>
+            </button>
 
-          {/* Search bar with camera + voice + search button */}
-          <div className="search-wrap">
-            <div className="search-bar">
-              <input
-                className="search-input"
-                placeholder={lang === "fr" ? "Écouteurs sans fil" : "Wireless Earbuds"}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
-              />
-              <button className="sb-icon" title="Search with camera / image" onClick={() => fileRef.current && fileRef.current.click()}>
-                <IconCamera />
+            {/* Search bar with camera + voice + search button */}
+            <div className="search-wrap" ref={suggestionsRef}>
+              <div className="search-bar">
+                <input
+                  className="search-input"
+                  placeholder={lang === "fr" ? "Écouteurs sans fil" : "Wireless Earbuds"}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { doSearch(); setShowSuggestions(false); } }}
+                />
+                <button type="button" className="sb-icon" title="Search with camera / image" onClick={() => fileRef.current && fileRef.current.click()}>
+                  <IconCamera />
+                </button>
+                <button type="button" className={listening ? "sb-icon listening" : "sb-icon"} title="Voice search" onClick={toggleVoice}>
+                  <IconMic />
+                </button>
+              </div>
+              <button type="button" className="search-btn" onClick={() => { doSearch(); setShowSuggestions(false); }}>
+                <IconSearch /><span>{t_smart("Search")}</span>
               </button>
-              <button className={listening ? "sb-icon listening" : "sb-icon"} title="Voice search" onClick={toggleVoice}>
-                <IconMic />
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageFile} />
+
+              {/* Suggestions Dropdown */}
+              <AnimatePresence>
+                {showSuggestions && suggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.15 }}
+                    className="search-suggestions-dropdown"
+                  >
+                    {suggestions.map((p) => {
+                      const currency = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency === 'USD' ? '$' : (settings?.currency || 'FCFA'));
+                      const formattedPrice = `${Number(p.price || 0).toLocaleString('fr-FR')} ${currency}`;
+                      return (
+                        <div
+                          key={p.id}
+                          className="search-suggestion-item"
+                          onClick={() => {
+                            setShowSuggestions(false);
+                            setQuery("");
+                            navigate(`/product/${p.id}`);
+                          }}
+                        >
+                          <img
+                            src={p.image_url || p.image || (p.images && p.images[0]) || '/hero-banner.png'}
+                            alt={p.name}
+                            className="suggestion-thumb"
+                            onError={(e) => { e.target.onerror = null; e.target.src = '/hero-banner.png'; }}
+                          />
+                          <div className="suggestion-info">
+                            <h4 className="suggestion-name">{p.name}</h4>
+                            <p className="suggestion-price">{formattedPrice}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button 
+              className={activePage === "wishlist" ? "icon-btn active" : "icon-btn"} 
+              onClick={() => { setActivePage("wishlist"); navigate("/wishlist"); }} 
+              title="Show wishlist"
+            >
+              <IconHeart filled={activePage === "wishlist" || wishlist.length > 0} />
+              {wishlist.length > 0 && <span className="badge">{wishlist.length}</span>}
+            </button>
+
+            {/* Notifications */}
+            <div className="dd-wrap">
+              <button className="icon-btn" onClick={onNotifOpen} aria-label="Notifications">
+                <IconBell />
+                {unreadNotifCount > 0 && (
+                  <motion.span key={unreadNotifCount} className="badge red" initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 18 }}>
+                    {unreadNotifCount}
+                  </motion.span>
+                )}
               </button>
             </div>
-            <button className="search-btn" onClick={doSearch}>
-              <IconSearch /><span>{t_smart("Search")}</span>
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageFile} />
-          </div>
 
-          <button 
-            className={activePage === "wishlist" ? "icon-btn active" : "icon-btn"} 
-            onClick={() => { setActivePage("wishlist"); navigate("/wishlist"); }} 
-            title="Show wishlist"
-          >
-            <IconHeart filled={activePage === "wishlist" || wishlist.length > 0} />
-            {wishlist.length > 0 && <span className="badge">{wishlist.length}</span>}
-          </button>
-
-          {/* Notifications */}
-          <div className="dd-wrap" ref={notifRef}>
-            <button className={notifOpen ? "icon-btn active" : "icon-btn"} onClick={() => setNotifOpen((v) => !v)} aria-label="Notifications">
-              <IconBell />
-              {unreadCount > 0 && (
-                <motion.span key={unreadCount} className="badge red" initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 18 }}>
-                  {unreadCount}
-                </motion.span>
-              )}
-            </button>
-            <AnimatePresence>
-              {notifOpen && (
-                <motion.div className="dropdown" initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.18 }}>
-                  <div className="dd-head">
-                    <b>{t("Notifications") || "Notifications"}</b>
-                    {unreadCount > 0 && <button className="link-btn" onClick={markAllRead}>{lang === "fr" ? "Tout marquer" : "Mark all as read"}</button>}
+            {/* Profile */}
+            <div className="dd-wrap" ref={profileRef}>
+              <button className="profile-btn" onClick={() => setProfileOpen((v) => !v)} aria-label="Profile">
+                {currentUser ? (
+                  <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#1F6FEB] to-[#1554C0] flex items-center justify-center text-white font-extrabold text-[15px] shadow-inner">
+                    {(currentUser.name?.[0] || currentUser.user_metadata?.full_name?.[0] || currentUser.email?.[0] || "U").toUpperCase()}
                   </div>
-                  {notifications.length === 0 ? (
-                    <div className="notif-empty">🔔<br />{lang === "fr" ? "Vous êtes à jour !" : "You're all caught up!"}</div>
-                  ) : (
-                    <div className="notif-list">
-                      {notifications.map((n) => (
-                        <div key={n.id} className={n.read ? "notif-item" : "notif-item unread"} onClick={() => markRead(n.id)}>
-                          <span className="notif-ico">{n.ico}</span>
-                          <div>
-                            <div className="notif-title">{n.title}</div>
-                            <div className="notif-text">{n.text}</div>
-                            <div className="notif-time">{n.time}</div>
+                ) : (
+                  <IconUser />
+                )}
+              </button>
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div className="dropdown" initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.18 }}>
+                    {currentUser ? (
+                      <>
+                        <div className="profile-head-premium">
+                          <div className="premium-avatar">
+                            {(currentUser.name?.[0] || currentUser.user_metadata?.full_name?.[0] || currentUser.email?.[0] || "U").toUpperCase()}
                           </div>
-                          <button className="notif-x" aria-label="Dismiss notification" onClick={(e) => { e.stopPropagation(); dismissNotif(n.id); }}>
-                            <IconX />
+                          <div className="premium-name">
+                            {currentUser.name || currentUser.user_metadata?.full_name || "Account User"}
+                          </div>
+                          <div className="premium-mail">
+                            {currentUser.email}
+                          </div>
+                        </div>
+                        <div className="premium-divider" />
+                        <div className="menu-list">
+                          <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/orders"); }}>
+                            <IconShoppingBag />
+                            <span>{lang === "fr" ? "Mes commandes" : "My Orders"}</span>
+                          </button>
+                          <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/settings"); }}>
+                            <IconGear />
+                            <span>{lang === "fr" ? "Paramètres" : "Settings"}</span>
+                          </button>
+                          <button className="menu-item" onClick={handleLogout}>
+                            <IconLogout />
+                            <span>{lang === "fr" ? "Déconnexion" : "Log out"}</span>
+                          </button>
+                          <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/visit"); }}>
+                            <IconInfo />
+                            <span>{lang === "fr" ? "À propos de nous" : "About us"}</span>
+                          </button>
+                          <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/terms"); }}>
+                            <IconFileText />
+                            <span>{lang === "fr" ? "Conditions générales" : "Terms & Conditions"}</span>
+                          </button>
+                          <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/visit"); }}>
+                            <IconMapPin />
+                            <span>{lang === "fr" ? "Nous trouver" : "Find us"}</span>
                           </button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                      </>
+                    ) : (
+                      <div className="menu-list" style={{ padding: 20, textAlign: "center" }}>
+                        <div style={{ width: 52, height: 52, margin: "0 auto 10px", borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <IconUser />
+                        </div>
+                        <p style={{ fontWeight: 700, fontFamily: "'Sora',sans-serif" }}>Welcome to {settings?.shopName || "SWEETO-HUB"}</p>
+                        <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 14px" }}>Sign in to see orders & wishlist</p>
+                        <button className="menu-item" style={{ background: "linear-gradient(135deg,#1F6FEB,#1554C0)", color: "#fff", justifyContent: "center", fontWeight: 700, borderRadius: 12, padding: 12 }} onClick={() => { setProfileOpen(false); navigate("/auth"); }}>
+                          {lang === "fr" ? "Se connecter" : "Sign In"}
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-          {/* Profile */}
-          <div className="dd-wrap" ref={profileRef}>
-            <button className="profile-btn" onClick={() => setProfileOpen((v) => !v)} aria-label="Profile">
-              {currentUser ? (
-                <div className="w-full h-full rounded-full bg-[#6d5ef0] flex items-center justify-center text-white font-extrabold text-[15px] shadow-inner">
-                  {(currentUser.user_metadata?.full_name?.[0] || currentUser.email?.[0] || "U").toUpperCase()}
-                </div>
-              ) : (
-                <IconUser />
+            <button className="icon-btn" onClick={() => onCartOpen && onCartOpen()} aria-label="Open cart">
+              <IconCart />
+              {cart.length > 0 && (
+                <span className="badge">
+                  {cart.reduce((sum, item) => sum + (item.quantity || 1), 0)}
+                </span>
               )}
             </button>
-            <AnimatePresence>
-              {profileOpen && (
-                <motion.div className="dropdown" initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.97 }} transition={{ duration: 0.18 }}>
-                  {currentUser ? (
-                    <>
-                      <div className="profile-head">
-                        <div className="w-11 h-11 rounded-full bg-white text-[#6d5ef0] flex items-center justify-center font-black text-lg border-2 border-white/50 flex-shrink-0">
-                          {(currentUser.user_metadata?.full_name?.[0] || currentUser.email?.[0] || "U").toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="p-name">{currentUser.user_metadata?.full_name || "Account User"}</div>
-                          <div className="p-mail">{currentUser.email}</div>
-                        </div>
-                      </div>
-                      <div className="menu-list">
-                        <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/dashboard"); }}><IconUser /> {lang === "fr" ? "Mon profil" : "My Profile"}</button>
-                        <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/orders"); }}><IconBox /> {lang === "fr" ? "Mes commandes" : "My Orders"}</button>
-                        <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/wishlist"); }}><IconHeart filled /> {lang === "fr" ? "Liste d'envies" : "Wishlist"}</button>
-                        <button className="menu-item" onClick={() => { setProfileOpen(false); navigate("/settings"); }}><IconGear /> {lang === "fr" ? "Paramètres" : "Settings"}</button>
-                        <div className="menu-sep" />
-                        <button className="menu-item danger" onClick={handleLogout}><IconLogout /> {lang === "fr" ? "Se déconnecter" : "Log out"}</button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="menu-list" style={{ padding: 20, textAlign: "center" }}>
-                      <div style={{ width: 52, height: 52, margin: "0 auto 10px", borderRadius: "50%", background: "var(--accent-soft)", color: "var(--accent)", display: "flex", alignItems: "center", justifyItems: "center" }}>
-                        <IconUser />
-                      </div>
-                      <p style={{ fontWeight: 700, fontFamily: "'Sora',sans-serif" }}>Welcome to {settings?.shopName || "SWEETO-HUB"}</p>
-                      <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 14px" }}>Sign in to see orders & wishlist</p>
-                      <button className="menu-item" style={{ background: "linear-gradient(135deg,#6d5ef0,#4338ca)", color: "#fff", justifyContent: "center", fontWeight: 700, borderRadius: 12, padding: 12 }} onClick={() => { setProfileOpen(false); navigate("/auth"); }}>
-                        {lang === "fr" ? "Se connecter" : "Sign In"}
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-
-          <button className="icon-btn" onClick={() => onCartOpen && onCartOpen()} aria-label="Open cart">
-            <IconCart />
-            {cart.length > 0 && (
-              <span className="badge">
-                {cart.reduce((sum, item) => sum + (item.quantity || 1), 0)}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Visual search modal */}
       <AnimatePresence>

@@ -39,6 +39,15 @@ const DealOfTheDay = ({ title, isFirst, showVideoPromo, videoAdId }) => {
   const totalPages = Math.ceil(dealProducts.length / perPage);
   const visible = dealProducts.slice(page * perPage, page * perPage + perPage);
 
+  // Auto-slide deals every 4 seconds
+  useEffect(() => {
+    if (totalPages <= 1) return;
+    const timer = setInterval(() => {
+      setPage(prev => (prev + 1) % totalPages);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [totalPages]);
+
   if (dealProducts.length === 0) return null;
 
   return (

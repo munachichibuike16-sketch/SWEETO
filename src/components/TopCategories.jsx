@@ -33,7 +33,7 @@ export default function TopCategories() {
       return 'from-eas-blue/15 to-eas-blue/25 border-eas-blue/30 text-eas-blue dark:text-blue-400';
     }
     if (lowerName.includes('laptop') || lowerName.includes('computer') || lowerName.includes('macbook') || lowerName.includes('pc')) {
-      return 'from-purple-500/25 to-indigo-500/25 border-purple-500/30 text-purple-500 dark:text-purple-400';
+      return 'from-blue-600/20 to-sky-500/20 border-blue-500/30 text-[#1F6FEB] dark:text-blue-400';
     }
     if (lowerName.includes('tv') || lowerName.includes('screen') || lowerName.includes('monitor') || lowerName.includes('cinema')) {
       return 'from-eas-blue/15 to-eas-blue/25 border-eas-blue/30 text-eas-blue dark:text-blue-400';
@@ -47,7 +47,7 @@ export default function TopCategories() {
     if (lowerName.includes('earbud') || lowerName.includes('headphone') || lowerName.includes('airpod') || lowerName.includes('pods')) {
       return 'from-eas-blue/15 to-eas-blue/25 border-eas-blue/30 text-eas-blue dark:text-blue-400';
     }
-    return 'from-indigo-500/25 to-violet-500/25 border-indigo-500/30 text-indigo-500 dark:text-indigo-400';
+    return 'from-blue-500/20 to-sky-500/20 border-blue-500/30 text-[#1F6FEB] dark:text-blue-400';
   };
 
   // Resolve category images: always prioritize user custom images from database

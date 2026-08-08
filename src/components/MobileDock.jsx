@@ -62,7 +62,7 @@ export default function MobileDock({ setIsCartOpen, setIsSidebarOpen }) {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[95%] max-w-md h-16 bg-white/75 dark:bg-[#020617]/75 backdrop-blur-xl border border-slate-200/50 dark:border-eas-blue/15 rounded-3xl shadow-[0_20px_50px_rgba(0,82,255,0.05)] flex items-center justify-between px-5 overflow-hidden select-none">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] md:hidden w-[95%] max-w-md h-16 bg-white/90 dark:bg-[#0A2540]/90 backdrop-blur-xl border border-[#D9E3F2] dark:border-blue-500/20 rounded-3xl shadow-[0_18px_44px_-18px_rgba(10,37,64,0.25)] flex items-center justify-between px-6 overflow-hidden select-none">
 
 
       {/* Navigation Items */}

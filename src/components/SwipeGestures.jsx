@@ -108,21 +108,11 @@ const SwipeGestures = () => {
     setIsSwipingBack(false);
     setSwipeProgress(0);
 
-    // ─── Trigger Refresh ───
-    if (pullRef.current.active && pullProgress >= 1 && !isRefreshing) {
-      if (navigator.vibrate) navigator.vibrate(15);
-      setIsRefreshing(true);
-      setPullProgress(1);
-      
-      // Reload after animation
-      setTimeout(() => {
-        window.location.reload();
-      }, 600);
-    } else {
-      pullRef.current = { startY: 0, active: false };
-      setIsPulling(false);
-      setPullProgress(0);
-    }
+    // ─── Trigger Refresh (Disabled full window.location.reload to prevent interrupting clicks and navigation) ───
+    pullRef.current = { startY: 0, active: false };
+    setIsPulling(false);
+    setPullProgress(0);
+    setIsRefreshing(false);
   }, [swipeProgress, pullProgress, isRefreshing]);
 
   // ─── Attach Global Touch Listeners ───

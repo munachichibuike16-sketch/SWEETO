@@ -121,7 +121,7 @@ export default function InteractiveHub() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white flex items-center justify-center shadow-xl shadow-rose-500/25 cursor-pointer relative"
+        className="w-12 h-12 rounded-full bg-gradient-to-r from-[#1F6FEB] to-[#1554C0] text-white flex items-center justify-center shadow-xl shadow-blue-500/25 cursor-pointer relative"
         title={lang === 'fr' ? 'Sweeto Cadeaux' : 'Sweeto Gift Center'}
       >
         <Gift size={20} className="animate-pulse" />

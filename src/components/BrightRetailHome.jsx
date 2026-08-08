@@ -292,7 +292,7 @@ export default function BrightRetailHome({ onProductClick }) {
     );
   };
 
-  const renderProductCard = (product, idx = 0, prefix = 'p') => {
+  const renderProductCard = (product, idx = 0, prefix = 'p', hideDiscount = false) => {
     const discount = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
     const isWished = isInWishlist(product.id);
     const isBestSellerStyle = prefix === 'tab' && activeTab === 'bestseller';
@@ -407,7 +407,7 @@ export default function BrightRetailHome({ onProductClick }) {
         className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-2xl overflow-hidden flex flex-col p-4 relative group cursor-pointer shadow-sm hover:shadow-md hover:border-[#ffc200]/50 dark:hover:border-[#ffc200]/50 transition-all duration-300"
       >
         {/* Absolute Badges */}
-        {discount > 0 && (
+        {!hideDiscount && discount > 0 && (
           <span className="absolute top-3 left-3 bg-[#ec5b5b] text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm z-10 uppercase shadow-sm">
             -{discount}%
           </span>
@@ -430,41 +430,62 @@ export default function BrightRetailHome({ onProductClick }) {
         </button>
 
         {/* Product Image */}
-        <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl p-3 mb-4">
+        <div className="w-full h-36 flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#020617] rounded-xl p-3 mb-4 relative">
           <img 
             src={product.image_url || product.image || '/hero-banner.png'} 
             alt={product.name} 
             className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
+          {hideDiscount && (
+            <div className="absolute bottom-2.5 right-2.5 z-20">
+              <button 
+                onClick={(e) => handleAddToCart(e, product)}
+                className="w-7.5 h-7.5 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center hover:bg-[#1e5cff] hover:text-white active:scale-95 transition-all text-slate-800 dark:text-white cursor-pointer"
+              >
+                <ShoppingCart size={13} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Product Content */}
         <div className="flex flex-col flex-1 space-y-1.5">
-          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
-            {product.category}
+          <span className={hideDiscount
+            ? "text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1"
+            : "text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none"
+          }>
+            {product.brand || 'SWEETO'} · {product.category}
           </span>
-          <h4 className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight uppercase">
+          <h4 className={hideDiscount
+            ? "text-[13px] sm:text-sm font-black text-slate-905 dark:text-white line-clamp-2 leading-tight uppercase mb-1"
+            : "text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 line-clamp-2 leading-tight uppercase"
+          }>
             {product.name}
           </h4>
 
           {/* Ratings */}
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                size={10} 
-                className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
-              />
-            ))}
+          <div className="flex items-center gap-1.5">
+            <div className="flex text-[#ffc200]">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  size={10} 
+                  className={i < Math.floor(product.rating || 4.2) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
+                />
+              ))}
+            </div>
             <span className="text-[8px] font-extrabold text-slate-400">({product.reviews_count || 1})</span>
           </div>
 
           {/* Prices */}
-          <div className="flex items-baseline gap-2 pt-1">
-            <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
+          <div className={`flex items-baseline gap-2 pt-1 ${hideDiscount ? 'mt-auto' : ''}`}>
+            <span className={hideDiscount
+              ? "text-[14px] sm:text-base font-black text-slate-955 dark:text-white font-mono"
+              : "text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono"
+            }>
               {product.price.toLocaleString()} <span className="text-[9px]">{settings.currency || 'FCFA'}</span>
             </span>
-            {product.original_price && product.original_price > product.price && (
+            {!hideDiscount && product.original_price && product.original_price > product.price && (
               <span className="text-[10px] font-bold text-slate-450 line-through font-mono">
                 {product.original_price.toLocaleString()}
               </span>
@@ -472,12 +493,14 @@ export default function BrightRetailHome({ onProductClick }) {
           </div>
 
           {/* Action Button */}
-          <button 
-            onClick={(e) => handleAddToCart(e, product)}
-            className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-955 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
-          >
-            {t('add_to_cart') || 'Add To Cart'}
-          </button>
+          {!hideDiscount && (
+            <button 
+              onClick={(e) => handleAddToCart(e, product)}
+              className="w-full mt-auto py-2.5 bg-[#ffc200] hover:bg-slate-955 dark:hover:bg-white text-slate-955 hover:text-white dark:hover:text-slate-955 font-black text-[9px] uppercase tracking-wider rounded-lg transition-colors duration-200"
+            >
+              {t('add_to_cart') || 'Add To Cart'}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -1047,7 +1070,7 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
             {renderBrightHeader(displayTitleA, null, { headerStyle: section.headerStyle, showViewAll: section.showViewAll !== false }, null, true)}
             <div className="grid grid-cols-2 gap-4">
-              {loading ? renderSkeletons(4) : productsA.map((p, idx) => renderProductCard(p, idx, 'sideA'))}
+              {loading ? renderSkeletons(4) : productsA.map((p, idx) => renderProductCard(p, idx, 'sideA', section.position > 4))}
             </div>
           </div>
 
@@ -1055,7 +1078,7 @@ export default function BrightRetailHome({ onProductClick }) {
           <div className="bg-white dark:bg-[#0b1329] border border-slate-200/50 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm space-y-4">
             {renderBrightHeader(displayTitleB, null, { headerStyle: section.headerStyleB || 'bright_outlined', showViewAll: section.showViewAll !== false }, null, true)}
             <div className="grid grid-cols-2 gap-4">
-              {loading ? renderSkeletons(4) : productsB.map((p, idx) => renderProductCard(p, idx, 'sideB'))}
+              {loading ? renderSkeletons(4) : productsB.map((p, idx) => renderProductCard(p, idx, 'sideB', section.position > 4))}
             </div>
           </div>
         </div>
@@ -1079,7 +1102,7 @@ export default function BrightRetailHome({ onProductClick }) {
         {renderBrightHeader(title, subtitle, section)}
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
-          {loading ? renderSkeletons(maxProducts) : displayProducts.map((p, idx) => renderProductCard(p, idx, 'custom'))}
+          {loading ? renderSkeletons(maxProducts) : displayProducts.map((p, idx) => renderProductCard(p, idx, 'custom', section.position > 4))}
         </div>
       </div>
     );
@@ -1107,7 +1130,7 @@ export default function BrightRetailHome({ onProductClick }) {
           </div>
         ) : displayProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
-            {displayProducts.map((p, idx) => renderProductCard(p, idx, 'featured'))}
+            {displayProducts.map((p, idx) => renderProductCard(p, idx, 'featured', true))}
           </div>
         ) : (
           <div className="text-center py-12 text-slate-450 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#0b1329] rounded-2xl border border-slate-200/50 dark:border-slate-800/60">
@@ -1140,7 +1163,7 @@ export default function BrightRetailHome({ onProductClick }) {
           </div>
         ) : displayProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-6 -mx-4 sm:mx-0 px-0">
-            {displayProducts.map((p, idx) => renderProductCard(p, idx, 'trending'))}
+            {displayProducts.map((p, idx) => renderProductCard(p, idx, 'trending', true))}
           </div>
         ) : (
           <div className="text-center py-12 text-slate-450 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#0b1329] rounded-2xl border border-slate-200/50 dark:border-slate-800/60">

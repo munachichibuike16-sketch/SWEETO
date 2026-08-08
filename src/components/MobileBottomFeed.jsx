@@ -66,7 +66,7 @@ export default function MobileBottomFeed({ settings, products = [], categories =
       {feedProducts.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
           {feedProducts.map(product => (
-            <ProductCard key={product.id} product={product} onProductClick={onProductClick} />
+            <ProductCard key={product.id} product={product} onProductClick={onProductClick} hideDiscountAndOriginalPrice={true} />
           ))}
         </div>
       ) : (

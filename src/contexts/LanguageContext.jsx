@@ -867,104 +867,27 @@ export const translations = {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [lang, setLang] = useState('fr');
+  const [lang] = useState('en');
 
   useEffect(() => {
-    // 1. Define global Google Translate init callback
-    if (!window.googleTranslateElementInit) {
-      window.googleTranslateElementInit = () => {
-        if (window.google && window.google.translate) {
-          new window.google.translate.TranslateElement({
-            pageLanguage: 'auto',
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false
-          }, 'google_translate_element');
-        }
-      };
-    }
-
-    // 2. Append script tag if not present
-    const scriptId = 'google-translate-script';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.type = 'text/javascript';
-      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      document.body.appendChild(script);
-    }
+    document.documentElement.lang = 'en';
+    document.documentElement.dir = 'ltr';
+    localStorage.setItem('sweetohub_lang', 'en');
     
-    // 3. Create hidden target div if not present
-    const elementId = 'google_translate_element';
-    if (!document.getElementById(elementId)) {
-      const div = document.createElement('div');
-      div.id = elementId;
-      div.style.display = 'none';
-      document.body.appendChild(div);
-    }
-
-    const savedLang = localStorage.getItem('sweetohub_lang') || 'fr';
-    if (savedLang && translations[savedLang]) {
-      setLang(savedLang);
-      document.documentElement.lang = savedLang;
-
-      // Set cookie on initial load to match saved language
-      const cookieVal = `/auto/${savedLang}`;
-      document.cookie = `googtrans=${cookieVal}; path=/;`;
-      document.cookie = `googtrans=${cookieVal}; path=/; domain=${window.location.hostname};`;
-    }
-
-    // 4. Injected auto-hide style after 10 seconds to avoid blocking the header
-    const timer = setTimeout(() => {
-      const style = document.createElement('style');
-      style.id = 'goog-translate-override-style';
-      style.innerHTML = `
-        .goog-te-banner-frame,
-        iframe.goog-te-banner-frame,
-        .goog-te-banner,
-        .goog-te-menu-value,
-        #goog-gt-tt {
-          display: none !important;
-          visibility: hidden !important;
-          opacity: 0 !important;
-          height: 0 !important;
-        }
-        body {
-          top: 0px !important;
-          position: static !important;
-        }
-        .skiptranslate {
-          display: none !important;
-        }
-      `;
-      document.head.appendChild(style);
-    }, 10000);
-
-    return () => clearTimeout(timer);
+    // Clear Google Translate cookies
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
   }, []);
 
   const changeLanguage = (newLang) => {
-    if (translations[newLang]) {
-      setLang(newLang);
-      localStorage.setItem('sweetohub_lang', newLang);
-      document.documentElement.lang = newLang;
-
-      // Set cookie to trigger Google Auto-Translate
-      const cookieVal = `/auto/${newLang}`;
-      document.cookie = `googtrans=${cookieVal}; path=/;`;
-      document.cookie = `googtrans=${cookieVal}; path=/; domain=${window.location.hostname};`;
-
-      // Brief delay then reload to let Google Translate process the page
-      setTimeout(() => {
-        window.location.reload();
-      }, 150);
-    }
+    // No-op - only English supported
   };
 
   const t = (key) => {
-    if (translations[lang] && translations[lang][key]) {
-      return translations[lang][key];
+    if (translations['en'] && translations['en'][key]) {
+      return translations['en'][key];
     }
-    return translations['fr'][key] || translations['en'][key] || key;
+    return key;
   };
 
   const cleanProductName = (str) => {
@@ -974,10 +897,10 @@ export const LanguageProvider = ({ children }) => {
     cleaned = cleaned.replace(/\s+/g, ' ');
     const lower = cleaned.toLowerCase();
     if (lower.startsWith('playstation 5 console') || lower.startsWith('playstation 5 edition')) {
-      return lang === 'fr' ? 'PlayStation 5 Édition Standard' : 'PlayStation 5 Standard Edition';
+      return 'PlayStation 5 Standard Edition';
     }
     if (lower.startsWith('desk fan')) {
-      return lang === 'fr' ? 'Ventilateur de Bureau' : 'High-Performance Desk Fan';
+      return 'High-Performance Desk Fan';
     }
     
     const acronyms = ['jbl', 'hp', 'lg', 'tv', 'anc', 'ssd', 'ram', 'usb', 'cpu', 'gpu', 'probook', 'fcfa', 'otg', 'hdmi'];
@@ -997,31 +920,24 @@ export const LanguageProvider = ({ children }) => {
   const t_smart = (str) => {
     if (!str) return str;
     
-    // Normalize string to lowercase and replace non-alphanumeric character sequences with a single underscore
     const key = str.toLowerCase()
       .replace(/[^a-z0-9]+/g, '_')
-      .replace(/(^_|_$)/g, ''); // strip leading/trailing underscores
+      .replace(/(^_|_$)/g, '');
     
-    if (translations[lang] && translations[lang][key]) {
-      return translations[lang][key];
+    if (translations['en'] && translations['en'][key]) {
+      return translations['en'][key];
     }
     
-    // Fallback: try raw space-to-underscore replacement
     const fallbackKey = str.toLowerCase().replace(/ /g, '_');
-    if (translations[lang] && translations[lang][fallbackKey]) {
-      return translations[lang][fallbackKey];
+    if (translations['en'] && translations['en'][fallbackKey]) {
+      return translations['en'][fallbackKey];
     }
     
     return cleanProductName(str);
   };
 
-  const isRTL = lang === 'ar';
-  const dir = isRTL ? 'rtl' : 'ltr';
-
-  useEffect(() => {
-    document.documentElement.dir = dir;
-    document.documentElement.lang = lang;
-  }, [lang, dir]);
+  const isRTL = false;
+  const dir = 'ltr';
 
   return (
     <LanguageContext.Provider value={{ lang, changeLanguage, t, t_smart, isRTL, dir }}>

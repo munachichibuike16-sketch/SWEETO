@@ -417,10 +417,10 @@ export default function LiveChatManagement() {
           )}
         </div>
 
-        {/* Floating Pink Action Button from the Mockup */}
+        {/* Floating Action Button */}
         <button
           onClick={copyInviteLink}
-          className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer z-25"
+          className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-gradient-to-tr from-[#1F6FEB] to-[#1554C0] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer z-25"
           title="Copy Customer Support Invite Link"
         >
           <Plus size={20} />

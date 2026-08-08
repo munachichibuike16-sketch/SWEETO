@@ -166,7 +166,7 @@ export default function NotificationsContent({ onProductClick }) {
       case 'processing': return <Clock className="text-amber-500 w-6 h-6" />;
       case 'shipped': return <Truck className="text-blue-500 w-6 h-6" />;
       case 'delivered': return <CheckCircle2 className="text-emerald-500 w-6 h-6" />;
-      case 'sale': return <Sparkles className="text-purple-500 w-6 h-6" />;
+      case 'sale': return <Sparkles className="text-[#1F6FEB] w-6 h-6" />;
       case 'alert': return <AlertCircle className="text-red-500 w-6 h-6" />;
       default: return <CheckCircle2 className="text-green-500 w-6 h-6" />;
     }
@@ -195,20 +195,20 @@ export default function NotificationsContent({ onProductClick }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#090d16] font-sans relative overflow-x-hidden selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#F6F9FE] dark:bg-[#090d16] font-sans relative overflow-x-hidden selection:bg-blue-500/30">
       
       {/* Background ambient glowing elements */}
-      <div className="fixed top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-indigo-500/10 via-purple-500/5 to-transparent dark:from-indigo-900/20 dark:via-purple-900/10 pointer-events-none -z-10" />
-      <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/10 dark:bg-indigo-600/10 blur-[120px] pointer-events-none -z-10" />
-      <div className="fixed top-[20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-purple-500/10 dark:bg-purple-600/10 blur-[100px] pointer-events-none -z-10" />
+      <div className="fixed top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-blue-500/10 via-blue-500/5 to-transparent dark:from-blue-900/20 dark:via-blue-900/10 pointer-events-none -z-10" />
+      <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-500/10 dark:bg-blue-600/10 blur-[120px] pointer-events-none -z-10" />
+      <div className="fixed top-[20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-600/10 dark:bg-blue-600/10 blur-[100px] pointer-events-none -z-10" />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-24 pt-[env(safe-area-inset-top,0px)] sm:pt-6">
         
         {/* Modern Floating Header */}
         <div className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] sm:top-6 left-0 right-0 z-30 mx-auto w-full max-w-2xl px-4 sm:px-6">
-          <div className="bg-white/70 dark:bg-[#0f1423]/70 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)] border border-white/50 dark:border-white/5 flex items-center justify-between px-6 py-4 transition-all duration-300">
+          <div className="bg-white/90 dark:bg-[#0f1423]/70 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)] border border-[#D9E3F2] dark:border-white/5 flex items-center justify-between px-6 py-4 transition-all duration-300">
             <div className="flex items-center gap-4">
-              <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30">
+              <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-[#1F6FEB] to-[#1554C0] text-white shadow-lg shadow-blue-500/30">
                 <Bell className="w-6 h-6" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white dark:border-[#0f1423] rounded-full flex items-center justify-center text-[9px] font-bold">

@@ -166,27 +166,27 @@ export default function DealsContent({ onProductClick }) {
           initial={{ scale: 0.98, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative w-full rounded-none bg-[#13161c] text-white overflow-hidden shadow-2xl border-y border-white/5 flex flex-col items-center p-6 sm:p-8 md:p-10 select-none -mx-4 sm:mx-auto"
+          className="relative w-full rounded-none bg-[#0c1424]/80 text-white overflow-hidden shadow-2xl border-y border-white/10 flex flex-col items-center p-6 sm:p-8 md:p-10 select-none -mx-4 sm:mx-auto backdrop-blur-xl"
         >
-          {/* Subtle Orange/Golden radial glow on the right side */}
-          <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#ffc72c]/10 to-transparent blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-[200px] h-[200px] bg-[#ff5722]/5 rounded-full blur-[100px] pointer-events-none" />
-
+          {/* Subtle blue radial glow on the right side */}
+          <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-gradient-to-l from-[#1F6FEB]/15 to-transparent blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-[200px] h-[200px] bg-[#1F6FEB]/10 rounded-full blur-[100px] pointer-events-none" />
+ 
           {/* Badge */}
-          <div className="flex items-center gap-1.5 bg-[#f5c71a] text-slate-950 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider select-none mb-4 shadow-[0_4px_15px_rgba(245,199,26,0.3)]">
-            <span className="text-slate-950">⚡</span>
+          <div className="flex items-center gap-1.5 bg-[#1F6FEB] text-white px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider select-none mb-4 shadow-[0_4px_15px_rgba(31,111,235,0.35)]">
+            <span className="text-white">⚡</span>
             <span>{lang === 'fr' ? 'Super Offres Choix' : 'Choice Super Deals'}</span>
           </div>
-
+ 
           {/* Heading */}
           <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white text-center tracking-tight leading-tight max-w-3xl mb-3">
             {lang === 'fr' ? (
-              <>Jusqu'à <span className="text-[#f5c71a]">-70%</span> sur les essentiels Tech</>
+              <>Jusqu'à <span className="text-[#60a5fa]">-70%</span> sur les essentiels Tech</>
             ) : (
-              <>Up to <span className="text-[#f5c71a]">70% OFF</span> Tech Essentials</>
+              <>Up to <span className="text-[#60a5fa]">70% OFF</span> Tech Essentials</>
             )}
           </h1>
-
+ 
           {/* Subheading */}
           <p className="text-[10px] sm:text-xs md:text-sm text-white/70 text-center max-w-2xl mb-6 font-medium leading-relaxed">
             {lang === 'fr' 
@@ -194,7 +194,7 @@ export default function DealsContent({ onProductClick }) {
               : "Free shipping on orders over $10 • Guaranteed 5-Day Delivery • 75-Day Buyer Protection"
             }
           </p>
-
+ 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-8">
             {/* Button 1: Shop Deals Now */}
@@ -205,41 +205,41 @@ export default function DealsContent({ onProductClick }) {
                   element.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className="px-6 py-3 bg-gradient-to-r from-[#ff5722] to-[#ff2a5f] hover:from-[#ff6b3d] hover:to-[#ff4575] text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-[0_6px_20px_rgba(255,87,34,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-[#1F6FEB] to-[#1554C0] hover:from-[#3b82f6] hover:to-[#1d4ed8] text-white rounded-full font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-[0_6px_20px_rgba(31,111,235,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer border-none flex items-center gap-2"
             >
               <span>{lang === 'fr' ? 'Acheter maintenant' : 'Shop Deals Now'}</span>
               <ArrowRight size={14} className="stroke-[3]" />
             </button>
-
+ 
           </div>
-
+ 
           {/* Countdown timer card inside the banner */}
-          <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-3xl p-4 sm:p-5 w-full max-w-[340px] sm:max-w-[400px] flex flex-col items-center gap-3 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[#f5c71a]">
+          <div className="bg-black/20 backdrop-blur-md border border-white/5 rounded-3xl p-4 sm:p-5 w-full max-w-[340px] sm:max-w-[400px] flex flex-col items-center gap-3 shadow-[0_15px_35px_rgba(0,0,0,0.2)]">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[#60a5fa]">
               {lang === 'fr' ? 'LA VENTE FLASH SE TERMINE DANS' : 'FLASH SALE ENDS IN'}
             </span>
             
             <div className="flex items-center gap-2.5 sm:gap-3 text-white select-none">
               <div className="flex flex-col items-center">
-                <div className="bg-[#0b0f19] border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-[#f5c71a] shadow-inner">
+                <div className="bg-[#0b0f19]/60 border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-[#60a5fa] shadow-inner">
                   {String(timeLeft.hours).padStart(2, '0')}
                 </div>
                 <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 uppercase tracking-widest">HRS</span>
               </div>
               
-              <span className="text-lg sm:text-2xl font-black text-[#f5c71a] -mt-4">:</span>
+              <span className="text-lg sm:text-2xl font-black text-[#60a5fa] -mt-4">:</span>
               
               <div className="flex flex-col items-center">
-                <div className="bg-[#0b0f19] border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-[#f5c71a] shadow-inner">
+                <div className="bg-[#0b0f19]/60 border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-[#60a5fa] shadow-inner">
                   {String(timeLeft.minutes).padStart(2, '0')}
                 </div>
                 <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 uppercase tracking-widest">MIN</span>
               </div>
               
-              <span className="text-lg sm:text-2xl font-black text-[#f5c71a] -mt-4">:</span>
+              <span className="text-lg sm:text-2xl font-black text-[#60a5fa] -mt-4">:</span>
               
               <div className="flex flex-col items-center">
-                <div className="bg-[#0b0f19] border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-red-500 shadow-inner animate-[pulse_1s_infinite]">
+                <div className="bg-[#0b0f19]/60 border border-white/5 rounded-2xl w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-lg sm:text-2xl font-black text-red-500 shadow-inner animate-[pulse_1s_infinite]">
                   {String(timeLeft.seconds).padStart(2, '0')}
                 </div>
                 <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 uppercase tracking-widest">SEC</span>

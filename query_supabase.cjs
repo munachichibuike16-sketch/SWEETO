@@ -5,11 +5,33 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function run() {
-  const { data, error } = await supabase.from('settings').select('*');
-  if (error) {
-    console.error('Error fetching settings:', error);
-  } else {
-    console.log(JSON.stringify(data, null, 2));
+  const { data: latestOrder, error: fetchErr } = await supabase
+    .from('orders')
+    .select('*')
+    .order('id', { ascending: false })
+    .limit(1);
+
+  if (fetchErr) {
+    console.error('Fetch error:', fetchErr);
+    return;
+  }
+
+  console.log('Latest order:', latestOrder);
+
+  if (latestOrder && latestOrder.length > 0) {
+    const orderId = latestOrder[0].id;
+    console.log('Testing update on order:', orderId);
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ city: 'Abidjan Test' })
+      .eq('id', orderId)
+      .select();
+
+    if (error) {
+      console.error('Update error:', error);
+    } else {
+      console.log('Update success:', data);
+    }
   }
 }
 

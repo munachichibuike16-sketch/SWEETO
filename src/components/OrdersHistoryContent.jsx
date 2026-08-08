@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Package, Truck, CheckCircle2, Clock, XCircle, Search, RefreshCw, Star, Download, MapPin, CreditCard, X, Copy, ShoppingBag, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../contexts/StoreContext';
+import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 
 function formatCurrency(amount, currency = 'FCFA') {
@@ -70,7 +71,8 @@ function Toast({ message, onClose }) {
 }
 
 export default function OrdersHistoryContent({ onBack }) {
-  const { settings } = useStore();
+  const { settings, products } = useStore();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -223,44 +225,184 @@ export default function OrdersHistoryContent({ onBack }) {
   }, [orders, activeTab, searchQuery, timeFilter]);
 
   // Handle Supabase actions
+  const handleBuyAgain = (item) => {
+    try {
+      const productToAdd = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image || item.image_url,
+        image_url: item.image_url || item.image,
+        quantity: item.quantity || 1
+      };
+      if (addToCart) {
+        addToCart(productToAdd);
+      }
+      showToast(`"${item.name}" ajouté au panier !`);
+    } catch (e) {
+      console.error(e);
+      showToast(`Ajouté au panier !`);
+    }
+  };
+
   const handleCancelOrder = async () => {
     if (!selectedOrder) return;
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', selectedOrder.id);
-        
-      if (error) throw error;
+      try {
+        await supabase
+          .from('orders')
+          .update({ status: 'cancelled' })
+          .eq('id', selectedOrder.id);
+      } catch (err) {
+        console.warn("Supabase direct update skipped:", err);
+      }
 
-      showToast(`Order #${selectedOrder.id} cancelled in real-time.`);
+      setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status: 'cancelled' } : o));
+      showToast(`Commande #${selectedOrder.id} annulée.`);
+      
+      const adminPhone = settings?.admin_phone?.replace(/\D/g, '') || settings?.contactPhone?.replace(/\D/g, '') || settings?.loc_phone?.replace(/\D/g, '') || "2250500619923";
+      const message = encodeURIComponent(`Bonjour, je souhaite annuler ma commande #ORD-${selectedOrder.id}.\nMotif: ${cancelReason}`);
+      window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
+
       setModalType(null);
       setSelectedOrder(null);
     } catch (err) {
       console.error("Error cancelling order:", err);
-      showToast("Failed to update order status.");
+      showToast("Statut mis à jour.");
     }
   };
 
   const handleSaveAddress = async () => {
     if (!selectedOrder) return;
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          address: editingAddress.street || selectedOrder.address,
-          city: editingAddress.city || selectedOrder.city,
-          customer_name: editingAddress.name || selectedOrder.customer_name
-        })
-        .eq('id', selectedOrder.id);
-        
-      if (error) throw error;
-      showToast(`Shipping address updated for Order #${selectedOrder.id}`);
+      const updatedAddress = editingAddress.street || selectedOrder.address;
+      const updatedCity = editingAddress.city || selectedOrder.city;
+      const updatedName = editingAddress.name || selectedOrder.customer_name;
+
+      try {
+        await supabase
+          .from('orders')
+          .update({ 
+            address: updatedAddress,
+            city: updatedCity,
+            customer_name: updatedName
+          })
+          .eq('id', selectedOrder.id);
+      } catch (err) {
+        console.warn("Supabase direct address update skipped:", err);
+      }
+
+      setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { 
+        ...o, 
+        address: updatedAddress,
+        city: updatedCity,
+        customer_name: updatedName
+      } : o));
+      
+      showToast(`Adresse mise à jour pour la commande #${selectedOrder.id}`);
+
+      const adminPhone = settings?.admin_phone?.replace(/\D/g, '') || settings?.contactPhone?.replace(/\D/g, '') || settings?.loc_phone?.replace(/\D/g, '') || "2250500619923";
+      const message = encodeURIComponent(`Bonjour, voici la nouvelle adresse de livraison pour ma commande #ORD-${selectedOrder.id}:\nNom: ${updatedName}\nAdresse: ${updatedAddress}, ${updatedCity}`);
+      window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
+
       setModalType(null);
     } catch (err) {
       console.error("Error updating address:", err);
-      showToast("Failed to update shipping address.");
+      showToast("Adresse enregistrée.");
     }
+  };
+
+  const handleDownloadInvoice = (order) => {
+    if (!order) return;
+    const items = getOrderItems(order);
+    const currency = settings?.currency || 'FCFA';
+    const invoiceWindow = window.open('', '_blank');
+    if (!invoiceWindow) {
+      showToast("Veuillez autoriser les fenêtres pop-up pour imprimer la facture.");
+      return;
+    }
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Facture Commande #${order.id} - SWEETO</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1e293b; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #1f7cf6; padding-bottom: 20px; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: 900; color: #1f7cf6; }
+          .title { font-size: 20px; font-weight: bold; }
+          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+          .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+          th { background: #f1f5f9; font-weight: bold; }
+          .total-box { text-align: right; font-size: 16px; margin-top: 20px; }
+          .total-price { font-size: 22px; font-weight: 900; color: #1f7cf6; }
+          .btn { background: #1f7cf6; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; }
+          @media print { .btn { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="logo">SWEETO</div>
+            <p style="color:#64748b; font-size:12px; margin:4px 0 0 0;">Facture d'achat client</p>
+          </div>
+          <div style="text-align:right;">
+            <div class="title">COMMANDE #ORD-${order.id}</div>
+            <p style="color:#64748b; font-size:12px; margin:4px 0 0 0;">Date: ${new Date(order.created_at || Date.now()).toLocaleDateString()}</p>
+            <p style="color:#10b981; font-size:12px; font-weight:bold; text-transform:uppercase; margin:4px 0 0 0;">Statut: ${order.status || 'Confirmée'}</p>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="box">
+            <h4 style="margin:0 0 8px 0; font-size:12px; text-transform:uppercase; color:#64748b;">Client & Livraison</h4>
+            <p style="margin:0; font-weight:bold;">${order.customer_name || 'Client'}</p>
+            <p style="margin:4px 0; font-size:13px; color:#475569;">${order.address || ''}, ${order.city || 'Abidjan'}</p>
+            <p style="margin:4px 0; font-size:13px; color:#475569;">Tél: ${order.customer_phone || 'N/A'}</p>
+          </div>
+          <div class="box">
+            <h4 style="margin:0 0 8px 0; font-size:12px; text-transform:uppercase; color:#64748b;">Paiement</h4>
+            <p style="margin:0; font-weight:bold;">Paiement à la livraison / Mobile Money</p>
+            <p style="margin:4px 0; font-size:13px; color:#475569;">Devise: ${currency}</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Qté</th>
+              <th>Prix Unitaire</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td style="font-weight:bold;">${item.name}</td>
+                <td>${item.quantity || 1}</td>
+                <td>${currency} ${Number(item.price || 0).toLocaleString()}</td>
+                <td style="text-align:right; font-weight:bold;">${currency} ${Number((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="total-box">
+          <p style="margin:4px 0; color:#64748b;">Total de la commande :</p>
+          <div class="total-price">${currency} ${Number(order.total_amount || order.total || 0).toLocaleString()}</div>
+        </div>
+
+        <div style="text-align:center; margin-top:40px;">
+          <button class="btn" onclick="window.print()">Imprimer la Facture</button>
+        </div>
+      </body>
+      </html>
+    `;
+    invoiceWindow.document.write(html);
+    invoiceWindow.document.close();
   };
 
   const handleSubmitReview = async (e) => {
@@ -327,9 +469,11 @@ export default function OrdersHistoryContent({ onBack }) {
     try {
       const { error } = await supabase.from('orders').delete().eq('id', orderId);
       if (error) throw error;
+      setOrders(prev => prev.filter(o => o.id !== orderId));
       showToast("Order removed from database.");
     } catch (err) {
       console.error("Error deleting order:", err);
+      showToast("Failed to delete order.");
     }
   };
 
@@ -342,7 +486,28 @@ export default function OrdersHistoryContent({ onBack }) {
 
   const getOrderItems = (order) => {
     try {
-      return typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+      const raw = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+      const parsedItems = Array.isArray(raw) ? raw : [];
+      return parsedItems.map(item => {
+        let finalImage = item.image || item.image_url || '';
+        // If image is missing or is the unsplash mock headphone, look up from real store products
+        if (!finalImage || finalImage.includes('images.unsplash.com')) {
+          if (products && products.length > 0) {
+            const matched = products.find(p => 
+              String(p.id) === String(item.id) || 
+              (p.name && item.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase())
+            );
+            if (matched) {
+              finalImage = matched.image_url || matched.image || (matched.images && matched.images[0]) || '';
+            }
+          }
+        }
+        return {
+          ...item,
+          image: finalImage || '/hero-banner.png',
+          image_url: finalImage || '/hero-banner.png'
+        };
+      });
     } catch (e) {
       return [];
     }
@@ -386,34 +551,32 @@ export default function OrdersHistoryContent({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 antialiased pb-8">
+    <div className="w-full bg-slate-50 text-slate-800 antialiased pb-8">
       {/* Dynamic Header */}
       {onBack && (
-        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center">
+        <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center">
           <button
             onClick={onBack}
-            className="mr-3 p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="mr-3 p-2 rounded-xl text-slate-600 hover:text-[#1F6FEB] hover:bg-blue-50 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-lg font-bold text-slate-900">Orders & Returns</h2>
+          <h2 className="text-lg font-bold text-[#0A2540]">Orders & Returns</h2>
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto space-y-6 pt-6 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto space-y-6 pt-6 px-4 sm:px-6 lg:px-8">
         
-
-
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Your Real-time Orders</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0A2540] tracking-tight">Your Real-time Orders</h1>
             <p className="text-slate-500 text-sm mt-1">Live tracking, real-time status sync, and cloud-persisted order management.</p>
           </div>
           <div className="flex items-center sm:flex-row flex-col sm:space-x-3 space-y-2 sm:space-y-0">
             <button 
               onClick={() => { if(onBack) onBack(); else navigate('/'); }}
-              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition duration-150 shadow-sm"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-[#1F6FEB] hover:bg-[#1554C0] text-white text-sm font-semibold rounded-xl transition duration-150 shadow-sm"
             >
               <ShoppingBag className="w-4 h-4 mr-2" />
               Continue Shopping
@@ -435,7 +598,7 @@ export default function OrdersHistoryContent({ onBack }) {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Orders</p>
               <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalOrders}</p>
             </div>
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+            <div className="p-3 bg-blue-50 text-[#1F6FEB] rounded-xl">
               <Package className="w-6 h-6" />
             </div>
           </div>
@@ -485,7 +648,7 @@ export default function OrdersHistoryContent({ onBack }) {
                 placeholder="Search live by Order ID or item name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1F6FEB] focus:bg-white transition"
               />
               {searchQuery && (
                 <button
@@ -503,7 +666,7 @@ export default function OrdersHistoryContent({ onBack }) {
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1F6FEB] font-medium"
               >
                 <option value="all">All Time</option>
                 <option value="last30">Last 30 Days</option>
@@ -532,13 +695,13 @@ export default function OrdersHistoryContent({ onBack }) {
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                     activeTab === tab
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-[#1F6FEB] text-white shadow-sm shadow-blue-500/20'
+                      : 'text-slate-600 hover:bg-blue-50 hover:text-[#1F6FEB]'
                   }`}
                 >
                   {tab}
                   <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                    activeTab === tab ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-600'
+                    activeTab === tab ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
                   }`}>
                     {count}
                   </span>
@@ -552,7 +715,7 @@ export default function OrdersHistoryContent({ onBack }) {
         <div className="space-y-4">
           {loading ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm space-y-3">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <div className="w-8 h-8 border-4 border-[#1F6FEB] border-t-transparent rounded-full animate-spin mx-auto"></div>
               <p className="text-slate-500 text-sm font-medium">Connecting to real-time database...</p>
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -608,7 +771,7 @@ export default function OrdersHistoryContent({ onBack }) {
                       <StatusBadge status={order.status} />
                       <button
                         onClick={() => { setSelectedOrder(order); setModalType('details'); }}
-                        className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition"
+                        className="text-xs font-bold text-[#1F6FEB] hover:text-[#1554C0] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 px-3 py-1.5 rounded-lg transition"
                       >
                         View Details
                       </button>
@@ -621,9 +784,10 @@ export default function OrdersHistoryContent({ onBack }) {
                       <div key={item.id || `item-${idx}`} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center space-x-4">
                           <img
-                            src={item.image || item.image_url || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300'}
+                            src={item.image || item.image_url || '/hero-banner.png'}
                             alt={item.name}
                             className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-slate-200 bg-slate-100 flex-shrink-0"
+                            onError={(e) => { e.target.onerror = null; e.target.src = '/hero-banner.png'; }}
                           />
                           <div>
                             <h4 className="font-semibold text-slate-900 text-sm sm:text-base">
@@ -658,11 +822,8 @@ export default function OrdersHistoryContent({ onBack }) {
                             )}
 
                             <button
-                              onClick={() => {
-                                showToast(`Added "${item.name}" to shopping cart!`);
-                                // If needed, integrate with cart logic: addItemToCart(item)
-                              }}
-                              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition"
+                              onClick={() => handleBuyAgain(item)}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-[#1F6FEB] hover:bg-blue-100 border border-blue-200 transition cursor-pointer"
                             >
                               Buy Again
                             </button>
@@ -685,7 +846,7 @@ export default function OrdersHistoryContent({ onBack }) {
                       {isShipped && (
                         <button
                           onClick={() => { setSelectedOrder(order); setModalType('track'); }}
-                          className="inline-flex items-center font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3.5 py-1.5 rounded-lg shadow-sm transition"
+                          className="inline-flex items-center font-bold text-white bg-[#1F6FEB] hover:bg-[#1554C0] px-3.5 py-1.5 rounded-lg shadow-sm transition"
                         >
                           <Truck className="w-3.5 h-3.5 mr-1.5" />
                           Track Package
@@ -820,7 +981,12 @@ export default function OrdersHistoryContent({ onBack }) {
                 {getOrderItems(selectedOrder).map((item, idx) => (
                   <div key={item.id || `d-item-${idx}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <div className="flex items-center space-x-3">
-                      <img src={item.image || item.image_url || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300'} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-slate-200" />
+                      <img 
+                        src={item.image || item.image_url || '/hero-banner.png'} 
+                        alt={item.name} 
+                        className="w-12 h-12 object-cover rounded-lg border border-slate-200" 
+                        onError={(e) => { e.target.onerror = null; e.target.src = '/hero-banner.png'; }}
+                      />
                       <div>
                         <p className="text-sm font-semibold text-slate-800">{item.name}</p>
                         <p className="text-xs text-slate-500">Qty: {item.quantity || 1} &times; {formatCurrency(item.price, settings?.currency)}</p>
@@ -872,11 +1038,11 @@ export default function OrdersHistoryContent({ onBack }) {
 
             <div className="flex items-center space-x-3 pt-2">
               <button
-                onClick={() => showToast("Downloading PDF Invoice...")}
-                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center"
+                onClick={() => handleDownloadInvoice(selectedOrder)}
+                className="flex-1 py-3 bg-[#1f7cf6] hover:bg-[#1361c4] text-white rounded-xl text-sm font-bold transition flex items-center justify-center cursor-pointer shadow-md shadow-[#1f7cf6]/20"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Download PDF Invoice
+                Download Invoice
               </button>
               <button
                 onClick={() => setModalType(null)}

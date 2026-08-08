@@ -297,13 +297,13 @@ const AuthPage = () => {
                 />
                 <span className="text-[11px] font-bold text-slate-600 leading-relaxed">
                   I agree to the{' '}
-                  <a href="#" className="underline hover:text-slate-900 transition-colors">
+                  <button type="button" onClick={() => navigate('/legal')} className="underline hover:text-slate-900 transition-colors bg-transparent border-none p-0 cursor-pointer font-inherit">
                     Terms & Conditions
-                  </a>{' '}
+                  </button>{' '}
                   and{' '}
-                  <a href="#" className="underline hover:text-slate-900 transition-colors">
+                  <button type="button" onClick={() => navigate('/legal')} className="underline hover:text-slate-900 transition-colors bg-transparent border-none p-0 cursor-pointer font-inherit">
                     Privacy Policy
-                  </a>
+                  </button>
                 </span>
               </label>
             )}

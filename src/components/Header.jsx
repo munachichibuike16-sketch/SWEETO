@@ -13,7 +13,7 @@ import SweetoLogo from './SweetoLogo';
 import { logVisitorEvent } from '../utils/analytics';
 import { pushManager } from '../utils/pushManager';
 
-const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
+const Header = ({ onMenuClick, onCartClick, onStoreClick, onNotifClick }) => {
   const { cartCount, cartTotal } = useCart();
   const { wishlistItems } = useWishlist();
   const { products, categories = [], searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, setSelectedBrand, settings, showToast, sections } = useStore();
@@ -239,7 +239,17 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
   useEffect(() => {
     const calculateUnread = () => {
       try {
-        const readNotifs = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+        const rawRead = localStorage.getItem('read_notifications');
+        
+        // Mark all initial mock products as read for first-time visitors
+        if (rawRead === null && products && products.length > 0) {
+          const allInitialIds = products.map(p => `new-product-${p.id}`);
+          localStorage.setItem('read_notifications', JSON.stringify(allInitialIds));
+          setUnreadNotifCount(0);
+          return;
+        }
+
+        const readNotifs = rawRead ? JSON.parse(rawRead) : [];
         const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
         const deletedNotifs = JSON.parse(localStorage.getItem('deleted_notifications') || '{}');
         const count = products.filter(p => p.is_new_arrival).filter(p => {
@@ -248,7 +258,7 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
         }).length;
         setUnreadNotifCount(count);
       } catch (e) {
-        setUnreadNotifCount(products.filter(p => p.is_new_arrival).length);
+        setUnreadNotifCount(0);
       }
     };
 
@@ -766,50 +776,7 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
               </div>
             </div>
 
-            {/* Language/Country Dropdown (French/USD or similar) */}
-            <div className="relative" ref={langRef}>
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                className="flex items-center gap-1 px-1.5 py-1 rounded-xl text-slate-700 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-850/50 transition-all cursor-pointer bg-transparent border-none"
-              >
-                <span className="text-lg">🇨🇮</span>
-                <div className="flex flex-col items-start leading-none text-left text-[9px]">
-                  <span className="text-slate-405">FR/</span>
-                  <span className="font-bold uppercase text-slate-850 dark:text-slate-200 mt-0.5 flex items-center gap-0.5">
-                    {settings?.currency || 'USD'} <ChevronDown size={8} />
-                  </span>
-                </div>
-              </motion.button>
 
-              <AnimatePresence>
-                {isLangOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[110]"
-                  >
-                    <div className="max-h-[250px] overflow-y-auto py-2">
-                      {languages.map(language => (
-                        <button
-                          key={language.code}
-                          onClick={() => handleLanguageChange(language.code)}
-                          className={`w-full text-start px-4 py-2 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer ${
-                            lang === language.code 
-                              ? 'bg-[#e61e25]/10 text-[#e61e25] dark:bg-[#e61e25]/20' 
-                              : 'text-slate-655 dark:text-slate-300 hover:bg-slate-55 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          <span className="uppercase tracking-widest mr-2 opacity-50">{language.code}</span>
-                          {language.name}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* Account dropdown (User icon outline, Welcome text, Log in / Register) */}
             <div className="relative group/account">
@@ -982,8 +949,8 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
         {/* Mobile Header Layout */}
         <div className="flex flex-col md:hidden w-full">
           {/* Persistent Compact Single-Row Mobile Header */}
-          <div className="flex items-center justify-between w-full h-14 gap-3 px-2">
-            {/* Redesigned Icy Cool Mobile Branding without checkmark */}
+          <div className="flex items-center justify-between w-full h-14 gap-3.5 px-3 bg-white dark:bg-[#020617] border-b border-slate-150 dark:border-slate-800">
+            {/* Blue Rounded Badge with White S + SWEETO-HUB Label */}
             <div 
               onClick={() => {
                 setSearchQuery('');
@@ -992,21 +959,26 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
                 navigate('/');
                 window.scrollTo(0, 0);
               }}
-              className="flex items-center select-none cursor-pointer group shrink-0"
+              className="flex items-center gap-2 select-none cursor-pointer group shrink-0"
             >
-              <span className="font-black text-xl sm:text-2xl tracking-tighter uppercase italic drop-shadow-sm select-none">
-                <span className="text-blue-600">S</span> <span className="text-black dark:text-white">SWEETO-HUB</span>
+              {/* Blue Badge */}
+              <div className="w-8 h-8 rounded-lg bg-[#1F6FEB] text-white flex items-center justify-center font-black italic text-lg shadow-sm shrink-0">
+                S
+              </div>
+              {/* Bold Capitalized Italic Black Text */}
+              <span className="font-extrabold text-sm tracking-tight uppercase italic text-slate-900 dark:text-white">
+                SWEETO-HUB
               </span>
             </div>
 
             {/* Compact Search Bar in the middle */}
             <div 
               onClick={() => setIsSearchOpen(true)}
-              className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-full py-2 pl-4 pr-3 gap-2 relative shadow-sm cursor-pointer h-10 overflow-hidden"
+              className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-full py-2 pl-3.5 pr-3.5 gap-2 relative cursor-pointer h-10 overflow-hidden"
             >
               <Search size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
-              <div className="w-full bg-transparent border-none outline-none font-semibold text-xs text-slate-400 dark:text-slate-500 select-none truncate text-start">
-                {inputValue || placeholders[currentPlaceholderIndex]}
+              <div className="w-full bg-transparent border-none outline-none font-medium text-xs text-slate-400 dark:text-slate-500 select-none truncate text-start">
+                {inputValue || (lang === 'fr' ? 'Rechercher...' : 'Search...')}
               </div>
               <button 
                 type="button" 
@@ -1014,42 +986,33 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick }) => {
                   e.stopPropagation();
                   imageInputRef.current?.click();
                 }}
-                className="text-slate-400 dark:text-slate-500 hover:text-slate-655 shrink-0 ml-auto flex items-center justify-center p-0.5"
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-655 shrink-0 ml-auto flex items-center justify-center p-0.5 bg-transparent border-none cursor-pointer"
               >
-                <Camera size={14} strokeWidth={2} />
+                <Camera size={16} strokeWidth={2} />
               </button>
             </div>
  
-            {/* Action Icons: Settings gear & Notification bell */}
-            <div className="flex items-center gap-0.5 shrink-0">
-              {/* Settings gear */}
-              {!isActualHomePage && (
-                <button 
-                  onClick={() => navigate('/settings')} 
-                  className="p-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors"
-                  title={t('settings') || 'Settings'}
-                >
-                  <Settings size={20} strokeWidth={1.5} />
-                </button>
-              )}
-
-              {/* Notifications bell */}
-              <button 
-                onClick={() => {
-                  pushManager.subscribe('customer').catch(() => {});
+            {/* Notification Circular Bell Button */}
+            <button 
+              type="button"
+              onClick={() => {
+                pushManager.subscribe('customer').catch(() => {});
+                if (onNotifClick) {
+                  onNotifClick();
+                } else {
                   navigate('/notifications');
-                }} 
-                className="p-1.5 text-slate-700 dark:text-slate-300 hover:text-blue-500 transition-colors relative"
-                title={t('notifications')}
-              >
-                <Bell size={20} strokeWidth={1.5} />
-                {unreadNotifCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 min-w-4 h-4 px-1 bg-[#ff3b30] rounded-full flex items-center justify-center text-white text-[7.5px] font-black shadow-md leading-none">
-                    {unreadNotifCount}
-                  </span>
-                )}
-              </button>
-            </div>
+                }
+              }} 
+              className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shrink-0 relative cursor-pointer"
+              title={t('notifications')}
+            >
+              <Bell size={18} strokeWidth={1.8} />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-red-500 rounded-full flex items-center justify-center text-white text-[7.5px] font-black shadow-md leading-none border border-white dark:border-slate-900">
+                  {unreadNotifCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </header>

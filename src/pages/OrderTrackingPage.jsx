@@ -836,7 +836,7 @@ export default function OrderTrackingPage() {
                     <button
                       onClick={handleVerifyDeliveryCode}
                       disabled={verifyingCode}
-                      className="px-6 py-3.5 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:bg-slate-350 dark:disabled:bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer border-none flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20"
+                      className="px-6 py-3.5 bg-[#1F6FEB] hover:bg-[#1554C0] disabled:bg-slate-350 dark:disabled:bg-slate-800 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer border-none flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20"
                     >
                       {verifyingCode ? '...' : (lang === 'fr' ? 'VALIDER' : 'VERIFY')}
                     </button>

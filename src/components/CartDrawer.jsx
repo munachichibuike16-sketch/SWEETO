@@ -189,7 +189,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               {(() => {
                 const moreToLove = (products || [])
                   .filter(p => !cartItems.some(item => item.id === p.id))
-                  .slice(0, 4);
+                  .slice(0, 16);
                 
                 if (moreToLove.length === 0) return null;
                 

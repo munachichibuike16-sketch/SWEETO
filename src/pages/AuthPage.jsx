@@ -74,8 +74,22 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   const { showToast, settings, products, userCurrency, changeUserCurrency } = useStore();
   const { t } = useLanguage();
   const { isDarkMode, toggleTheme } = useTheme();
-  
+  const [targetTab, setTargetTab] = useState(null);
   const [currentTab, setCurrentTab] = useState(tabParam || initialTab || 'login');
+  const handleAuthSuccess = (user, message) => {
+    showToast(message, 'success');
+    const redirectUrl = searchParams.get('redirect');
+    if (redirectUrl) {
+      navigate(redirectUrl);
+    } else if (targetTab) {
+      setCurrentTab(targetTab);
+      setTargetTab(null);
+      setShowAuthForm(false);
+    } else {
+      setCurrentTab('overview');
+      setShowAuthForm(false);
+    }
+  };
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -262,7 +276,14 @@ const AuthPage = ({ initialTab, onCartClick }) => {
   // Sync tab state when initialTab prop changes dynamically (e.g. via navigation)
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('sweetohub_session'));
-    if (initialTab) {
+    if (session && (initialTab === 'login' || initialTab === 'signup')) {
+      setCurrentTab('overview');
+      setShowAuthForm(false);
+    } else if (!session && (initialTab === 'settings' || initialTab === 'orders' || initialTab === 'overview')) {
+      setTargetTab(initialTab);
+      setCurrentTab('login');
+      setShowAuthForm(true);
+    } else if (initialTab) {
       setCurrentTab(initialTab);
       if (initialTab === 'login' || initialTab === 'signup') {
         setShowAuthForm(true);
@@ -427,8 +448,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
         localStorage.setItem('sweetohub_users', JSON.stringify(users));
       }
 
-      showToast(`Welcome back, ${user.name}! ⚡`, 'success');
-      setCurrentTab('overview');
+      handleAuthSuccess(user, `Welcome back, ${user.name}! ⚡`);
     } catch (err) {
       console.error("Login failed:", err);
       showToast("Authentication service error.", "error");
@@ -527,8 +547,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
       localStorage.setItem('sweetohub_session', JSON.stringify(safeUser));
       setSessionUser(safeUser);
 
-      showToast(`Welcome to SWEETO-HUB, ${name}! ⚡`, 'success');
-      setCurrentTab('overview');
+      handleAuthSuccess(safeUser, `Welcome to SWEETO-HUB, ${name}! ⚡`);
     } catch (err) {
       console.error("Sign up failed:", err);
       showToast("Registration service error.", "error");
@@ -539,17 +558,25 @@ const AuthPage = ({ initialTab, onCartClick }) => {
 
   // Google Login callbacks
   const GOOGLE_CLIENT_ID = '869701747796-smfrr2fte1uv0t8dsebll4gvumkrjdv7.apps.googleusercontent.com';
+  const googleInitializedRef = useRef(false);
 
   useEffect(() => {
     const initGoogle = () => {
-      if (window.google?.accounts?.id) {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          ux_mode: 'popup'
-        });
+      if (window.google?.accounts?.id && !googleInitializedRef.current) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            ux_mode: 'popup'
+          });
+          googleInitializedRef.current = true;
+          setGoogleLoaded(true);
+        } catch (e) {
+          console.warn("Google initialization notice:", e);
+        }
+      } else if (window.google?.accounts?.id) {
         setGoogleLoaded(true);
       }
     };
@@ -563,7 +590,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
       script.onload = initGoogle;
       document.head.appendChild(script);
     } else {
-      setTimeout(initGoogle, 150);
+      initGoogle();
     }
   }, []);
 
@@ -672,8 +699,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
       const activeUser = existing || localUser;
       localStorage.setItem('sweetohub_session', JSON.stringify(activeUser));
       setSessionUser(activeUser);
-      showToast(`Welcome, ${activeUser.name}! ⚡`, 'success');
-      setCurrentTab('overview');
+      handleAuthSuccess(activeUser, `Welcome, ${activeUser.name}! ⚡`);
     }
   };
 
@@ -732,8 +758,7 @@ const AuthPage = ({ initialTab, onCartClick }) => {
       const activeUser = existing || localUser;
       localStorage.setItem('sweetohub_session', JSON.stringify(activeUser));
       setSessionUser(activeUser);
-      showToast(`Welcome, ${activeUser.name}! (Demo) ⚡`, 'success');
-      setCurrentTab('overview');
+      handleAuthSuccess(activeUser, `Welcome, ${activeUser.name}! (Demo) ⚡`);
     }, 1000);
   };
 
@@ -1632,23 +1657,8 @@ const AuthPage = ({ initialTab, onCartClick }) => {
                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       Language Selector
                     </label>
-                    <div className="relative">
-                      <select 
-                        value={lang || 'en'} 
-                        onChange={(e) => changeLanguage && changeLanguage(e.target.value)}
-                        className="bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl p-4 text-sm font-semibold text-slate-800 dark:text-white focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full transition-all cursor-pointer appearance-none"
-                      >
-                        <option value="en">English</option>
-                        <option value="fr">Français (French)</option>
-                        <option value="es">Español (Spanish)</option>
-                        <option value="de">Deutsch (German)</option>
-                        <option value="pt">Português (Portuguese)</option>
-                        <option value="zh">中文 (Chinese)</option>
-                        <option value="ar">العربية (Arabic)</option>
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <ChevronDown size={16} />
-                      </div>
+                    <div className="bg-slate-50/50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800/50 rounded-2xl p-4 text-sm font-semibold text-slate-400 dark:text-slate-500 w-full select-none">
+                      English (Default)
                     </div>
                   </div>
 
@@ -2451,9 +2461,9 @@ const AuthPage = ({ initialTab, onCartClick }) => {
             </div>
 
             <p className="auth-footer-text">
-              {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}
-              <a href="#">{t('terms') || 'Terms'}</a> {' & '}
-              <a href="#">{t('privacy_policy') || 'Privacy Policy'}</a>
+              {t('agree_terms') || "By continuing, you agree to SWEETO-HUB's"}{' '}
+              <button type="button" onClick={() => navigate('/legal')} className="underline hover:text-blue-500 bg-transparent border-none p-0 cursor-pointer font-inherit">{t('terms') || 'Terms'}</button>{' & '}
+              <button type="button" onClick={() => navigate('/legal')} className="underline hover:text-blue-500 bg-transparent border-none p-0 cursor-pointer font-inherit">{t('privacy_policy') || 'Privacy Policy'}</button>
             </p>
           </div>
         </div>

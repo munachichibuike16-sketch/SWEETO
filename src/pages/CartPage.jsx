@@ -5,11 +5,12 @@ import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { QuantityControl, ContinueShoppingButton } from '../components/CheckoutShared';
+import ProductCard from '../components/ProductCard';
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { cartItems, cartTotal, updateQuantity, removeFromCart } = useCart();
-  const { settings } = useStore();
+  const { cartItems, cartTotal, updateQuantity, removeFromCart, addToCart } = useCart();
+  const { products, settings } = useStore();
   const { t, lang } = useLanguage();
 
   const currencySymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency === 'USD' ? '$' : (settings?.currency || 'FCFA'));
@@ -20,6 +21,14 @@ export default function CartPage() {
   // Example shipping logic (free over a certain amount, or base fee)
   const shipping = cartTotal > 50000 ? 0 : 0; // Usually calculated at checkout based on location
   const total = cartTotal + shipping + transportFee;
+
+  const moreToLoveProducts = React.useMemo(() => {
+    if (!products) return [];
+    const cartIds = new Set(cartItems.map(item => item.id.toString()));
+    return products
+      .filter(p => p.status === 'active' && p.stock > 0 && !cartIds.has(p.id.toString()))
+      .slice(0, 16);
+  }, [products, cartItems]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -116,40 +125,88 @@ export default function CartPage() {
 
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm sticky top-24">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {lang === 'fr' ? 'Résumé de la commande' : 'Order Summary'}
+              <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">
+                Order Summary
               </h2>
+              
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-slate-600">
-                  <span>{lang === 'fr' ? 'Sous-total' : 'Subtotal'}</span>
-                  <span className="font-medium text-slate-900">{currencySymbol} {cartTotal.toLocaleString()}</span>
+                <div className="flex justify-between text-slate-500 font-medium">
+                  <span>Subtotal</span>
+                  <span className="font-semibold text-slate-900">{currencySymbol} {cartTotal.toLocaleString()}</span>
                 </div>
                 
-                <div className="h-px bg-slate-200 my-3" />
-                <div className="flex justify-between items-baseline">
-                  <span className="text-base font-semibold text-slate-900">Total</span>
-                  <span className="text-2xl font-bold text-slate-900">{currencySymbol} {cartTotal.toLocaleString()}</span>
+                <div className="flex justify-between text-slate-500 font-medium">
+                  <span>Delivery</span>
+                  <span className="font-semibold text-slate-900">Free</span>
                 </div>
+
+                <div className="flex justify-between text-slate-500 font-medium pb-3">
+                  <span>Discount</span>
+                  <span className="font-semibold text-slate-900">{currencySymbol} 0</span>
+                </div>
+
+                <div className="h-px bg-slate-200 my-3" />
+                
+                <div className="flex justify-between items-baseline pt-2">
+                  <span className="text-base font-bold text-slate-900">Total</span>
+                  <span className="text-2xl font-black text-[#1f7cf6]">{currencySymbol} {cartTotal.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Discount Promo Input Field */}
+              <div className="mt-6 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Promo code"
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#1f7cf6]/20 focus:border-[#1f7cf6] outline-none transition-all"
+                />
+                <button className="px-5 py-2.5 rounded-xl bg-[#1f7cf6] text-white font-bold text-sm shadow-md shadow-[#1f7cf6]/20 hover:bg-[#1361c4] transition-all cursor-pointer">
+                  Apply
+                </button>
               </div>
 
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full mt-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5"
+                className="w-full mt-6 py-3.5 rounded-xl bg-[#1f7cf6] text-white font-bold shadow-lg shadow-[#1f7cf6]/20 hover:bg-[#1361c4] hover:shadow-xl hover:shadow-[#1f7cf6]/30 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
-                {lang === 'fr' ? 'Passer à la caisse' : 'Proceed to Checkout'}
+                Proceed to Checkout
               </button>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <p className="text-xs text-slate-500 mb-3 text-center">
-                  {lang === 'fr' ? 'Paiement Sécurisé' : 'Secure Payment'}
+                  Secure Payment
                 </p>
                 <div className="flex justify-center gap-3 opacity-60">
-                  <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700">WAVE</div>
-                  <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700">VISA</div>
-                  <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700">MC</div>
+                  <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 select-none">WAVE</div>
+                  <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 select-none">VISA</div>
+                  <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 select-none">MC</div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* More to Love Section */}
+      {moreToLoveProducts.length > 0 && (
+        <div className="mt-16 pt-10 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col mb-8 select-none">
+            <span className="text-xs font-black uppercase tracking-widest text-[#1F6FEB]">
+              {lang === 'fr' ? 'Découvrir' : 'Discover new drops'}
+            </span>
+            <h2 className="text-2xl md:text-3xl font-black mt-1">
+              {lang === 'fr' ? (
+                <>Plus d'articles <span className="italic text-[#1f7cf6] font-black">à adorer.</span></>
+              ) : (
+                <>More to <span className="italic text-[#1f7cf6] font-black">love.</span></>
+              )}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {moreToLoveProducts.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
           </div>
         </div>
       )}

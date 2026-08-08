@@ -872,62 +872,6 @@ const Sidebar = ({ isOpen, onClose, onCategorySelect, activeCategory, embedded =
                         </button>
                       </div>
                     ))}
-
-                    {/* Regional Language Selector Item */}
-                    <div className="flex flex-col bg-white dark:bg-slate-900">
-                      <div className="flex items-stretch justify-between min-h-[52px] border-b border-slate-100 dark:border-slate-800">
-                        <button
-                          onClick={() => {
-                            navigate('/settings');
-                            onClose();
-                          }}
-                          className="flex-1 text-left px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-slate-200 hover:text-eas-blue transition-colors cursor-pointer flex items-center gap-3"
-                        >
-                          <Globe size={14} className="text-slate-400" />
-                          <span>{t('language') || 'Language'} ({lang.toUpperCase()})</span>
-                        </button>
-                        <button
-                          onClick={() => setIsLangExpanded(!isLangExpanded)}
-                          className={`w-12 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                            isLangExpanded 
-                              ? 'bg-eas-blue text-white border-l-eas-blue shadow-inner' 
-                              : 'text-slate-400 dark:text-slate-500 hover:text-slate-850 dark:hover:text-white'
-                          }`}
-                        >
-                          <ChevronRight className={`w-4 h-4 stroke-[3.5] transition-transform duration-300 ${isLangExpanded ? 'rotate-90' : ''}`} />
-                        </button>
-                      </div>
-
-                      {/* Language Options 2-Column Grid */}
-                      <AnimatePresence initial={false}>
-                        {isLangExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: 'easeInOut' }}
-                            className="overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 grid grid-cols-2 gap-2 p-4 border-b border-slate-100 dark:border-slate-800"
-                          >
-                            {languages.map((language) => (
-                              <button
-                                key={language.code}
-                                onClick={() => {
-                                  changeLanguage(language.code);
-                                  onClose();
-                                }}
-                                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center transition-all cursor-pointer ${
-                                  lang === language.code
-                                    ? 'bg-eas-blue text-white shadow-lg shadow-eas-blue/20'
-                                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-100 dark:border-slate-800/80 hover:border-eas-blue hover:text-eas-blue'
-                                }`}
-                              >
-                                {language.code} - {language.name}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

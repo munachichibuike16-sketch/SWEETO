@@ -3,29 +3,37 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-eas-blue: #0000ff;
-  --color-eas-dark: #020617;
-  --color-eas-light: #f0f5ff;
-  --color-eas-accent: #3333ff;
+  --color-eas-blue: #1F6FEB;
+  --color-eas-dark: #0A2540;
+  --color-eas-light: #F6F9FE;
+  --color-eas-accent: #1554C0;
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Space Grotesk', sans-serif;
   --font-mono: 'Fira Code', monospace;
 }
 
 :root {
-  --eas-blue: #0000ff;
-  --eas-light: #f0f5ff;
+  --paper: #F6F9FE;
+  --card: #FFFFFF;
+  --stage: #E8F0FB;
+  --ink: #0A2540;
+  --ink-soft: #5A6B84;
+  --line: #D9E3F2;
+  --accent: #1F6FEB;
+  --accent-dark: #1554C0;
+  --eas-blue: #1F6FEB;
+  --eas-light: #F6F9FE;
   color-scheme: light;
 }
 
 .dark {
   color-scheme: dark;
-  --eas-blue: #0000ff;
+  --eas-blue: #1F6FEB;
 }
 
 @layer base {
   body {
-    @apply antialiased text-slate-900 dark:text-slate-100 bg-white dark:bg-[#020617] transition-colors duration-500;
+    @apply antialiased text-[#0A2540] dark:text-slate-100 bg-[#F6F9FE] dark:bg-[#020617] transition-colors duration-500;
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     font-feature-settings: "cv02", "cv05", "cv11";
@@ -38,7 +46,7 @@
   }
 
   ::selection {
-    @apply bg-blue-500/30 text-blue-500;
+    @apply bg-[#1F6FEB]/20 text-[#1F6FEB];
   }
 }
 

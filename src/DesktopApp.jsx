@@ -6,6 +6,7 @@ import { useCart } from './contexts/CartContext';
 import { useWishlist } from './contexts/WishlistContext';
 import { useLanguage } from './contexts/LanguageContext';
 import DesktopHeader from './components/DesktopHeader';
+import NotificationsDrawer from './components/NotificationsDrawer';
 import AuthPage from './pages/AuthPage';
 import WishlistContent from './components/WishlistContent';
 import { getCategoryDescendants } from './utils/categoryHelpers';
@@ -568,6 +569,7 @@ export default function DesktopApp() {
   const infiniteObserverRef = useRef(null);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const [likedProducts, setLikedProducts] = useState(['prod-d1', 'prod-d2']);
   const [likesMap, setLikesMap] = useState(() => {
@@ -735,7 +737,7 @@ export default function DesktopApp() {
     return shuffled.slice(0, 10);
   };
 
-  const ProductCard = ({ product, badgeBg = 'bg-blue-600' }) => {
+  const ProductCard = ({ product, badgeBg = 'bg-blue-600', layout }) => {
     const finalPrice = product.price || 0;
     const oldPrice = product.originalPrice || (product.price * 1.25);
     const discount = product.discount || Math.round(((oldPrice - finalPrice) / oldPrice) * 100);
@@ -747,7 +749,7 @@ export default function DesktopApp() {
         className="bg-white dark:bg-[#0b0f19]/45 border border-slate-100 dark:border-slate-800/80 rounded-[1.75rem] p-4 flex flex-col justify-between text-left relative shadow-sm hover:shadow-md transition-all duration-300 group hover:-translate-y-1 cursor-pointer h-full select-none"
       >
         {/* Discount badge top-left */}
-        {discount > 0 && (
+        {discount > 0 && layout !== 'unending' && (
           <span className="absolute top-3 left-3 bg-red-500/10 text-red-500 font-extrabold text-[9px] px-2 py-0.5 rounded border border-red-500/15 z-10 select-none uppercase">
             -{discount}% OFF
           </span>
@@ -837,25 +839,25 @@ export default function DesktopApp() {
   const renderUnendingProductsSection = () => (
     <section className="max-w-[1440px] mx-auto px-8 py-8 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/30 dark:bg-slate-950/20 rounded-[2.5rem] my-4 relative overflow-hidden select-none">
       {/* Decorative background blur shapes */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 relative z-10">
         <div className="flex items-start gap-4">
-          <div className="p-4 bg-gradient-to-tr from-[#6D28D9] to-[#8B5CF6] text-white rounded-2xl shadow-xl shadow-indigo-500/20 flex items-center justify-center transform hover:rotate-6 transition-transform duration-300">
+          <div className="p-4 bg-gradient-to-tr from-[#1F6FEB] to-[#1554C0] text-white rounded-2xl shadow-xl shadow-blue-500/20 flex items-center justify-center transform hover:rotate-6 transition-transform duration-300">
             <IconInfinity className="w-6 h-6 animate-pulse" />
           </div>
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic tracking-tighter">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#0A2540] dark:text-white uppercase italic tracking-tighter">
                 {t_smart('UNENDING PRODUCT STREAM')}
               </h2>
-              <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-amber-500 text-white text-[9px] font-black uppercase px-3.5 py-1 rounded-full shadow-sm">
+              <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-blue-400 text-white text-[9px] font-black uppercase px-3.5 py-1 rounded-full shadow-sm">
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
                 {t_smart('INFINITE CATALOG')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 max-w-xl">
+            <p className="text-xs sm:text-sm font-medium text-[#5A6B84] dark:text-slate-400 max-w-xl">
               {t_smart('Continuously loading infinite hardware catalog. Keeps fetching as you scroll down!')}
             </p>
           </div>
@@ -866,7 +868,7 @@ export default function DesktopApp() {
             <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {t_smart('Showing')}{' '}
-              <strong className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 font-black text-sm">
+              <strong className="text-[#1F6FEB] font-black text-sm">
                 {infiniteProducts.length}
               </strong>{' '}
               {t_smart('Products')}
@@ -935,6 +937,7 @@ export default function DesktopApp() {
         setActivePage={setActivePage} 
         onCartOpen={() => setIsCartOpen(true)}
         onSidebarOpen={() => setIsSidebarOpen(true)}
+        onNotifOpen={() => setIsNotifOpen(true)}
       />
 
       {/* PAGE VIEW: WISHLIST */}
@@ -954,7 +957,7 @@ export default function DesktopApp() {
 
       {/* PAGE VIEW: AUTH / ACCOUNT */}
       {activePage === 'auth' && (
-        <AuthPage initialTab={location.pathname.includes('/orders') ? 'orders' : 'login'} />
+        <AuthPage initialTab={location.pathname.includes('/settings') ? 'settings' : (location.pathname.includes('/orders') ? 'orders' : 'login')} />
       )}
 
       {/* PAGE VIEW: HOME PAGE */}
@@ -1494,6 +1497,12 @@ export default function DesktopApp() {
           </div>
         </div>
       )}
+
+      <NotificationsDrawer 
+        isOpen={isNotifOpen} 
+        onClose={() => setIsNotifOpen(false)} 
+        onProductClick={openProductDetail} 
+      />
 
     </div>
   );

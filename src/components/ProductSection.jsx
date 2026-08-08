@@ -48,7 +48,7 @@ export const SectionBanner = ({ title, subtitle, viewAllLink, onViewAllClick }) 
   );
 };
 
-const ProductRow = ({ products, onProductClick, type, isMobile }) => {
+const ProductRow = ({ products, onProductClick, type, isMobile, layout }) => {
   const scrollRef = useRef(null);
   
   const scroll = (direction) => {
@@ -92,7 +92,7 @@ const ProductRow = ({ products, onProductClick, type, isMobile }) => {
               product={product}
               index={idx}
               onProductClick={onProductClick}
-              layout={type === 'new' ? 'new_arrivals' : 'default'}
+              layout={layout || (type === 'new' ? 'new_arrivals' : 'default')}
             />
           </div>
         ))}
@@ -180,7 +180,7 @@ export const SectionHeader = ({
   const styles = {
     bold: "bg-white dark:bg-[#020617] border-l-[8px] md:border-l-[12px] border-slate-900 dark:border-blue-500 py-3.5 px-3 md:py-12 md:px-14 rounded-r-xl md:rounded-r-[3rem] shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)]",
     minimal: "bg-transparent border-b-2 border-slate-200 dark:border-eas-blue/15 py-2 md:py-10 px-1",
-    accent: "bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-2xl shadow-blue-500/20",
+    accent: "bg-gradient-to-br from-[#1F6FEB] via-[#1554C0] to-[#0A2540] text-white py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-2xl shadow-[#1F6FEB]/20",
     neon: "bg-[#020617] border border-emerald-500/40 text-emerald-400 py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-[0_20px_50px_rgba(16,185,129,0.15)] relative overflow-hidden",
     outlined: "border-2 md:border-4 border-slate-900 dark:border-white py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem]",
     glass: "backdrop-blur-3xl bg-white/40 dark:bg-[#020617]/40 border border-white/20 dark:border-eas-blue/15 py-3.5 px-3 md:py-12 md:px-14 rounded-xl md:rounded-[3rem] shadow-2xl shadow-black/5"
@@ -246,7 +246,7 @@ export const SectionHeader = ({
   );
 };
 
-const ProductSection = ({ title, subtitle, products, type, settings, onProductClick, viewAllLink, bannerImage, hideBanner, headerStyle, hideHeader, cols, onViewAllClick }) => {
+const ProductSection = ({ title, subtitle, products, type, settings, onProductClick, viewAllLink, bannerImage, hideBanner, headerStyle, hideHeader, cols, onViewAllClick, layout }) => {
   const navigate = useNavigate();
   const [activeSubCategory, setActiveSubCategory] = useState('All');
   const [isMobile, setIsMobile] = useState(false);
@@ -323,11 +323,12 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
                 product={product}
                 index={idx}
                 onProductClick={onProductClick}
+                layout={layout}
               />
             ))}
           </div>
         ) : (
-          <ProductRow products={filteredProducts} onProductClick={onProductClick} type={type} isMobile={isMobile} />
+          <ProductRow products={filteredProducts} onProductClick={onProductClick} type={type} isMobile={isMobile} layout={layout} />
         )
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-4 px-0 md:px-0 w-full">
@@ -337,7 +338,7 @@ const ProductSection = ({ title, subtitle, products, type, settings, onProductCl
               product={product}
               index={idx}
               onProductClick={onProductClick}
-              layout={!isMobile && type === 'new' ? 'new_arrivals' : 'default'}
+              layout={layout || (!isMobile && type === 'new' ? 'new_arrivals' : 'default')}
             />
           ))}
         </div>

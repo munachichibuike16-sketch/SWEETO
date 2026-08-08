@@ -60,7 +60,7 @@ const getImagesList = (prod) => {
   return list;
 };
 
-const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default' }) => {
+const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, layout = 'default', hideDiscountAndOriginalPrice = false }) => {
   const navigate = useNavigate();
   const { settings, openGlobalLightbox, productViewsMap, productLikesMap, toggleProductLike, incrementProductView, showToast } = useStore();
   const { isDarkMode } = useTheme();
@@ -231,7 +231,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
 
   const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0";
-  const discountPercent = product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null);
+  const discountPercent = hideDiscountAndOriginalPrice ? 0 : (product.discount || (product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null));
 
   if (layout === 'unending') {
     const finalPrice = product.price || 0;
@@ -423,7 +423,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <span className="text-xl font-black text-[#111322] dark:text-white">
                   {finalPrice.toLocaleString()} {currSymbol}
                 </span>
-                {oldPrice && oldPrice > finalPrice && (
+                {oldPrice && oldPrice > finalPrice && !hideDiscountAndOriginalPrice && (
                   <span className="text-sm text-slate-400 line-through font-bold">
                     {oldPrice.toLocaleString()} {currSymbol}
                   </span>
@@ -546,7 +546,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <span className="text-base font-black text-slate-900 dark:text-white">
                   {product.price?.toLocaleString()} {settings?.currency || 'FCFA'}
                 </span>
-                {product.original_price && product.original_price > product.price && (
+                {product.original_price && product.original_price > product.price && !hideDiscountAndOriginalPrice && (
                   <span className="text-xs text-slate-400 line-through font-bold">
                     {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
                   </span>
@@ -561,6 +561,101 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <ShoppingCart size={12} fill="currentColor" />
                 <span>{isFr ? 'Ajouter' : 'Add to Cart'}</span>
               </button>
+            </div>
+          </div>
+        </motion.div>
+
+        <QuickViewModal 
+          product={product} 
+          isOpen={isQuickViewOpen} 
+          onClose={closeQuickView}
+          onViewDetails={handleViewDetails}
+        />
+      </>
+    );
+  }
+
+  if (layout === 'clean') {
+    const finalPrice = product.price || 0;
+    const currSymbol = settings?.currency === 'XOF' ? 'FCFA' : (settings?.currency || 'FCFA');
+    const isWished = isInWishlist(product.id);
+    const ratingVal = product.rating || 4.3;
+    const reviewsCountVal = reviews.length > 0 ? reviews.length : 761;
+
+    return (
+      <>
+        <motion.div 
+          whileHover={{ y: -4, scale: 1.01 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          onClick={handleCardClick}
+          className="group relative flex flex-col h-full cursor-pointer w-full bg-transparent border-0 p-0 shadow-none hover:shadow-none text-left"
+        >
+          {/* Image Container */}
+          <div className="relative aspect-square w-full flex items-center justify-center overflow-hidden mb-3 rounded-2xl bg-slate-50 dark:bg-[#020617] p-3">
+            {/* Wishlist Button Overlay on top-right */}
+            <div className="absolute top-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleToggleWishlist}
+                className={`w-7.5 h-7.5 rounded-full shadow-md flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${
+                  isWished 
+                    ? 'bg-[#ff3b30] border-[#ff3b30] text-white shadow-red-500/30' 
+                    : 'bg-white/75 dark:bg-slate-900/75 border-slate-200/40 dark:border-slate-800/40 text-slate-700 dark:text-slate-350 hover:bg-[#ff3b30] hover:text-white'
+                }`}
+              >
+                <Heart size={13} fill={isWished ? "currentColor" : "none"} />
+              </button>
+            </div>
+
+            {/* Cart Button Overlay on bottom-right */}
+            <div className="absolute bottom-2.5 right-2.5 z-20">
+              <button 
+                onClick={handleAddToCart}
+                className="w-7.5 h-7.5 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center hover:bg-[#1e5cff] hover:text-white active:scale-95 transition-all text-slate-800 dark:text-white cursor-pointer"
+              >
+                <ShoppingCart size={13} />
+              </button>
+            </div>
+
+            <img 
+              src={images[currentImageIndex] || '/hero-banner.png'} 
+              alt={product.name} 
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = '/hero-banner.png';
+              }}
+              className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 rounded-lg"
+            />
+          </div>
+
+          {/* Info Details in correct order: Category, Title, Rating, Price */}
+          <div className="flex flex-col flex-1 py-0.5 text-left space-y-1.5">
+            {/* Category / Brand */}
+            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+              {product.brand || 'SWEETO'} · {product.category || 'LUXEOPTIK'}
+            </div>
+
+            {/* Title */}
+            <h3 className="line-clamp-2 text-[13px] sm:text-sm font-black text-slate-905 dark:text-white leading-tight uppercase">
+              {t_smart(product.name)}
+            </h3>
+
+            {/* Rating */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex text-[#ffc200]">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={i} 
+                    size={10} 
+                    className={i < Math.floor(Number(ratingVal)) ? 'text-[#ffc200] fill-[#ffc200]' : 'text-slate-200 dark:text-slate-700'} 
+                  />
+                ))}
+              </div>
+              <span className="text-[8px] font-extrabold text-slate-400">({reviewsCountVal})</span>
+            </div>
+
+            {/* Price */}
+            <div className="text-[14px] sm:text-base font-black text-slate-955 dark:text-white font-mono mt-auto leading-none">
+              {finalPrice.toLocaleString()} <span className="text-[9px]">{currSymbol}</span>
             </div>
           </div>
         </motion.div>
@@ -650,7 +745,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
                 <span className="text-[14px] sm:text-base font-black text-slate-900 dark:text-white leading-none">
                   {settings?.currency || 'FCFA'} {product.price?.toLocaleString()}
                 </span>
-                {product.original_price && product.original_price > product.price && (
+                {product.original_price && product.original_price > product.price && !hideDiscountAndOriginalPrice && (
                   <span className="text-[10px] sm:text-[12px] font-bold text-slate-450 dark:text-slate-500 line-through mt-1.5 font-mono leading-none">
                     {settings?.currency || 'FCFA'} {product.original_price.toLocaleString()}
                   </span>
@@ -719,7 +814,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
               )}
             </div>
 
-            {product.original_price && (
+            {product.original_price && !hideDiscountAndOriginalPrice && (
               <div className="text-slate-400 dark:text-slate-500 line-through text-xs font-semibold font-mono mb-1">
                 {product.original_price.toLocaleString()} {settings?.currency || 'FCFA'}
               </div>

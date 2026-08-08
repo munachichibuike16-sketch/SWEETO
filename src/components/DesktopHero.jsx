@@ -109,7 +109,7 @@ const DesktopHero = ({ onProductClick, onCartOpen }) => {
             className="absolute z-20 w-52 md:w-56 -translate-x-16 translate-y-16"
           >
             <img 
-              src="https://images.unsplash.com/photo-1496181130204-755241544e35?auto=format&fit=crop&q=80&w=400" 
+              src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=400" 
               alt="Laptop" 
               className="w-full h-auto object-contain rounded-lg drop-shadow-[0_10px_25px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]" 
               onError={(e) => { e.target.style.display = 'none'; }}

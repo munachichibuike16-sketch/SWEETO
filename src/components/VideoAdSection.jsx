@@ -283,17 +283,17 @@ const VideoAdSection = ({ section }) => {
   return (
     <section className="py-3 px-4 md:px-8 max-w-[1600px] mx-auto overflow-hidden relative">
       {/* Background Soft Neon Backglow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-32 bg-pink-500/5 dark:bg-pink-500/2 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-32 bg-blue-500/5 dark:bg-blue-500/2 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Centered Premium Header */}
       <div className="flex flex-col items-center justify-center mb-10 relative">
         <h2 className="text-xl md:text-3xl font-black uppercase tracking-[0.25em] text-center italic relative">
-          <span className="bg-gradient-to-r from-pink-500 via-purple-600 to-eas-blue dark:from-white dark:via-pink-400 dark:to-white bg-clip-text text-transparent drop-shadow-[0_2px_15px_rgba(236,72,153,0.2)]">
+          <span className="bg-gradient-to-r from-[#1F6FEB] via-[#1554C0] to-blue-400 dark:from-white dark:via-blue-300 dark:to-white bg-clip-text text-transparent drop-shadow-[0_2px_15px_rgba(31,111,235,0.2)]">
             {lang === 'fr' ? 'Sweeto Promos & Reviews' : 'Sweeto Promos & Reviews'}
           </span>
         </h2>
         <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] mt-3 flex items-center gap-2">
-          <Sparkles size={12} className="text-pink-500" />
+          <Sparkles size={12} className="text-[#1F6FEB]" />
           {lang === 'fr' ? 'Découvrez nos nouveautés en vidéos courtes' : 'Discover our updates in short-form clips'}
         </p>
       </div>

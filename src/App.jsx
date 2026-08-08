@@ -12,6 +12,7 @@ import StoreSidebar from './components/StoreSidebar';
 import ProductSection, { SectionBanner, DualProductSection } from './components/ProductSection';
 import ProductCard from './components/ProductCard';
 import CartDrawer from './components/CartDrawer';
+import NotificationsDrawer from './components/NotificationsDrawer';
 
 import WishlistContent from './components/WishlistContent';
 import FlashyDealsSection from './components/FlashyDealsSection';
@@ -243,6 +244,7 @@ const ConfirmDialog = () => {
 
 const Storefront = ({ viewMode: propViewMode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const viewMode = useMemo(() => {
     if (propViewMode) return propViewMode;
     const hash = window.location.hash.replace(/^#/, '');
@@ -273,6 +275,14 @@ const Storefront = ({ viewMode: propViewMode }) => {
   const [isStoreSidebarOpen, setIsStoreSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  useEffect(() => {
+    if (viewMode === 'notifications') {
+      setIsNotifOpen(true);
+      navigate('/', { replace: true });
+    }
+  }, [viewMode, navigate]);
   
   const { products: liveProducts, categories, searchQuery, setSearchQuery, imageSearchResults, setImageSearchResults, selectedCategory, setSelectedCategory, selectedBrand, setSelectedBrand, settings, recentlyViewed, sections } = useStore();
   const { t, t_smart, lang } = useLanguage();
@@ -382,7 +392,6 @@ const Storefront = ({ viewMode: propViewMode }) => {
   const [sortBy, setSortBy] = useState('name_az');
   const { productId: rawProductId, categoryName } = useParams();
   const productId = rawProductId ? rawProductId.toLowerCase().replace(/^swt-/, '') : '';
-  const navigate = useNavigate();
 
   const activeCategory = viewMode === 'category' 
     ? (categoryName ? decodeURIComponent(categoryName) : null) 
@@ -636,6 +645,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
     const title = section.title || section.name;
     const subtitle = section.subtitle || section.tagline;
     const maxProducts = section.maxProducts || 8;
+    const layout = (window.innerWidth < 768 && section.position > 4) ? 'clean' : undefined;
 
     // Check if product-based section has 0 products
     const isProductBased = ['dealOfDay', 'deal_of_the_day', 'newArrival', 'products', 'just_arrived', 'trending', 'featured', 'featured_grid', 'smartphonesPlacement', 'homeCinemaPlacement', 'speakersPlacement', 'refrigeratorsPlacement', 'flashSale', 'giftIdeas', 'custom'].includes(type);
@@ -702,6 +712,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             headerStyle={section.headerStyle}
             settings={settings?.new_scroll}
             onProductClick={handleProductClick}
+            layout={layout}
           />
         );
       case 'trending':
@@ -717,6 +728,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             headerStyle={section.headerStyle}
             settings={settings?.trending_scroll}
             onProductClick={handleProductClick}
+            layout={layout}
           />
         );
       case 'featured':
@@ -735,6 +747,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             headerStyle={section.headerStyle}
             settings={settings?.featured_scroll}
             onProductClick={handleProductClick}
+            layout={layout}
           />
         );
       case 'smartphonesPlacement':
@@ -747,6 +760,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             type="category" 
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
+            layout={layout}
             onViewAllClick={() => {
               setSelectedCategory(null);
               setSelectedBrand(null);
@@ -766,6 +780,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             type="category" 
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
+            layout={layout}
             onViewAllClick={() => {
               setSelectedCategory(null);
               setSelectedBrand(null);
@@ -787,6 +802,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             type="category" 
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
+            layout={layout}
             onViewAllClick={() => {
               setSelectedCategory(null);
               setSelectedBrand(null);
@@ -814,6 +830,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
             type="category" 
             headerStyle={section.headerStyle}
             onProductClick={handleProductClick}
+            layout={layout}
             onViewAllClick={() => {
               setSelectedCategory(null);
               setSelectedBrand(null);
@@ -1009,6 +1026,7 @@ const Storefront = ({ viewMode: propViewMode }) => {
           onMenuClick={() => setIsSidebarOpen(true)} 
           onStoreClick={() => setIsStoreSidebarOpen(true)}
           onCartClick={() => setIsCartOpen(true)}
+          onNotifClick={() => setIsNotifOpen(true)}
         />
       )}
       <motion.div 
@@ -1281,6 +1299,12 @@ const Storefront = ({ viewMode: propViewMode }) => {
       <CartDrawer 
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)} 
+      />
+
+      <NotificationsDrawer
+        isOpen={isNotifOpen}
+        onClose={() => setIsNotifOpen(false)}
+        onProductClick={handleProductClick}
       />
 
 

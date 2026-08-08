@@ -3,7 +3,7 @@
  * Handles dynamic push events and provides PWA asset caching capabilities.
  */
 
-const CACHE_NAME = 'sweeto-cache-v2';
+const CACHE_NAME = 'sweeto-cache-v18';
 const OFFLINE_URL = '/';
 
 // Core assets to cache immediately upon installation
@@ -15,37 +15,29 @@ const PRECACHE_ASSETS = [
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',
-  '/admin-favicon.svg',
-  '/admin-manifest.json',
-  '/admin-icon-192.png',
-  '/admin-icon-512.png',
-  '/admin-apple-touch-icon.png',
-  '/icons.svg',
-  '/hero-banner.png'
+  '/manifest.webmanifest'
 ];
 
 self.addEventListener('install', (event) => {
+  console.log('[Service Worker] Installed.');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
-        PRECACHE_ASSETS.map((asset) => {
-          return cache.add(asset).catch((err) => {
-            console.warn(`Failed to precache asset: ${asset}`, err);
-          });
-        })
-      );
-    })
+      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
+        console.warn('Pre-caching non-fatal warning:', err);
+      });
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activated.');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('[Service Worker] Deleting obsolete cache:', cache);
+            return caches.delete(cache);
           }
         })
       );
@@ -59,21 +51,29 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Only intercept standard HTTP/HTTPS requests (ignores chrome-extension, data, blob, etc.)
+  // Only intercept standard HTTP/HTTPS requests
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-  // Avoid intercepting API database calls or Supabase requests so backend operations work normally
-  if (url.pathname.includes('/api/') || url.host.includes('supabase.co')) {
+  // Never intercept dev server internals, HMR websockets, APIs, or database queries
+  if (
+    url.pathname.includes('/api/') || 
+    url.host.includes('supabase.co') ||
+    url.pathname.includes('/src/') ||
+    url.pathname.includes('/@vite') ||
+    url.pathname.includes('/@fs') ||
+    url.pathname.includes('/node_modules/') ||
+    url.port === '5173' ||
+    url.port === '3000'
+  ) {
     return;
   }
 
-  // Network-First with Cache Fallback for navigation requests (HTML pages)
+  // Network-First for navigation requests
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           if (response && response.status === 200) {
-            // Open cache and save the fresh version
             const clone = response.clone();
             caches.open(CACHE_NAME)
               .then((cache) => cache.put(event.request, clone).catch(() => {}))
@@ -82,18 +82,17 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          // Offline fallback
           const offlineRes = await caches.match(OFFLINE_URL);
           if (offlineRes) return offlineRes;
           const indexRes = await caches.match('/index.html');
           if (indexRes) return indexRes;
-          return new Response('Offline', { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'text/html' } });
+          return new Response('Offline', { status: 200, headers: { 'Content-Type': 'text/html' } });
         })
     );
     return;
   }
 
-  // Cache-First strategy for images (to avoid saturating browser network sockets in the background)
+  // Cache-First strategy for images
   const isImageRequest = 
     url.pathname.match(/\.(png|jpg|jpeg|webp|svg|gif|ico)$/i) || 
     url.pathname.includes('/storage/v1/object/public/');
@@ -113,13 +112,14 @@ self.addEventListener('fetch', (event) => {
                 .catch(() => {});
             }
             return networkResponse;
-          });
+          })
+          .catch(() => caches.match('/hero-banner.png'));
       })
     );
     return;
   }
 
-  // Stale-While-Revalidate for other static assets (JS, CSS, fonts)
+  // Stale-While-Revalidate for other static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
@@ -132,10 +132,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch((error) => {
-          console.error('Fetch failed:', error);
-          return new Response('Service Unavailable', { status: 503 });
-        });
+        .catch(() => cachedResponse);
 
       return cachedResponse || fetchPromise;
     })

@@ -378,6 +378,8 @@ export default function ProductDetailPage() {
   const titleRef = useRef(null);
   const mainImgRef = useRef(null);
 
+  const REDUCED = typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+
   // Fetch product data on load
   useEffect(() => {
     if (productId && liveProducts.length > 0) {
@@ -563,7 +565,7 @@ export default function ProductDetailPage() {
   const relatedIds = new Set(relatedProducts.map(r => r.id.toString()));
   const moreToLoveProducts = liveProducts
     .filter(p => p.id.toString() !== product.id.toString() && p.status === 'active' && !relatedIds.has(p.id.toString()))
-    .slice(0, 8);
+    .slice(0, 16);
 
   // Review statistics calculation
   const reviewCount = reviews.length;
@@ -610,10 +612,11 @@ export default function ProductDetailPage() {
 
   /* Actions */
   const addToCartHandler = (item, q) => {
+    const isMainProduct = product && item.id === product.id;
     const finalProduct = {
       ...item,
-      name: selectedVariant ? `${item.name} (${selectedVariant.name})` : item.name,
-      price: finalPrice
+      name: (isMainProduct && selectedVariant) ? `${item.name} (${selectedVariant.name})` : item.name,
+      price: isMainProduct ? finalPrice : (item.price || 0)
     };
     originalAddToCart(finalProduct, q);
     showToast(`Added ${item.name} to cart!`, 'success');
@@ -640,7 +643,6 @@ export default function ProductDetailPage() {
     setAdded(true);
     setTimeout(() => { 
       setAdded(false); 
-      setIsCartOpen(true); 
     }, 650);
   };
 
@@ -732,11 +734,11 @@ export default function ProductDetailPage() {
         <div className="wrap select-none">
           {/* Breadcrumbs */}
           <div className="crumb">
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/'); }}>Home</a>
+            <button type="button" onClick={() => navigate('/')} className="hover:underline bg-transparent border-none p-0 cursor-pointer text-inherit font-inherit">Home</button>
             <i>/</i>
-            <a href="#" onClick={(e) => { e.preventDefault(); handleCategoryBreadcrumb(); }}>
+            <button type="button" onClick={handleCategoryBreadcrumb} className="hover:underline bg-transparent border-none p-0 cursor-pointer text-inherit font-inherit">
               {product.category || 'Electronics'}
-            </a>
+            </button>
             <i>/</i>
             <b>{product.name}</b>
           </div>
@@ -795,9 +797,9 @@ export default function ProductDetailPage() {
               </div>
               
               <div className="price-row">
-                <span className="price">{finalPrice.toLocaleString()} {currSymbol}</span>
-                {oldPrice > finalPrice && <span className="compare">{oldPrice.toLocaleString()} {currSymbol}</span>}
-                {savings > 0 && <span className="save">You save {savings.toLocaleString()} {currSymbol}</span>}
+                <span className="price">{(finalPrice * qty).toLocaleString()} {currSymbol}</span>
+                {oldPrice > finalPrice && <span className="compare">{(oldPrice * qty).toLocaleString()} {currSymbol}</span>}
+                {savings > 0 && <span className="save">You save {(savings * qty).toLocaleString()} {currSymbol}</span>}
               </div>
               
               <p className="pdesc">{cleanDescription}</p>

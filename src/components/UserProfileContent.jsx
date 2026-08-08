@@ -48,6 +48,7 @@ import {
   ChevronUp,
   ArrowLeft
 } from 'lucide-react';
+import OrdersHistoryContent from './OrdersHistoryContent';
 import { useNavigate } from 'react-router-dom';
 
 const AVATAR_PRESETS = [
@@ -136,21 +137,34 @@ const UserProfileContent = ({
 
   const loadRealOrders = async () => {
     try {
+      if (!sessionUser) return;
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('customer_email', sessionUser.email.toLowerCase())
         .order('created_at', { ascending: false });
       
       if (!error && data) {
-        const formattedOrders = data.map(o => {
+        const userIdentifier = (sessionUser?.id || '').toString().toLowerCase();
+        const userEmail = (sessionUser?.email || '').toLowerCase();
+        const userPhone = (sessionUser?.phoneNumber || sessionUser?.phone || '').replace(/\D/g, '');
+
+        const userOrders = data.filter(order => {
+          const contact = (order.customer_contact || '').toLowerCase();
+          const phone = (order.customer_phone || '').replace(/\D/g, '');
+          const matchId = userIdentifier && contact.includes(userIdentifier);
+          const matchEmail = userEmail && contact.includes(userEmail);
+          const matchPhone = userPhone && (contact.includes(userPhone) || (phone && phone === userPhone));
+          return matchId || matchEmail || matchPhone;
+        });
+
+        const formattedOrders = userOrders.map(o => {
           let items = [];
           try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch (e) {}
           return {
             id: o.id,
             date: new Date(o.created_at).toLocaleDateString(),
-            total: o.total_amount || 0,
-            status: o.status === 'completed' ? 'Delivered' : (o.status === 'cancelled' ? 'Cancelled' : 'In Transit'),
+            total: o.total_amount || o.total || 0,
+            status: o.status === 'completed' || o.status === 'delivered' ? 'Delivered' : (o.status === 'cancelled' ? 'Cancelled' : 'In Transit'),
             itemsCount: items.length,
             trackingCode: 'TRK-' + (o.id.toString().substring(0,8).toUpperCase()),
             carrier: 'Standard Delivery',
@@ -320,9 +334,13 @@ const UserProfileContent = ({
   };
 
   const filteredOrders = orders.filter(o => {
-    const matchesSearch = o.id.toLowerCase().includes(orderSearch.toLowerCase()) || 
-                          o.items.some(i => i.name.toLowerCase().includes(orderSearch.toLowerCase()));
-    const matchesStatus = orderFilterStatus === 'All' || o.status === orderFilterStatus;
+    const orderIdStr = String(o?.id || '').toLowerCase();
+    const searchStr = (orderSearch || '').toLowerCase();
+    const itemsList = Array.isArray(o?.items) ? o.items : [];
+    const matchesSearch = !searchStr || 
+                          orderIdStr.includes(searchStr) || 
+                          itemsList.some(i => String(i?.name || i?.title || '').toLowerCase().includes(searchStr));
+    const matchesStatus = orderFilterStatus === 'All' || o?.status === orderFilterStatus;
     return matchesSearch && matchesStatus;
   });
 
@@ -352,7 +370,7 @@ const UserProfileContent = ({
         </div>
       )}
 
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+      <header className="bg-white/95 backdrop-blur-md border-b border-[#D9E3F2] sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -361,18 +379,18 @@ const UserProfileContent = ({
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-violet-500/30">
+            <div className="w-8 h-8 rounded-xl bg-[#1F6FEB] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#1F6FEB]/30">
               LC
             </div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight hidden sm:block">
+            <h1 className="text-xl font-black text-[#0A2540] tracking-tight hidden sm:block">
               My Account & Portal
             </h1>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 border border-emerald-200/60 rounded-full text-xs font-semibold text-emerald-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Signed in as <strong className="font-bold text-slate-900">{user.name}</strong></span>
+            <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 border border-blue-200/60 rounded-full text-xs font-semibold text-[#1F6FEB]">
+              <span className="w-2 h-2 rounded-full bg-[#1F6FEB] animate-pulse" />
+              <span>Signed in as <strong className="font-bold text-[#0A2540]">{user.name}</strong></span>
             </div>
 
             <button 
@@ -389,11 +407,11 @@ const UserProfileContent = ({
 
       {/* Main Profile Header Banner */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#D9E3F2] rounded-3xl overflow-hidden shadow-sm">
           
-          <div className="h-36 sm:h-44 w-full relative bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 overflow-hidden">
-            <img src={user.coverImage} alt="Cover" className="w-full h-full object-cover opacity-40 filter blur-[1px]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+          <div className="h-36 sm:h-44 w-full relative bg-gradient-to-r from-[#0A2540] via-[#1554C0] to-[#1F6FEB] overflow-hidden">
+            <img src={user.coverImage} alt="Cover" className="w-full h-full object-cover opacity-30 filter blur-[1px]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540]/80 via-transparent to-transparent" />
             
             <button 
               onClick={() => showToast("Cover photo updated!")}
@@ -411,7 +429,7 @@ const UserProfileContent = ({
                   {user.avatarType === 'photo' ? (
                     <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 flex items-center justify-center text-white font-extrabold text-4xl shadow-inner">
+                    <div className="w-full h-full bg-gradient-to-br from-[#1F6FEB] to-[#1554C0] flex items-center justify-center text-white font-extrabold text-4xl shadow-inner">
                       {getInitials()}
                     </div>
                   )}
@@ -419,7 +437,7 @@ const UserProfileContent = ({
 
                 <button 
                   onClick={() => setIsAvatarModalOpen(true)}
-                  className="absolute bottom-1 right-1 p-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shadow-lg border-2 border-white transition flex items-center justify-center"
+                  className="absolute bottom-1 right-1 p-2 bg-[#1F6FEB] hover:bg-[#1554C0] text-white rounded-xl shadow-lg border-2 border-white transition flex items-center justify-center"
                   title="Change Profile Picture"
                 >
                   <Camera className="w-3.5 h-3.5" />
@@ -428,23 +446,23 @@ const UserProfileContent = ({
 
               <div className="mb-1">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                  <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">{user.name}</h2>
-                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200/80 text-xs font-bold px-3 py-0.5 rounded-full">
-                    <Sparkles className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  <h2 className="text-2xl font-extrabold text-[#0A2540] tracking-tight">{user.name}</h2>
+                  <span className="inline-flex items-center gap-1 bg-blue-50 text-[#1F6FEB] border border-blue-200/80 text-xs font-bold px-3 py-0.5 rounded-full">
+                    <Sparkles className="w-3.5 h-3.5 fill-[#1F6FEB] text-[#1F6FEB]" />
                     {user.tier}
                   </span>
                 </div>
                 
-                <p className="text-slate-500 text-xs mt-1">{user.email} • Member since {user.memberSince}</p>
+                <p className="text-[#5A6B84] text-xs mt-1">{user.email} • Member since {user.memberSince}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto justify-center">
               <button 
                 onClick={() => setActiveTab('profile')}
-                className="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200/80 px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2"
+                className="bg-[#E8F0FB] hover:bg-[#D9E3F2] text-[#1F6FEB] border border-[#D9E3F2] px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2"
               >
-                <User className="w-4 h-4 text-violet-600" />
+                <User className="w-4 h-4 text-[#1F6FEB]" />
                 <span>View Full Profile</span>
               </button>
             </div>
@@ -461,11 +479,11 @@ const UserProfileContent = ({
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all ${
                       isActive 
-                        ? 'bg-violet-600 text-white shadow-md shadow-violet-600/25' 
-                        : 'text-slate-600 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
+                        ? 'bg-[#1F6FEB] text-white shadow-md shadow-[#1F6FEB]/25' 
+                        : 'text-[#5A6B84] hover:bg-white hover:text-[#0A2540] border border-transparent hover:border-[#D9E3F2]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#5A6B84]'}`} />
                     <span>{tab.label}</span>
                     {tab.badge && (
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
@@ -488,14 +506,14 @@ const UserProfileContent = ({
         {/* ==================== TAB 0: MAIN ACCOUNT PAGE (OVERVIEW) ==================== */}
         {activeTab === 'account' && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-violet-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-r from-[#0A2540] via-[#1554C0] to-[#1F6FEB] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
               <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                  <span className="inline-block px-3 py-1 bg-violet-500/20 text-violet-300 border border-violet-400/30 text-xs font-bold rounded-full mb-3">
+                  <span className="inline-block px-3 py-1 bg-white/20 text-blue-100 border border-white/30 text-xs font-bold rounded-full mb-3">
                     Account Dashboard & Central Hub
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-black">Welcome back, {user.firstName}!</h2>
-                  <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
+                  <p className="text-blue-100 text-xs sm:text-sm mt-1 max-w-xl">
                     Here is an overview of your account status, active orders, saved wallet methods, and loyalty benefits.
                   </p>
                 </div>
@@ -503,14 +521,14 @@ const UserProfileContent = ({
                 <div className="flex flex-wrap items-center gap-3">
                   <button 
                     onClick={() => setActiveTab('profile')}
-                    className="bg-white hover:bg-slate-100 text-slate-900 px-5 py-2.5 rounded-2xl text-xs font-extrabold transition shadow-lg flex items-center gap-2"
+                    className="bg-white hover:bg-slate-100 text-[#0A2540] px-5 py-2.5 rounded-2xl text-xs font-extrabold transition shadow-lg flex items-center gap-2"
                   >
-                    <Edit3 className="w-4 h-4 text-violet-600" />
+                    <Edit3 className="w-4 h-4 text-[#1F6FEB]" />
                     Edit Profile Details
                   </button>
                   <button 
                     onClick={() => setActiveTab('orders')}
-                    className="bg-violet-600/40 hover:bg-violet-600/60 text-white border border-violet-400/30 px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2"
+                    className="bg-[#1F6FEB]/40 hover:bg-[#1F6FEB]/60 text-white border border-white/30 px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2"
                   >
                     <Package className="w-4 h-4" />
                     Track Shipments
@@ -522,7 +540,7 @@ const UserProfileContent = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div 
                 onClick={() => setActiveTab('orders')}
-                className="bg-white border border-slate-200 p-5 rounded-3xl flex items-center gap-4 cursor-pointer hover:border-violet-300 transition shadow-sm"
+                className="bg-white border border-[#D9E3F2] p-5 rounded-3xl flex items-center gap-4 cursor-pointer hover:border-[#1F6FEB]/50 transition shadow-sm"
               >
                 <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                   <Package className="w-6 h-6" />
@@ -561,9 +579,9 @@ const UserProfileContent = ({
 
               <div 
                 onClick={() => setActiveTab('security')}
-                className="bg-white border border-slate-200 p-5 rounded-3xl flex items-center gap-4 cursor-pointer hover:border-violet-300 transition shadow-sm"
+                className="bg-white border border-[#D9E3F2] p-5 rounded-3xl flex items-center gap-4 cursor-pointer hover:border-[#1F6FEB]/50 transition shadow-sm"
               >
-                <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
+                <div className="p-3 bg-blue-50 text-[#1F6FEB] rounded-2xl">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <div>
@@ -951,121 +969,13 @@ const UserProfileContent = ({
                 </div>
               )}
             </div>
-
           </div>
         )}
 
         {/* ==================== TAB 2: MY ORDERS ==================== */}
         {activeTab === 'orders' && (
-          <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                <div>
-                  <h3 className="text-xl font-extrabold text-slate-900">My Orders & Tracking</h3>
-                  <p className="text-xs text-slate-500">Track current shipments and view historical invoices</p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                    <input 
-                      type="text" 
-                      placeholder="Search Order ID or Item..." 
-                      value={orderSearch}
-                      onChange={e => setOrderSearch(e.target.value)}
-                      className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-50 w-48 sm:w-64"
-                    />
-                  </div>
-
-                  <select 
-                    value={orderFilterStatus}
-                    onChange={e => setOrderFilterStatus(e.target.value)}
-                    className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold focus:outline-none"
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="In Transit">In Transit</option>
-                    <option value="Delivered">Delivered</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {filteredOrders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-600 font-bold">No orders found matching search</p>
-                  </div>
-                ) : (
-                  filteredOrders.map((order) => (
-                    <div key={order.id} className="border border-slate-200 rounded-3xl p-5 hover:border-violet-300 transition bg-white">
-                      
-                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
-                        <div>
-                          <span className="font-extrabold text-slate-900 text-base">SWT-{order.id.substring(0,8).toUpperCase()}</span>
-                          <span className="text-xs text-slate-400 ml-3">Ordered on {order.date}</span>
-                        </div>
-
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                          order.status === 'Delivered' 
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                        }`}>
-                          {order.status === 'Delivered' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Truck className="w-3.5 h-3.5 animate-pulse" />}
-                          {order.status}
-                        </span>
-                      </div>
-
-                      <div className="py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 min-w-[220px]">
-                              {item.image ? (
-                                <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover" />
-                              ) : (
-                                <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center">
-                                  <Package className="w-6 h-6 text-slate-400" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="text-xs font-bold text-slate-800 line-clamp-1">{item.name}</p>
-                                <p className="text-xs text-slate-500">${item.price.toFixed(2)} x {item.qty}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="text-right flex md:flex-col items-center md:items-end justify-between w-full md:w-auto">
-                          <p className="text-[11px] text-slate-400 uppercase font-bold">Total Paid</p>
-                          <p className="text-lg font-black text-slate-900">${order.total.toFixed(2)}</p>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div className="text-slate-500 font-medium">
-                          Carrier: <strong className="text-slate-800">{order.carrier}</strong> • Tracking: <span className="font-mono text-slate-700">{order.trackingCode}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => setSelectedOrder(order)}
-                            className="bg-violet-50 hover:bg-violet-100 text-violet-700 font-bold px-3.5 py-1.5 rounded-xl transition"
-                          >
-                            Live Tracking
-                          </button>
-                          <button 
-                            onClick={() => showToast(`Invoice PDF for ${order.id} downloaded.`)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1"
-                          >
-                            <Download className="w-3.5 h-3.5" /> Invoice
-                          </button>
-                        </div>
-                      </div>
-
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+          <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+            <OrdersHistoryContent onBack={() => setActiveTab('account')} />
           </div>
         )}
 

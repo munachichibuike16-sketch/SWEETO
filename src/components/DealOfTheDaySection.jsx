@@ -79,63 +79,53 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
     }
   }, [products]);
 
-  const animationRef = React.useRef(null);
-
+  // Auto-slide interval for both Mobile and Desktop
   useEffect(() => {
-    if (!products || products.length === 0 || isHovered || isExpanded) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      return;
-    }
+    if (!products || products.length === 0 || isHovered || isExpanded) return;
 
-    const scrollSpeed = 0.6; // pixels per frame, slow and smooth
-
-    const animate = () => {
+    const interval = setInterval(() => {
       // Mobile scroll
       const mContainer = mobileScrollRef.current;
       if (mContainer && !isExpanded) {
+        const firstChild = mContainer.firstElementChild;
+        const cardWidth = firstChild ? firstChild.offsetWidth + 12 : 220; // card width + gap
         const singleSetWidth = mContainer.scrollWidth / 3;
+
         if (scrollDirection === 'right') {
-          mContainer.scrollLeft -= scrollSpeed;
           if (mContainer.scrollLeft <= singleSetWidth - mContainer.clientWidth) {
             mContainer.scrollLeft += singleSetWidth;
           }
+          mContainer.scrollBy({ left: -cardWidth, behavior: 'smooth' });
         } else {
-          mContainer.scrollLeft += scrollSpeed;
           if (mContainer.scrollLeft >= singleSetWidth * 2) {
             mContainer.scrollLeft -= singleSetWidth;
           }
+          mContainer.scrollBy({ left: cardWidth, behavior: 'smooth' });
         }
       }
 
       // Desktop scroll
       const dContainer = desktopScrollRef.current;
       if (dContainer) {
+        const firstChild = dContainer.firstElementChild;
+        const cardWidth = firstChild ? firstChild.offsetWidth + 24 : 260; // card width + gap
         const singleSetWidth = dContainer.scrollWidth / 3;
+
         if (scrollDirection === 'right') {
-          dContainer.scrollLeft -= scrollSpeed;
           if (dContainer.scrollLeft <= singleSetWidth - dContainer.clientWidth) {
             dContainer.scrollLeft += singleSetWidth;
           }
+          dContainer.scrollBy({ left: -cardWidth, behavior: 'smooth' });
         } else {
-          dContainer.scrollLeft += scrollSpeed;
           if (dContainer.scrollLeft >= singleSetWidth * 2) {
             dContainer.scrollLeft -= singleSetWidth;
           }
+          dContainer.scrollBy({ left: cardWidth, behavior: 'smooth' });
         }
       }
+    }, 3000); // Slides every 3 seconds
 
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    return () => clearInterval(interval);
   }, [products, isHovered, isExpanded, scrollDirection]);
 
   useEffect(() => {
@@ -327,12 +317,12 @@ const DealOfTheDaySection = ({ products, onProductClick, bannerImage, headerStyl
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
                             {/* Brand & Category */}
-                            <div className="text-[10px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest text-left mb-1">
+                            <div className="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest text-left mb-1">
                               {product.brand || 'SWEETO'} · {product.category || 'Deals'}
                             </div>
 
                             {/* Title */}
-                            <h3 className="line-clamp-2 text-xs font-bold text-slate-850 dark:text-white text-left leading-snug mb-1.5 min-h-[32px]">
+                            <h3 className="line-clamp-2 text-xs font-bold text-slate-855 dark:text-white text-left leading-snug mb-1.5 min-h-[32px]">
                               {t_smart(product.name)}
                             </h3>
 
