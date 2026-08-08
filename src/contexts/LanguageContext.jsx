@@ -867,12 +867,13 @@ export const translations = {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [lang] = useState('en');
+  const [lang, setLang] = useState(localStorage.getItem('sweetohub_lang') || 'fr');
 
   useEffect(() => {
-    document.documentElement.lang = 'en';
+    const initialLang = localStorage.getItem('sweetohub_lang') || 'fr';
+    document.documentElement.lang = initialLang;
     document.documentElement.dir = 'ltr';
-    localStorage.setItem('sweetohub_lang', 'en');
+    localStorage.setItem('sweetohub_lang', initialLang);
     
     // Clear Google Translate cookies
     document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -880,10 +881,16 @@ export const LanguageProvider = ({ children }) => {
   }, []);
 
   const changeLanguage = (newLang) => {
-    // No-op - only English supported
+    setLang(newLang);
+    document.documentElement.lang = newLang;
+    localStorage.setItem('sweetohub_lang', newLang);
+    window.dispatchEvent(new Event('notifications_updated'));
   };
 
   const t = (key) => {
+    if (translations[lang] && translations[lang][key]) {
+      return translations[lang][key];
+    }
     if (translations['en'] && translations['en'][key]) {
       return translations['en'][key];
     }
@@ -924,11 +931,17 @@ export const LanguageProvider = ({ children }) => {
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/(^_|_$)/g, '');
     
+    if (translations[lang] && translations[lang][key]) {
+      return translations[lang][key];
+    }
     if (translations['en'] && translations['en'][key]) {
       return translations['en'][key];
     }
     
     const fallbackKey = str.toLowerCase().replace(/ /g, '_');
+    if (translations[lang] && translations[lang][fallbackKey]) {
+      return translations[lang][fallbackKey];
+    }
     if (translations['en'] && translations['en'][fallbackKey]) {
       return translations['en'][fallbackKey];
     }
