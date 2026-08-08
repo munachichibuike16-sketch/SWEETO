@@ -14,6 +14,7 @@ import DesktopHeader from '../components/DesktopHeader';
 import CartDrawer from '../components/CartDrawer';
 import Sidebar from '../components/Sidebar';
 import { supabase } from '../lib/supabase';
+import ShareModal from '../components/ShareModal';
 
 /* ─────────────────────── helpers ─────────────────────── */
 const getHexColor = (colorName) => {
@@ -358,6 +359,7 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [wish, setWish] = useState(false);
   const [sharePulse, setSharePulse] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [added, setAdded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -649,20 +651,7 @@ export default function ProductDetailPage() {
   const shareProduct = () => {
     setSharePulse(true);
     setTimeout(() => setSharePulse(false), 400);
-    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-    const shareText = product.description || `Check out ${product.name} on SWEETO!`;
-    const shareData = {
-      title: product.name,
-      text: shareText,
-      url: shareUrl,
-    };
-    if (navigator.share) {
-      navigator.share(shareData).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => showToast('Share link copied to clipboard!', 'success'))
-        .catch(() => showToast('Failed to copy share link', 'error'));
-    }
+    setIsShareOpen(true);
   };
 
   const setGalleryView = (i) => {
@@ -1228,6 +1217,14 @@ export default function ProductDetailPage() {
       
       {/* Global Checkout Cart Drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* Premium Share Modal */}
+      <ShareModal 
+        isOpen={isShareOpen} 
+        onClose={() => setIsShareOpen(false)} 
+        product={product} 
+        showToast={showToast} 
+      />
     </>
   );
 }

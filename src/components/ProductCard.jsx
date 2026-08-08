@@ -9,6 +9,7 @@ import { useStore } from '../contexts/StoreContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import QuickViewModal from './QuickViewModal';
+import ShareModal from './ShareModal';
 import { logVisitorEvent } from '../utils/analytics';
 import { API_BASE_URL } from '../utils/api';
 
@@ -69,6 +70,7 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   
   const images = getImagesList(product);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -194,39 +196,9 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
     toggleProductLike(product.id, !isWished);
   };
 
-  const handleShareProduct = async (e) => {
+  const handleShareProduct = (e) => {
     e.stopPropagation();
-    
-    // Construct the crawler-friendly share link pointing to the backend metadata route
-    const shareUrl = `${window.location.origin}/share/product/${product.id}`;
-    const shareTitle = product.name;
-    const shareText = product.description || `Check out ${product.name} on SWEETO!`;
-    const shareData = {
-      title: shareTitle,
-      text: shareText,
-      url: shareUrl,
-    };
-
-
-
-    if (navigator.share) {
-      navigator.share(shareData)
-      .then(() => console.log('Successfully shared'))
-      .catch((error) => console.log('Error sharing:', error));
-    } else {
-      // Fallback: Copy link to clipboard
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => {
-          if (showToast) {
-            showToast(lang === 'fr' ? 'Lien de partage copié dans le presse-papiers ! 🔗' : 'Share link copied to clipboard! 🔗', 'success');
-          } else {
-            alert(lang === 'fr' ? 'Lien de partage copié dans le presse-papiers !' : 'Share link copied to clipboard!');
-          }
-        })
-        .catch((err) => {
-          console.error('Failed to copy: ', err);
-        });
-    }
+    setIsShareOpen(true);
   };
 
   const reviews = typeof product.reviews === 'string' ? JSON.parse(product.reviews || '[]') : (product.reviews || []);
@@ -833,6 +805,13 @@ const ProductCard = ({ product, index = 0, onProductClick, isDailyDeal = false, 
         isOpen={isQuickViewOpen} 
         onClose={closeQuickView}
         onViewDetails={handleViewDetails}
+      />
+
+      <ShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        product={product}
+        showToast={showToast}
       />
     </>
   );
