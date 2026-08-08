@@ -4,6 +4,7 @@ import { ShoppingBag, X, Check, Copy, User, Banknote, Clock, MessageCircle, Arro
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useStore } from '../contexts/StoreContext';
+import { playSound } from '../utils/sound';
 
 export default function OrderNotificationFlow({ order, onClose }) {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function OrderNotificationFlow({ order, onClose }) {
   useEffect(() => {
     if (order) {
       setShowToast(true);
+      // Play premium chime sound effect
+      playSound('chime');
     }
   }, [order]);
 
@@ -86,12 +89,12 @@ export default function OrderNotificationFlow({ order, onClose }) {
       <AnimatePresence>
         {showToast && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            initial={{ opacity: 0, y: -80, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            exit={{ opacity: 0, y: -80, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             onClick={handleToastClick}
-            className="fixed top-5 right-4 md:right-8 z-[9999] max-w-md w-[calc(100vw-32px)] bg-white dark:bg-[#0B132B] rounded-2xl p-4 shadow-2xl border border-slate-150 dark:border-slate-800 flex items-start gap-3.5 cursor-pointer hover:shadow-blue-500/10 hover:border-[#1F6FEB]/40 transition-all group"
+            className="fixed top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-[9999] max-w-md w-[92%] bg-white dark:bg-[#0B132B] rounded-2xl p-4 shadow-2xl border border-slate-150 dark:border-slate-800 flex items-start gap-3.5 cursor-pointer hover:shadow-blue-500/10 hover:border-[#1F6FEB]/40 transition-all group"
           >
             {/* Mint Green Shopping Bag Icon */}
             <div className="w-11 h-11 rounded-full bg-[#E6F8F0] dark:bg-[#064e3b]/30 flex items-center justify-center text-[#10B981] shrink-0 shadow-sm group-hover:scale-105 transition-transform">

@@ -669,6 +669,16 @@ const CheckoutPage = () => {
       };
       setPlacedOrderData(completedOrder);
 
+      // Save order locally for realtime notification bell status & orders history tracking
+      try {
+        const storedOrders = JSON.parse(localStorage.getItem('customer_orders') || '[]');
+        storedOrders.unshift(completedOrder);
+        localStorage.setItem('customer_orders', JSON.stringify(storedOrders));
+        window.dispatchEvent(new Event('notifications_updated'));
+      } catch (e) {
+        console.warn('Failed to save order to local list:', e);
+      }
+
       setWaMessage(message);
       setOrderId(newOrderId);
       setOrderedItems([...cartItems]);

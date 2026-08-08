@@ -252,11 +252,22 @@ const Header = ({ onMenuClick, onCartClick, onStoreClick, onNotifClick }) => {
         const readNotifs = rawRead ? JSON.parse(rawRead) : [];
         const readTimed = JSON.parse(localStorage.getItem('read_notifications_timed') || '{}');
         const deletedNotifs = JSON.parse(localStorage.getItem('deleted_notifications') || '{}');
-        const count = products.filter(p => p.is_new_arrival).filter(p => {
+        
+        // Count unread new product arrivals
+        const productCount = products.filter(p => p.is_new_arrival).filter(p => {
           const id = `new-product-${p.id}`;
           return !readNotifs.includes(id) && !readTimed[id] && !deletedNotifs[id];
         }).length;
-        setUnreadNotifCount(count);
+
+        // Count unread locally stored customer orders
+        const localOrders = JSON.parse(localStorage.getItem('customer_orders') || '[]');
+        const orderCount = localOrders.filter(order => {
+          const status = (order.status || 'pending').toLowerCase();
+          const notifId = `order-${order.id}-${status}`;
+          return !readNotifs.includes(notifId) && !deletedNotifs[notifId];
+        }).length;
+
+        setUnreadNotifCount(productCount + orderCount);
       } catch (e) {
         setUnreadNotifCount(0);
       }
