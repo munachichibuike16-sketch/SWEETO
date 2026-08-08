@@ -31,6 +31,7 @@ import SweetoLogo from '../components/SweetoLogo';
 import { useNavigate } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
 import { apiFetch } from '../utils/api';
+import { playSound } from '../utils/sound';
 
 const isImageUrl = (url) => {
   if (typeof url !== 'string') return false;
@@ -781,6 +782,18 @@ const Dashboard = () => {
     const channel = supabase.channel('admin-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
         console.log('Realtime Order Insert:', payload);
+        const order = payload.new;
+        if (order) {
+          // Play notification chime for the admin
+          playSound('chime');
+          
+          const orderId = order.id ? `SWT-${order.id}` : 'New Order';
+          const customerName = order.customer_name || 'Customer';
+          const amount = order.total_amount || order.total || 0;
+          const currency = order.currency || settings?.currency || 'FCFA';
+          
+          showToast(`🔔 New Order! ${orderId} placed by ${customerName} (${Number(amount).toLocaleString()} ${currency})`, 'success');
+        }
         refreshData();
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'products' }, (payload) => {
