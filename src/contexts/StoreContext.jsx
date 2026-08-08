@@ -950,6 +950,84 @@ export const StoreProvider = ({ children }) => {
     };
   }, [fireNativeNotification, triggerInAppNotification]);
 
+  // Subscribe to real-time changes in Supabase orders table for customer order status updates
+  useEffect(() => {
+    const isAdminPage = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/admin') || window.location.hash.includes('/dashboard') || window.location.hash.includes('/admin');
+    if (isAdminPage) return;
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('orders-realtime-customer')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
+        (payload) => {
+          console.log('Realtime Order Update received:', payload);
+          const order = payload.new;
+          if (!order) return;
+
+          // Check if status has actually changed
+          if (payload.old && payload.new.status === payload.old.status) return;
+
+          // Check if this order belongs to the customer (matches local cached order list)
+          const localOrders = JSON.parse(localStorage.getItem('customer_orders') || '[]');
+          const isMyOrder = localOrders.some(o => o.id.toString() === order.id.toString());
+          if (!isMyOrder) return;
+
+          // Play chime sound
+          playSound('chime');
+
+          // Map status to clean descriptive messages in French & English
+          const status = (order.status || 'pending').toLowerCase();
+          const orderId = order.id ? `SWT-${order.id}` : 'Order';
+          const lang = localStorage.getItem('sweetohub_lang') || 'en';
+          
+          let title = lang === 'fr' ? 'Mise à jour de commande' : 'Order Update';
+          let body = '';
+          let toastType = 'info';
+
+          if (status === 'confirmed') {
+            title = lang === 'fr' ? 'Commande Confirmée' : 'Order Confirmed';
+            body = lang === 'fr' ? `Votre commande ${orderId} a été confirmée par l'admin.` : `Your order ${orderId} has been confirmed by the admin.`;
+            toastType = 'success';
+          } else if (status === 'processing') {
+            title = lang === 'fr' ? 'Commande en Traitement' : 'Order Processing';
+            body = lang === 'fr' ? `Votre commande ${orderId} est en cours de traitement.` : `Your order ${orderId} is being processed.`;
+          } else if (status === 'shipped' || status === 'shipping') {
+            title = lang === 'fr' ? 'Commande Expédiée 🚚' : 'Order Shipped 🚚';
+            body = lang === 'fr' ? `Bonne nouvelle ! Votre commande ${orderId} est en route.` : `Good news! Your order ${orderId} is on the way.`;
+            toastType = 'success';
+          } else if (status === 'delivered' || status === 'completed') {
+            title = lang === 'fr' ? 'Commande Livrée 📦' : 'Order Delivered 📦';
+            body = lang === 'fr' ? `Votre commande ${orderId} a été livrée. Merci !` : `Your order ${orderId} has been delivered. Thank you!`;
+            toastType = 'success';
+          } else if (status === 'cancelled') {
+            title = lang === 'fr' ? 'Commande Annulée ❌' : 'Order Cancelled ❌';
+            body = lang === 'fr' ? `Votre commande ${orderId} a été annulée.` : `Your order ${orderId} has been cancelled.`;
+            toastType = 'warning';
+          }
+
+          // 1. Native device notification
+          fireNativeNotification(title, body, '/notifications');
+
+          // 2. Show floating toast
+          showToast(`🔔 ${title}: ${body}`, toastType);
+
+          // Update local customer_orders status cache
+          const updatedLocalOrders = localOrders.map(o => o.id.toString() === order.id.toString() ? { ...o, status: order.status } : o);
+          localStorage.setItem('customer_orders', JSON.stringify(updatedLocalOrders));
+
+          // Trigger header badge recalculation event
+          window.dispatchEvent(new Event('notifications_updated'));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [settings, fireNativeNotification]);
+
   useEffect(() => {
     if (settings?.language) {
       document.documentElement.lang = settings.language;
