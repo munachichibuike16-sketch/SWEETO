@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Truck, CheckCircle2, Clock, XCircle, Search, RefreshCw, Star, Download, MapPin, CreditCard, X, Copy, ShoppingBag, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Package, Truck, CheckCircle2, Clock, XCircle, Search, RefreshCw, Star, Download, MapPin, CreditCard, X, Copy, ShoppingBag, Plus, Trash2, ArrowLeft, User, Banknote, MessageCircle, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../contexts/StoreContext';
 import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function formatCurrency(amount, currency = 'FCFA') {
   try {
@@ -73,6 +75,7 @@ function Toast({ message, onClose }) {
 export default function OrdersHistoryContent({ onBack }) {
   const { settings, products } = useStore();
   const { addToCart } = useCart();
+  const { lang } = useLanguage();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -746,7 +749,11 @@ export default function OrdersHistoryContent({ onBack }) {
               const isDelivered = ['delivered', 'completed'].includes(normalizedStatus);
               
               return (
-                <div key={order.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:border-slate-300 transition duration-200">
+                <div 
+                  key={order.id} 
+                  onClick={() => { setSelectedOrder(order); setModalType('details'); }}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:border-slate-300 transition duration-200 cursor-pointer"
+                >
                   
                   {/* Card Header */}
                   <div className="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
@@ -770,7 +777,7 @@ export default function OrdersHistoryContent({ onBack }) {
                     <div className="flex items-center space-x-3">
                       <StatusBadge status={order.status} />
                       <button
-                        onClick={() => { setSelectedOrder(order); setModalType('details'); }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setModalType('details'); }}
                         className="text-xs font-bold text-[#1F6FEB] hover:text-[#1554C0] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 px-3 py-1.5 rounded-lg transition"
                       >
                         View Details
@@ -805,7 +812,8 @@ export default function OrdersHistoryContent({ onBack }) {
                           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                             {isDelivered && (
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedOrder(order);
                                   setActiveReviewItem(item);
                                   setModalType('review');
@@ -822,7 +830,7 @@ export default function OrdersHistoryContent({ onBack }) {
                             )}
 
                             <button
-                              onClick={() => handleBuyAgain(item)}
+                              onClick={(e) => { e.stopPropagation(); handleBuyAgain(item); }}
                               className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-[#1F6FEB] hover:bg-blue-100 border border-blue-200 transition cursor-pointer"
                             >
                               Buy Again
@@ -845,7 +853,7 @@ export default function OrdersHistoryContent({ onBack }) {
                     <div className="flex items-center space-x-2">
                       {isShipped && (
                         <button
-                          onClick={() => { setSelectedOrder(order); setModalType('track'); }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setModalType('track'); }}
                           className="inline-flex items-center font-bold text-white bg-[#1F6FEB] hover:bg-[#1554C0] px-3.5 py-1.5 rounded-lg shadow-sm transition"
                         >
                           <Truck className="w-3.5 h-3.5 mr-1.5" />
@@ -856,7 +864,8 @@ export default function OrdersHistoryContent({ onBack }) {
                       {isProcessing && (
                         <>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setSelectedOrder(order);
                               setEditingAddress({
                                 street: order.address,
@@ -870,7 +879,7 @@ export default function OrdersHistoryContent({ onBack }) {
                             Change Address
                           </button>
                           <button
-                            onClick={() => { setSelectedOrder(order); setModalType('cancel'); }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setModalType('cancel'); }}
                             className="font-semibold text-rose-600 hover:bg-rose-50 bg-white border border-rose-200 px-3 py-1.5 rounded-lg transition"
                           >
                             Cancel Order
@@ -879,7 +888,7 @@ export default function OrdersHistoryContent({ onBack }) {
                       )}
 
                       <button
-                        onClick={() => handleDeleteOrder(order.id)}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order.id); }}
                         className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition"
                         title="Delete Order from Database"
                       >
@@ -900,7 +909,7 @@ export default function OrdersHistoryContent({ onBack }) {
 
       {/* 1. TRACK SHIPMENT MODAL */}
       {modalType === 'track' && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
@@ -961,103 +970,238 @@ export default function OrdersHistoryContent({ onBack }) {
         </div>
       )}
 
-      {/* 2. ORDER DETAILS & INVOICE MODAL */}
-      {modalType === 'details' && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Order Summary</h3>
-                <p className="text-xs text-slate-500">Code: {selectedOrder.id} &bull; Placed on {new Date(selectedOrder.created_at).toLocaleDateString()}</p>
-              </div>
-              <button onClick={() => setModalType(null)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* 2. ORDER DETAILS & INVOICE MODAL (PREMIUM TRACKING STYLE) */}
+      <AnimatePresence>
+        {modalType === 'details' && selectedOrder && (() => {
+          const orderId = selectedOrder.id ? (String(selectedOrder.id).startsWith('ORD-') ? selectedOrder.id : `ORD-${selectedOrder.id}`) : 'ORD-00000';
+          const customerName = selectedOrder.customer_name || 'Customer';
+          const customerPhone = selectedOrder.customer_phone || '';
+          const customerAddress = selectedOrder.address || (selectedOrder.city ? `${selectedOrder.city}, ${selectedOrder.address || ''}` : 'Address Provided');
+          const currency = settings?.currency || 'FCFA';
+          const totalAmount = selectedOrder.total_amount || selectedOrder.total || 0;
+          const items = getOrderItems(selectedOrder);
+          const itemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+          const formattedDate = new Date(selectedOrder.created_at || Date.now()).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
 
-            <div>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Items Ordered</h4>
-              <div className="space-y-3">
-                {getOrderItems(selectedOrder).map((item, idx) => (
-                  <div key={item.id || `d-item-${idx}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center space-x-3">
-                      <img 
-                        src={item.image || item.image_url || '/hero-banner.png'} 
-                        alt={item.name} 
-                        className="w-12 h-12 object-cover rounded-lg border border-slate-200" 
-                        onError={(e) => { e.target.onerror = null; e.target.src = '/hero-banner.png'; }}
-                      />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">{item.name}</p>
-                        <p className="text-xs text-slate-500">Qty: {item.quantity || 1} &times; {formatCurrency(item.price, settings?.currency)}</p>
-                      </div>
+          const handleCopyId = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(orderId);
+            showToast("Tracking number copied to clipboard!");
+          };
+
+          const handleWhatsAppContact = (e) => {
+            e.stopPropagation();
+            const phone = settings?.admin_phone?.replace(/\D/g, '') || settings?.contactPhone?.replace(/\D/g, '') || "2250500619923";
+            const text = encodeURIComponent(
+              `Hello SWEETO-HUB, I would like to inquire about my order ${orderId} placed on ${formattedDate}. Total: ${currency} ${Number(totalAmount).toLocaleString()}`
+            );
+            window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+          };
+
+          const getStatusStage = (status) => {
+            const s = (status || '').toLowerCase();
+            if (s === 'delivered' || s === 'completed') return 4;
+            if (s === 'shipped' || s === 'shipping') return 3;
+            if (s === 'confirmed' || s === 'processing') return 2;
+            return 1; // pending/placed
+          };
+
+          const currentStage = getStatusStage(selectedOrder.status);
+          const stages = [
+            { num: 1, label: lang === 'fr' ? 'SAISIE' : 'PLACED' },
+            { num: 2, label: lang === 'fr' ? 'CONFIRMÉ' : 'CONFIRMED' },
+            { num: 3, label: lang === 'fr' ? 'EN ROUTE' : 'PROCESSING' },
+            { num: 4, label: lang === 'fr' ? 'LIVRÉ' : 'DONE' }
+          ];
+
+          return (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.93, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: 20 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                className="bg-white dark:bg-[#0E172A] w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative my-auto text-left"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Drag Pill Handle */}
+                <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-1" />
+
+                {/* Header */}
+                <div className="px-6 pt-3 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                        {orderId}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={handleCopyId}
+                        className="p-1 rounded-md text-[#1F6FEB] hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer border-none"
+                        title="Copy Order ID"
+                      >
+                        <Copy size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadInvoice(selectedOrder)}
+                        className="p-1 rounded-md text-slate-500 hover:text-indigo-650 hover:bg-[#1F6FEB]/10 dark:hover:bg-blue-900/30 transition-colors cursor-pointer border-none"
+                        title="Download Invoice"
+                      >
+                        <Download size={16} />
+                      </button>
                     </div>
-                    <span className="font-bold text-slate-900 text-sm">{formatCurrency((item.price || 0) * (item.quantity || 1), settings?.currency)}</span>
+                    <p className="text-xs text-slate-400 dark:text-slate-550 mt-1 flex items-center gap-1.5 font-medium">
+                      📅 {formattedDate}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        selectedOrder.status === 'cancelled' 
+                          ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 border border-rose-200/60' 
+                          : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 border border-amber-200/60'
+                      }`}>
+                        • {selectedOrder.status?.toUpperCase() || 'PENDING'}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex items-center text-slate-700 font-semibold text-xs uppercase tracking-wider mb-2">
-                  <MapPin className="w-4 h-4 mr-1 text-slate-500" />
-                  Shipping Address
+                  <button
+                    type="button"
+                    onClick={() => setModalType(null)}
+                    className="p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
-                <p className="text-sm font-semibold text-slate-800">{selectedOrder.customer_name || 'Customer'}</p>
-                <p className="text-xs text-slate-600 mt-1">{selectedOrder.address || 'Address unspecified'}</p>
-                <p className="text-xs text-slate-600">{selectedOrder.city || 'Abidjan'}</p>
-                <p className="text-xs text-slate-500 mt-2">{selectedOrder.customer_phone}</p>
-              </div>
 
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex items-center text-slate-700 font-semibold text-xs uppercase tracking-wider mb-2">
-                  <CreditCard className="w-4 h-4 mr-1 text-slate-500" />
-                  Payment Info
+                <div className="px-6 py-5 space-y-6 max-h-[60vh] overflow-y-auto">
+                  {/* 4-Step Progress Stepper */}
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between relative px-2">
+                      {/* Connecting Background Line */}
+                      <div className="absolute top-4 left-6 right-6 h-0.5 bg-slate-200 dark:bg-slate-700 -z-0">
+                        <div 
+                          className="h-full bg-[#10B981] transition-all duration-500" 
+                          style={{ width: `${((currentStage - 1) / 3) * 100}%` }}
+                        />
+                      </div>
+                      
+                      {stages.map((stage) => {
+                        const isActive = currentStage >= stage.num;
+                        return (
+                          <div key={stage.num} className="flex flex-col items-center relative z-10">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md transition-all ${
+                              isActive 
+                                ? 'bg-[#10B981] text-white shadow-[#10B981]/25' 
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 shadow-none'
+                            }`}>
+                              {isActive ? <Check size={16} /> : stage.num}
+                            </div>
+                            <span className={`text-[10px] font-extrabold mt-2 uppercase tracking-wider transition-colors ${
+                              isActive ? 'text-[#10B981]' : 'text-slate-400'
+                            }`}>
+                              {stage.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Section 1: Customer Details */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      <User size={14} className="text-slate-600 dark:text-slate-400" />
+                      <span>CUSTOMER</span>
+                    </div>
+                    <div className="space-y-0.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      <p className="font-bold text-slate-900 dark:text-white">{customerName}</p>
+                      {customerPhone && (
+                        <p className="text-[#1F6FEB] font-bold">{customerPhone}</p>
+                      )}
+                      <p className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-tight">{customerAddress}</p>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Order Total */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                      <Banknote size={14} className="text-slate-600 dark:text-slate-400" />
+                      <span>ORDER TOTAL</span>
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-black text-[#1F6FEB] tracking-tight">
+                      {currency} {Number(totalAmount).toFixed(2)}
+                    </div>
+                  </div>
+
+                  {/* Section 3: Order Items */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+                      <ShoppingBag size={14} className="text-slate-600 dark:text-slate-400" />
+                      <span>ORDER ITEMS ({itemCount})</span>
+                    </div>
+                    
+                    <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {items.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between pt-2 first:pt-0">
+                          <div className="pr-4">
+                            <p className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">
+                              {item.name || `Item #${idx + 1}`}
+                            </p>
+                            <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                              {item.quantity || 1}x
+                            </p>
+                          </div>
+                          <span className="font-bold text-sm text-slate-900 dark:text-white whitespace-nowrap">
+                            {currency} {Number((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-semibold text-slate-800">Standard Payment</p>
-                <p className="text-xs text-emerald-600 font-medium mt-1">Payment Status: Confirmed</p>
-                <p className="text-xs text-slate-500 mt-4">Carrier: Standard Courier</p>
-              </div>
-            </div>
 
-            <div className="border-t border-slate-100 pt-4 space-y-2 text-sm">
-              <div className="flex justify-between text-slate-600">
-                <span>Subtotal</span>
-                <span>{formatCurrency((selectedOrder.total_amount || selectedOrder.total || 0) - (selectedOrder.delivery_fee || 0), settings?.currency)}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Delivery Fee</span>
-                <span>{Number(selectedOrder.delivery_fee || 0) === 0 ? "FREE" : formatCurrency(selectedOrder.delivery_fee, settings?.currency)}</span>
-              </div>
-              <div className="flex justify-between font-extrabold text-slate-900 text-lg pt-2 border-t border-slate-200">
-                <span>Grand Total</span>
-                <span className="text-indigo-600">{formatCurrency(selectedOrder.total_amount || selectedOrder.total, settings?.currency)}</span>
-              </div>
-            </div>
+                {/* Bottom Buttons */}
+                <div className="p-5 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Cobalt Royal Blue Continue Shopping Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalType(null);
+                      navigate('/');
+                    }}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#1F6FEB] to-[#1554C0] hover:from-[#1554C0] hover:to-[#0D3C8A] text-white font-bold text-sm shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer border-none"
+                  >
+                    <ShoppingBag size={16} />
+                    <span>{lang === 'fr' ? 'Continuer les achats' : 'Continue Shopping'}</span>
+                  </button>
 
-            <div className="flex items-center space-x-3 pt-2">
-              <button
-                onClick={() => handleDownloadInvoice(selectedOrder)}
-                className="flex-1 py-3 bg-[#1f7cf6] hover:bg-[#1361c4] text-white rounded-xl text-sm font-bold transition flex items-center justify-center cursor-pointer shadow-md shadow-[#1f7cf6]/20"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Invoice
-              </button>
-              <button
-                onClick={() => setModalType(null)}
-                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition"
-              >
-                Close
-              </button>
+                  {/* Emerald Green WhatsApp Contact Button */}
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppContact}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer border-none"
+                  >
+                    <MessageCircle size={16} />
+                    <span>{lang === 'fr' ? 'Nous contacter' : 'Contact Us'}</span>
+                  </button>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })()}
+      </AnimatePresence>
 
       {/* 3. CANCEL ORDER MODAL */}
       {modalType === 'cancel' && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900">Cancel Order {selectedOrder.id}</h3>
@@ -1104,7 +1248,7 @@ export default function OrdersHistoryContent({ onBack }) {
 
       {/* 4. WRITE REVIEW MODAL */}
       {modalType === 'review' && activeReviewItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900">Write Product Review</h3>
@@ -1169,7 +1313,7 @@ export default function OrdersHistoryContent({ onBack }) {
 
       {/* 5. EDIT SHIPPING ADDRESS MODAL */}
       {modalType === 'editAddress' && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900">Edit Shipping Address</h3>

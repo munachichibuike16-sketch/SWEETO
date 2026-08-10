@@ -57,7 +57,7 @@ const WavePayPage = () => {
   useEffect(() => {
     if (isSuccess && orderId) {
       const timer = setTimeout(() => {
-        navigate(`/order-tracking/${orderId}`);
+        navigate('/orders');
       }, 3500);
       return () => clearTimeout(timer);
     }
@@ -360,7 +360,7 @@ const WavePayPage = () => {
 
           <div className="space-y-3">
             <button 
-              onClick={() => navigate(`/order-tracking/${orderId}`)}
+              onClick={() => navigate('/orders')}
               className="w-full bg-[#0052FF] text-white font-black py-4.5 rounded-2xl uppercase tracking-widest text-[11px] hover:bg-[#0043D0] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none shadow-lg shadow-blue-500/25"
             >
               {lang === 'fr' ? 'Suivre ma commande' : 'Track Order'}
@@ -463,7 +463,7 @@ const WavePayPage = () => {
               {lang === 'fr' ? 'Annuler' : 'Cancel'}
             </button>
             <button
-              onClick={() => navigate(`/order-tracking/${orderId}`)}
+              onClick={() => navigate('/orders')}
               className="flex-[2] py-4 bg-slate-900 hover:bg-slate-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-black/10 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-none"
             >
               {lang === 'fr' ? 'Passer au Suivi' : 'Skip to Tracking'}
@@ -610,7 +610,7 @@ const WavePayPage = () => {
           </button>
 
           <button
-            onClick={() => navigate(`/order-tracking/${orderId}`)}
+            onClick={() => navigate('/orders')}
             className="flex-1 min-w-[80px] py-4.5 bg-blue-500/10 text-[#0052FF] dark:text-blue-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center border border-blue-500/20"
           >
             {lang === 'fr' ? 'Passer' : 'Skip'}

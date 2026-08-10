@@ -782,13 +782,13 @@ export default function BrightRetailHome({ onProductClick }) {
               {/* Button 2: Track Order */}
               <button
                 onClick={() => {
-                  navigate('/order-tracking');
+                  navigate('/orders');
                   window.scrollTo(0, 0);
                 }}
                 className="w-full sm:w-auto px-7 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.03] active:scale-95 cursor-pointer flex items-center justify-center gap-2.5"
               >
                 <Truck size={15} className="text-white opacity-90 shrink-0" />
-                <span>{lang === 'fr' ? 'Suivre ma commande' : 'Track Existing Order'}</span>
+                <span>{lang === 'fr' ? 'Mes commandes' : 'View Orders'}</span>
               </button>
             </div>
 

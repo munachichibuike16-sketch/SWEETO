@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import OrdersHistoryContent from '../components/OrdersHistoryContent';
 import DesktopHeader from '../components/DesktopHeader';
 import Header from '../components/Header';
-import MobileDock from '../components/MobileDock';
 
 export default function OrdersPage() {
   const navigate = useNavigate();
@@ -30,8 +29,6 @@ export default function OrdersPage() {
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-12 flex-1">
         <OrdersHistoryContent onBack={() => navigate(-1)} />
       </main>
-
-      <MobileDock />
     </div>
   );
 }

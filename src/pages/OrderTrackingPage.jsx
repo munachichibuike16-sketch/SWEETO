@@ -649,80 +649,6 @@ export default function OrderTrackingPage() {
           </div>
         )}
 
-        {/* Search Panel Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-white/5 shadow-sm text-center relative max-w-4xl mx-auto mb-8">
-          <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4">
-            <MapPin size={22} className="fill-current" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            {lang === 'fr' ? 'SUIVEZ VOTRE COLIS' : 'Track Your Package'}
-          </h2>
-          <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold max-w-2xl mx-auto mt-2 leading-relaxed">
-            {lang === 'fr' 
-              ? "Saisissez votre numéro de suivi à 8 chiffres ci-dessous pour consulter les mises à jour d'expédition en temps réel, la localisation du chauffeur et l'heure d'arrivée estimée."
-              : 'Enter your 8-digit tracking number below to view real-time shipping updates, driver location, and estimated time of arrival.'}
-          </p>
-
-          {/* Search form */}
-          <form onSubmit={handleSearch} className="max-w-md mx-auto flex items-center gap-3 mt-6">
-            <div className="relative flex-1">
-              <input 
-                placeholder="E.G. ORD-9824"
-                value={orderIdInput}
-                onChange={(e) => setOrderIdInput(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 pl-11 text-xs font-bold uppercase tracking-wider outline-none focus:border-indigo-500 text-slate-900 dark:text-white"
-              />
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6h16.5M3.75 12h16.5M3.75 18h16.5" />
-              </svg>
-            </div>
-            <button 
-              type="submit"
-              className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-750 text-white rounded-xl font-extrabold text-xs uppercase tracking-wider cursor-pointer border-none shadow-sm flex items-center gap-2 active:scale-95 transition-all"
-            >
-              <Search size={14} />
-              <span>{lang === 'fr' ? 'PISTE' : 'Track'}</span>
-            </button>
-          </form>
-
-          {/* Samples */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-              {lang === 'fr' ? "ESSAYEZ DES COMMANDES D'EXEMPLE :" : 'Try sample orders:'}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setOrderIdInput('ORD-9824');
-                setCurrentOrderId('ORD-9824');
-              }}
-              className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950 hover:bg-indigo-500/5 hover:text-indigo-650 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-800 text-[10px] font-bold rounded-xl text-slate-500 cursor-pointer transition-all"
-            >
-              #ORD-9824 {lang === 'fr' ? '(En transit)' : '(In Transit)'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOrderIdInput('ORD-7210');
-                setCurrentOrderId('ORD-7210');
-              }}
-              className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950 hover:bg-emerald-500/5 hover:text-emerald-500 dark:hover:text-emerald-450 border border-slate-200 dark:border-slate-800 text-[10px] font-bold rounded-xl text-slate-500 cursor-pointer transition-all"
-            >
-              #ORD-7210 {lang === 'fr' ? '(Livré)' : '(Delivered)'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOrderIdInput('ORD-4102');
-                setCurrentOrderId('ORD-4102');
-              }}
-              className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950 hover:bg-amber-500/5 hover:text-amber-550 dark:hover:text-amber-450 border border-slate-200 dark:border-slate-800 text-[10px] font-bold rounded-xl text-slate-500 cursor-pointer transition-all"
-            >
-              #ORD-4102 {lang === 'fr' ? '(En cours de traitement)' : '(Processing)'}
-            </button>
-          </div>
-        </div>
-
         {order ? (
           <div className="space-y-8">
             {/* Tracking Progress Wizard Card */}
@@ -918,8 +844,8 @@ export default function OrderTrackingPage() {
               </h3>
               <p className="text-xs text-slate-455 dark:text-slate-550 max-w-md mx-auto leading-relaxed font-bold">
                 {lang === 'fr' 
-                  ? 'Entrez le numéro de suivi de votre commande ci-dessus pour suivre votre colis.'
-                  : 'Enter your order identifier in the search bar above to see the real-time map and track your driver.'}
+                  ? 'Veuillez accéder au suivi via le lien de votre commande.'
+                  : 'Please access tracking directly via your order link.'}
               </p>
             </div>
             <button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Package, AlertCircle, CheckCircle2, Trash2, X, Sparkles, CheckCheck, Truck, Clock, XCircle } from 'lucide-react';
+import { Bell, Package, AlertCircle, CheckCircle2, Trash2, X, Sparkles, CheckCheck, Truck, Clock, XCircle, User, Banknote, ShoppingBag, MessageCircle, Check, Copy, Download } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,13 +8,126 @@ import { supabase } from '../lib/supabase';
 
 export default function NotificationsContent({ onProductClick }) {
   const navigate = useNavigate();
-  const { products } = useStore();
+  const { products, settings } = useStore();
   const { lang } = useLanguage();
   
   const [notifications, setNotifications] = useState([]);
   const [readNotifs, setReadNotifs] = useState([]);
   const [deletedNotifs, setDeletedNotifs] = useState({});
   const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  const getOrderItems = (order) => {
+    try {
+      const raw = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  function formatCurrency(amount, currency = 'FCFA') {
+    try {
+      let isoCurrency = currency;
+      if (currency === 'FCFA' || currency === 'CFA') {
+        isoCurrency = 'XOF'; 
+      }
+      const formatted = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: isoCurrency }).format(amount || 0);
+      if (currency === 'FCFA' || currency === 'CFA') {
+        return formatted.replace('XOF', 'FCFA');
+      }
+      return formatted;
+    } catch (e) {
+      return `${Number(amount || 0).toLocaleString('fr-FR')} ${currency}`;
+    }
+  }
+
+  const handleDownloadInvoice = (order) => {
+    if (!order) return;
+    const items = getOrderItems(order);
+    const currency = settings?.currency || 'FCFA';
+    const invoiceWindow = window.open('', '_blank');
+    if (!invoiceWindow) return;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Facture Commande #${order.id} - SWEETO</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1e293b; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #1f7cf6; padding-bottom: 20px; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: 900; color: #1f7cf6; }
+          .title { font-size: 20px; font-weight: bold; }
+          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+          .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+          th { background: #f1f5f9; font-weight: bold; }
+          .total-box { text-align: right; font-size: 16px; margin-top: 20px; }
+          .total-price { font-size: 22px; font-weight: 900; color: #1f7cf6; }
+          .btn { background: #1f7cf6; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; }
+          @media print { .btn { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="logo">SWEETO</div>
+            <p style="color:#64748b; font-size:12px; margin:4px 0 0 0;">Facture d'achat client</p>
+          </div>
+          <div style="text-align:right;">
+            <div class="title">COMMANDE #ORD-${order.id}</div>
+            <p style="color:#64748b; font-size:12px; margin:4px 0 0 0;">Date: ${new Date(order.created_at || Date.now()).toLocaleDateString()}</p>
+            <p style="color:#10b981; font-size:12px; font-weight:bold; text-transform:uppercase; margin:4px 0 0 0;">Statut: ${order.status || 'Confirmée'}</p>
+          </div>
+        </div>
+        <div class="details-grid">
+          <div class="box">
+            <h4 style="margin:0 0 8px 0; font-size:12px; text-transform:uppercase; color:#64748b;">Client & Livraison</h4>
+            <p style="margin:0; font-weight:bold;">${order.customer_name || 'Client'}</p>
+            <p style="margin:4px 0; font-size:13px; color:#475569;">${order.address || ''}, ${order.city || 'Abidjan'}</p>
+            <p style="margin:4px 0; font-size:13px; color:#475569;">Tél: ${order.customer_phone || 'N/A'}</p>
+          </div>
+          <div class="box">
+            <h4 style="margin:0 0 8px 0; font-size:12px; text-transform:uppercase; color:#64748b;">Paiement</h4>
+            <p style="margin:0; font-weight:bold;">Paiement à la livraison / Mobile Money</p>
+            <p style="margin:4px 0; font-size:13px; color:#475569;">Devise: ${currency}</p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Qté</th>
+              <th>Prix Unitaire</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td style="font-weight:bold;">${item.name}</td>
+                <td>${item.quantity || 1}</td>
+                <td>${currency} ${Number(item.price || 0).toLocaleString()}</td>
+                <td style="text-align:right; font-weight:bold;">${currency} ${Number((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="total-box">
+          <p style="margin:4px 0; color:#64748b;">Total de la commande :</p>
+          <div class="total-price">${currency} ${Number(order.total_amount || order.total || 0).toLocaleString()}</div>
+        </div>
+        <div style="text-align:center; margin-top:40px;">
+          <button class="btn" onclick="window.print()">Imprimer la Facture</button>
+        </div>
+      </body>
+      </html>
+    `;
+    invoiceWindow.document.write(html);
+    invoiceWindow.document.close();
+  };
 
   useEffect(() => {
     // Load state from localStorage
@@ -110,6 +223,7 @@ export default function NotificationsContent({ onProductClick }) {
         type,
         title,
         message,
+        orderId: order.id,
         time: order.created_at ? new Date(order.created_at).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' }) : 'Recent',
         read: storedRead.includes(`order-${order.id}-${status}`),
         deleted: !!storedDeleted[`order-${order.id}-${status}`],
@@ -157,6 +271,12 @@ export default function NotificationsContent({ onProductClick }) {
     if (!notif.read) toggleRead(notif.id);
     if (notif.originalProduct && onProductClick) {
       onProductClick(notif.originalProduct);
+    } else if (notif.orderId) {
+      const matchedOrder = orders.find(o => o.id === notif.orderId);
+      if (matchedOrder) {
+        setSelectedOrder(matchedOrder);
+        setShowDetailsModal(true);
+      }
     }
   };
 
@@ -369,6 +489,221 @@ export default function NotificationsContent({ onProductClick }) {
           )}
         </div>
       </div>
+
+      {/* Premium Stepper Modal */}
+      <AnimatePresence>
+        {showDetailsModal && selectedOrder && (() => {
+          const orderId = selectedOrder.id ? (String(selectedOrder.id).startsWith('ORD-') ? selectedOrder.id : `ORD-${selectedOrder.id}`) : 'ORD-00000';
+          const customerName = selectedOrder.customer_name || 'Customer';
+          const customerPhone = selectedOrder.customer_phone || '';
+          const customerAddress = selectedOrder.address || (selectedOrder.city ? `${selectedOrder.city}, ${selectedOrder.address || ''}` : 'Address Provided');
+          const currency = settings?.currency || 'FCFA';
+          const totalAmount = selectedOrder.total_amount || selectedOrder.total || 0;
+          const items = getOrderItems(selectedOrder);
+          const itemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+          const formattedDate = new Date(selectedOrder.created_at || Date.now()).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          const handleCopyId = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(orderId);
+          };
+
+          const handleWhatsAppContact = (e) => {
+            e.stopPropagation();
+            const phone = settings?.admin_phone?.replace(/\D/g, '') || settings?.contactPhone?.replace(/\D/g, '') || "2250500619923";
+            const text = encodeURIComponent(
+              `Hello SWEETO-HUB, I would like to inquire about my order ${orderId} placed on ${formattedDate}. Total: ${currency} ${Number(totalAmount).toLocaleString()}`
+            );
+            window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+          };
+
+          const getStatusStage = (status) => {
+            const s = (status || '').toLowerCase();
+            if (s === 'delivered' || s === 'completed') return 4;
+            if (s === 'shipped' || s === 'shipping') return 3;
+            if (s === 'confirmed' || s === 'processing') return 2;
+            return 1; // pending/placed
+          };
+
+          const currentStage = getStatusStage(selectedOrder.status);
+          const stages = [
+            { num: 1, label: lang === 'fr' ? 'SAISIE' : 'PLACED' },
+            { num: 2, label: lang === 'fr' ? 'CONFIRMÉ' : 'CONFIRMED' },
+            { num: 3, label: lang === 'fr' ? 'EN ROUTE' : 'PROCESSING' },
+            { num: 4, label: lang === 'fr' ? 'LIVRÉ' : 'DONE' }
+          ];
+
+          return (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.93, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: 20 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                className="bg-white dark:bg-[#0E172A] w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative my-auto text-left"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-1" />
+
+                <div className="px-6 pt-3 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                        {orderId}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={handleCopyId}
+                        className="p-1 rounded-md text-[#1F6FEB] hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer border-none"
+                        title="Copy Order ID"
+                      >
+                        <Copy size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadInvoice(selectedOrder)}
+                        className="p-1 rounded-md text-slate-500 hover:text-indigo-650 hover:bg-[#1F6FEB]/10 dark:hover:bg-blue-900/30 transition-colors cursor-pointer border-none"
+                        title="Download Invoice"
+                      >
+                        <Download size={16} />
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-400 dark:text-slate-550 mt-1 flex items-center gap-1.5 font-medium">
+                      📅 {formattedDate}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        selectedOrder.status === 'cancelled' 
+                          ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 border border-rose-200/60' 
+                          : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 border border-amber-200/60'
+                      }`}>
+                        • {selectedOrder.status?.toUpperCase() || 'PENDING'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailsModal(false)}
+                    className="p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="px-6 py-5 space-y-6 max-h-[60vh] overflow-y-auto">
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between relative px-2">
+                      <div className="absolute top-4 left-6 right-6 h-0.5 bg-slate-200 dark:bg-slate-700 -z-0">
+                        <div 
+                          className="h-full bg-[#10B981] transition-all duration-500" 
+                          style={{ width: `${((currentStage - 1) / 3) * 100}%` }}
+                        />
+                      </div>
+                      
+                      {stages.map((stage) => {
+                        const isActive = currentStage >= stage.num;
+                        return (
+                          <div key={stage.num} className="flex flex-col items-center relative z-10">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md transition-all ${
+                              isActive 
+                                ? 'bg-[#10B981] text-white shadow-[#10B981]/25' 
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 shadow-none'
+                            }`}>
+                              {isActive ? <Check size={16} /> : stage.num}
+                            </div>
+                            <span className={`text-[10px] font-extrabold mt-2 uppercase tracking-wider transition-colors ${
+                              isActive ? 'text-[#10B981]' : 'text-slate-400'
+                            }`}>
+                              {stage.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      <User size={14} className="text-slate-600 dark:text-slate-400" />
+                      <span>CUSTOMER</span>
+                    </div>
+                    <div className="space-y-0.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      <p className="font-bold text-slate-900 dark:text-white">{customerName}</p>
+                      {customerPhone && (
+                        <p className="text-[#1F6FEB] font-bold">{customerPhone}</p>
+                      )}
+                      <p className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-tight">{customerAddress}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                      <Banknote size={14} className="text-slate-600 dark:text-slate-400" />
+                      <span>ORDER TOTAL</span>
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-black text-[#1F6FEB] tracking-tight">
+                      {currency} {Number(totalAmount).toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+                      <ShoppingBag size={14} className="text-slate-600 dark:text-slate-400" />
+                      <span>ORDER ITEMS ({itemCount})</span>
+                    </div>
+                    
+                    <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {items.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between pt-2 first:pt-0">
+                          <div className="pr-4">
+                            <p className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">
+                              {item.name || `Item #${idx + 1}`}
+                            </p>
+                            <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                              {item.quantity || 1}x
+                            </p>
+                          </div>
+                          <span className="font-bold text-sm text-slate-900 dark:text-white whitespace-nowrap">
+                            {currency} {Number((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailsModal(false)}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#1F6FEB] to-[#1554C0] hover:from-[#1554C0] hover:to-[#0D3C8A] text-white font-bold text-sm shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer border-none"
+                  >
+                    <ShoppingBag size={16} />
+                    <span>{lang === 'fr' ? 'Continuer les achats' : 'Continue Shopping'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppContact}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer border-none"
+                  >
+                    <MessageCircle size={16} />
+                    <span>{lang === 'fr' ? 'Nous contacter' : 'Contact Us'}</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
+      </AnimatePresence>
     </div>
   );
 }

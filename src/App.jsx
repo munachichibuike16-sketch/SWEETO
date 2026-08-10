@@ -32,7 +32,6 @@ import CategoryLandingPage from './components/CategoryLandingPage';
 import ShufflingProductPage from './components/ShufflingProductPage';
 import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
-import OrderTrackingPage from './pages/OrderTrackingPage';
 import DeliverPage from './pages/DeliverPage';
 import OrdersPage from './pages/OrdersPage';
 import Dashboard from './pages/Dashboard';
@@ -1496,8 +1495,6 @@ const App = () => {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
-          <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
-          <Route path="/order-tracking" element={<OrderTrackingPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/swto-deliver" element={<DeliverPage />} />
           <Route path="/dashboard" element={<Dashboard />} />

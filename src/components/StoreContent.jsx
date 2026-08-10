@@ -318,7 +318,7 @@ const StoreContent = () => {
                       {mainItemName} est en cours de traitement pour <span className="text-teal-600 dark:text-teal-400 font-medium">{order.city}</span>!
                     </p>
                     <button 
-                      onClick={() => navigate(`/order-tracking/${order.id}`)}
+                      onClick={() => navigate('/orders')}
                       className="active-tap text-[10px] font-bold text-teal-600 dark:text-teal-400 mt-2 hover:text-teal-500 dark:hover:text-teal-300 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer"
                     >
                       TRACK ORDER <span className="font-normal">&gt;</span>
@@ -338,7 +338,7 @@ const StoreContent = () => {
                       </button>
                       
                       <button 
-                        onClick={() => navigate(`/order-tracking/${order.id}`)}
+                        onClick={() => navigate('/orders')}
                         className="active-tap w-7 h-7 rounded-full bg-eas-blue hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transition-all duration-300 shadow-eas-blue/30 cursor-pointer"
                       >
                         <i className="fa-solid fa-arrow-right text-[11px]"></i>
