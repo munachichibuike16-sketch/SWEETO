@@ -27,8 +27,7 @@ import AdminAnalyticsDashboard from '../components/AdminAnalyticsDashboard';
 import { useStore } from '../contexts/StoreContext';
 import { supabase } from '../lib/supabase';
 import { formatDbError } from '../utils/errorHelper';
-import SweetoLogo from '../components/SweetoLogo';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
 import { apiFetch } from '../utils/api';
 import { playSound } from '../utils/sound';
@@ -250,7 +249,20 @@ const Dashboard = () => {
     localStorage.setItem('admin_theme', isAdminDark ? 'dark' : 'light');
   }, [isAdminDark]);
 
-  const [activeTab, setActiveTab] = React.useState('Overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = React.useState(() => searchParams.get('tab') || 'Overview');
+
+  React.useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    setSearchParams(tabName === 'Overview' ? {} : { tab: tabName });
+  };
   const [hasUnreadChat, setHasUnreadChat] = React.useState(false);
 
   React.useEffect(() => {
@@ -942,7 +954,7 @@ const Dashboard = () => {
             const hasUnreadMessages = item.name === 'Live Chat' && hasUnreadChat;
             
             return (
-              <button key={item.name} onClick={() => setActiveTab(item.name)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white font-medium'}`}>
+              <button key={item.name} onClick={() => handleTabChange(item.name)} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white font-medium'}`}>
                 {isActive && <motion.div layoutId="activeTabIndicator" className="absolute inset-0 border-2 border-blue-500/20 dark:border-blue-500/30 rounded-2xl" initial={false} transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />}
                 <item.icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                 <span className="text-sm tracking-wide">{item.name}</span>
@@ -1261,7 +1273,7 @@ const Dashboard = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`relative flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all ${
                   isActive ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-slate-400 dark:text-slate-500'
                 }`}
