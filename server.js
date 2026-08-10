@@ -707,6 +707,56 @@ async function triggerTwilioVoiceCall(adminPhone, orderId, customerName, total) 
   }
 }
 
+// Infobip WhatsApp alert sender helper
+async function sendInfobipWhatsAppMessage(to, messageText) {
+  const apiKey = process.env.INFOBIP_API_KEY;
+  let apiUrl = process.env.INFOBIP_API_URL || '552n1y.api.infobip.com';
+  if (!apiUrl.startsWith('http')) {
+    apiUrl = `https://${apiUrl}`;
+  }
+  const sender = process.env.INFOBIP_SENDER || '447860099299';
+
+  if (!apiKey) {
+    console.warn('⚠️ Infobip API key is not configured in environment variables. Cannot send WhatsApp message.');
+    return false;
+  }
+
+  // Clean numbers (must be international digits format, e.g. 2250500619923)
+  const cleanTo = to.replace(/\D/g, '');
+  const cleanSender = sender.replace(/\D/g, '');
+
+  try {
+    console.log(`💬 Sending Infobip WhatsApp order message to ${cleanTo} from sender ${cleanSender}...`);
+    const response = await fetch(`${apiUrl}/whatsapp/1/message/text`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `App ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        from: cleanSender,
+        to: cleanTo,
+        content: {
+          text: messageText
+        }
+      })
+    });
+
+    const resData = await response.json();
+    if (response.ok) {
+      console.log(`✅ Infobip WhatsApp message sent successfully! Msg ID:`, resData.messages?.[0]?.messageId);
+      return true;
+    } else {
+      console.error(`❌ Infobip WhatsApp API Error:`, resData);
+      return false;
+    }
+  } catch (err) {
+    console.error(`❌ Failed to send Infobip WhatsApp message:`, err);
+    return false;
+  }
+}
+
 function scheduleAdminCallBackup(orderId, customerName, total) {
   setTimeout(() => {
     try {
@@ -1480,6 +1530,54 @@ app.post('/api/orders', (req, res) => {
       null,
       'admin'
     );
+
+    // Trigger customer background push notification
+    const customerPhone = req.body.customer_phone || (customer_contact ? customer_contact.split(' | ')[0] : null);
+    const customerUserId = req.body.user_id || (customer_contact ? customer_contact.split(' | ')[4] : null);
+    const currency = 'FCFA';
+
+    if (customerPhone) {
+      sendBackgroundPushNotification(
+        '🛍️ Order Placed Successfully!',
+        `Thank you for your order! Your order #${info.lastInsertRowid} of ${Number(total || 0).toLocaleString()} ${currency} is confirmed.`,
+        `/#/track/${info.lastInsertRowid}`,
+        null,
+        'customer',
+        customerPhone
+      ).catch(e => console.error('Failed to send customer push by phone:', e));
+    }
+    if (customerUserId && customerUserId !== customerPhone) {
+      sendBackgroundPushNotification(
+        '🛍️ Order Placed Successfully!',
+        `Thank you for your order! Your order #${info.lastInsertRowid} of ${Number(total || 0).toLocaleString()} ${currency} is confirmed.`,
+        `/#/track/${info.lastInsertRowid}`,
+        null,
+        'customer',
+        customerUserId
+      ).catch(e => console.error('Failed to send customer push by user_id:', e));
+    }
+
+    // Send automated WhatsApp alert to the admin via Infobip
+    const adminPhoneSetting = db.prepare("SELECT value FROM settings WHERE key = 'admin_phone'").get();
+    const adminPhone = adminPhoneSetting ? adminPhoneSetting.value : (process.env.ADMIN_PHONE || '+2250500619923');
+
+    try {
+      const itemsArray = JSON.parse(items || '[]');
+      const itemsSummary = itemsArray.map(item => `• ${item.name} (x${item.quantity}) - ${Number(item.price * item.quantity).toLocaleString()} FCFA`).join('\n');
+      const formattedMessage = `*🛍️ NEW ORDER RECEIVED!* (Order ID: #${info.lastInsertRowid})\n\n` +
+        `*Customer:* ${customer_name || 'Customer'}\n` +
+        `*Contact:* ${customerPhone || 'None'}\n` +
+        `*Total:* ${Number(total || 0).toLocaleString()} FCFA\n\n` +
+        `*Items:* \n${itemsSummary}`;
+
+      if (adminPhone) {
+        sendInfobipWhatsAppMessage(adminPhone, formattedMessage).catch(err => {
+          console.error('Failed to dispatch Infobip WhatsApp message:', err);
+        });
+      }
+    } catch (e) {
+      console.warn('Failed parsing order items for Infobip WhatsApp notification:', e);
+    }
 
     // Schedule 1-minute pending voice call backup notification
     scheduleAdminCallBackup(info.lastInsertRowid, customer_name, total);

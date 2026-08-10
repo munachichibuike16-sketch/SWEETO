@@ -679,6 +679,11 @@ const CheckoutPage = () => {
         console.warn('Failed to save order to local list:', e);
       }
 
+      // Prompt for push subscription
+      try {
+        pushManager.subscribe('customer').catch(() => {});
+      } catch (e) {}
+
       setWaMessage(message);
       setOrderId(newOrderId);
       setOrderedItems([...cartItems]);
@@ -957,7 +962,72 @@ const CheckoutPage = () => {
     );
   }
 
-  const handleConfirmWhatsAppOrder = () => {
+  const handleConfirmWhatsAppOrder = async () => {
+    setIsProcessing(true);
+    
+    const session = JSON.parse(localStorage.getItem('sweetohub_session'));
+    const customerName = session?.full_name || session?.username || 'WhatsApp Customer';
+    const customerPhone = session?.phone || session?.phoneNumber || 'WhatsApp';
+    
+    // Address Details
+    const addressDetails = `WhatsApp Checkout`;
+    const contactInfo = [
+      customerPhone,
+      addressDetails,
+      'WhatsApp Checkout',
+      session?.email || '',
+      session?.id || ''
+    ].join(' | ');
+
+    const orderPayload = {
+      customer_name: customerName,
+      customer_contact: contactInfo,
+      customer_phone: customerPhone,
+      items: JSON.stringify(cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image || item.image_url || (item.images && item.images[0]) || '',
+        image_url: item.image_url || item.image || (item.images && item.images[0]) || '',
+        color: item.selectedColor || item.color || '',
+        size: item.selectedSize || item.size || ''
+      }))),
+      total_amount: grandTotal,
+      total: grandTotal,
+      total_items: cartItems.reduce((acc, item) => acc + item.quantity, 0),
+      status: 'pending',
+      promo_code: null,
+      city: 'WhatsApp Checkout',
+      address: addressDetails,
+    };
+
+    let newOrderId = null;
+
+    try {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('orders')
+          .insert([orderPayload])
+          .select()
+          .single();
+        if (error) throw error;
+        newOrderId = data?.id;
+      } else {
+        // Fallback to local Express/SQLite server
+        const response = await apiFetch('/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload)
+        });
+        if (!response.ok) throw new Error('Local database placement failed');
+        const resData = await response.json();
+        newOrderId = resData.id;
+      }
+    } catch (err) {
+      console.warn('Failed to record order to DB before WhatsApp redirect:', err);
+    }
+
     const itemsText = cartItems.map(item => {
       return `• ${item.name} (${item.quantity}x) - ${settings?.currency || 'FCFA'} ${(item.price * item.quantity).toLocaleString()}`;
     }).join('\n');
@@ -974,14 +1044,43 @@ const CheckoutPage = () => {
     const encodedMessage = encodeURIComponent(message);
     const waNumber = settings?.admin_phone?.replace(/\D/g, '') || settings?.contactPhone?.replace(/\D/g, '') || settings?.loc_phone?.replace(/\D/g, '') || "2250500619923";
     
-    // Clear cart
-    clearCart();
-    
-    // Redirect to home
-    navigate('/');
-    showToast(lang === 'fr' ? 'Redirection vers WhatsApp...' : 'Redirecting to WhatsApp...', 'success');
-    
-    window.open(`https://wa.me/${waNumber}?text=${encodedMessage}`, '_blank');
+    // Save order locally for realtime notification bell status & orders history tracking
+    const completedOrder = {
+      id: newOrderId || 'Pending',
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      address: addressDetails,
+      city: 'WhatsApp Checkout',
+      total_amount: grandTotal,
+      currency: settings?.currency || 'FCFA',
+      items: [...cartItems],
+      created_at: new Date().toISOString()
+    };
+    setPlacedOrderData(completedOrder);
+
+    try {
+      const storedOrders = JSON.parse(localStorage.getItem('customer_orders') || '[]');
+      storedOrders.unshift(completedOrder);
+      localStorage.setItem('customer_orders', JSON.stringify(storedOrders));
+      window.dispatchEvent(new Event('notifications_updated'));
+    } catch (e) {
+      console.warn('Failed to save order to local list:', e);
+    }
+
+    // Try to trigger push subscription prompt
+    try {
+      pushManager.subscribe('customer').catch(() => {});
+    } catch (e) {}
+
+    showToast(lang === 'fr' ? 'Commande enregistrée ! Redirection vers WhatsApp...' : 'Order recorded! Redirecting to WhatsApp...', 'success');
+
+    // Delay redirection to let notification drop and sound play
+    setTimeout(() => {
+      clearCart();
+      setIsProcessing(false);
+      window.open(`https://wa.me/${waNumber}?text=${encodedMessage}`, '_blank');
+      navigate('/');
+    }, 1800);
   };
 
   const renderWhatsAppCheckout = () => {

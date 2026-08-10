@@ -41,11 +41,122 @@ serve(async (req) => {
       const { table, type, record, old_record } = payload
 
       if (table === 'orders' && type === 'INSERT') {
-        // New order -> Notify admins
-        pushTitle = "🛍️ New Order Received!"
-        pushBody = `Order SWT-${record.id} from ${record.customer_name || 'Customer'} — ${Number(record.total || 0).toLocaleString()} FCFA`
-        pushUrl = "/#/dashboard"
-        targetRole = "admin"
+        // Send WhatsApp alert to the admin via Infobip in Deno
+        const infobipApiKey = Deno.env.get("INFOBIP_API_KEY");
+        let infobipApiUrl = Deno.env.get("INFOBIP_API_URL") || "https://552n1y.api.infobip.com";
+        if (!infobipApiUrl.startsWith('http')) {
+          infobipApiUrl = `https://${infobipApiUrl}`;
+        }
+        const infobipSender = Deno.env.get("INFOBIP_SENDER") || "447860099299";
+        const adminPhone = Deno.env.get("ADMIN_PHONE") || "+2250500619923";
+
+        if (infobipApiKey) {
+          try {
+            let itemsSummary = "";
+            try {
+              const itemsArray = typeof record.items === 'string' ? JSON.parse(record.items) : record.items;
+              if (Array.isArray(itemsArray)) {
+                itemsSummary = itemsArray.map((item: any) => `• ${item.name} (x${item.quantity}) - ${Number(item.price * item.quantity).toLocaleString()} FCFA`).join('\n');
+              }
+            } catch (_) {}
+
+            const rawMessage = `*🛍️ NEW ORDER RECEIVED!* (Order ID: #${record.id})\n\n` +
+              `*Customer:* ${record.customer_name || 'Customer'}\n` +
+              `*Contact:* ${record.customer_phone || 'None'}\n` +
+              `*Total:* ${Number(record.total_amount || record.total || 0).toLocaleString()} FCFA\n\n` +
+              `*Items:* \n${itemsSummary}`;
+
+            const cleanTo = adminPhone.replace(/\D/g, '');
+            const cleanSender = infobipSender.replace(/\D/g, '');
+
+            console.log(`Deno Edge: Sending Infobip WhatsApp message to ${cleanTo} from sender ${cleanSender}...`);
+            fetch(`${infobipApiUrl}/whatsapp/1/message/text`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `App ${infobipApiKey}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                from: cleanSender,
+                to: cleanTo,
+                content: {
+                  text: rawMessage
+                }
+              })
+            }).then(async r => {
+              const text = await r.text();
+              console.log("Deno Edge Infobip Response:", text);
+            }).catch(e => {
+              console.error("Deno Edge Infobip Error:", e);
+            });
+          } catch (e) {
+            console.error('Failed executing Infobip fetch in Edge Function:', e);
+          }
+        } else {
+          console.warn('Deno Edge: INFOBIP_API_KEY is not set. Skipping WhatsApp order alert.');
+        }
+
+        const targetUserIds = [];
+        if (record.customer_phone) targetUserIds.push(record.customer_phone);
+        if (record.customer_contact) {
+          const parts = record.customer_contact.split(' | ');
+          if (parts[0]) targetUserIds.push(parts[0]); // phone
+          if (parts[4]) targetUserIds.push(parts[4]); // user_id
+        }
+        if (record.customer_id) targetUserIds.push(record.customer_id);
+
+        // Fetch subscriptions matching admin role OR customer user_ids
+        const orFilter = [
+          'role.eq.admin',
+          ...targetUserIds.filter(Boolean).map(uid => `user_id.eq.${uid}`)
+        ].join(',');
+
+        const { data: subscriptions, error: dbErr } = await supabase
+          .from('push_subscriptions')
+          .select('*')
+          .or(orFilter);
+
+        if (dbErr) throw dbErr;
+        if (!subscriptions || subscriptions.length === 0) {
+          return new Response(JSON.stringify({ success: true, sentCount: 0, message: "No subscribers found" }), { status: 200, headers: corsHeaders });
+        }
+
+        const promises = subscriptions.map((sub) => {
+          let title = "";
+          let body = "";
+          let url = "/#/";
+
+          if (sub.role === 'admin') {
+            title = "🛍️ New Order Received!";
+            body = `Order SWT-${record.id} from ${record.customer_name || 'Customer'} — ${Number(record.total || 0).toLocaleString()} FCFA`;
+            url = "/#/dashboard";
+          } else {
+            title = "🛍️ Order Placed Successfully!";
+            body = `Thank you ${record.customer_name || ''}! Your order #${record.id} of ${Number(record.total || 0).toLocaleString()} FCFA is confirmed.`;
+            url = `/#/track/${record.id}`;
+          }
+
+          const pushSubscription = {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth
+            }
+          };
+
+          const pushPayload = JSON.stringify({ title, body, url, image: null });
+
+          return webpush.sendNotification(pushSubscription, pushPayload)
+            .catch(async (err: any) => {
+              if (err.statusCode === 410 || err.statusCode === 404) {
+                await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+              }
+            });
+        });
+
+        await Promise.all(promises);
+        return new Response(JSON.stringify({ success: true, sentCount: subscriptions.length }), { status: 200, headers: corsHeaders });
       } 
       else if (table === 'orders' && type === 'UPDATE') {
         // Status/tracking change -> Notify customers
