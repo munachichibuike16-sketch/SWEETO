@@ -1488,10 +1488,10 @@ const App = () => {
           <Route path="/new-arrivals" element={HomeElement} />
           <Route path="/featured" element={HomeElement} />
           <Route path="/visit" element={HomeElement} />
-          <Route path="/privacy" element={HomeElement} />
-          <Route path="/terms" element={HomeElement} />
-          <Route path="/security" element={HomeElement} />
-          <Route path="/refund" element={HomeElement} />
+          <Route path="/privacy" element={<LegalPage type="privacy" />} />
+          <Route path="/terms" element={<LegalPage type="terms" />} />
+          <Route path="/security" element={<LegalPage type="security" />} />
+          <Route path="/refund" element={<LegalPage type="refund" />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/wave-pay/:orderId" element={<WavePayPage />} />
