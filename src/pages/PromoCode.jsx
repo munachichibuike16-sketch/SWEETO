@@ -33,6 +33,9 @@ export default function PromoCode() {
             const data = await res.json();
             setPromos(data);
             return;
+          } else if (res.status === 404) {
+            console.warn('API endpoint not found. Make sure backend server is running on port 3000.');
+            setError('Backend server not found. Please start the server with: node server.js');
           }
         } catch (e) {
           console.warn('Local SQLite fetch failed, falling back to Supabase:', e);
