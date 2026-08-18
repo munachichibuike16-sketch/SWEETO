@@ -86,6 +86,7 @@ window.addEventListener('hashchange', updatePWAManifestAndIcons);
 
 import React, { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Toaster } from 'react-hot-toast'
 import './index.css'
 import App from './App.jsx'
 import DesktopApp from './DesktopApp.jsx'
@@ -104,6 +105,34 @@ createRoot(document.getElementById('root')).render(
           <CartProvider>
             <WishlistProvider>
               <App />
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#ffffff',
+                    color: '#1e293b',
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                    border: '1px solid #e2e8f0',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  },
+                  success: {
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#ffffff',
+                    },
+                  },
+                  error: {
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#ffffff',
+                    },
+                  },
+                }}
+              />
             </WishlistProvider>
           </CartProvider>
         </StoreProvider>

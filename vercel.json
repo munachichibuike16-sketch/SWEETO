@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/share/product/:id",
+      "destination": "/share.php"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

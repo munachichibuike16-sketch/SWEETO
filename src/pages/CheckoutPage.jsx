@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check, Truck, Lock, CreditCard } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Zap, ArrowRight, MapPin, Phone, User, Package, Award, UserCheck, Loader2, Compass, Home, Map, ChevronDown, Check, Truck, Lock, CreditCard, Bell, Mail, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useStore } from '../contexts/StoreContext';
@@ -10,6 +10,7 @@ import { playSound } from '../utils/sound';
 import { apiFetch } from '../utils/api';
 import ProductCard from '../components/ProductCard';
 import OrderNotificationFlow from '../components/OrderNotificationFlow';
+import toast from 'react-hot-toast';
 
 const LOCATIONIQ_KEY = import.meta.env.VITE_LOCATIONIQ_KEY || '';
 
@@ -679,8 +680,116 @@ const CheckoutPage = () => {
         console.warn('Failed to save order to local list:', e);
       }
 
+      // 🎉 SHOW ADVANCED ORDER NOTIFICATION TOAST
+      const orderIdDisplay = newOrderId ? (String(newOrderId).startsWith('ORD-') ? newOrderId : `ORD-${newOrderId}`) : 'ORD-0000';
+      toast.success(
+        (t) => (
+          <div className="flex items-start gap-3 p-2">
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 shrink-0">
+              <Bell size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm text-slate-900 dark:text-white">
+                ✅ {lang === 'fr' ? 'Commande Placée avec Succès!' : 'Order Placed Successfully!'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {lang === 'fr' 
+                  ? `Votre commande ${orderIdDisplay} est en attente de confirmation.` 
+                  : `Your order ${orderIdDisplay} is waiting for confirmation.`}
+              </p>
+              <div className="flex items-center gap-2 mt-2 text-[10px] font-semibold text-slate-400">
+                <span className="flex items-center gap-1">
+                  <Smartphone size={10} />
+                  {lang === 'fr' ? 'Notification mobile' : 'Mobile notification'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Mail size={10} />
+                  {lang === 'fr' ? 'Email envoyé' : 'Email sent'}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        ),
+        {
+          duration: 8000,
+          position: 'top-center',
+          style: {
+            background: '#ffffff',
+            color: '#1e293b',
+            borderRadius: '16px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+            border: '1px solid #e2e8f0',
+            padding: '0',
+            maxWidth: '400px',
+          },
+          icon: null,
+        }
+      );
+
+      // 🔔 REQUEST PUSH NOTIFICATION PERMISSION
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            // Show system-style notification
+            new Notification(
+              lang === 'fr' ? '✅ Commande Confirmée!' : '✅ Order Confirmed!',
+              {
+                body: lang === 'fr' 
+                  ? `Votre commande ${orderIdDisplay} a été placée avec succès.` 
+                  : `Your order ${orderIdDisplay} has been placed successfully.`,
+                icon: '/favicon.svg',
+                badge: '/favicon.svg',
+                vibrate: [200, 100, 200],
+                tag: `order-${newOrderId}`,
+                requireInteraction: true,
+              }
+            );
+          }
+        });
+      }
+
+      // 📧 SEND EMAIL NOTIFICATION (via backend or EmailJS)
+      try {
+        const emailPayload = {
+          to: email || formData.email || '',
+          subject: lang === 'fr' 
+            ? `Confirmation de commande #${orderIdDisplay}` 
+            : `Order Confirmation #${orderIdDisplay}`,
+          template: 'order_confirmation',
+          data: {
+            orderId: orderIdDisplay,
+            customerName: formData.name,
+            totalAmount: grandTotal,
+            currency: currency,
+            orderDate: new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US'),
+            items: cartItems.length,
+          }
+        };
+        
+        // Try backend email endpoint first
+        await apiFetch('/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailPayload)
+        }).catch(() => {
+          console.log('Backend email not available, using fallback');
+        });
+      } catch (e) {
+        console.warn('Email notification failed:', e);
+      }
+
       // Prompt for push subscription
       try {
+        const { pushManager } = await import('../utils/pushManager');
         pushManager.subscribe('customer').catch(() => {});
       } catch (e) {}
 

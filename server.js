@@ -7,6 +7,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
+import nodemailer from 'nodemailer';
 
 // ESM fix for __dirname
 import multer from 'multer';
@@ -1507,7 +1508,7 @@ app.delete('/api/orders/:id', authenticateAdmin, (req, res) => {
 app.post('/api/orders', (req, res) => {
   const { 
     customer_name, customer_contact, items, 
-    total, total_items, status 
+    total, total_items, status, customer_email
   } = req.body;
   
   try {
@@ -1520,12 +1521,13 @@ app.post('/api/orders', (req, res) => {
       customer_name, customer_contact || null, items || '[]', 
       total, total_items || 1, status || 'completed', req.body.user_id || null
     );
-    res.json({ id: info.lastInsertRowid, success: true });
+    const orderId = info.lastInsertRowid;
+    res.json({ id: orderId, success: true });
 
     // Trigger admin push notification for new order
     sendBackgroundPushNotification(
       '🛍️ New Order Received!',
-      `Order SWT-${info.lastInsertRowid} from ${customer_name || 'Customer'} — ${Number(total || 0).toLocaleString()} FCFA`,
+      `Order SWT-${orderId} from ${customer_name || 'Customer'} — ${Number(total || 0).toLocaleString()} FCFA`,
       '/dashboard',
       null,
       'admin'
@@ -1539,8 +1541,8 @@ app.post('/api/orders', (req, res) => {
     if (customerPhone) {
       sendBackgroundPushNotification(
         '🛍️ Order Placed Successfully!',
-        `Thank you for your order! Your order #${info.lastInsertRowid} of ${Number(total || 0).toLocaleString()} ${currency} is confirmed.`,
-        `/#/track/${info.lastInsertRowid}`,
+        `Thank you for your order! Your order #${orderId} of ${Number(total || 0).toLocaleString()} ${currency} is confirmed.`,
+        `/#/track/${orderId}`,
         null,
         'customer',
         customerPhone
@@ -1549,12 +1551,87 @@ app.post('/api/orders', (req, res) => {
     if (customerUserId && customerUserId !== customerPhone) {
       sendBackgroundPushNotification(
         '🛍️ Order Placed Successfully!',
-        `Thank you for your order! Your order #${info.lastInsertRowid} of ${Number(total || 0).toLocaleString()} ${currency} is confirmed.`,
-        `/#/track/${info.lastInsertRowid}`,
+        `Thank you for your order! Your order #${orderId} of ${Number(total || 0).toLocaleString()} ${currency} is confirmed.`,
+        `/#/track/${orderId}`,
         null,
         'customer',
         customerUserId
       ).catch(e => console.error('Failed to send customer push by user_id:', e));
+    }
+
+    // Send Email Notification to Customer
+    if (customer_email) {
+      const itemsArray = JSON.parse(items || '[]');
+      const itemsList = itemsArray.map(item => `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">x${item.quantity}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">${Number(item.price * item.quantity).toLocaleString()} FCFA</td>
+        </tr>
+      `).join('');
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: process.env.EMAIL_PORT || 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"Sweeto Store" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        to: customer_email,
+        subject: `Order Confirmation #SWT-${orderId}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb; padding: 20px;">
+            <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <h2 style="color: #4F46E5; text-align: center; margin-bottom: 20px;">Order Placed Successfully! 🎉</h2>
+              <p style="color: #374151; line-height: 1.6;">Thank you for your order. We have received it and are preparing it for confirmation.</p>
+              
+              <div style="background: #EEF2FF; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Order ID:</strong> SWT-${orderId}</p>
+                <p style="margin: 5px 0;"><strong>Total Amount:</strong> ${Number(total || 0).toLocaleString()} FCFA</p>
+                <p style="margin: 5px 0;"><strong>Items:</strong> ${total_items || itemsArray.length}</p>
+              </div>
+
+              <h3 style="color: #4F46E5; border-bottom: 2px solid #4F46E5; padding-bottom: 10px;">Order Summary</h3>
+              <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <thead>
+                  <tr style="background: #4F46E5; color: white;">
+                    <th style="padding: 12px; text-align: left;">Product</th>
+                    <th style="padding: 12px; text-align: center;">Qty</th>
+                    <th style="padding: 12px; text-align: right;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsList}
+                </tbody>
+              </table>
+
+              <p style="color: #374151; line-height: 1.6; margin-top: 20px;">We will notify you once your order is confirmed and shipped.</p>
+              
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="${process.env.FRONTEND_URL || 'https://swto.site'}/#/track/${orderId}" 
+                   style="display: inline-block; background: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                  Track Your Order
+                </a>
+              </div>
+              
+              <p style="color: #6B7280; font-size: 14px; margin-top: 20px; text-align: center;">Need help? Contact us at support@swto.site</p>
+            </div>
+          </div>
+        `,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Email error:', error.message);
+        } else {
+          console.log('Email sent successfully to', customer_email, 'Message ID:', info.messageId);
+        }
+      });
     }
 
     // Send automated WhatsApp alert to the admin via Infobip
@@ -1564,7 +1641,7 @@ app.post('/api/orders', (req, res) => {
     try {
       const itemsArray = JSON.parse(items || '[]');
       const itemsSummary = itemsArray.map(item => `• ${item.name} (x${item.quantity}) - ${Number(item.price * item.quantity).toLocaleString()} FCFA`).join('\n');
-      const formattedMessage = `*🛍️ NEW ORDER RECEIVED!* (Order ID: #${info.lastInsertRowid})\n\n` +
+      const formattedMessage = `*🛍️ NEW ORDER RECEIVED!* (Order ID: #${orderId})\n\n` +
         `*Customer:* ${customer_name || 'Customer'}\n` +
         `*Contact:* ${customerPhone || 'None'}\n` +
         `*Total:* ${Number(total || 0).toLocaleString()} FCFA\n\n` +
@@ -1580,7 +1657,7 @@ app.post('/api/orders', (req, res) => {
     }
 
     // Schedule 1-minute pending voice call backup notification
-    scheduleAdminCallBackup(info.lastInsertRowid, customer_name, total);
+    scheduleAdminCallBackup(orderId, customer_name, total);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
