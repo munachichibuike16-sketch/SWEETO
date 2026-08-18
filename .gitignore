@@ -1,47 +1,10 @@
 ```
-# Dependencies
+.vercel/
 node_modules/
-
-# Environment variables
+dist/
+build/
+*.log
 .env
 .env.local
 .env.*
-
-# Logs
-*.log
-
-# Build outputs
-dist/
-build/
-target/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
-# Distribution / packaging
-*.tar.gz
-*.whl
-*.egg-info/
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Local configuration
-.vercel/
 ```

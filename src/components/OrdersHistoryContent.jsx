@@ -452,6 +452,7 @@ export default function OrdersHistoryContent({ onBack }) {
         items: itemsStr,
         customer_name: user.name || "Alex Morgan",
         customer_phone: user.phoneNumber || user.phone || "+1 (555) 234-5678",
+        customer_email: user.email || "",
         customer_contact: `| ${user.email || user.id} |`,
         address: "742 Evergreen Terrace",
         city: "Springfield"
@@ -459,6 +460,21 @@ export default function OrdersHistoryContent({ onBack }) {
 
       const { error } = await supabase.from('orders').insert([newOrder]);
       if (error) throw error;
+
+      // Send notification to backend for email and push
+      try {
+        await fetch('/api/send-order-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: window.pushSubscription,
+            orderData: { orderId: newOrder.id || 'new', totalAmount: total, itemCount: cart.length },
+            customerEmail: user.email
+          })
+        });
+      } catch (notifErr) {
+        console.error('Failed to send notification:', notifErr);
+      }
 
       showToast(`Real-time Order placed successfully!`);
       setModalType(null);
